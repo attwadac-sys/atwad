@@ -368,6 +368,8 @@
     .form-row{grid-template-columns:1fr;}
   }
 </style>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
 </head>
 <body>
 
@@ -403,6 +405,7 @@
       <div class="topbar-sub">تسجيل وتصنيف وإدارة قاعدة البيانات</div>
     </div>
     <div class="topbar-actions">
+      <button onclick="importFromFirebase()" id="importBtn" style="background:#fff;border:1.5px solid #0EA5E9;color:#0EA5E9;border-radius:10px;padding:9px 16px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">📥 استيراد من الحجوزات</button>
       <button class="btn-add" onclick="openAddModal()">＋ إضافة عميل</button>
     </div>
   </div>

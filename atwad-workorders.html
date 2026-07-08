@@ -162,6 +162,8 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 
 @media(max-width:900px){.sidebar{display:none;}.main{margin-right:0;}.stats-row{grid-template-columns:repeat(3,1fr);}.wo-grid{grid-template-columns:1fr;}}
 </style>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
 </head>
 <body>
 
@@ -183,6 +185,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 <div class="main">
   <div class="topbar">
     <div><div class="topbar-title">🔧 أوامر العمل</div><div class="topbar-sub">فتح وإدارة عمليات الصيانة والتنظيف</div></div>
+    <button onclick="importWOFromFirebase()" id="importWOBtn" style="background:#fff;border:1.5px solid #0EA5E9;color:#0EA5E9;border-radius:10px;padding:9px 16px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">📥 استيراد من الحجوزات</button>
     <button class="btn-primary" onclick="openNewWO()">＋ أمر عمل جديد</button>
   </div>
 
@@ -380,6 +383,51 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 <div class="toast" id="toast"></div>
 
 <script>
+// ===== FIREBASE =====
+var db = null;
+try {
+  if(!firebase.apps.length) firebase.initializeApp({databaseURL:"https://atwad-booking-default-rtdb.firebaseio.com"});
+  db = firebase.database();
+} catch(e){ console.log('Firebase:',e); }
+
+function importWOFromFirebase() {
+  if(!db){ showToast('⚠️ Firebase غير متاح'); return; }
+  var btn = document.getElementById('importWOBtn');
+  btn.textContent = '⏳ جاري الاستيراد...'; btn.disabled = true;
+  db.ref('bookings').once('value', function(snap) {
+    var added = 0, skip = 0;
+    var existRefs = new Set(workOrders.map(function(w){ return w.firebaseRef||''; }));
+    snap.forEach(function(child) {
+      var b = child.val(); var key = child.key;
+      if(existRefs.has(key)){ skip++; return; }
+      if(!b.date || !b.time) return;
+      workOrders.unshift({
+        id: 'WO-' + String(workOrders.length+1001).padStart(5,'0'),
+        firebaseRef: key,
+        status: 'open',
+        client: b.client||b.name||'—',
+        phone: (b.phone||'').replace(/[^0-9]/g,'').replace(/^966/,'0'),
+        address: b.city||'جدة',
+        service: b.service||'تنظيف مكيف',
+        actype: 'سبليت',
+        units: b.units||1,
+        tech: 'Abrar',
+        date: b.date,
+        time: (b.time||'').split(' - ')[0]||b.time,
+        problem: 'من نموذج الحجز الإلكتروني',
+        parts: '',
+        price: 0, partsCost: 0, discount: 0, total: 0,
+        payment: 'كاش', rating: 0,
+        createdAt: b.createdAt||new Date().toISOString()
+      });
+      existRefs.add(key); added++;
+    });
+    saveData(); updateStats(); renderWOs();
+    btn.textContent = '📥 استيراد من الحجوزات'; btn.disabled = false;
+    if(added>0) showToast('✅ تم استيراد '+added+' أمر عمل جديد');
+    else showToast('ℹ️ لا أوامر جديدة — تم تخطي '+skip);
+  }, function(){ btn.textContent='📥 استيراد من الحجوزات'; btn.disabled=false; showToast('❌ خطأ في الاتصال'); });
+}
 // ===== STATE =====
 let workOrders = JSON.parse(localStorage.getItem('atwad_workorders') || '[]');
 let clients = []; try { clients = JSON.parse(localStorage.getItem('atwad_clients') || '[]'); } catch {}

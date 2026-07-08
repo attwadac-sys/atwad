@@ -132,6 +132,8 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 
 @media(max-width:900px){.sidebar{display:none;}.main{margin-right:0;}.kpi-row{grid-template-columns:1fr 1fr;}.charts-row,.tables-row{grid-template-columns:1fr;}.period-tabs{display:none;}}
 </style>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
 </head>
 <body>
 
@@ -160,6 +162,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
         <button class="period-tab" onclick="setPeriod('year',this)">هذه السنة</button>
         <button class="period-tab" onclick="setPeriod('all',this)">الكل</button>
       </div>
+      <button onclick="importFinanceFromFirebase()" id="importFinBtn" style="background:#fff;border:1.5px solid #10B981;color:#10B981;border-radius:10px;padding:9px 16px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">📥 استيراد إيرادات الحجوزات</button>
       <button class="btn-add" onclick="openModal()">＋ إضافة قيد</button>
     </div>
   </div>
@@ -326,6 +329,57 @@ function genId(){ return 'F' + Date.now().toString().slice(-7); }
 function fmt(n){ return Number(n).toLocaleString('ar-SA'); }
 function fmtDate(d){ try{ return new Date(d+'T00:00:00').toLocaleDateString('ar-SA',{month:'short',day:'numeric'}); } catch{ return d||'—'; } }
 
+// ===== FIREBASE =====
+var db = null;
+try {
+  if(!firebase.apps.length) firebase.initializeApp({databaseURL:"https://atwad-booking-default-rtdb.firebaseio.com"});
+  db = firebase.database();
+} catch(e){ console.log('Firebase:',e); }
+
+// أسعار الخدمات
+var SVC_PRICES = {
+  'تنظيف مكيف': {1:110, 2:180, 3:240, 4:280},
+  'صيانة دورية': 120, 'تعبئة غاز': 150,
+  'كشف وإصلاح أعطال': 100, 'تركيب مكيف جديد': 200, 'باقة صيانة سنوية': 400
+};
+function calcPrice(svc, units) {
+  if(svc==='تنظيف مكيف'){ var p=SVC_PRICES[svc]; return units>=5?units*60:(p[units]||units*60); }
+  return (SVC_PRICES[svc]||100)*units;
+}
+
+function importFinanceFromFirebase() {
+  if(!db){ showToast('⚠️ Firebase غير متاح'); return; }
+  var btn = document.getElementById('importFinBtn');
+  btn.textContent = '⏳ جاري الاستيراد...'; btn.disabled = true;
+  db.ref('bookings').once('value', function(snap) {
+    var added = 0, skip = 0;
+    var existRefs = new Set(entries.map(function(e){ return e.firebaseRef||''; }));
+    snap.forEach(function(child) {
+      var b = child.val(); var key = child.key;
+      if(existRefs.has(key)){ skip++; return; }
+      if(!b.date) return;
+      var amount = calcPrice(b.service||'تنظيف مكيف', b.units||1);
+      entries.unshift({
+        id: 'F'+Date.now()+Math.random().toString(36).slice(2,5),
+        firebaseRef: key,
+        type: 'income',
+        amount: amount,
+        desc: (b.service||'خدمة') + ' - ' + (b.client||b.name||'عميل'),
+        date: b.date,
+        category: 'خدمة',
+        method: 'كاش',
+        party: b.client||b.name||'',
+        status: 'معلق',
+        createdAt: b.createdAt||new Date().toISOString()
+      });
+      existRefs.add(key); added++;
+    });
+    saveData(); renderAll();
+    btn.textContent = '📥 استيراد إيرادات الحجوزات'; btn.disabled = false;
+    if(added>0) showToast('✅ تم استيراد '+added+' إيراد جديد من الحجوزات');
+    else showToast('ℹ️ لا إيرادات جديدة — تم تخطي '+skip);
+  }, function(){ btn.textContent='📥 استيراد إيرادات الحجوزات'; btn.disabled=false; showToast('❌ خطأ'); });
+}
 // ===== PERIOD FILTER =====
 function setPeriod(p, btn){
   period = p;
