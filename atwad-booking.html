@@ -1049,7 +1049,10 @@ function submitBooking() {
     `الوقت: ${state.visitTime}\n` +
     `المدينة: ${state.clientCity}`
   );
-  document.getElementById('whatsappLink').href = `https://wa.me/966500000000?text=${msg}`;
+  const waUrl = `https://wa.me/966509720382?text=${msg}`;
+  document.getElementById('whatsappLink').href = waUrl;
+  // فتح واتساب تلقائياً لإشعار المؤسسة
+  setTimeout(() => { window.open(waUrl, '_blank'); }, 1000);
 
   document.getElementById('step4').classList.remove('active');
   document.getElementById('stepSuccess').classList.add('active');
