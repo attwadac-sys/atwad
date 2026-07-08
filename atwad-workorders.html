@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مؤسسة أطواد - إدارة العمليات</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap');
+:root{
+  --deep:#0C3B5E;--steel:#1E5F8A;--sky:#0EA5E9;--ice:#E8F4FD;--frost:#F0F9FF;
+  --slate:#334155;--mist:#94A3B8;--success:#10B981;--warning:#F59E0B;--danger:#EF4444;--purple:#8B5CF6;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
+
+.sidebar{position:fixed;right:0;top:0;bottom:0;width:230px;background:linear-gradient(180deg,var(--deep),var(--steel));z-index:200;display:flex;flex-direction:column;}
+.sidebar-logo{padding:22px 18px 18px;border-bottom:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:12px;}
+.sidebar-logo .icon{width:42px;height:42px;background:linear-gradient(135deg,var(--sky),#38BDF8);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;}
+.sidebar-logo h1{color:#fff;font-size:16px;font-weight:800;}
+.sidebar-logo p{color:rgba(255,255,255,.5);font-size:11px;}
+.nav-section{padding:14px 10px 6px;}
+.nav-label{color:rgba(255,255,255,.3);font-size:10px;font-weight:700;padding:0 8px 5px;letter-spacing:1px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:rgba(255,255,255,.7);font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;margin-bottom:2px;}
+.nav-item:hover{background:rgba(255,255,255,.08);color:#fff;}
+.nav-item.active{background:rgba(14,165,233,.22);color:var(--sky);font-weight:700;}
+.nav-icon{font-size:16px;width:20px;text-align:center;}
+
+.main{margin-right:230px;}
+.topbar{background:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1.5px solid #E2E8F0;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.04);}
+.topbar-title{font-size:18px;font-weight:800;color:var(--deep);}
+.topbar-sub{font-size:12px;color:var(--mist);margin-top:1px;}
+.btn-primary{background:linear-gradient(90deg,var(--deep),var(--sky));color:#fff;border:none;border-radius:10px;padding:9px 18px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(14,165,233,.3);transition:all .2s;}
+.btn-primary:hover{transform:translateY(-1px);}
+
+.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;padding:18px 22px 0;}
+.stat-card{background:#fff;border-radius:14px;padding:14px 16px;box-shadow:0 2px 10px rgba(0,0,0,.04);border-right:3px solid transparent;cursor:pointer;transition:all .2s;}
+.stat-card:hover{transform:translateY(-2px);}
+.stat-card.open{border-color:var(--sky);}
+.stat-card.inprog{border-color:var(--warning);}
+.stat-card.done{border-color:var(--success);}
+.stat-card.invoiced{border-color:var(--purple);}
+.stat-card.all-s{border-color:var(--slate);}
+.stat-icon{font-size:20px;margin-bottom:5px;}
+.stat-num{font-size:22px;font-weight:800;color:var(--deep);}
+.stat-lbl{font-size:10px;color:var(--mist);}
+
+/* FILTERS */
+.toolbar{display:flex;align-items:center;gap:10px;padding:14px 22px;flex-wrap:wrap;}
+.filter-btn{padding:7px 14px;border-radius:20px;border:1.5px solid #E2E8F0;background:#fff;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:600;color:var(--mist);cursor:pointer;transition:all .2s;}
+.filter-btn.active,.filter-btn:hover{border-color:var(--sky);color:var(--sky);background:var(--ice);}
+.search-wrap{flex:1;position:relative;min-width:180px;}
+.search-wrap input{width:100%;padding:8px 14px 8px 36px;border:1.5px solid #E2E8F0;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;outline:none;background:var(--frost);}
+.search-wrap input:focus{border-color:var(--sky);background:#fff;}
+.search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--mist);}
+
+/* WORK ORDERS GRID */
+.wo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;padding:0 22px 30px;}
+.wo-card{background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,.06);overflow:hidden;cursor:pointer;transition:all .2s;border-top:3px solid var(--sky);}
+.wo-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.1);}
+.wo-card.s-open{border-color:var(--sky);}
+.wo-card.s-inprogress{border-color:var(--warning);}
+.wo-card.s-done{border-color:var(--success);}
+.wo-card.s-invoiced{border-color:var(--purple);}
+.wo-header{padding:14px 16px 10px;display:flex;justify-content:space-between;align-items:flex-start;}
+.wo-id{font-size:11px;font-weight:700;color:var(--mist);}
+.wo-status{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+.ws-open{background:#E0F2FE;color:#0369A1;}
+.ws-inprogress{background:#FEF3C7;color:#92400E;}
+.ws-done{background:#D1FAE5;color:#065F46;}
+.ws-invoiced{background:#EDE9FE;color:#6D28D9;}
+.wo-client{font-size:15px;font-weight:800;color:var(--deep);padding:0 16px 4px;}
+.wo-service{font-size:12px;color:var(--mist);padding:0 16px 10px;}
+.wo-meta{padding:10px 16px;background:var(--frost);display:flex;gap:14px;font-size:12px;color:var(--mist);}
+.wo-meta span{display:flex;align-items:center;gap:4px;}
+.wo-footer{padding:10px 16px;display:flex;align-items:center;justify-content:space-between;}
+.wo-price{font-size:16px;font-weight:800;color:var(--deep);}
+.wo-actions{display:flex;gap:6px;}
+.wa-btn{padding:5px 10px;border:none;border-radius:7px;font-family:'Tajawal',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;}
+.wa-open{background:var(--ice);color:var(--sky);}
+.wa-invoice{background:#EDE9FE;color:var(--purple);}
+.wa-done{background:#D1FAE5;color:var(--success);}
+
+/* STEP MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(12,59,94,.5);z-index:500;display:none;align-items:center;justify-content:center;backdrop-filter:blur(3px);}
+.modal-overlay.open{display:flex;}
+.modal{background:#fff;border-radius:20px;width:100%;max-width:680px;max-height:93vh;overflow-y:auto;box-shadow:0 20px 60px rgba(12,59,94,.25);animation:slideUp .3s cubic-bezier(.34,1.56,.64,1);}
+@keyframes slideUp{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-hdr{padding:18px 22px 14px;background:linear-gradient(90deg,var(--frost),var(--ice));border-bottom:1.5px solid rgba(14,165,233,.12);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;}
+.modal-hdr h3{font-size:16px;font-weight:800;color:var(--deep);}
+.modal-close{width:28px;height:28px;border-radius:50%;border:none;background:#E2E8F0;color:var(--slate);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.modal-close:hover{background:var(--danger);color:#fff;}
+.modal-body{padding:20px 22px;}
+
+/* STEPS PROGRESS */
+.steps-progress{display:flex;align-items:center;margin-bottom:22px;}
+.sp-step{display:flex;flex-direction:column;align-items:center;flex:1;}
+.sp-circle{width:32px;height:32px;border-radius:50%;background:var(--ice);color:var(--mist);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;transition:all .3s;}
+.sp-step.active .sp-circle{background:var(--sky);color:#fff;box-shadow:0 0 0 4px rgba(14,165,233,.2);}
+.sp-step.done .sp-circle{background:var(--success);color:#fff;}
+.sp-label{font-size:10px;color:var(--mist);margin-top:4px;font-weight:600;}
+.sp-step.active .sp-label{color:var(--sky);}
+.sp-step.done .sp-label{color:var(--success);}
+.sp-line{flex:1;height:2px;background:var(--ice);margin:0 4px;margin-bottom:16px;}
+.sp-line.done{background:var(--success);}
+
+/* FORM */
+.section-title{font-size:13px;font-weight:700;color:var(--deep);margin-bottom:12px;padding-bottom:6px;border-bottom:1.5px solid var(--ice);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.form-group{margin-bottom:12px;}
+.form-group label{display:block;font-size:12px;font-weight:700;color:var(--slate);margin-bottom:5px;}
+.req{color:var(--danger);}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:9px 12px;border:1.5px solid #E2E8F0;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:14px;color:var(--slate);background:var(--frost);outline:none;transition:all .2s;direction:rtl;}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--sky);background:#fff;box-shadow:0 0 0 3px rgba(14,165,233,.1);}
+
+/* PHOTO UPLOAD */
+.photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px;}
+.photo-box{aspect-ratio:1;border:2px dashed #E2E8F0;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;background:var(--frost);position:relative;overflow:hidden;}
+.photo-box:hover{border-color:var(--sky);background:var(--ice);}
+.photo-box img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;}
+.photo-box .photo-label{font-size:11px;color:var(--mist);margin-top:4px;}
+.photo-box .photo-icon{font-size:24px;}
+.photo-box input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;}
+
+/* SIGNATURE PAD */
+.sig-wrap{border:1.5px solid #E2E8F0;border-radius:12px;overflow:hidden;margin-bottom:12px;background:#fff;}
+.sig-header{padding:8px 14px;background:var(--frost);border-bottom:1px solid var(--ice);display:flex;justify-content:space-between;align-items:center;}
+.sig-header span{font-size:12px;font-weight:700;color:var(--slate);}
+.sig-clear{padding:4px 10px;border:none;background:var(--ice);border-radius:6px;font-family:'Tajawal',sans-serif;font-size:11px;color:var(--mist);cursor:pointer;}
+#sigCanvas{display:block;width:100%;height:160px;cursor:crosshair;touch-action:none;}
+
+/* INVOICE */
+.invoice-preview{border:1.5px solid var(--ice);border-radius:14px;overflow:hidden;margin-bottom:16px;}
+.invoice-top{background:linear-gradient(90deg,var(--deep),var(--steel));padding:16px 20px;display:flex;justify-content:space-between;align-items:center;}
+.invoice-top h2{color:#fff;font-size:16px;font-weight:800;}
+.invoice-top .inv-num{color:rgba(255,255,255,.7);font-size:12px;}
+.invoice-body{padding:16px 20px;}
+.inv-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px dashed var(--ice);font-size:13px;}
+.inv-row:last-child{border-bottom:none;}
+.inv-row .label{color:var(--mist);}
+.inv-row .value{font-weight:700;color:var(--deep);}
+.inv-total{background:var(--deep);color:#fff;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;}
+.inv-total .t-label{font-size:14px;font-weight:600;}
+.inv-total .t-price{font-size:22px;font-weight:800;color:var(--sky);}
+
+/* RATING */
+.rating-stars{display:flex;gap:8px;font-size:32px;cursor:pointer;margin:8px 0 16px;}
+.star{opacity:.3;transition:all .2s;}
+.star.active{opacity:1;}
+
+/* MODAL FOOTER */
+.modal-footer{padding:14px 22px;border-top:1px solid #F1F5F9;display:flex;gap:10px;justify-content:space-between;position:sticky;bottom:0;background:#fff;z-index:10;}
+.btn-back{padding:9px 18px;border:1.5px solid #E2E8F0;border-radius:9px;background:#fff;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:600;color:var(--slate);cursor:pointer;}
+.btn-next{padding:9px 24px;border:none;border-radius:9px;background:linear-gradient(90deg,var(--deep),var(--sky));color:#fff;font-family:'Tajawal',sans-serif;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(14,165,233,.3);}
+
+/* SUCCESS */
+.success-screen{text-align:center;padding:40px 20px;}
+.success-anim{width:80px;height:80px;background:linear-gradient(135deg,var(--success),#34D399);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:38px;margin:0 auto 18px;box-shadow:0 0 0 12px rgba(16,185,129,.12);animation:popIn .5s cubic-bezier(.34,1.56,.64,1);}
+@keyframes popIn{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--deep);color:#fff;padding:10px 22px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.2);transition:transform .3s;z-index:999;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+@media(max-width:900px){.sidebar{display:none;}.main{margin-right:0;}.stats-row{grid-template-columns:repeat(3,1fr);}.wo-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sidebar-logo"><div class="icon">❄️</div><div><h1>أطواد</h1><p>لصيانة المكيفات</p></div></div>
+  <div class="nav-section">
+    <div class="nav-label">القائمة</div>
+    <div class="nav-item" onclick="location.href='atwad-customers.html'"><span class="nav-icon">👥</span> العملاء</div>
+    <div class="nav-item" onclick="location.href='atwad-appointments.html'"><span class="nav-icon">📅</span> المواعيد</div>
+    <div class="nav-item active" onclick="location.href='atwad-workorders.html'"><span class="nav-icon">🔧</span> أوامر العمل</div>
+    <div class="nav-item" onclick="location.href='atwad-finance.html'"><span class="nav-icon">💰</span> الإدارة المالية</div>
+    <div class="nav-item" onclick="alert('التقارير — قريباً ✨')"><span class="nav-icon">📊</span> التقارير</div>
+  </div>
+  <div class="nav-section" style="margin-top:auto;border-top:1px solid rgba(255,255,255,.08);padding-top:10px;">
+    <div class="nav-item" onclick="alert('الإعدادات — قريباً ✨')"><span class="nav-icon">⚙️</span> الإعدادات</div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <div><div class="topbar-title">🔧 أوامر العمل</div><div class="topbar-sub">فتح وإدارة عمليات الصيانة والتنظيف</div></div>
+    <button class="btn-primary" onclick="openNewWO()">＋ أمر عمل جديد</button>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card all-s" onclick="setFilter('all')"><div class="stat-icon">📋</div><div class="stat-num" id="sAll">0</div><div class="stat-lbl">الكل</div></div>
+    <div class="stat-card open" onclick="setFilter('open')"><div class="stat-icon">🔵</div><div class="stat-num" id="sOpen">0</div><div class="stat-lbl">مفتوح</div></div>
+    <div class="stat-card inprog" onclick="setFilter('inprogress')"><div class="stat-icon">⚡</div><div class="stat-num" id="sInprog">0</div><div class="stat-lbl">قيد التنفيذ</div></div>
+    <div class="stat-card done" onclick="setFilter('done')"><div class="stat-icon">✅</div><div class="stat-num" id="sDone">0</div><div class="stat-lbl">مكتمل</div></div>
+    <div class="stat-card invoiced" onclick="setFilter('invoiced')"><div class="stat-icon">🧾</div><div class="stat-num" id="sInvoiced">0</div><div class="stat-lbl">فاتورة صادرة</div></div>
+  </div>
+
+  <div class="toolbar">
+    <button class="filter-btn active" id="fAll" onclick="setFilter('all',this)">الكل</button>
+    <button class="filter-btn" id="fOpen" onclick="setFilter('open',this)">🔵 مفتوح</button>
+    <button class="filter-btn" id="fInprog" onclick="setFilter('inprogress',this)">⚡ قيد التنفيذ</button>
+    <button class="filter-btn" id="fDone" onclick="setFilter('done',this)">✅ مكتمل</button>
+    <button class="filter-btn" id="fInvoiced" onclick="setFilter('invoiced',this)">🧾 فاتورة</button>
+    <div class="search-wrap"><span class="search-icon">🔍</span><input placeholder="ابحث باسم العميل أو رقم الأمر..." oninput="renderWOs(this.value)"></div>
+  </div>
+
+  <div class="wo-grid" id="woGrid"></div>
+</div>
+
+<!-- WORK ORDER WIZARD MODAL -->
+<div class="modal-overlay" id="woModal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h3 id="woModalTitle">🔧 أمر عمل جديد</h3>
+      <button class="modal-close" onclick="closeWOModal()">×</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- STEPS PROGRESS -->
+      <div class="steps-progress" id="stepsBar">
+        <div class="sp-step active" id="sp1"><div class="sp-circle">1</div><div class="sp-label">البيانات</div></div>
+        <div class="sp-line" id="sl1"></div>
+        <div class="sp-step" id="sp2"><div class="sp-circle">2</div><div class="sp-label">الصور</div></div>
+        <div class="sp-line" id="sl2"></div>
+        <div class="sp-step" id="sp3"><div class="sp-circle">3</div><div class="sp-label">الفاتورة</div></div>
+        <div class="sp-line" id="sl3"></div>
+        <div class="sp-step" id="sp4"><div class="sp-circle">4</div><div class="sp-label">التوقيع</div></div>
+        <div class="sp-line" id="sl4"></div>
+        <div class="sp-step" id="sp5"><div class="sp-circle">5</div><div class="sp-label">التقييم</div></div>
+      </div>
+
+      <!-- STEP 1: BASIC INFO -->
+      <div id="step1">
+        <div class="section-title">📋 بيانات العملية</div>
+        <div class="form-row">
+          <div class="form-group"><label>اسم العميل <span class="req">*</span></label><input type="text" id="w_client" list="wClientList" placeholder="اسم العميل"><datalist id="wClientList"></datalist></div>
+          <div class="form-group"><label>رقم الجوال <span class="req">*</span></label><input type="tel" id="w_phone" placeholder="05xxxxxxxx"></div>
+        </div>
+        <div class="form-group"><label>العنوان <span class="req">*</span></label><input type="text" id="w_address" placeholder="الحي، الشارع..."></div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>نوع الخدمة <span class="req">*</span></label>
+            <select id="w_service">
+              <option value="">-- اختر --</option>
+              <option>تنظيف مكيف</option><option>صيانة دورية</option><option>تعبئة غاز</option>
+              <option>كشف وإصلاح أعطال</option><option>تركيب مكيف</option><option>باقة سنوية</option>
+            </select>
+          </div>
+          <div class="form-group"><label>نوع المكيف</label>
+            <select id="w_actype"><option value="">-- اختر --</option><option>سبليت</option><option>كاسيت</option><option>شباك</option><option>مركزي</option><option>داكت</option></select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>عدد الوحدات</label><input type="number" id="w_units" value="1" min="1" max="50"></div>
+          <div class="form-group"><label>الفني <span class="req">*</span></label>
+            <select id="w_tech"><option value="">-- اختر --</option><option value="Abrar">أبرار</option><option value="Shoib">شعيب</option><option value="Suhail">سهيل</option></select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>تاريخ الزيارة</label><input type="date" id="w_date"></div>
+          <div class="form-group"><label>وقت البداية</label><input type="time" id="w_time" value="09:00"></div>
+        </div>
+        <div class="form-group"><label>وصف المشكلة / ملاحظات</label><textarea id="w_problem" rows="2" placeholder="صف المشكلة أو الطلب..."></textarea></div>
+        <div class="form-group"><label>قطع الغيار المستخدمة</label><textarea id="w_parts" rows="2" placeholder="مثال: فريون R22، كباستر 35 ميكروفاراد..."></textarea></div>
+      </div>
+
+      <!-- STEP 2: PHOTOS -->
+      <div id="step2" style="display:none">
+        <div class="section-title">📸 صور قبل وبعد</div>
+        <div style="margin-bottom:10px;font-size:13px;color:var(--mist);">التقط صوراً توثيقية للعملية لحفظها في ملف الطلب</div>
+        <div style="font-size:12px;font-weight:700;color:var(--slate);margin-bottom:8px;">📷 صور قبل العمل</div>
+        <div class="photo-grid">
+          <div class="photo-box" id="pb1"><div class="photo-icon">📷</div><div class="photo-label">قبل 1</div><input type="file" accept="image/*" onchange="loadPhoto(this,'pb1')"></div>
+          <div class="photo-box" id="pb2"><div class="photo-icon">📷</div><div class="photo-label">قبل 2</div><input type="file" accept="image/*" onchange="loadPhoto(this,'pb2')"></div>
+          <div class="photo-box" id="pb3"><div class="photo-icon">📷</div><div class="photo-label">قبل 3</div><input type="file" accept="image/*" onchange="loadPhoto(this,'pb3')"></div>
+        </div>
+        <div style="font-size:12px;font-weight:700;color:var(--slate);margin-bottom:8px;">✨ صور بعد العمل</div>
+        <div class="photo-grid">
+          <div class="photo-box" id="pa1"><div class="photo-icon">✨</div><div class="photo-label">بعد 1</div><input type="file" accept="image/*" onchange="loadPhoto(this,'pa1')"></div>
+          <div class="photo-box" id="pa2"><div class="photo-icon">✨</div><div class="photo-label">بعد 2</div><input type="file" accept="image/*" onchange="loadPhoto(this,'pa2')"></div>
+          <div class="photo-box" id="pa3"><div class="photo-icon">✨</div><div class="photo-label">بعد 3</div><input type="file" accept="image/*" onchange="loadPhoto(this,'pa3')"></div>
+        </div>
+        <div style="background:var(--frost);border-radius:10px;padding:12px;font-size:12px;color:var(--mist);display:flex;gap:8px;align-items:center;">
+          <span>💡</span><span>الصور اختيارية ولكن تُعزز ثقة العميل وتحمي المؤسسة عند أي نزاع</span>
+        </div>
+      </div>
+
+      <!-- STEP 3: INVOICE -->
+      <div id="step3" style="display:none">
+        <div class="section-title">🧾 إصدار الفاتورة</div>
+        <div class="form-row">
+          <div class="form-group"><label>سعر الخدمة (ريال) <span class="req">*</span></label><input type="number" id="w_price" placeholder="0" min="0" oninput="updateInvoice()"></div>
+          <div class="form-group"><label>تكلفة قطع الغيار (ريال)</label><input type="number" id="w_parts_cost" placeholder="0" min="0" value="0" oninput="updateInvoice()"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>خصم (ريال)</label><input type="number" id="w_discount" placeholder="0" min="0" value="0" oninput="updateInvoice()"></div>
+          <div class="form-group"><label>طريقة الدفع</label>
+            <select id="w_payment"><option value="كاش">💵 كاش</option><option value="تحويل">🏦 تحويل بنكي</option><option value="مدى">💳 مدى</option></select>
+          </div>
+        </div>
+        <div class="invoice-preview">
+          <div class="invoice-top"><h2>مؤسسة أطواد لصيانة المكيفات</h2><div class="inv-num" id="invNum">WO-00000</div></div>
+          <div class="invoice-body">
+            <div class="inv-row"><span class="label">العميل</span><span class="value" id="inv_client">—</span></div>
+            <div class="inv-row"><span class="label">الخدمة</span><span class="value" id="inv_service">—</span></div>
+            <div class="inv-row"><span class="label">عدد الوحدات</span><span class="value" id="inv_units">—</span></div>
+            <div class="inv-row"><span class="label">التاريخ</span><span class="value" id="inv_date">—</span></div>
+            <div class="inv-row"><span class="label">الفني</span><span class="value" id="inv_tech">—</span></div>
+            <div class="inv-row"><span class="label">سعر الخدمة</span><span class="value" id="inv_price">0 ريال</span></div>
+            <div class="inv-row"><span class="label">قطع الغيار</span><span class="value" id="inv_parts">0 ريال</span></div>
+            <div class="inv-row"><span class="label">خصم</span><span class="value" id="inv_discount" style="color:var(--success)">0 ريال</span></div>
+          </div>
+          <div class="inv-total"><span class="t-label">الإجمالي</span><span class="t-price" id="inv_total">0 ريال</span></div>
+        </div>
+        <div style="background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:10px;padding:10px 14px;font-size:12px;color:#92400E;">⚠️ الأسعار لا تشمل قطع الغيار إلا إذا مذكورة. الضمان أسبوع على أعمال التنظيف.</div>
+      </div>
+
+      <!-- STEP 4: SIGNATURE -->
+      <div id="step4" style="display:none">
+        <div class="section-title">✍️ توقيع العميل</div>
+        <div style="font-size:13px;color:var(--mist);margin-bottom:14px;">يوقّع العميل إقراراً باستلام الخدمة وموافقته على الفاتورة</div>
+        <div class="sig-wrap">
+          <div class="sig-header">
+            <span>✍️ منطقة التوقيع</span>
+            <button class="sig-clear" onclick="clearSig()">مسح</button>
+          </div>
+          <canvas id="sigCanvas" width="600" height="160"></canvas>
+        </div>
+        <div style="background:var(--frost);border-radius:10px;padding:12px;font-size:12px;color:var(--mist);">
+          بتوقيع هذا النموذج، يُقرّ العميل باستلام الخدمة المذكورة وموافقته على المبلغ المحدد في الفاتورة.
+        </div>
+      </div>
+
+      <!-- STEP 5: RATING -->
+      <div id="step5" style="display:none">
+        <div class="section-title">⭐ تقييم الخدمة</div>
+        <div style="font-size:13px;color:var(--mist);margin-bottom:14px;">اطلب من العميل تقييم الخدمة لتحسين الجودة</div>
+        <div style="text-align:center;margin-bottom:20px;">
+          <div style="font-size:15px;font-weight:700;color:var(--deep);margin-bottom:10px;">كيف تقيّم خدمتنا؟</div>
+          <div class="rating-stars" id="ratingStars" style="justify-content:center;">
+            <span class="star" onclick="setRating(1)">⭐</span>
+            <span class="star" onclick="setRating(2)">⭐</span>
+            <span class="star" onclick="setRating(3)">⭐</span>
+            <span class="star" onclick="setRating(4)">⭐</span>
+            <span class="star" onclick="setRating(5)">⭐</span>
+          </div>
+          <div id="ratingLabel" style="font-size:13px;color:var(--mist);height:20px;"></div>
+        </div>
+        <div class="form-group"><label>ملاحظات العميل (اختياري)</label><textarea id="w_feedback" rows="3" placeholder="أي تعليقات أو مقترحات..."></textarea></div>
+        <div style="background:#D1FAE5;border-radius:10px;padding:14px;text-align:center;margin-top:6px;">
+          <div style="font-size:13px;color:#065F46;font-weight:700;">📲 شارك تجربتك معنا على واتساب</div>
+          <div style="font-size:12px;color:#065F46;margin-top:4px;">رأيك يساعدنا في تحسين الخدمة</div>
+        </div>
+      </div>
+
+      <!-- SUCCESS -->
+      <div id="stepSuccess" style="display:none">
+        <div class="success-screen">
+          <div class="success-anim">✓</div>
+          <div style="font-size:22px;font-weight:800;color:var(--deep);margin-bottom:8px;">اكتملت العملية! 🎉</div>
+          <div style="font-size:14px;color:var(--mist);margin-bottom:24px;">تم حفظ أمر العمل والفاتورة وتوقيع العميل</div>
+          <div id="successWONum" style="background:var(--frost);border:2px dashed var(--sky);border-radius:12px;padding:14px;margin-bottom:20px;">
+            <div style="font-size:11px;color:var(--mist)">رقم أمر العمل</div>
+            <div style="font-size:24px;font-weight:800;color:var(--deep);letter-spacing:2px;direction:ltr;">WO-00000</div>
+          </div>
+          <div style="display:flex;gap:10px;justify-content:center;">
+            <button onclick="shareWhatsapp()" style="padding:10px 18px;background:#25D366;color:#fff;border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">📲 إرسال الفاتورة</button>
+            <button onclick="closeWOModal()" style="padding:10px 18px;background:var(--ice);color:var(--sky);border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">إغلاق</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer" id="woModalFooter">
+      <button class="btn-back" id="btnBack" onclick="prevStep()" style="display:none">← رجوع</button>
+      <button class="btn-next" id="btnNext" onclick="nextStep()">التالي ←</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== STATE =====
+let workOrders = JSON.parse(localStorage.getItem('atwad_workorders') || '[]');
+let clients = []; try { clients = JSON.parse(localStorage.getItem('atwad_clients') || '[]'); } catch {}
+let currentFilter = 'all';
+let currentStep = 1;
+let editingWO = null;
+let currentRating = 0;
+let sigCanvas, sigCtx, drawing = false;
+let lastPos = {};
+let currentWOId = null;
+
+const TECHS = { Abrar:'أبرار', Shoib:'شعيب', Suhail:'سهيل' };
+const RATING_LABELS = ['','ضعيف','مقبول','جيد','جيد جداً','ممتاز 🌟'];
+
+function genId(){ return 'WO-' + String(workOrders.length + 1001).padStart(5,'0'); }
+function saveData(){ localStorage.setItem('atwad_workorders', JSON.stringify(workOrders)); }
+function today(){ return new Date().toISOString().split('T')[0]; }
+function fmtDate(d){ try{ return new Date(d+'T00:00:00').toLocaleDateString('ar-SA',{year:'numeric',month:'short',day:'numeric'}); } catch{ return d||'—'; } }
+
+// ===== STATS =====
+function updateStats(){
+  document.getElementById('sAll').textContent = workOrders.length;
+  document.getElementById('sOpen').textContent = workOrders.filter(w=>w.status==='open').length;
+  document.getElementById('sInprog').textContent = workOrders.filter(w=>w.status==='inprogress').length;
+  document.getElementById('sDone').textContent = workOrders.filter(w=>w.status==='done').length;
+  document.getElementById('sInvoiced').textContent = workOrders.filter(w=>w.status==='invoiced').length;
+}
+
+// ===== FILTER =====
+function setFilter(f, btn){
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  renderWOs();
+}
+
+// ===== RENDER =====
+function renderWOs(search=''){
+  let list = [...workOrders];
+  if(currentFilter !== 'all') list = list.filter(w=>w.status===currentFilter);
+  if(search) list = list.filter(w=>(w.client||'').toLowerCase().includes(search.toLowerCase())||(w.id||'').includes(search));
+  list.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''));
+
+  const sMap = { open:'ws-open', inprogress:'ws-inprogress', done:'ws-done', invoiced:'ws-invoiced' };
+  const sLabel = { open:'مفتوح', inprogress:'قيد التنفيذ', done:'مكتمل', invoiced:'فاتورة صادرة' };
+
+  if(list.length === 0){
+    document.getElementById('woGrid').innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--mist);"><div style="font-size:48px;margin-bottom:12px;">🔧</div><p>لا توجد أوامر عمل بعد<br><small>اضغط "+ أمر عمل جديد" للبدء</small></p></div>`;
+    return;
+  }
+
+  document.getElementById('woGrid').innerHTML = list.map(w=>`
+    <div class="wo-card s-${w.status||'open'}" onclick="openWODetail('${w.id}')">
+      <div class="wo-header">
+        <span class="wo-id">${w.id}</span>
+        <span class="wo-status ${sMap[w.status||'open']}">${sLabel[w.status||'open']}</span>
+      </div>
+      <div class="wo-client">${w.client||'—'}</div>
+      <div class="wo-service">🛠️ ${w.service||'—'} · ${w.units||1} وحدة · ${TECHS[w.tech]||w.tech||'—'}</div>
+      <div class="wo-meta">
+        <span>📅 ${fmtDate(w.date)}</span>
+        <span>📍 ${(w.address||'').substring(0,20)||'—'}</span>
+        ${w.rating?`<span>⭐ ${w.rating}/5</span>`:''}
+      </div>
+      <div class="wo-footer">
+        <div class="wo-price">${w.total||0} ريال</div>
+        <div class="wo-actions" onclick="event.stopPropagation()">
+          ${w.status==='open'?`<button class="wa-btn wa-open" onclick="quickStatus('${w.id}','inprogress')">⚡ بدء</button>`:''}
+          ${w.status==='inprogress'?`<button class="wa-btn wa-done" onclick="quickStatus('${w.id}','done')">✓ إتمام</button>`:''}
+          ${w.status==='done'?`<button class="wa-btn wa-invoice" onclick="quickStatus('${w.id}','invoiced')">🧾 فاتورة</button>`:''}
+          <button class="wa-btn wa-open" onclick="openWODetail('${w.id}')">عرض</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function quickStatus(id, status){
+  const idx = workOrders.findIndex(w=>w.id===id);
+  if(idx>-1){ workOrders[idx].status=status; saveData(); updateStats(); renderWOs(); showToast('✅ تم تحديث الحالة'); }
+}
+
+// ===== NEW WO WIZARD =====
+function openNewWO(){
+  editingWO = null; currentStep = 1; currentRating = 0; currentWOId = null;
+  document.getElementById('woModalTitle').textContent = '🔧 أمر عمل جديد';
+  ['w_client','w_phone','w_address','w_problem','w_parts','w_feedback'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('w_service').value='';
+  document.getElementById('w_actype').value='';
+  document.getElementById('w_tech').value='';
+  document.getElementById('w_units').value='1';
+  document.getElementById('w_date').value=today();
+  document.getElementById('w_time').value='09:00';
+  document.getElementById('w_price').value='';
+  document.getElementById('w_parts_cost').value='0';
+  document.getElementById('w_discount').value='0';
+  document.getElementById('w_payment').value='كاش';
+  ['pb1','pb2','pb3','pa1','pa2','pa3'].forEach(id=>{ const b=document.getElementById(id); if(b){ const imgs=b.querySelectorAll('img'); imgs.forEach(i=>i.remove()); }});
+  document.querySelectorAll('.star').forEach(s=>s.classList.remove('active'));
+  document.getElementById('ratingLabel').textContent='';
+  populateClients();
+  showStep(1);
+  document.getElementById('woModal').classList.add('open');
+}
+
+function openWODetail(id){
+  const w = workOrders.find(x=>x.id===id);
+  if(!w) return;
+  // Pre-fill and open in view mode
+  editingWO = id;
+  document.getElementById('woModalTitle').textContent = '📋 ' + w.id;
+  document.getElementById('w_client').value = w.client||'';
+  document.getElementById('w_phone').value = w.phone||'';
+  document.getElementById('w_address').value = w.address||'';
+  document.getElementById('w_service').value = w.service||'';
+  document.getElementById('w_actype').value = w.actype||'';
+  document.getElementById('w_tech').value = w.tech||'';
+  document.getElementById('w_units').value = w.units||1;
+  document.getElementById('w_date').value = w.date||today();
+  document.getElementById('w_time').value = w.time||'09:00';
+  document.getElementById('w_problem').value = w.problem||'';
+  document.getElementById('w_parts').value = w.parts||'';
+  document.getElementById('w_price').value = w.price||'';
+  document.getElementById('w_parts_cost').value = w.partsCost||0;
+  document.getElementById('w_discount').value = w.discount||0;
+  document.getElementById('w_payment').value = w.payment||'كاش';
+  currentWOId = id;
+  populateClients();
+  updateInvoice();
+  showStep(3);
+  document.getElementById('woModal').classList.add('open');
+}
+
+function closeWOModal(){ document.getElementById('woModal').classList.remove('open'); }
+
+// ===== STEPS =====
+function showStep(n){
+  currentStep = n;
+  for(let i=1;i<=5;i++){
+    document.getElementById('step'+i).style.display = i===n?'block':'none';
+    document.getElementById('sp'+i).className = 'sp-step' + (i<n?' done':i===n?' active':'');
+    if(i<5) document.getElementById('sl'+i).className = 'sp-line' + (i<n?' done':'');
+  }
+  document.getElementById('stepSuccess').style.display = 'none';
+  document.getElementById('stepsBar').style.display = n<=5?'flex':'none';
+  document.getElementById('woModalFooter').style.display = n<=5?'flex':'none';
+  document.getElementById('btnBack').style.display = n>1?'inline-block':'none';
+  document.getElementById('btnNext').textContent = n===4?'إتمام وحفظ ←' : n===5?'تسليم الطلب ✓' : 'التالي ←';
+  if(n===3) updateInvoice();
+  if(n===4) initSig();
+}
+
+function nextStep(){
+  if(currentStep===1){
+    if(!document.getElementById('w_client').value.trim()) return showToast('❌ أدخل اسم العميل');
+    if(!document.getElementById('w_phone').value.trim()) return showToast('❌ أدخل رقم الجوال');
+    if(!document.getElementById('w_service').value) return showToast('❌ اختر نوع الخدمة');
+    if(!document.getElementById('w_tech').value) return showToast('❌ اختر الفني');
+    if(currentStep<5){ showStep(currentStep+1); return; }
+  }
+  if(currentStep===2){ showStep(3); return; }
+  if(currentStep===3){
+    if(!document.getElementById('w_price').value) return showToast('❌ أدخل سعر الخدمة');
+    showStep(4); return;
+  }
+  if(currentStep===4){ saveWO(); showStep(5); return; }
+  if(currentStep===5){ finalizeWO(); }
+}
+
+function prevStep(){ if(currentStep>1) showStep(currentStep-1); }
+
+function saveWO(){
+  const price = parseFloat(document.getElementById('w_price').value)||0;
+  const parts = parseFloat(document.getElementById('w_parts_cost').value)||0;
+  const disc = parseFloat(document.getElementById('w_discount').value)||0;
+  const total = Math.max(0, price + parts - disc);
+  const id = editingWO || genId();
+  currentWOId = id;
+  const data = {
+    id, status: editingWO ? (workOrders.find(w=>w.id===editingWO)?.status||'open') : 'inprogress',
+    client: document.getElementById('w_client').value.trim(),
+    phone: document.getElementById('w_phone').value.trim(),
+    address: document.getElementById('w_address').value.trim(),
+    service: document.getElementById('w_service').value,
+    actype: document.getElementById('w_actype').value,
+    units: parseInt(document.getElementById('w_units').value)||1,
+    tech: document.getElementById('w_tech').value,
+    date: document.getElementById('w_date').value,
+    time: document.getElementById('w_time').value,
+    problem: document.getElementById('w_problem').value.trim(),
+    parts: document.getElementById('w_parts').value.trim(),
+    price, partsCost: parts, discount: disc, total,
+    payment: document.getElementById('w_payment').value,
+    sig: getSigData(),
+    createdAt: new Date().toISOString()
+  };
+  if(editingWO){
+    const idx = workOrders.findIndex(w=>w.id===editingWO);
+    workOrders[idx] = {...workOrders[idx],...data};
+  } else {
+    workOrders.unshift(data);
+  }
+  document.getElementById('successWONum').querySelector('div:last-child').textContent = id;
+  document.getElementById('invNum').textContent = id;
+  saveData(); updateStats(); renderWOs();
+}
+
+function finalizeWO(){
+  const idx = workOrders.findIndex(w=>w.id===currentWOId);
+  if(idx>-1){
+    workOrders[idx].status = 'invoiced';
+    workOrders[idx].rating = currentRating;
+    workOrders[idx].feedback = document.getElementById('w_feedback').value.trim();
+    saveData(); updateStats(); renderWOs();
+  }
+  for(let i=1;i<=5;i++) document.getElementById('step'+i).style.display='none';
+  document.getElementById('stepSuccess').style.display='block';
+  document.getElementById('stepsBar').style.display='none';
+  document.getElementById('woModalFooter').style.display='none';
+  showToast('🎉 تم إتمام أمر العمل بنجاح!');
+}
+
+// ===== INVOICE =====
+function updateInvoice(){
+  const price = parseFloat(document.getElementById('w_price').value)||0;
+  const parts = parseFloat(document.getElementById('w_parts_cost').value)||0;
+  const disc = parseFloat(document.getElementById('w_discount').value)||0;
+  const total = Math.max(0, price + parts - disc);
+  document.getElementById('inv_client').textContent = document.getElementById('w_client').value||'—';
+  document.getElementById('inv_service').textContent = document.getElementById('w_service').value||'—';
+  document.getElementById('inv_units').textContent = (document.getElementById('w_units').value||1) + ' وحدة';
+  document.getElementById('inv_date').textContent = fmtDate(document.getElementById('w_date').value);
+  document.getElementById('inv_tech').textContent = TECHS[document.getElementById('w_tech').value]||'—';
+  document.getElementById('inv_price').textContent = price + ' ريال';
+  document.getElementById('inv_parts').textContent = parts + ' ريال';
+  document.getElementById('inv_discount').textContent = '- ' + disc + ' ريال';
+  document.getElementById('inv_total').textContent = total + ' ريال';
+}
+
+// ===== SIGNATURE =====
+function initSig(){
+  sigCanvas = document.getElementById('sigCanvas');
+  sigCtx = sigCanvas.getContext('2d');
+  sigCtx.strokeStyle = '#0C3B5E';
+  sigCtx.lineWidth = 2.5;
+  sigCtx.lineCap = 'round';
+  sigCanvas.onmousedown = e=>{ drawing=true; lastPos=getPos(e,sigCanvas); };
+  sigCanvas.onmousemove = e=>{ if(!drawing) return; draw(getPos(e,sigCanvas)); };
+  sigCanvas.onmouseup = sigCanvas.onmouseleave = ()=>{ drawing=false; };
+  sigCanvas.ontouchstart = e=>{ e.preventDefault(); drawing=true; lastPos=getPos(e.touches[0],sigCanvas); };
+  sigCanvas.ontouchmove = e=>{ e.preventDefault(); if(!drawing) return; draw(getPos(e.touches[0],sigCanvas)); };
+  sigCanvas.ontouchend = ()=>{ drawing=false; };
+}
+function getPos(e,c){ const r=c.getBoundingClientRect(); return {x:(e.clientX-r.left)*(c.width/r.width),y:(e.clientY-r.top)*(c.height/r.height)}; }
+function draw(pos){ sigCtx.beginPath(); sigCtx.moveTo(lastPos.x,lastPos.y); sigCtx.lineTo(pos.x,pos.y); sigCtx.stroke(); lastPos=pos; }
+function clearSig(){ if(sigCtx) sigCtx.clearRect(0,0,sigCanvas.width,sigCanvas.height); }
+function getSigData(){ try{ return sigCanvas?sigCanvas.toDataURL():''; } catch{ return ''; } }
+
+// ===== PHOTOS =====
+function loadPhoto(input,boxId){
+  if(!input.files[0]) return;
+  const box = document.getElementById(boxId);
+  const reader = new FileReader();
+  reader.onload = e=>{ box.querySelectorAll('img').forEach(i=>i.remove()); const img=document.createElement('img'); img.src=e.target.result; img.style.cssText='width:100%;height:100%;object-fit:cover;position:absolute;inset:0;border-radius:10px;'; box.appendChild(img); };
+  reader.readAsDataURL(input.files[0]);
+}
+
+// ===== RATING =====
+function setRating(n){
+  currentRating = n;
+  document.querySelectorAll('.star').forEach((s,i)=>s.classList.toggle('active',i<n));
+  document.getElementById('ratingLabel').textContent = RATING_LABELS[n];
+}
+
+// ===== CLIENTS DATALIST =====
+function populateClients(){
+  const dl = document.getElementById('wClientList');
+  dl.innerHTML = clients.map(c=>`<option value="${c.name}">`).join('');
+  document.getElementById('w_client').addEventListener('input', function(){
+    const c = clients.find(x=>x.name===this.value);
+    if(c){ document.getElementById('w_phone').value=c.phone||''; document.getElementById('w_address').value=c.address||''; }
+  });
+}
+
+// ===== SHARE =====
+function shareWhatsapp(){
+  const w = workOrders.find(x=>x.id===currentWOId);
+  if(!w) return;
+  const msg = encodeURIComponent(`فاتورة مؤسسة أطواد لصيانة المكيفات\n${'─'.repeat(25)}\nرقم الأمر: ${w.id}\nالعميل: ${w.client}\nالخدمة: ${w.service} (${w.units} وحدة)\nالفني: ${TECHS[w.tech]||w.tech}\nالتاريخ: ${fmtDate(w.date)}\n${'─'.repeat(25)}\nالإجمالي: ${w.total} ريال\nطريقة الدفع: ${w.payment}\n${'─'.repeat(25)}\nشكراً لثقتكم 🙏`);
+  window.open(`https://wa.me/966${(w.phone||'').replace(/^0/,'')}?text=${msg}`,'_blank');
+}
+
+// ===== TOAST =====
+function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2800); }
+
+// ===== DEMO DATA =====
+if(workOrders.length===0){
+  workOrders=[
+    {id:'WO-01001',status:'invoiced',client:'Dr. Hasan Al Shahri',phone:'0555519923',address:'Al Bsatin',service:'تنظيف مكيف',actype:'سبليت',units:3,tech:'Abrar',date:today(),time:'09:00',problem:'تنظيف دوري',parts:'',price:300,partsCost:0,discount:0,total:300,payment:'كاش',rating:5,createdAt:new Date().toISOString()},
+    {id:'WO-01002',status:'inprogress',client:'Farash Al Shareef',phone:'0543322162',address:'Obur North',service:'صيانة دورية',actype:'سبليت',units:1,tech:'Shoib',date:today(),time:'11:30',problem:'صوت غير طبيعي',parts:'كباستر 35 ميكروفاراد',price:150,partsCost:80,discount:0,total:230,payment:'تحويل',rating:0,createdAt:new Date().toISOString()},
+    {id:'WO-01003',status:'open',client:'أم سعود السلامة',phone:'0504332700',address:'Al Salamah',service:'تعبئة غاز',actype:'سبليت',units:2,tech:'Suhail',date:today(),time:'14:00',problem:'المكيف لا يبرد',parts:'فريون R22',price:200,partsCost:120,discount:20,total:300,payment:'كاش',rating:0,createdAt:new Date().toISOString()},
+    {id:'WO-01004',status:'done',client:'نوره زبونة',phone:'0596615884',address:'Al Rehab',service:'تنظيف مكيف',actype:'شباك',units:1,tech:'Abrar',date:today(),time:'10:00',problem:'تنظيف عادي',parts:'',price:110,partsCost:0,discount:0,total:110,payment:'كاش',rating:4,createdAt:new Date().toISOString()},
+  ];
+  saveData();
+}
+
+updateStats();
+renderWOs();
+</script>
+</body>
+</html>

@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مؤسسة أطواد - إدارة العملاء</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap');
+
+  :root {
+    --deep:    #0C3B5E;
+    --steel:   #1E5F8A;
+    --sky:     #0EA5E9;
+    --ice:     #E8F4FD;
+    --frost:   #F0F9FF;
+    --slate:   #334155;
+    --mist:    #94A3B8;
+    --white:   #FFFFFF;
+    --success: #10B981;
+    --warning: #F59E0B;
+    --danger:  #EF4444;
+    --new-cl:  #8B5CF6;
+    --corp-cl: #0EA5E9;
+    --reg-cl:  #10B981;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family:'Tajawal',sans-serif;
+    background:#F1F5F9;
+    min-height:100vh;
+    color:var(--slate);
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    position:fixed; right:0; top:0; bottom:0;
+    width:230px;
+    background:linear-gradient(180deg,var(--deep) 0%,var(--steel) 100%);
+    z-index:200;
+    display:flex; flex-direction:column;
+    box-shadow:4px 0 24px rgba(12,59,94,0.18);
+  }
+  .sidebar-logo {
+    padding:24px 20px 20px;
+    border-bottom:1px solid rgba(255,255,255,0.1);
+    display:flex; align-items:center; gap:12px;
+  }
+  .sidebar-logo .icon {
+    width:44px;height:44px;
+    background:linear-gradient(135deg,var(--sky),#38BDF8);
+    border-radius:12px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:22px;
+  }
+  .sidebar-logo h1 { color:#fff;font-size:17px;font-weight:800; }
+  .sidebar-logo p  { color:rgba(255,255,255,0.55);font-size:11px; }
+
+  .nav-section { padding:16px 12px 8px; }
+  .nav-label   { color:rgba(255,255,255,0.35);font-size:10px;font-weight:700;padding:0 8px 6px;letter-spacing:1px; }
+  .nav-item {
+    display:flex;align-items:center;gap:10px;
+    padding:11px 12px;
+    border-radius:10px;
+    color:rgba(255,255,255,0.7);
+    font-size:14px;font-weight:500;
+    cursor:pointer;
+    transition:all 0.2s;
+    margin-bottom:2px;
+  }
+  .nav-item:hover  { background:rgba(255,255,255,0.08);color:#fff; }
+  .nav-item.active { background:rgba(14,165,233,0.22);color:var(--sky);font-weight:700; }
+  .nav-item .nav-icon { font-size:17px;width:22px;text-align:center; }
+  .nav-badge {
+    margin-right:auto;
+    background:var(--sky);color:#fff;
+    font-size:10px;font-weight:700;
+    padding:2px 7px;border-radius:20px;
+  }
+
+  /* MAIN */
+  .main { margin-right:230px; padding:0; }
+
+  /* TOPBAR */
+  .topbar {
+    background:#fff;
+    padding:16px 28px;
+    display:flex;align-items:center;justify-content:space-between;
+    border-bottom:1.5px solid #E2E8F0;
+    position:sticky;top:0;z-index:100;
+    box-shadow:0 2px 8px rgba(0,0,0,0.04);
+  }
+  .topbar-title { font-size:20px;font-weight:800;color:var(--deep); }
+  .topbar-sub   { font-size:13px;color:var(--mist);margin-top:2px; }
+  .topbar-actions { display:flex;gap:10px;align-items:center; }
+  .btn-add {
+    background:linear-gradient(90deg,var(--deep),var(--sky));
+    color:#fff;border:none;border-radius:10px;
+    padding:10px 20px;font-family:'Tajawal',sans-serif;
+    font-size:14px;font-weight:700;cursor:pointer;
+    display:flex;align-items:center;gap:6px;
+    box-shadow:0 4px 12px rgba(14,165,233,0.3);
+    transition:all 0.2s;
+  }
+  .btn-add:hover { transform:translateY(-1px);box-shadow:0 6px 16px rgba(14,165,233,0.4); }
+
+  /* STATS ROW */
+  .stats-row {
+    display:grid;grid-template-columns:repeat(4,1fr);gap:16px;
+    padding:20px 28px;
+  }
+  .stat-card {
+    background:#fff;border-radius:16px;padding:18px 20px;
+    box-shadow:0 2px 12px rgba(0,0,0,0.05);
+    border-right:4px solid transparent;
+    transition:all 0.2s;
+  }
+  .stat-card:hover { transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.09); }
+  .stat-card.total  { border-color:var(--sky); }
+  .stat-card.new-c  { border-color:var(--new-cl); }
+  .stat-card.reg    { border-color:var(--reg-cl); }
+  .stat-card.corp   { border-color:var(--corp-cl); }
+  .stat-icon { font-size:26px;margin-bottom:8px; }
+  .stat-num  { font-size:28px;font-weight:800;color:var(--deep); }
+  .stat-lbl  { font-size:12px;color:var(--mist);font-weight:500;margin-top:2px; }
+
+  /* CONTENT */
+  .content { padding:0 28px 40px; }
+
+  /* SEARCH & FILTER */
+  .toolbar {
+    display:flex;align-items:center;gap:12px;
+    margin-bottom:18px;
+    flex-wrap:wrap;
+  }
+  .search-wrap {
+    flex:1;min-width:200px;
+    position:relative;
+  }
+  .search-wrap input {
+    width:100%;padding:10px 16px 10px 40px;
+    border:1.5px solid #E2E8F0;border-radius:10px;
+    font-family:'Tajawal',sans-serif;font-size:14px;
+    background:var(--frost);outline:none;
+    transition:all 0.2s;
+  }
+  .search-wrap input:focus { border-color:var(--sky);background:#fff; }
+  .search-icon {
+    position:absolute;left:12px;top:50%;transform:translateY(-50%);
+    color:var(--mist);font-size:16px;
+  }
+  .filter-btn {
+    padding:10px 16px;
+    border:1.5px solid #E2E8F0;border-radius:10px;
+    background:#fff;font-family:'Tajawal',sans-serif;
+    font-size:13px;font-weight:600;color:var(--slate);
+    cursor:pointer;transition:all 0.2s;
+    display:flex;align-items:center;gap:6px;
+  }
+  .filter-btn:hover,.filter-btn.active { border-color:var(--sky);color:var(--sky);background:var(--ice); }
+  .filter-btn.new-f.active  { border-color:var(--new-cl);color:var(--new-cl);background:#F5F3FF; }
+  .filter-btn.reg-f.active  { border-color:var(--reg-cl);color:var(--reg-cl);background:#ECFDF5; }
+  .filter-btn.corp-f.active { border-color:var(--corp-cl);color:var(--corp-cl);background:var(--ice); }
+
+  /* TABLE */
+  .table-card {
+    background:#fff;border-radius:16px;
+    box-shadow:0 2px 12px rgba(0,0,0,0.05);
+    overflow:hidden;
+  }
+  .table-wrap { overflow-x:auto; }
+  table { width:100%;border-collapse:collapse; }
+  thead tr { background:linear-gradient(90deg,var(--frost),var(--ice)); }
+  thead th {
+    padding:14px 16px;text-align:right;
+    font-size:12px;font-weight:700;color:var(--steel);
+    border-bottom:2px solid var(--ice);
+    white-space:nowrap;
+  }
+  tbody tr {
+    border-bottom:1px solid #F1F5F9;
+    transition:background 0.15s;
+    cursor:pointer;
+  }
+  tbody tr:hover { background:var(--frost); }
+  tbody tr:last-child { border-bottom:none; }
+  td { padding:13px 16px;font-size:14px;color:var(--slate);vertical-align:middle; }
+
+  .client-name-cell { display:flex;align-items:center;gap:10px; }
+  .avatar {
+    width:38px;height:38px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:16px;font-weight:700;color:#fff;flex-shrink:0;
+  }
+  .client-name { font-weight:700;color:var(--deep); }
+  .client-id   { font-size:11px;color:var(--mist); }
+
+  .badge {
+    display:inline-flex;align-items:center;gap:4px;
+    padding:4px 10px;border-radius:20px;
+    font-size:12px;font-weight:700;
+  }
+  .badge-new  { background:#EDE9FE;color:var(--new-cl); }
+  .badge-reg  { background:#D1FAE5;color:var(--reg-cl); }
+  .badge-corp { background:#E0F2FE;color:var(--corp-cl); }
+
+  .action-btn {
+    padding:6px 12px;border-radius:8px;border:none;
+    font-family:'Tajawal',sans-serif;font-size:12px;font-weight:600;
+    cursor:pointer;transition:all 0.15s;
+  }
+  .btn-view { background:var(--ice);color:var(--sky); }
+  .btn-view:hover { background:var(--sky);color:#fff; }
+  .btn-book { background:#D1FAE5;color:var(--reg-cl); }
+  .btn-book:hover { background:var(--reg-cl);color:#fff; }
+  .btn-del  { background:#FEE2E2;color:var(--danger); }
+  .btn-del:hover { background:var(--danger);color:#fff; }
+
+  .phone-link { color:var(--sky);text-decoration:none;font-weight:600; }
+  .phone-link:hover { text-decoration:underline; }
+
+  .visits-count { font-weight:700;color:var(--deep); }
+  .last-visit   { font-size:12px;color:var(--mist); }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align:center;padding:60px 20px;
+    color:var(--mist);
+  }
+  .empty-state .empty-icon { font-size:48px;margin-bottom:12px; }
+  .empty-state p { font-size:15px; }
+
+  /* MODAL OVERLAY */
+  .modal-overlay {
+    position:fixed;inset:0;
+    background:rgba(12,59,94,0.45);
+    z-index:500;
+    display:none;align-items:center;justify-content:center;
+    backdrop-filter:blur(2px);
+  }
+  .modal-overlay.open { display:flex; }
+  .modal {
+    background:#fff;border-radius:20px;
+    width:100%;max-width:540px;
+    max-height:90vh;overflow-y:auto;
+    box-shadow:0 20px 60px rgba(12,59,94,0.25);
+    animation:slideUp 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes slideUp {
+    from{transform:translateY(40px);opacity:0}
+    to{transform:translateY(0);opacity:1}
+  }
+  .modal-header {
+    padding:22px 26px 18px;
+    background:linear-gradient(90deg,var(--frost),var(--ice));
+    border-bottom:1.5px solid rgba(14,165,233,0.12);
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .modal-header h3 { font-size:18px;font-weight:800;color:var(--deep); }
+  .modal-close {
+    width:32px;height:32px;border-radius:50%;
+    border:none;background:#E2E8F0;color:var(--slate);
+    font-size:18px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    transition:all 0.2s;
+  }
+  .modal-close:hover { background:var(--danger);color:#fff; }
+  .modal-body { padding:24px 26px; }
+
+  .form-row { display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px; }
+  .form-group { margin-bottom:16px; }
+  .form-group label {
+    display:block;font-size:13px;font-weight:600;
+    color:var(--slate);margin-bottom:6px;
+  }
+  .req { color:var(--danger); }
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    width:100%;padding:10px 14px;
+    border:1.5px solid #E2E8F0;border-radius:10px;
+    font-family:'Tajawal',sans-serif;font-size:14px;
+    color:var(--slate);background:var(--frost);
+    outline:none;transition:all 0.2s;direction:rtl;
+  }
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus {
+    border-color:var(--sky);background:#fff;
+    box-shadow:0 0 0 3px rgba(14,165,233,0.1);
+  }
+  .type-row { display:flex;gap:8px; }
+  .type-chip {
+    flex:1;padding:10px 6px;text-align:center;
+    border:2px solid #E2E8F0;border-radius:10px;
+    font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;
+    cursor:pointer;transition:all 0.2s;background:var(--frost);
+    color:var(--slate);
+  }
+  .type-chip.sel-new  { border-color:var(--new-cl);background:#EDE9FE;color:var(--new-cl); }
+  .type-chip.sel-reg  { border-color:var(--reg-cl);background:#D1FAE5;color:var(--reg-cl); }
+  .type-chip.sel-corp { border-color:var(--corp-cl);background:#E0F2FE;color:var(--corp-cl); }
+
+  .modal-footer {
+    padding:16px 26px;border-top:1px solid #F1F5F9;
+    display:flex;gap:10px;justify-content:flex-end;
+  }
+  .btn-cancel {
+    padding:10px 20px;border:1.5px solid #E2E8F0;border-radius:10px;
+    background:#fff;font-family:'Tajawal',sans-serif;font-size:14px;
+    font-weight:600;color:var(--slate);cursor:pointer;transition:all 0.2s;
+  }
+  .btn-cancel:hover { border-color:var(--danger);color:var(--danger); }
+  .btn-save {
+    padding:10px 28px;border:none;border-radius:10px;
+    background:linear-gradient(90deg,var(--deep),var(--sky));
+    color:#fff;font-family:'Tajawal',sans-serif;font-size:14px;
+    font-weight:700;cursor:pointer;
+    box-shadow:0 4px 12px rgba(14,165,233,0.3);transition:all 0.2s;
+  }
+  .btn-save:hover { transform:translateY(-1px);box-shadow:0 6px 16px rgba(14,165,233,0.4); }
+
+  /* DETAIL MODAL */
+  .detail-section { margin-bottom:20px; }
+  .detail-section h4 {
+    font-size:13px;font-weight:700;color:var(--mist);
+    margin-bottom:10px;padding-bottom:6px;
+    border-bottom:1px dashed #E2E8F0;
+  }
+  .detail-row {
+    display:flex;justify-content:space-between;align-items:center;
+    padding:7px 0;font-size:14px;
+  }
+  .detail-row .d-label { color:var(--mist); }
+  .detail-row .d-val   { font-weight:700;color:var(--deep); }
+  .history-item {
+    background:var(--frost);border-radius:10px;
+    padding:10px 14px;margin-bottom:8px;
+    display:flex;justify-content:space-between;align-items:center;
+    font-size:13px;
+  }
+  .history-item .h-service { font-weight:600;color:var(--deep); }
+  .history-item .h-date    { color:var(--mist); }
+  .history-item .h-price   { color:var(--sky);font-weight:700; }
+
+  /* TOAST */
+  .toast {
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+    background:var(--deep);color:#fff;
+    padding:12px 24px;border-radius:12px;
+    font-size:14px;font-weight:600;
+    box-shadow:0 8px 24px rgba(0,0,0,0.2);
+    transition:transform 0.3s;z-index:999;
+    display:flex;align-items:center;gap:8px;
+  }
+  .toast.show { transform:translateX(-50%) translateY(0); }
+
+  /* RESPONSIVE */
+  @media(max-width:900px){
+    .sidebar{display:none;}
+    .main{margin-right:0;}
+    .stats-row{grid-template-columns:1fr 1fr;}
+    .content,.stats-row,.topbar{padding-right:16px;padding-left:16px;}
+  }
+  @media(max-width:540px){
+    .stats-row{grid-template-columns:1fr 1fr;}
+    .form-row{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="icon">❄️</div>
+    <div>
+      <h1>أطواد</h1>
+      <p>لصيانة المكيفات</p>
+    </div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">القائمة الرئيسية</div>
+    <div class="nav-item active" onclick="location.href='atwad-customers.html'"><span class="nav-icon">👥</span> العملاء <span class="nav-badge" id="navBadge">0</span></div>
+    <div class="nav-item" onclick="location.href='atwad-appointments.html'"><span class="nav-icon">📅</span> المواعيد</div>
+    <div class="nav-item" onclick="location.href='atwad-workorders.html'"><span class="nav-icon">🔧</span> أوامر العمل</div>
+    <div class="nav-item" onclick="location.href='atwad-finance.html'"><span class="nav-icon">💰</span> الإدارة المالية</div>
+    <div class="nav-item" onclick="alert('التقارير — قريباً ✨')"><span class="nav-icon">📊</span> التقارير</div>
+  </div>
+  <div class="nav-section" style="margin-top:auto;border-top:1px solid rgba(255,255,255,0.08);padding-top:12px;">
+    <div class="nav-item" onclick="alert('الإعدادات — قريباً ✨')"><span class="nav-icon">⚙️</span> الإعدادات</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">👥 إدارة العملاء</div>
+      <div class="topbar-sub">تسجيل وتصنيف وإدارة قاعدة البيانات</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn-add" onclick="openAddModal()">＋ إضافة عميل</button>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-row">
+    <div class="stat-card total">
+      <div class="stat-icon">👥</div>
+      <div class="stat-num" id="statTotal">0</div>
+      <div class="stat-lbl">إجمالي العملاء</div>
+    </div>
+    <div class="stat-card new-c">
+      <div class="stat-icon">🆕</div>
+      <div class="stat-num" id="statNew">0</div>
+      <div class="stat-lbl">عملاء جدد</div>
+    </div>
+    <div class="stat-card reg">
+      <div class="stat-icon">⭐</div>
+      <div class="stat-num" id="statReg">0</div>
+      <div class="stat-lbl">عملاء دائمون</div>
+    </div>
+    <div class="stat-card corp">
+      <div class="stat-icon">🏢</div>
+      <div class="stat-num" id="statCorp">0</div>
+      <div class="stat-lbl">شركات</div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="ابحث بالاسم أو الجوال أو المدينة..." oninput="renderTable()">
+      </div>
+      <button class="filter-btn active" data-filter="all" onclick="setFilter(this,'all')">الكل</button>
+      <button class="filter-btn new-f" data-filter="جديد" onclick="setFilter(this,'جديد')">🆕 جدد</button>
+      <button class="filter-btn reg-f" data-filter="دائم" onclick="setFilter(this,'دائم')">⭐ دائمون</button>
+      <button class="filter-btn corp-f" data-filter="شركات" onclick="setFilter(this,'شركات')">🏢 شركات</button>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-card">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>العميل</th>
+              <th>الجوال</th>
+              <th>المدينة</th>
+              <th>التصنيف</th>
+              <th>الزيارات</th>
+              <th>آخر خدمة</th>
+              <th>الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+        <div class="empty-state" id="emptyState" style="display:none;">
+          <div class="empty-icon">👤</div>
+          <p>لا يوجد عملاء مسجلون بعد<br><small>اضغط "إضافة عميل" لبدء قاعدة البيانات</small></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD / EDIT MODAL -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">➕ إضافة عميل جديد</h3>
+      <button class="modal-close" onclick="closeModal('addModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>الاسم الكريم <span class="req">*</span></label>
+          <input type="text" id="f_name" placeholder="اسم العميل">
+        </div>
+        <div class="form-group">
+          <label>رقم الجوال <span class="req">*</span></label>
+          <input type="tel" id="f_phone" placeholder="05xxxxxxxx" maxlength="10">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>المدينة <span class="req">*</span></label>
+          <select id="f_city">
+            <option value="">-- اختر --</option>
+            <option>الرياض</option><option>جدة</option>
+            <option>مكة المكرمة</option><option>المدينة المنورة</option>
+            <option>الدمام</option><option>الخبر</option>
+            <option>الطائف</option><option>تبوك</option><option>أخرى</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>نوع العميل <span class="req">*</span></label>
+          <div class="type-row">
+            <div class="type-chip" data-type="جديد" onclick="selectType(this)">🆕 جديد</div>
+            <div class="type-chip" data-type="دائم" onclick="selectType(this)">⭐ دائم</div>
+            <div class="type-chip" data-type="شركات" onclick="selectType(this)">🏢 شركة</div>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>العنوان التفصيلي</label>
+        <input type="text" id="f_address" placeholder="الحي، الشارع...">
+      </div>
+      <div class="form-group">
+        <label>اسم الشركة / الجهة</label>
+        <input type="text" id="f_company" placeholder="اختياري للشركات">
+      </div>
+      <div class="form-group">
+        <label>ملاحظات</label>
+        <textarea id="f_notes" rows="2" placeholder="أي معلومات إضافية..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('addModal')">إلغاء</button>
+      <button class="btn-save" onclick="saveClient()">💾 حفظ العميل</button>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="detailTitle">📋 ملف العميل</h3>
+      <button class="modal-close" onclick="closeModal('detailModal')">×</button>
+    </div>
+    <div class="modal-body" id="detailBody"></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('detailModal')">إغلاق</button>
+      <button class="btn-save" id="detailEditBtn">✏️ تعديل</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ========== DATA ==========
+let clients = JSON.parse(localStorage.getItem('atwad_clients') || '[]');
+let editingId = null;
+let currentFilter = 'all';
+let selectedType = '';
+
+const avatarColors = ['#0EA5E9','#8B5CF6','#10B981','#F59E0B','#EF4444','#EC4899','#0C3B5E'];
+
+function saveData() {
+  localStorage.setItem('atwad_clients', JSON.stringify(clients));
+}
+
+function genId() {
+  return 'C' + Date.now().toString().slice(-6);
+}
+
+function getAvatarColor(name) {
+  let sum = 0;
+  for (let c of name) sum += c.charCodeAt(0);
+  return avatarColors[sum % avatarColors.length];
+}
+
+function getInitials(name) {
+  const parts = name.trim().split(' ');
+  return parts.length >= 2 ? parts[0][0] + parts[1][0] : parts[0].slice(0,2);
+}
+
+// ========== RENDER ==========
+function updateStats() {
+  document.getElementById('statTotal').textContent = clients.length;
+  document.getElementById('statNew').textContent  = clients.filter(c=>c.type==='جديد').length;
+  document.getElementById('statReg').textContent  = clients.filter(c=>c.type==='دائم').length;
+  document.getElementById('statCorp').textContent = clients.filter(c=>c.type==='شركات').length;
+  document.getElementById('navBadge').textContent = clients.length;
+}
+
+function badgeHTML(type) {
+  const map = { جديد:'badge-new', دائم:'badge-reg', شركات:'badge-corp' };
+  const icon = { جديد:'🆕', دائم:'⭐', شركات:'🏢' };
+  return `<span class="badge ${map[type]||'badge-new'}">${icon[type]||''} ${type}</span>`;
+}
+
+function renderTable() {
+  const search = document.getElementById('searchInput').value.trim().toLowerCase();
+  let list = clients;
+  if (currentFilter !== 'all') list = list.filter(c => c.type === currentFilter);
+  if (search) list = list.filter(c =>
+    c.name.toLowerCase().includes(search) ||
+    c.phone.includes(search) ||
+    (c.city||'').includes(search)
+  );
+
+  const tbody = document.getElementById('tableBody');
+  const empty = document.getElementById('emptyState');
+
+  if (list.length === 0) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  tbody.innerHTML = list.map(c => `
+    <tr onclick="openDetail('${c.id}')">
+      <td>
+        <div class="client-name-cell">
+          <div class="avatar" style="background:${getAvatarColor(c.name)}">${getInitials(c.name)}</div>
+          <div>
+            <div class="client-name">${c.name}</div>
+            <div class="client-id">${c.id}</div>
+          </div>
+        </div>
+      </td>
+      <td><a class="phone-link" href="tel:${c.phone}" onclick="event.stopPropagation()">${c.phone}</a></td>
+      <td>${c.city||'—'}</td>
+      <td>${badgeHTML(c.type)}</td>
+      <td><span class="visits-count">${c.visits||0}</span></td>
+      <td><span class="last-visit">${c.lastVisit||'لم تُحدد'}</span></td>
+      <td onclick="event.stopPropagation()">
+        <div style="display:flex;gap:6px;">
+          <button class="action-btn btn-view" onclick="openDetail('${c.id}')">عرض</button>
+          <button class="action-btn btn-book" onclick="quickBook('${c.id}')">📅 حجز</button>
+          <button class="action-btn btn-del"  onclick="deleteClient('${c.id}')">🗑️</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+  updateStats();
+}
+
+// ========== FILTER ==========
+function setFilter(btn, filter) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentFilter = filter;
+  renderTable();
+}
+
+// ========== ADD / EDIT MODAL ==========
+function openAddModal(id) {
+  editingId = id || null;
+  selectedType = '';
+  document.querySelectorAll('.type-chip').forEach(c => c.className = 'type-chip');
+  document.getElementById('modalTitle').textContent = id ? '✏️ تعديل بيانات العميل' : '➕ إضافة عميل جديد';
+
+  if (id) {
+    const c = clients.find(x => x.id === id);
+    document.getElementById('f_name').value    = c.name;
+    document.getElementById('f_phone').value   = c.phone;
+    document.getElementById('f_city').value    = c.city||'';
+    document.getElementById('f_address').value = c.address||'';
+    document.getElementById('f_company').value = c.company||'';
+    document.getElementById('f_notes').value   = c.notes||'';
+    selectedType = c.type;
+    document.querySelectorAll('.type-chip').forEach(chip => {
+      if (chip.dataset.type === c.type) selectType(chip);
+    });
+  } else {
+    ['f_name','f_phone','f_address','f_company','f_notes'].forEach(id => document.getElementById(id).value='');
+    document.getElementById('f_city').value='';
+  }
+
+  document.getElementById('addModal').classList.add('open');
+}
+
+function selectType(chip) {
+  document.querySelectorAll('.type-chip').forEach(c => c.className='type-chip');
+  selectedType = chip.dataset.type;
+  const clsMap = { جديد:'sel-new', دائم:'sel-reg', شركات:'sel-corp' };
+  chip.classList.add(clsMap[selectedType]||'sel-new');
+}
+
+function saveClient() {
+  const name  = document.getElementById('f_name').value.trim();
+  const phone = document.getElementById('f_phone').value.trim();
+  const city  = document.getElementById('f_city').value;
+
+  if (!name)         return showToast('❌ أدخل اسم العميل');
+  if (!/^05\d{8}$/.test(phone)) return showToast('❌ رقم الجوال غير صحيح');
+  if (!city)         return showToast('❌ اختر المدينة');
+  if (!selectedType) return showToast('❌ اختر نوع العميل');
+
+  const data = {
+    name, phone, city,
+    type:    selectedType,
+    address: document.getElementById('f_address').value.trim(),
+    company: document.getElementById('f_company').value.trim(),
+    notes:   document.getElementById('f_notes').value.trim(),
+  };
+
+  if (editingId) {
+    const idx = clients.findIndex(c => c.id === editingId);
+    clients[idx] = { ...clients[idx], ...data };
+    showToast('✅ تم تحديث بيانات العميل');
+  } else {
+    clients.unshift({ id: genId(), ...data, visits:0, lastVisit:'', createdAt: new Date().toLocaleDateString('ar-SA') });
+    showToast('✅ تم إضافة العميل بنجاح');
+  }
+
+  saveData();
+  closeModal('addModal');
+  renderTable();
+}
+
+// ========== DETAIL MODAL ==========
+function openDetail(id) {
+  const c = clients.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('detailTitle').textContent = '📋 ' + c.name;
+  document.getElementById('detailEditBtn').onclick = () => { closeModal('detailModal'); openAddModal(id); };
+
+  const sampleHistory = [
+    { service:'تنظيف مكيف (2 وحدة)', date:'15/06/2025', price:'180 ريال' },
+    { service:'تعبئة غاز', date:'10/03/2025', price:'150 ريال' },
+  ];
+
+  document.getElementById('detailBody').innerHTML = `
+    <div style="display:flex;align-items:center;gap:16px;padding:16px;background:var(--frost);border-radius:14px;margin-bottom:20px;">
+      <div class="avatar" style="width:56px;height:56px;font-size:22px;background:${getAvatarColor(c.name)}">${getInitials(c.name)}</div>
+      <div>
+        <div style="font-size:20px;font-weight:800;color:var(--deep)">${c.name}</div>
+        <div style="margin-top:4px">${badgeHTML(c.type)}</div>
+        <div style="font-size:12px;color:var(--mist);margin-top:4px">رقم العميل: ${c.id} · تاريخ التسجيل: ${c.createdAt||'—'}</div>
+      </div>
+    </div>
+    <div class="detail-section">
+      <h4>معلومات التواصل</h4>
+      <div class="detail-row"><span class="d-label">📱 الجوال</span><span class="d-val"><a class="phone-link" href="tel:${c.phone}">${c.phone}</a></span></div>
+      <div class="detail-row"><span class="d-label">📍 المدينة</span><span class="d-val">${c.city||'—'}</span></div>
+      <div class="detail-row"><span class="d-label">🏠 العنوان</span><span class="d-val">${c.address||'—'}</span></div>
+      ${c.company ? `<div class="detail-row"><span class="d-label">🏢 الشركة</span><span class="d-val">${c.company}</span></div>` : ''}
+    </div>
+    <div class="detail-section">
+      <h4>إحصائيات الخدمة</h4>
+      <div class="detail-row"><span class="d-label">🔢 عدد الزيارات</span><span class="d-val">${c.visits||0} زيارة</span></div>
+      <div class="detail-row"><span class="d-label">📅 آخر زيارة</span><span class="d-val">${c.lastVisit||'لم تُسجَّل بعد'}</span></div>
+    </div>
+    ${c.notes ? `<div class="detail-section"><h4>ملاحظات</h4><div style="background:var(--frost);padding:12px;border-radius:10px;font-size:14px;color:var(--slate)">${c.notes}</div></div>` : ''}
+    <div class="detail-section">
+      <h4>سجل الخدمات (آخر الزيارات)</h4>
+      ${c.visits > 0 ? sampleHistory.map(h=>`
+        <div class="history-item">
+          <div>
+            <div class="h-service">${h.service}</div>
+            <div class="h-date">${h.date}</div>
+          </div>
+          <div class="h-price">${h.price}</div>
+        </div>`).join('') : '<div style="color:var(--mist);font-size:13px;text-align:center;padding:12px">لا توجد زيارات مسجلة بعد</div>'}
+    </div>
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <a href="https://wa.me/966${c.phone.slice(1)}" target="_blank" style="flex:1;text-align:center;padding:10px;background:#25D366;color:#fff;border-radius:10px;font-weight:700;text-decoration:none;font-size:14px;">📲 واتساب</a>
+      <a href="tel:${c.phone}" style="flex:1;text-align:center;padding:10px;background:var(--ice);color:var(--sky);border-radius:10px;font-weight:700;text-decoration:none;font-size:14px;">📞 اتصال</a>
+    </div>
+  `;
+  document.getElementById('detailModal').classList.add('open');
+}
+
+// ========== DELETE ==========
+function deleteClient(id) {
+  if (!confirm('هل أنت متأكد من حذف هذا العميل؟')) return;
+  clients = clients.filter(c => c.id !== id);
+  saveData();
+  renderTable();
+  showToast('🗑️ تم حذف العميل');
+}
+
+// ========== QUICK BOOK ==========
+function quickBook(id) {
+  const c = clients.find(x => x.id === id);
+  showToast(`📅 جاري فتح نموذج الحجز لـ ${c.name}`);
+  // يمكن ربطه بصفحة الحجز
+  setTimeout(()=> window.open('atwad-booking.html','_blank'), 800);
+}
+
+// ========== HELPERS ==========
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2800);
+}
+
+// إغلاق بالنقر خارج
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) overlay.classList.remove('open');
+  });
+});
+
+// ========== INIT ==========
+// بيانات تجريبية إذا كانت القاعدة فارغة
+if (clients.length === 0) {
+  clients = [
+    { id:'C100001', name:'محمد العتيبي',    phone:'0501234567', city:'الرياض',  type:'دائم',    address:'حي النرجس', company:'', notes:'يفضل الصباح', visits:5, lastVisit:'10/06/2025', createdAt:'01/01/2025' },
+    { id:'C100002', name:'سارة الشمري',     phone:'0551234567', city:'جدة',     type:'جديد',    address:'حي الزهراء', company:'', notes:'', visits:1, lastVisit:'20/06/2025', createdAt:'20/06/2025' },
+    { id:'C100003', name:'شركة الأفق للتطوير', phone:'0561234567', city:'الرياض', type:'شركات', address:'طريق الملك فهد', company:'الأفق للتطوير العقاري', notes:'مبنى إداري - 12 وحدة', visits:3, lastVisit:'01/06/2025', createdAt:'15/03/2025' },
+    { id:'C100004', name:'خالد الدوسري',    phone:'0571234567', city:'الدمام',  type:'دائم',    address:'حي الشاطئ', company:'', notes:'', visits:8, lastVisit:'05/06/2025', createdAt:'10/11/2024' },
+    { id:'C100005', name:'نورة القحطاني',   phone:'0581234567', city:'الرياض',  type:'جديد',    address:'حي الملقا', company:'', notes:'التواصل فقط واتساب', visits:0, lastVisit:'', createdAt:'25/06/2025' },
+  ];
+  saveData();
+}
+
+renderTable();
+updateStats();
+</script>
+</body>
+</html>

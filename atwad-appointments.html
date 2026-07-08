@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مؤسسة أطواد - إدارة المواعيد</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap');
+:root{
+  --deep:#0C3B5E; --steel:#1E5F8A; --sky:#0EA5E9; --ice:#E8F4FD; --frost:#F0F9FF;
+  --slate:#334155; --mist:#94A3B8; --white:#FFFFFF;
+  --success:#10B981; --warning:#F59E0B; --danger:#EF4444; --purple:#8B5CF6;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
+
+/* SIDEBAR */
+.sidebar{position:fixed;right:0;top:0;bottom:0;width:230px;background:linear-gradient(180deg,var(--deep),var(--steel));z-index:200;display:flex;flex-direction:column;box-shadow:4px 0 24px rgba(12,59,94,.18);}
+.sidebar-logo{padding:22px 18px 18px;border-bottom:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:12px;}
+.sidebar-logo .icon{width:42px;height:42px;background:linear-gradient(135deg,var(--sky),#38BDF8);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;}
+.sidebar-logo h1{color:#fff;font-size:16px;font-weight:800;}
+.sidebar-logo p{color:rgba(255,255,255,.5);font-size:11px;}
+.nav-section{padding:14px 10px 6px;}
+.nav-label{color:rgba(255,255,255,.3);font-size:10px;font-weight:700;padding:0 8px 5px;letter-spacing:1px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:rgba(255,255,255,.7);font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;margin-bottom:2px;}
+.nav-item:hover{background:rgba(255,255,255,.08);color:#fff;}
+.nav-item.active{background:rgba(14,165,233,.22);color:var(--sky);font-weight:700;}
+.nav-icon{font-size:16px;width:20px;text-align:center;}
+
+/* MAIN */
+.main{margin-right:230px;}
+.topbar{background:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1.5px solid #E2E8F0;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.04);}
+.topbar-title{font-size:18px;font-weight:800;color:var(--deep);}
+.topbar-sub{font-size:12px;color:var(--mist);margin-top:1px;}
+.topbar-actions{display:flex;gap:10px;}
+.btn-primary{background:linear-gradient(90deg,var(--deep),var(--sky));color:#fff;border:none;border-radius:10px;padding:9px 18px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(14,165,233,.3);transition:all .2s;display:flex;align-items:center;gap:6px;}
+.btn-primary:hover{transform:translateY(-1px);}
+
+/* VIEW TOGGLE */
+.view-toggle{display:flex;background:#F1F5F9;border-radius:10px;padding:3px;}
+.view-btn{padding:7px 14px;border-radius:8px;border:none;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:600;cursor:pointer;background:transparent;color:var(--mist);transition:all .2s;}
+.view-btn.active{background:#fff;color:var(--deep);box-shadow:0 2px 6px rgba(0,0,0,.08);}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:18px 22px;}
+.stat-card{background:#fff;border-radius:14px;padding:16px 18px;box-shadow:0 2px 10px rgba(0,0,0,.04);border-right:3px solid transparent;}
+.stat-card.today{border-color:var(--sky);}
+.stat-card.pending{border-color:var(--warning);}
+.stat-card.done{border-color:var(--success);}
+.stat-card.tech{border-color:var(--purple);}
+.stat-icon{font-size:22px;margin-bottom:6px;}
+.stat-num{font-size:26px;font-weight:800;color:var(--deep);}
+.stat-lbl{font-size:11px;color:var(--mist);margin-top:1px;}
+
+/* CALENDAR HEADER */
+.cal-header{display:flex;align-items:center;justify-content:space-between;padding:0 22px 14px;}
+.cal-nav{display:flex;align-items:center;gap:12px;}
+.cal-nav-btn{width:32px;height:32px;border-radius:8px;border:1.5px solid #E2E8F0;background:#fff;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.cal-nav-btn:hover{border-color:var(--sky);color:var(--sky);}
+.cal-month{font-size:17px;font-weight:800;color:var(--deep);}
+.cal-today-btn{padding:6px 14px;background:var(--ice);border:none;border-radius:8px;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;color:var(--sky);cursor:pointer;}
+
+/* WEEK VIEW */
+.week-grid{display:grid;grid-template-columns:60px repeat(7,1fr);border-top:1px solid #E2E8F0;overflow:hidden;}
+.week-day-header{padding:10px 6px;text-align:center;background:var(--frost);border-bottom:2px solid var(--ice);border-left:1px solid #E2E8F0;}
+.week-day-name{font-size:11px;font-weight:700;color:var(--mist);}
+.week-day-num{font-size:18px;font-weight:800;color:var(--deep);margin-top:2px;}
+.week-day-header.today .week-day-num{background:var(--sky);color:#fff;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:2px auto 0;}
+.time-col{background:var(--frost);border-left:1px solid #E2E8F0;}
+.time-slot{height:60px;display:flex;align-items:flex-start;justify-content:flex-end;padding:4px 8px 0;font-size:10px;color:var(--mist);border-bottom:1px solid #F1F5F9;}
+.day-col{border-left:1px solid #E2E8F0;position:relative;}
+.day-hour{height:60px;border-bottom:1px solid #F8FAFC;}
+.day-hour.half{border-bottom:1px dashed #F1F5F9;}
+.appt-block{position:absolute;right:3px;left:3px;border-radius:8px;padding:4px 8px;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;overflow:hidden;z-index:10;}
+.appt-block:hover{transform:scale(1.02);box-shadow:0 4px 12px rgba(0,0,0,.15);}
+.appt-block .appt-time{font-size:10px;opacity:.8;}
+.appt-block .appt-name{font-size:12px;font-weight:700;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.appt-block .appt-tech{font-size:10px;opacity:.75;margin-top:2px;}
+
+/* STATUS COLORS */
+.status-confirmed{background:linear-gradient(135deg,#DBEAFE,#EFF6FF);border-right:3px solid var(--sky);color:var(--deep);}
+.status-pending{background:linear-gradient(135deg,#FEF3C7,#FFFBEB);border-right:3px solid var(--warning);color:#92400E;}
+.status-done{background:linear-gradient(135deg,#D1FAE5,#ECFDF5);border-right:3px solid var(--success);color:#065F46;}
+.status-cancelled{background:linear-gradient(135deg,#FEE2E2,#FFF5F5);border-right:3px solid var(--danger);color:#991B1B;}
+
+/* DAY LIST VIEW */
+.list-view{padding:0 22px 30px;}
+.day-section{margin-bottom:20px;}
+.day-section-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.day-section-date{font-size:14px;font-weight:700;color:var(--deep);}
+.day-section-badge{background:var(--ice);color:var(--sky);font-size:11px;font-weight:700;padding:2px 10px;border-radius:20px;}
+.appt-card{background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:8px;box-shadow:0 2px 8px rgba(0,0,0,.04);display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .2s;border-right:4px solid transparent;}
+.appt-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.08);transform:translateY(-1px);}
+.appt-card.c-confirmed{border-color:var(--sky);}
+.appt-card.c-pending{border-color:var(--warning);}
+.appt-card.c-done{border-color:var(--success);}
+.appt-card.c-cancelled{border-color:var(--danger);}
+.appt-time-block{text-align:center;min-width:54px;}
+.appt-time-block .t-start{font-size:15px;font-weight:800;color:var(--deep);}
+.appt-time-block .t-dur{font-size:10px;color:var(--mist);}
+.appt-divider{width:1px;height:40px;background:#E2E8F0;}
+.appt-info{flex:1;}
+.appt-client{font-size:14px;font-weight:700;color:var(--deep);}
+.appt-service{font-size:12px;color:var(--mist);margin-top:2px;}
+.appt-address{font-size:12px;color:var(--sky);margin-top:2px;display:flex;align-items:center;gap:4px;}
+.tech-pill{padding:3px 10px;border-radius:20px;background:var(--frost);color:var(--steel);font-size:11px;font-weight:600;}
+.status-pill{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+.sp-confirmed{background:#DBEAFE;color:#1E40AF;}
+.sp-pending{background:#FEF3C7;color:#92400E;}
+.sp-done{background:#D1FAE5;color:#065F46;}
+.sp-cancelled{background:#FEE2E2;color:#991B1B;}
+.appt-actions{display:flex;gap:6px;}
+.act-btn{padding:5px 10px;border:none;border-radius:7px;font-family:'Tajawal',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;}
+.act-whatsapp{background:#25D366;color:#fff;}
+.act-edit{background:var(--ice);color:var(--sky);}
+.act-done{background:#D1FAE5;color:var(--success);}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(12,59,94,.45);z-index:500;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px);}
+.modal-overlay.open{display:flex;}
+.modal{background:#fff;border-radius:20px;width:100%;max-width:520px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(12,59,94,.25);animation:slideUp .3s cubic-bezier(.34,1.56,.64,1);}
+@keyframes slideUp{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-hdr{padding:20px 24px 16px;background:linear-gradient(90deg,var(--frost),var(--ice));border-bottom:1.5px solid rgba(14,165,233,.12);display:flex;align-items:center;justify-content:space-between;}
+.modal-hdr h3{font-size:17px;font-weight:800;color:var(--deep);}
+.modal-close{width:30px;height:30px;border-radius:50%;border:none;background:#E2E8F0;color:var(--slate);font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.modal-close:hover{background:var(--danger);color:#fff;}
+.modal-body{padding:22px 24px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+.form-group{margin-bottom:14px;}
+.form-group label{display:block;font-size:12px;font-weight:700;color:var(--slate);margin-bottom:5px;}
+.req{color:var(--danger);}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:9px 12px;border:1.5px solid #E2E8F0;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:14px;color:var(--slate);background:var(--frost);outline:none;transition:all .2s;direction:rtl;}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--sky);background:#fff;box-shadow:0 0 0 3px rgba(14,165,233,.1);}
+.modal-footer{padding:14px 24px;border-top:1px solid #F1F5F9;display:flex;gap:10px;justify-content:flex-end;}
+.btn-cancel{padding:9px 18px;border:1.5px solid #E2E8F0;border-radius:9px;background:#fff;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:600;color:var(--slate);cursor:pointer;}
+.btn-save{padding:9px 24px;border:none;border-radius:9px;background:linear-gradient(90deg,var(--deep),var(--sky));color:#fff;font-family:'Tajawal',sans-serif;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(14,165,233,.3);}
+
+/* TOAST */
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--deep);color:#fff;padding:10px 22px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.2);transition:transform .3s;z-index:999;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+/* TECH FILTER */
+.tech-filter{display:flex;gap:8px;padding:0 22px 14px;flex-wrap:wrap;}
+.tech-chip{padding:6px 14px;border-radius:20px;border:1.5px solid #E2E8F0;background:#fff;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:600;color:var(--mist);cursor:pointer;transition:all .2s;}
+.tech-chip:hover,.tech-chip.active{border-color:var(--sky);color:var(--sky);background:var(--ice);}
+
+@media(max-width:900px){.sidebar{display:none;}.main{margin-right:0;}.stats-row{grid-template-columns:1fr 1fr;}.week-grid{overflow-x:auto;}}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-logo"><div class="icon">❄️</div><div><h1>أطواد</h1><p>لصيانة المكيفات</p></div></div>
+  <div class="nav-section">
+    <div class="nav-label">القائمة</div>
+    <div class="nav-item" onclick="location.href='atwad-customers.html'"><span class="nav-icon">👥</span> العملاء</div>
+    <div class="nav-item active" onclick="location.href='atwad-appointments.html'"><span class="nav-icon">📅</span> المواعيد</div>
+    <div class="nav-item" onclick="location.href='atwad-workorders.html'"><span class="nav-icon">🔧</span> أوامر العمل</div>
+    <div class="nav-item" onclick="location.href='atwad-finance.html'"><span class="nav-icon">💰</span> الإدارة المالية</div>
+    <div class="nav-item" onclick="alert('التقارير — قريباً ✨')"><span class="nav-icon">📊</span> التقارير</div>
+  </div>
+  <div class="nav-section" style="margin-top:auto;border-top:1px solid rgba(255,255,255,.08);padding-top:10px;">
+    <div class="nav-item" onclick="alert('الإعدادات — قريباً ✨')"><span class="nav-icon">⚙️</span> الإعدادات</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div><div class="topbar-title">📅 إدارة المواعيد</div><div class="topbar-sub">جدولة الفنيين وتوزيع الزيارات</div></div>
+    <div class="topbar-actions">
+      <div class="view-toggle">
+        <button class="view-btn" id="vWeek" onclick="switchView('week')">📆 أسبوع</button>
+        <button class="view-btn active" id="vList" onclick="switchView('list')">📋 قائمة</button>
+      </div>
+      <button class="btn-primary" onclick="openNewAppt()">＋ موعد جديد</button>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-row">
+    <div class="stat-card today"><div class="stat-icon">📅</div><div class="stat-num" id="statToday">0</div><div class="stat-lbl">مواعيد اليوم</div></div>
+    <div class="stat-card pending"><div class="stat-icon">⏳</div><div class="stat-num" id="statPending">0</div><div class="stat-lbl">في الانتظار</div></div>
+    <div class="stat-card done"><div class="stat-icon">✅</div><div class="stat-num" id="statDone">0</div><div class="stat-lbl">مكتملة الأسبوع</div></div>
+    <div class="stat-card tech"><div class="stat-icon">👷</div><div class="stat-num" id="statTechs">3</div><div class="stat-lbl">فنيون نشطون</div></div>
+  </div>
+
+  <!-- CALENDAR NAV -->
+  <div class="cal-header">
+    <div class="cal-nav">
+      <button class="cal-nav-btn" onclick="changeWeek(-1)">›</button>
+      <span class="cal-month" id="calMonth"></span>
+      <button class="cal-nav-btn" onclick="changeWeek(1)">‹</button>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button class="cal-today-btn" onclick="goToday()">اليوم</button>
+    </div>
+  </div>
+
+  <!-- TECH FILTER -->
+  <div class="tech-filter">
+    <button class="tech-chip active" onclick="filterTech('all',this)">الكل</button>
+    <button class="tech-chip" onclick="filterTech('Abrar',this)">👷 أبرار</button>
+    <button class="tech-chip" onclick="filterTech('Shoib',this)">👷 شعيب</button>
+    <button class="tech-chip" onclick="filterTech('Suhail',this)">👷 سهيل</button>
+  </div>
+
+  <!-- WEEK VIEW -->
+  <div id="weekView" style="display:none;padding:0 22px 30px;">
+    <div class="week-grid" id="weekGrid"></div>
+  </div>
+
+  <!-- LIST VIEW -->
+  <div class="list-view" id="listView"></div>
+</div>
+
+<!-- NEW APPOINTMENT MODAL -->
+<div class="modal-overlay" id="apptModal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h3 id="modalTitle">➕ موعد جديد</h3>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>اسم العميل <span class="req">*</span></label>
+          <input type="text" id="f_client" placeholder="اسم العميل" list="clientsList">
+          <datalist id="clientsList"></datalist>
+        </div>
+        <div class="form-group">
+          <label>جوال العميل <span class="req">*</span></label>
+          <input type="tel" id="f_phone" placeholder="05xxxxxxxx">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>العنوان التفصيلي <span class="req">*</span></label>
+        <input type="text" id="f_address" placeholder="الحي، الشارع...">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>نوع الخدمة <span class="req">*</span></label>
+          <select id="f_service">
+            <option value="">-- اختر --</option>
+            <option>تنظيف مكيف</option>
+            <option>صيانة دورية</option>
+            <option>تعبئة غاز</option>
+            <option>كشف وإصلاح أعطال</option>
+            <option>تركيب مكيف جديد</option>
+            <option>باقة صيانة سنوية</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>عدد المكيفات</label>
+          <input type="number" id="f_units" value="1" min="1" max="30">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>تاريخ الزيارة <span class="req">*</span></label>
+          <input type="date" id="f_date">
+        </div>
+        <div class="form-group">
+          <label>وقت البداية <span class="req">*</span></label>
+          <input type="time" id="f_time" value="09:00">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>الفني المسؤول <span class="req">*</span></label>
+          <select id="f_tech">
+            <option value="">-- اختر الفني --</option>
+            <option value="Abrar">أبرار</option>
+            <option value="Shoib">شعيب</option>
+            <option value="Suhail">سهيل</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>الحالة</label>
+          <select id="f_status">
+            <option value="pending">⏳ في الانتظار</option>
+            <option value="confirmed">✅ مؤكد</option>
+            <option value="done">🎉 مكتمل</option>
+            <option value="cancelled">❌ ملغي</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>ملاحظات</label>
+        <textarea id="f_notes" rows="2" placeholder="أي تعليمات للفني..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">إلغاء</button>
+      <button class="btn-save" onclick="saveAppt()">💾 حفظ الموعد</button>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h3 id="detailTitle">📋 تفاصيل الموعد</h3>
+      <button class="modal-close" onclick="document.getElementById('detailModal').classList.remove('open')">×</button>
+    </div>
+    <div class="modal-body" id="detailBody"></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="document.getElementById('detailModal').classList.remove('open')">إغلاق</button>
+      <button class="btn-save" id="detailEditBtn">✏️ تعديل</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== DATA =====
+let appointments = JSON.parse(localStorage.getItem('atwad_appointments') || '[]');
+let clients = [];
+try { clients = JSON.parse(localStorage.getItem('atwad_clients') || '[]'); } catch {}
+let currentWeekOffset = 0;
+let currentView = 'list';
+let techFilter = 'all';
+let editingId = null;
+
+const TECHS = { Abrar:'أبرار', Shoib:'شعيب', Suhail:'سهيل' };
+const STATUS_LABELS = { confirmed:'مؤكد', pending:'في الانتظار', done:'مكتمل', cancelled:'ملغي' };
+const STATUS_ICONS = { confirmed:'✅', pending:'⏳', done:'🎉', cancelled:'❌' };
+const TECH_COLORS = { Abrar:'#0EA5E9', Shoib:'#10B981', Suhail:'#8B5CF6' };
+
+function genId(){ return 'A' + Date.now().toString().slice(-6); }
+function saveData(){ localStorage.setItem('atwad_appointments', JSON.stringify(appointments)); }
+function today(){ return new Date().toISOString().split('T')[0]; }
+function formatDate(d){ try{ return new Date(d+'T00:00:00').toLocaleDateString('ar-SA',{weekday:'long',year:'numeric',month:'long',day:'numeric'}); } catch{ return d; } }
+function formatDateShort(d){ try{ return new Date(d+'T00:00:00').toLocaleDateString('ar-SA',{month:'short',day:'numeric'}); } catch{ return d; } }
+function getWeekDates(offset=0){
+  const d = new Date(); d.setDate(d.getDate() - d.getDay() + offset*7);
+  return Array.from({length:7},(_,i)=>{ const dd=new Date(d); dd.setDate(d.getDate()+i); return dd.toISOString().split('T')[0]; });
+}
+
+// Populate clients datalist
+function populateClients(){
+  const dl = document.getElementById('clientsList');
+  dl.innerHTML = clients.map(c=>`<option value="${c.name}" data-phone="${c.phone}" data-address="${c.address||''}">`).join('');
+  document.getElementById('f_client').addEventListener('input', function(){
+    const c = clients.find(x=>x.name===this.value);
+    if(c){ document.getElementById('f_phone').value=c.phone; document.getElementById('f_address').value=c.address||''; }
+  });
+}
+
+// ===== STATS =====
+function updateStats(){
+  const tod = today();
+  const todayAppts = appointments.filter(a=>a.date===tod);
+  const pending = appointments.filter(a=>a.status==='pending');
+  const weekDates = getWeekDates(0);
+  const done = appointments.filter(a=>weekDates.includes(a.date)&&a.status==='done');
+  document.getElementById('statToday').textContent = todayAppts.length;
+  document.getElementById('statPending').textContent = pending.length;
+  document.getElementById('statDone').textContent = done.length;
+}
+
+// ===== WEEK VIEW =====
+function renderWeek(){
+  const dates = getWeekDates(currentWeekOffset);
+  const tod = today();
+  const dayNames = ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+  const weekStart = new Date(dates[0]+'T00:00:00');
+  const weekEnd = new Date(dates[6]+'T00:00:00');
+  document.getElementById('calMonth').textContent =
+    weekStart.toLocaleDateString('ar-SA',{month:'long',year:'numeric'}) + ' — ' +
+    weekEnd.toLocaleDateString('ar-SA',{month:'long'});
+
+  const hours = Array.from({length:12},(_,i)=>i+7); // 7am-7pm
+  let html = `<div class="time-col"><div style="height:54px;border-bottom:2px solid var(--ice);"></div>`;
+  html += hours.map(h=>`<div class="time-slot">${h}:00</div>`).join('');
+  html += '</div>';
+
+  dates.forEach((date,di)=>{
+    const isToday = date===tod;
+    const d = new Date(date+'T00:00:00');
+    html += `<div>
+      <div class="week-day-header${isToday?' today':''}">
+        <div class="week-day-name">${dayNames[d.getDay()]}</div>
+        <div class="week-day-num">${d.getDate()}</div>
+      </div>
+      <div class="day-col">`;
+    hours.forEach(h=>{ html += `<div class="day-hour"></div>`; });
+    // Place appointments
+    const dayAppts = appointments.filter(a=>a.date===date&&(techFilter==='all'||a.tech===techFilter));
+    dayAppts.forEach(a=>{
+      const [hh,mm] = (a.time||'09:00').split(':').map(Number);
+      const top = (hh - 7) * 60 + mm;
+      const dur = (a.duration||60);
+      const tc = TECH_COLORS[a.tech]||'#0EA5E9';
+      html += `<div class="appt-block status-${a.status||'pending'}" style="top:${top}px;height:${dur-4}px;" onclick="openDetail('${a.id}')">
+        <div class="appt-time">${a.time}</div>
+        <div class="appt-name">${a.client}</div>
+        <div class="appt-tech" style="color:${tc}">▪ ${TECHS[a.tech]||a.tech}</div>
+      </div>`;
+    });
+    html += `</div></div>`;
+  });
+  document.getElementById('weekGrid').innerHTML = html;
+}
+
+// ===== LIST VIEW =====
+function renderList(){
+  // Group appointments by date, show upcoming + today
+  let appts = [...appointments];
+  if(techFilter!=='all') appts = appts.filter(a=>a.tech===techFilter);
+  appts.sort((a,b)=>((a.date||'')+(a.time||'')).localeCompare((b.date||'')+(b.time||'')));
+
+  const grouped = {};
+  appts.forEach(a=>{ if(!grouped[a.date]) grouped[a.date]=[]; grouped[a.date].push(a); });
+
+  const bm = { confirmed:'sp-confirmed', pending:'sp-pending', done:'sp-done', cancelled:'sp-cancelled' };
+  const cc = { confirmed:'c-confirmed', pending:'c-pending', done:'c-done', cancelled:'c-cancelled' };
+
+  if(Object.keys(grouped).length===0){
+    document.getElementById('listView').innerHTML = `
+      <div style="text-align:center;padding:60px 20px;color:var(--mist);">
+        <div style="font-size:48px;margin-bottom:12px;">📅</div>
+        <p style="font-size:15px;">لا توجد مواعيد مسجلة بعد<br><small>اضغط "موعد جديد" لإضافة أول موعد</small></p>
+      </div>`;
+    return;
+  }
+
+  let html = '';
+  Object.keys(grouped).sort().forEach(date=>{
+    const list = grouped[date];
+    html += `<div class="day-section">
+      <div class="day-section-header">
+        <span class="day-section-date">${formatDate(date)}</span>
+        <span class="day-section-badge">${list.length} موعد</span>
+        ${date===today()?'<span style="background:var(--sky);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;">اليوم</span>':''}
+      </div>`;
+    list.forEach(a=>{
+      const tc = TECH_COLORS[a.tech]||'#0EA5E9';
+      html += `<div class="appt-card ${cc[a.status||'pending']}" onclick="openDetail('${a.id}')">
+        <div class="appt-time-block">
+          <div class="t-start">${a.time||'--:--'}</div>
+          <div class="t-dur">${a.duration||60} دق</div>
+        </div>
+        <div class="appt-divider"></div>
+        <div class="appt-info">
+          <div class="appt-client">${a.client}</div>
+          <div class="appt-service">🛠️ ${a.service||'—'} ${a.units>1?'('+a.units+' وحدات)':''}</div>
+          <div class="appt-address">📍 ${a.address||'—'}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+          <span class="status-pill ${bm[a.status||'pending']}">${STATUS_ICONS[a.status||'pending']} ${STATUS_LABELS[a.status||'pending']}</span>
+          <span class="tech-pill" style="border-right:3px solid ${tc}">👷 ${TECHS[a.tech]||a.tech||'—'}</span>
+        </div>
+        <div class="appt-actions" onclick="event.stopPropagation()">
+          <button class="act-btn act-whatsapp" onclick="sendWhatsapp('${a.id}')">📲</button>
+          <button class="act-btn act-edit" onclick="editAppt('${a.id}')">✏️</button>
+          ${a.status!=='done'?`<button class="act-btn act-done" onclick="markDone('${a.id}')">✓</button>`:''}
+        </div>
+      </div>`;
+    });
+    html += '</div>';
+  });
+  document.getElementById('listView').innerHTML = html;
+}
+
+// ===== SWITCH VIEW =====
+function switchView(v){
+  currentView = v;
+  document.getElementById('vWeek').classList.toggle('active', v==='week');
+  document.getElementById('vList').classList.toggle('active', v==='list');
+  document.getElementById('weekView').style.display = v==='week'?'block':'none';
+  document.getElementById('listView').style.display = v==='list'?'block':'none';
+  if(v==='week') renderWeek(); else renderList();
+}
+
+function changeWeek(dir){ currentWeekOffset+=dir; renderWeek(); }
+function goToday(){ currentWeekOffset=0; renderWeek(); }
+function filterTech(t,btn){
+  techFilter=t;
+  document.querySelectorAll('.tech-chip').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  renderWeek(); renderList();
+}
+
+// ===== MODAL =====
+function openNewAppt(){
+  editingId=null;
+  document.getElementById('modalTitle').textContent='➕ موعد جديد';
+  ['f_client','f_phone','f_address','f_notes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f_service').value='';
+  document.getElementById('f_tech').value='';
+  document.getElementById('f_status').value='pending';
+  document.getElementById('f_units').value='1';
+  document.getElementById('f_date').value=today();
+  document.getElementById('f_time').value='09:00';
+  document.getElementById('apptModal').classList.add('open');
+  populateClients();
+}
+
+function editAppt(id){
+  const a = appointments.find(x=>x.id===id);
+  if(!a) return;
+  editingId=id;
+  document.getElementById('modalTitle').textContent='✏️ تعديل الموعد';
+  document.getElementById('f_client').value=a.client||'';
+  document.getElementById('f_phone').value=a.phone||'';
+  document.getElementById('f_address').value=a.address||'';
+  document.getElementById('f_service').value=a.service||'';
+  document.getElementById('f_tech').value=a.tech||'';
+  document.getElementById('f_status').value=a.status||'pending';
+  document.getElementById('f_units').value=a.units||1;
+  document.getElementById('f_date').value=a.date||today();
+  document.getElementById('f_time').value=a.time||'09:00';
+  document.getElementById('f_notes').value=a.notes||'';
+  document.getElementById('apptModal').classList.add('open');
+  document.getElementById('detailModal').classList.remove('open');
+  populateClients();
+}
+
+function saveAppt(){
+  const client=document.getElementById('f_client').value.trim();
+  const phone=document.getElementById('f_phone').value.trim();
+  const address=document.getElementById('f_address').value.trim();
+  const service=document.getElementById('f_service').value;
+  const tech=document.getElementById('f_tech').value;
+  const date=document.getElementById('f_date').value;
+  const time=document.getElementById('f_time').value;
+  if(!client||!phone||!service||!tech||!date) return showToast('❌ أكمل الحقول المطلوبة');
+  const data={
+    client,phone,address,service,tech,
+    status:document.getElementById('f_status').value,
+    units:parseInt(document.getElementById('f_units').value)||1,
+    date,time,
+    notes:document.getElementById('f_notes').value.trim(),
+    duration:90
+  };
+  if(editingId){ const idx=appointments.findIndex(a=>a.id===editingId); appointments[idx]={...appointments[idx],...data}; showToast('✅ تم تحديث الموعد'); }
+  else{ appointments.push({id:genId(),...data,createdAt:new Date().toISOString()}); showToast('✅ تم إضافة الموعد'); }
+  saveData(); closeModal(); updateStats(); renderWeek(); renderList();
+}
+
+function closeModal(){ document.getElementById('apptModal').classList.remove('open'); editingId=null; }
+
+// ===== DETAIL =====
+function openDetail(id){
+  const a=appointments.find(x=>x.id===id);
+  if(!a) return;
+  const tc=TECH_COLORS[a.tech]||'#0EA5E9';
+  const bm={confirmed:'sp-confirmed',pending:'sp-pending',done:'sp-done',cancelled:'sp-cancelled'};
+  document.getElementById('detailTitle').textContent='📋 ' + a.client;
+  document.getElementById('detailEditBtn').onclick=()=>editAppt(id);
+  document.getElementById('detailBody').innerHTML=`
+    <div style="background:var(--frost);border-radius:12px;padding:16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-size:18px;font-weight:800;color:var(--deep)">${a.client}</div>
+        <div style="font-size:13px;color:var(--mist);margin-top:3px;">📱 <a href="tel:${a.phone}" style="color:var(--sky)">${a.phone}</a></div>
+      </div>
+      <span class="status-pill ${bm[a.status||'pending']}">${STATUS_ICONS[a.status||'pending']} ${STATUS_LABELS[a.status||'pending']}</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+      <div style="background:#fff;border:1.5px solid var(--ice);border-radius:10px;padding:12px;">
+        <div style="font-size:11px;color:var(--mist);margin-bottom:4px;">🛠️ الخدمة</div>
+        <div style="font-weight:700;color:var(--deep)">${a.service||'—'}</div>
+        <div style="font-size:12px;color:var(--mist)">${a.units||1} وحدة</div>
+      </div>
+      <div style="background:#fff;border:1.5px solid var(--ice);border-radius:10px;padding:12px;">
+        <div style="font-size:11px;color:var(--mist);margin-bottom:4px;">📅 الموعد</div>
+        <div style="font-weight:700;color:var(--deep)">${formatDateShort(a.date)}</div>
+        <div style="font-size:12px;color:var(--mist)">⏰ ${a.time||'—'}</div>
+      </div>
+      <div style="background:#fff;border:1.5px solid var(--ice);border-radius:10px;padding:12px;">
+        <div style="font-size:11px;color:var(--mist);margin-bottom:4px;">👷 الفني</div>
+        <div style="font-weight:700;color:${tc}">${TECHS[a.tech]||a.tech||'—'}</div>
+      </div>
+      <div style="background:#fff;border:1.5px solid var(--ice);border-radius:10px;padding:12px;">
+        <div style="font-size:11px;color:var(--mist);margin-bottom:4px;">📍 الموقع</div>
+        <div style="font-weight:700;color:var(--deep);font-size:12px">${a.address||'—'}</div>
+      </div>
+    </div>
+    ${a.notes?`<div style="background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:10px;padding:12px;margin-bottom:14px;font-size:13px;color:#92400E;">📝 ${a.notes}</div>`:''}
+    <div style="display:flex;gap:8px;">
+      <a href="https://wa.me/966${(a.phone||'').replace(/^0/,'')}?text=${encodeURIComponent('مرحباً '+a.client+'،\nتذكير بموعدكم مع مؤسسة أطواد\nالخدمة: '+a.service+'\nالتاريخ: '+formatDateShort(a.date)+'\nالوقت: '+a.time+'\nسيتواصل معكم الفني قبل الوصول بـ 30 دقيقة 🔧')}" target="_blank" style="flex:1;text-align:center;padding:10px;background:#25D366;color:#fff;border-radius:9px;font-weight:700;text-decoration:none;font-size:13px;">📲 إرسال تذكير</a>
+      <a href="https://maps.google.com?q=${encodeURIComponent(a.address||'')}" target="_blank" style="flex:1;text-align:center;padding:10px;background:var(--ice);color:var(--sky);border-radius:9px;font-weight:700;text-decoration:none;font-size:13px;">🗺️ خرائط جوجل</a>
+      ${a.status!=='done'?`<button onclick="markDone('${a.id}');document.getElementById('detailModal').classList.remove('open')" style="flex:1;padding:10px;background:#D1FAE5;color:var(--success);border:none;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">✓ إتمام</button>`:''}
+    </div>`;
+  document.getElementById('detailModal').classList.add('open');
+}
+
+function markDone(id){
+  const idx=appointments.findIndex(a=>a.id===id);
+  if(idx>-1){ appointments[idx].status='done'; saveData(); updateStats(); renderWeek(); renderList(); showToast('🎉 تم إتمام الموعد'); }
+}
+
+function sendWhatsapp(id){
+  const a=appointments.find(x=>x.id===id);
+  if(!a) return;
+  const msg=encodeURIComponent(`مرحباً ${a.client}،\nتذكير بموعدكم مع مؤسسة أطواد\nالخدمة: ${a.service}\nالتاريخ: ${formatDateShort(a.date)}\nالوقت: ${a.time}\nسيتواصل معكم الفني قبل الوصول بـ 30 دقيقة 🔧`);
+  window.open(`https://wa.me/966${(a.phone||'').replace(/^0/,'')}?text=${msg}`,'_blank');
+}
+
+function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2800); }
+
+// Close modal on overlay click
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
+
+// ===== DEMO DATA =====
+if(appointments.length===0){
+  const tod=today();
+  const tom=new Date(); tom.setDate(tom.getDate()+1); const tomStr=tom.toISOString().split('T')[0];
+  const y=new Date(); y.setDate(y.getDate()-1); const yStr=y.toISOString().split('T')[0];
+  appointments=[
+    {id:'A100001',client:'Dr. Hasan Al Shahri',phone:'0555519923',address:'Al Bsatin, Jeddah',service:'تنظيف مكيف',units:3,date:tod,time:'09:00',tech:'Abrar',status:'confirmed',notes:'3 وحدات داخلية وخارجية',duration:90,createdAt:''},
+    {id:'A100002',client:'Farash Al Shareef',phone:'0543322162',address:'Obur North, Jeddah',service:'صيانة دورية',units:1,date:tod,time:'11:30',tech:'Shoib',status:'pending',notes:'',duration:60,createdAt:''},
+    {id:'A100003',client:'أم سعود السلامة',phone:'0504332700',address:'Al Salamah, Jeddah',service:'تعبئة غاز',units:2,date:tod,time:'14:00',tech:'Suhail',status:'pending',notes:'شقة الدور الثالث',duration:90,createdAt:''},
+    {id:'A100004',client:'نوره زبونة',phone:'0596615884',address:'Al Rehab, Jeddah',service:'تنظيف مكيف',units:1,date:tomStr,time:'10:00',tech:'Abrar',status:'confirmed',notes:'',duration:60,createdAt:''},
+    {id:'A100005',client:'M. AlShaalan',phone:'0506361409',address:'Al Naeem, Jeddah',service:'كشف وإصلاح أعطال',units:1,date:tomStr,time:'13:00',tech:'Shoib',status:'confirmed',notes:'صوت غير طبيعي من الوحدة',duration:90,createdAt:''},
+    {id:'A100006',client:'Fury Rose',phone:'0563277359',address:'Al-Hamdaniya, Jeddah',service:'تنظيف مكيف',units:1,date:yStr,time:'09:30',tech:'Abrar',status:'done',notes:'',duration:60,createdAt:''},
+  ];
+  saveData();
+}
+
+// ===== INIT =====
+updateStats();
+switchView('list');
+const calDates=getWeekDates(0);
+const ms=new Date(calDates[0]+'T00:00:00');
+const me=new Date(calDates[6]+'T00:00:00');
+document.getElementById('calMonth').textContent=ms.toLocaleDateString('ar-SA',{month:'long',year:'numeric'});
+</script>
+</body>
+</html>
