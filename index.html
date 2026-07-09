@@ -366,24 +366,34 @@
 </footer>
 
 <script>
-  // Date
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script>
   const now = new Date();
   const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
   document.getElementById('currentDate').textContent = now.toLocaleDateString('ar-SA', options);
 
-  // Stats from localStorage
-  function getCount(key) {
-    try {
-      const data = JSON.parse(localStorage.getItem(key) || '[]');
-      return Array.isArray(data) ? data.length : Object.keys(data).length;
-    } catch { return 0; }
+  const firebaseConfig = {
+    databaseURL: "https://atwad-booking-default-rtdb.firebaseio.com"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  function loadStat(ref, elementId) {
+    db.ref(ref).once('value').then(snap => {
+      const data = snap.val();
+      const count = data ? Object.keys(data).length : 0;
+      document.getElementById(elementId).textContent = count.toLocaleString('ar');
+    }).catch(() => {
+      document.getElementById(elementId).textContent = '0';
+    });
   }
 
-  document.getElementById('statCustomers').textContent = getCount('customers').toLocaleString('ar');
-  document.getElementById('statAppointments').textContent = getCount('appointments').toLocaleString('ar');
-  document.getElementById('statWorkorders').textContent = getCount('workOrders').toLocaleString('ar');
-  document.getElementById('statFinance').textContent = getCount('transactions').toLocaleString('ar');
-  document.getElementById('statReviews').textContent = getCount('reviews').toLocaleString('ar');
+  loadStat('customers',    'statCustomers');
+  loadStat('appointments', 'statAppointments');
+  loadStat('workOrders',   'statWorkorders');
+  loadStat('transactions', 'statFinance');
+  loadStat('reviews',      'statReviews');
 </script>
 </body>
 </html>
