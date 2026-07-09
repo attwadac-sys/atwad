@@ -13,8 +13,6 @@
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
-
-/* SIDEBAR */
 .sidebar{position:fixed;right:0;top:0;bottom:0;width:230px;background:linear-gradient(180deg,var(--deep),var(--steel));z-index:200;display:flex;flex-direction:column;box-shadow:4px 0 24px rgba(12,59,94,.18);}
 .sidebar-logo{padding:22px 18px 18px;border-bottom:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:12px;}
 .sidebar-logo .icon{width:42px;height:42px;background:linear-gradient(135deg,var(--sky),#38BDF8);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;}
@@ -26,8 +24,6 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 .nav-item:hover{background:rgba(255,255,255,.08);color:#fff;}
 .nav-item.active{background:rgba(14,165,233,.22);color:var(--sky);font-weight:700;}
 .nav-icon{font-size:16px;width:20px;text-align:center;}
-
-/* MAIN */
 .main{margin-right:230px;}
 .topbar{background:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1.5px solid #E2E8F0;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.04);}
 .topbar-title{font-size:18px;font-weight:800;color:var(--deep);}
@@ -35,13 +31,9 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 .topbar-actions{display:flex;gap:10px;}
 .btn-primary{background:linear-gradient(90deg,var(--deep),var(--sky));color:#fff;border:none;border-radius:10px;padding:9px 18px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(14,165,233,.3);transition:all .2s;display:flex;align-items:center;gap:6px;}
 .btn-primary:hover{transform:translateY(-1px);}
-
-/* VIEW TOGGLE */
 .view-toggle{display:flex;background:#F1F5F9;border-radius:10px;padding:3px;}
 .view-btn{padding:7px 14px;border-radius:8px;border:none;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:600;cursor:pointer;background:transparent;color:var(--mist);transition:all .2s;}
 .view-btn.active{background:#fff;color:var(--deep);box-shadow:0 2px 6px rgba(0,0,0,.08);}
-
-/* STATS */
 .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:18px 22px;}
 .stat-card{background:#fff;border-radius:14px;padding:16px 18px;box-shadow:0 2px 10px rgba(0,0,0,.04);border-right:3px solid transparent;}
 .stat-card.today{border-color:var(--sky);}
@@ -51,16 +43,12 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 .stat-icon{font-size:22px;margin-bottom:6px;}
 .stat-num{font-size:26px;font-weight:800;color:var(--deep);}
 .stat-lbl{font-size:11px;color:var(--mist);margin-top:1px;}
-
-/* CALENDAR HEADER */
 .cal-header{display:flex;align-items:center;justify-content:space-between;padding:0 22px 14px;}
 .cal-nav{display:flex;align-items:center;gap:12px;}
 .cal-nav-btn{width:32px;height:32px;border-radius:8px;border:1.5px solid #E2E8F0;background:#fff;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .2s;}
 .cal-nav-btn:hover{border-color:var(--sky);color:var(--sky);}
 .cal-month{font-size:17px;font-weight:800;color:var(--deep);}
 .cal-today-btn{padding:6px 14px;background:var(--ice);border:none;border-radius:8px;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;color:var(--sky);cursor:pointer;}
-
-/* WEEK VIEW */
 .week-grid{display:grid;grid-template-columns:60px repeat(7,1fr);border-top:1px solid #E2E8F0;overflow:hidden;}
 .week-day-header{padding:10px 6px;text-align:center;background:var(--frost);border-bottom:2px solid var(--ice);border-left:1px solid #E2E8F0;}
 .week-day-name{font-size:11px;font-weight:700;color:var(--mist);}
@@ -70,20 +58,15 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 .time-slot{height:60px;display:flex;align-items:flex-start;justify-content:flex-end;padding:4px 8px 0;font-size:10px;color:var(--mist);border-bottom:1px solid #F1F5F9;}
 .day-col{border-left:1px solid #E2E8F0;position:relative;}
 .day-hour{height:60px;border-bottom:1px solid #F8FAFC;}
-.day-hour.half{border-bottom:1px dashed #F1F5F9;}
 .appt-block{position:absolute;right:3px;left:3px;border-radius:8px;padding:4px 8px;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;overflow:hidden;z-index:10;}
 .appt-block:hover{transform:scale(1.02);box-shadow:0 4px 12px rgba(0,0,0,.15);}
 .appt-block .appt-time{font-size:10px;opacity:.8;}
 .appt-block .appt-name{font-size:12px;font-weight:700;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .appt-block .appt-tech{font-size:10px;opacity:.75;margin-top:2px;}
-
-/* STATUS COLORS */
 .status-confirmed{background:linear-gradient(135deg,#DBEAFE,#EFF6FF);border-right:3px solid var(--sky);color:var(--deep);}
 .status-pending{background:linear-gradient(135deg,#FEF3C7,#FFFBEB);border-right:3px solid var(--warning);color:#92400E;}
 .status-done{background:linear-gradient(135deg,#D1FAE5,#ECFDF5);border-right:3px solid var(--success);color:#065F46;}
 .status-cancelled{background:linear-gradient(135deg,#FEE2E2,#FFF5F5);border-right:3px solid var(--danger);color:#991B1B;}
-
-/* DAY LIST VIEW */
 .list-view{padding:0 22px 30px;}
 .day-section{margin-bottom:20px;}
 .day-section-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
@@ -114,8 +97,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 .act-whatsapp{background:#25D366;color:#fff;}
 .act-edit{background:var(--ice);color:var(--sky);}
 .act-done{background:#D1FAE5;color:var(--success);}
-
-/* MODAL */
+.act-delete{background:#FEE2E2;color:#EF4444;}
 .modal-overlay{position:fixed;inset:0;background:rgba(12,59,94,.45);z-index:500;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px);}
 .modal-overlay.open{display:flex;}
 .modal{background:#fff;border-radius:20px;width:100%;max-width:520px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(12,59,94,.25);animation:slideUp .3s cubic-bezier(.34,1.56,.64,1);}
@@ -134,18 +116,12 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 .modal-footer{padding:14px 24px;border-top:1px solid #F1F5F9;display:flex;gap:10px;justify-content:flex-end;}
 .btn-cancel{padding:9px 18px;border:1.5px solid #E2E8F0;border-radius:9px;background:#fff;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:600;color:var(--slate);cursor:pointer;}
 .btn-save{padding:9px 24px;border:none;border-radius:9px;background:linear-gradient(90deg,var(--deep),var(--sky));color:#fff;font-family:'Tajawal',sans-serif;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(14,165,233,.3);}
-
-/* TOAST */
 .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--deep);color:#fff;padding:10px 22px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.2);transition:transform .3s;z-index:999;}
 .toast.show{transform:translateX(-50%) translateY(0);}
-
-/* TECH FILTER */
 .tech-filter{display:flex;gap:8px;padding:0 22px 14px;flex-wrap:wrap;}
 .tech-chip{padding:6px 14px;border-radius:20px;border:1.5px solid #E2E8F0;background:#fff;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:600;color:var(--mist);cursor:pointer;transition:all .2s;}
 .tech-chip:hover,.tech-chip.active{border-color:var(--sky);color:var(--sky);background:var(--ice);}
-
 @media(max-width:900px){.sidebar{display:none;}.main{margin-right:0;}.stats-row{grid-template-columns:1fr 1fr;}.week-grid{overflow-x:auto;}}
-
 .lang-btn{padding:7px 14px;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);border-radius:8px;color:#fff;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;}
 .lang-btn:hover{background:rgba(255,255,255,.25);}
 </style>
@@ -154,25 +130,22 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 </head>
 <body>
 
-<!-- SIDEBAR -->
 <div class="sidebar">
   <div class="sidebar-logo"><div class="icon">❄️</div><div><h1 id="nav-brand">أطواد</h1><p id="nav-brandsub">لصيانة المكيفات</p></div></div>
   <div class="nav-section">
     <div class="nav-label">القائمة</div>
-    <div class="nav-item" id="nav-clients" id="nav-clients" id="nav-clients" onclick="location.href='atwad-customers.html'"><span class="nav-icon">👥</span> العملاء</div>
-    <div class="nav-item active" id="nav-appts" id="nav-appts" id="nav-appts" onclick="location.href='atwad-appointments.html'"><span class="nav-icon">📅</span> المواعيد</div>
-    <div class="nav-item" id="nav-wo" id="nav-wo" id="nav-wo" onclick="location.href='atwad-workorders.html'"><span class="nav-icon">🔧</span> أوامر العمل</div>
-    <div class="nav-item" id="nav-finance" id="nav-finance" id="nav-finance" onclick="location.href='atwad-finance.html'"><span class="nav-icon">💰</span> الإدارة المالية</div>
-    <div class="nav-item" id="nav-reports" id="nav-reports" id="nav-reports" onclick="location.href='atwad-reports.html'"><span class="nav-icon">📊</span> التقارير</div>
+    <div class="nav-item" id="nav-clients" onclick="location.href='atwad-customers.html'"><span class="nav-icon">👥</span> العملاء</div>
+    <div class="nav-item active" id="nav-appts" onclick="location.href='atwad-appointments.html'"><span class="nav-icon">📅</span> المواعيد</div>
+    <div class="nav-item" id="nav-wo" onclick="location.href='atwad-workorders.html'"><span class="nav-icon">🔧</span> أوامر العمل</div>
+    <div class="nav-item" id="nav-finance" onclick="location.href='atwad-finance.html'"><span class="nav-icon">💰</span> الإدارة المالية</div>
+    <div class="nav-item" id="nav-reports" onclick="location.href='atwad-reports.html'"><span class="nav-icon">📊</span> التقارير</div>
   </div>
   <div class="nav-section" style="margin-top:auto;border-top:1px solid rgba(255,255,255,.08);padding-top:10px;">
     <div class="nav-item" id="nav-settings" onclick="alert('Settings — Coming Soon / قريباً ✨')"><span class="nav-icon">⚙️</span> الإعدادات</div>
   </div>
 </div>
 
-<!-- MAIN -->
 <div class="main">
-  <!-- TOPBAR -->
   <div class="topbar">
     <div><div class="topbar-title" data-lang="title">📅 إدارة المواعيد</div><div class="topbar-sub" data-lang="sub">جدولة الفنيين وتوزيع الزيارات</div></div>
     <div class="topbar-actions"><button class="lang-btn" id="langBtn" onclick="toggleLang()">🌐 EN</button>
@@ -185,15 +158,13 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
     </div>
   </div>
 
-  <!-- STATS -->
   <div class="stats-row">
-    <div class="stat-card today"><div class="stat-icon">📅</div><div class="stat-num" id="statToday">0</div><div class="stat-lbl" data-lang="statToday">مواعيد اليوم</div></div>
-    <div class="stat-card pending"><div class="stat-icon">⏳</div><div class="stat-num" id="statPending">0</div><div class="stat-lbl" data-lang="statPend">في الانتظار</div></div>
-    <div class="stat-card done"><div class="stat-icon">✅</div><div class="stat-num" id="statDone">0</div><div class="stat-lbl" data-lang="statDone">مكتملة الأسبوع</div></div>
-    <div class="stat-card tech"><div class="stat-icon">👷</div><div class="stat-num" id="statTechs">3</div><div class="stat-lbl" data-lang="statTechs">فنيون نشطون</div></div>
+    <div class="stat-card today"><div class="stat-icon">📅</div><div class="stat-num" id="statToday">0</div><div class="stat-lbl">مواعيد اليوم</div></div>
+    <div class="stat-card pending"><div class="stat-icon">⏳</div><div class="stat-num" id="statPending">0</div><div class="stat-lbl">في الانتظار</div></div>
+    <div class="stat-card done"><div class="stat-icon">✅</div><div class="stat-num" id="statDone">0</div><div class="stat-lbl">مكتملة الأسبوع</div></div>
+    <div class="stat-card tech"><div class="stat-icon">👷</div><div class="stat-num" id="statTechs">3</div><div class="stat-lbl">فنيون نشطون</div></div>
   </div>
 
-  <!-- CALENDAR NAV -->
   <div class="cal-header">
     <div class="cal-nav">
       <button class="cal-nav-btn" onclick="changeWeek(-1)">›</button>
@@ -205,7 +176,6 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
     </div>
   </div>
 
-  <!-- TECH FILTER -->
   <div class="tech-filter">
     <button class="tech-chip active" onclick="filterTech('all',this)">الكل</button>
     <button class="tech-chip" onclick="filterTech('Abrar',this)">👷 أبرار</button>
@@ -213,12 +183,10 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
     <button class="tech-chip" onclick="filterTech('Suhail',this)">👷 سهيل</button>
   </div>
 
-  <!-- WEEK VIEW -->
   <div id="weekView" style="display:none;padding:0 22px 30px;">
     <div class="week-grid" id="weekGrid"></div>
   </div>
 
-  <!-- LIST VIEW -->
   <div class="list-view" id="listView"></div>
 </div>
 
@@ -323,7 +291,6 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 <div class="toast" id="toast"></div>
 
 <script>
-// ===== FIREBASE =====
 var db = null;
 try {
   firebase.initializeApp({databaseURL:"https://atwad-booking-default-rtdb.firebaseio.com"});
@@ -334,23 +301,18 @@ function importFromFirebase() {
   if(!db) { showToast('⚠️ Firebase غير متاح'); return; }
   var btn = document.getElementById('importFbBtn');
   btn.textContent = '⏳ جاري الاستيراد...'; btn.disabled = true;
-  
   db.ref('bookings').once('value', function(snap) {
     var added = 0, skip = 0;
     var existing = appointments.map(function(a){ return a.firebaseRef||''; });
-    
     snap.forEach(function(child) {
       var b = child.val();
       var key = child.key;
       if(existing.indexOf(key) >= 0){ skip++; return; }
       if(!b.date || !b.time) return;
-      
-      // تحديد الفني تلقائياً (أقل مواعيد في ذلك اليوم)
       var dayAppts = appointments.filter(function(a){ return a.date === b.date; });
       var techCount = {Abrar:0, Shoib:0, Suhail:0};
       dayAppts.forEach(function(a){ if(techCount[a.tech]!==undefined) techCount[a.tech]++; });
       var tech = Object.keys(techCount).reduce(function(a,b){ return techCount[a]<=techCount[b]?a:b; });
-      
       appointments.push({
         id: 'A'+Date.now()+Math.random().toString(36).slice(2,5),
         firebaseRef: key,
@@ -369,24 +331,16 @@ function importFromFirebase() {
       });
       added++;
     });
-    
-    saveData();
-    updateStats();
-    renderWeek();
-    renderList();
-    btn.textContent = '📥 استيراد حجوزات العملاء';
-    btn.disabled = false;
-    
-    if(added > 0) showToast('✅ تم استيراد ' + added + ' حجز جديد من نموذج العملاء');
+    saveData(); updateStats(); renderWeek(); renderList();
+    btn.textContent = '📥 استيراد حجوزات العملاء'; btn.disabled = false;
+    if(added > 0) showToast('✅ تم استيراد ' + added + ' حجز جديد');
     else showToast('ℹ️ لا توجد حجوزات جديدة — تم تخطي ' + skip + ' موجود');
   }, function(err){
     showToast('❌ خطأ: ' + err.message);
-    btn.textContent = '📥 استيراد حجوزات العملاء';
-    btn.disabled = false;
+    btn.textContent = '📥 استيراد حجوزات العملاء'; btn.disabled = false;
   });
 }
 
-// ===== DATA =====
 let appointments = JSON.parse(localStorage.getItem('atwad_appointments') || '[]');
 let clients = [];
 try { clients = JSON.parse(localStorage.getItem('atwad_clients') || '[]'); } catch {}
@@ -410,7 +364,6 @@ function getWeekDates(offset=0){
   return Array.from({length:7},(_,i)=>{ const dd=new Date(d); dd.setDate(d.getDate()+i); return dd.toISOString().split('T')[0]; });
 }
 
-// Populate clients datalist
 function populateClients(){
   const dl = document.getElementById('clientsList');
   dl.innerHTML = clients.map(c=>`<option value="${c.name}" data-phone="${c.phone}" data-address="${c.address||''}">`).join('');
@@ -420,19 +373,14 @@ function populateClients(){
   });
 }
 
-// ===== STATS =====
 function updateStats(){
   const tod = today();
-  const todayAppts = appointments.filter(a=>a.date===tod);
-  const pending = appointments.filter(a=>a.status==='pending');
+  document.getElementById('statToday').textContent = appointments.filter(a=>a.date===tod).length;
+  document.getElementById('statPending').textContent = appointments.filter(a=>a.status==='pending').length;
   const weekDates = getWeekDates(0);
-  const done = appointments.filter(a=>weekDates.includes(a.date)&&a.status==='done');
-  document.getElementById('statToday').textContent = todayAppts.length;
-  document.getElementById('statPending').textContent = pending.length;
-  document.getElementById('statDone').textContent = done.length;
+  document.getElementById('statDone').textContent = appointments.filter(a=>weekDates.includes(a.date)&&a.status==='done').length;
 }
 
-// ===== WEEK VIEW =====
 function renderWeek(){
   const dates = getWeekDates(currentWeekOffset);
   const tod = today();
@@ -442,23 +390,15 @@ function renderWeek(){
   document.getElementById('calMonth').textContent =
     weekStart.toLocaleDateString('ar-SA',{month:'long',year:'numeric'}) + ' — ' +
     weekEnd.toLocaleDateString('ar-SA',{month:'long'});
-
-  const hours = Array.from({length:12},(_,i)=>i+7); // 7am-7pm
+  const hours = Array.from({length:12},(_,i)=>i+7);
   let html = `<div class="time-col"><div style="height:54px;border-bottom:2px solid var(--ice);"></div>`;
   html += hours.map(h=>`<div class="time-slot">${h}:00</div>`).join('');
   html += '</div>';
-
   dates.forEach((date,di)=>{
     const isToday = date===tod;
     const d = new Date(date+'T00:00:00');
-    html += `<div>
-      <div class="week-day-header${isToday?' today':''}">
-        <div class="week-day-name">${dayNames[d.getDay()]}</div>
-        <div class="week-day-num">${d.getDate()}</div>
-      </div>
-      <div class="day-col">`;
+    html += `<div><div class="week-day-header${isToday?' today':''}"><div class="week-day-name">${dayNames[d.getDay()]}</div><div class="week-day-num">${d.getDate()}</div></div><div class="day-col">`;
     hours.forEach(h=>{ html += `<div class="day-hour"></div>`; });
-    // Place appointments
     const dayAppts = appointments.filter(a=>a.date===date&&(techFilter==='all'||a.tech===techFilter));
     dayAppts.forEach(a=>{
       const [hh,mm] = (a.time||'09:00').split(':').map(Number);
@@ -476,44 +416,26 @@ function renderWeek(){
   document.getElementById('weekGrid').innerHTML = html;
 }
 
-// ===== LIST VIEW =====
 function renderList(){
-  // Group appointments by date, show upcoming + today
   let appts = [...appointments];
   if(techFilter!=='all') appts = appts.filter(a=>a.tech===techFilter);
   appts.sort((a,b)=>((a.date||'')+(a.time||'')).localeCompare((b.date||'')+(b.time||'')));
-
   const grouped = {};
   appts.forEach(a=>{ if(!grouped[a.date]) grouped[a.date]=[]; grouped[a.date].push(a); });
-
   const bm = { confirmed:'sp-confirmed', pending:'sp-pending', done:'sp-done', cancelled:'sp-cancelled' };
   const cc = { confirmed:'c-confirmed', pending:'c-pending', done:'c-done', cancelled:'c-cancelled' };
-
   if(Object.keys(grouped).length===0){
-    document.getElementById('listView').innerHTML = `
-      <div style="text-align:center;padding:60px 20px;color:var(--mist);">
-        <div style="font-size:48px;margin-bottom:12px;">📅</div>
-        <p style="font-size:15px;">لا توجد مواعيد مسجلة بعد<br><small>اضغط "موعد جديد" لإضافة أول موعد</small></p>
-      </div>`;
+    document.getElementById('listView').innerHTML = `<div style="text-align:center;padding:60px 20px;color:var(--mist);"><div style="font-size:48px;margin-bottom:12px;">📅</div><p style="font-size:15px;">لا توجد مواعيد مسجلة بعد<br><small>اضغط "موعد جديد" لإضافة أول موعد</small></p></div>`;
     return;
   }
-
   let html = '';
   Object.keys(grouped).sort().forEach(date=>{
     const list = grouped[date];
-    html += `<div class="day-section">
-      <div class="day-section-header">
-        <span class="day-section-date">${formatDate(date)}</span>
-        <span class="day-section-badge">${list.length} موعد</span>
-        ${date===today()?'<span style="background:var(--sky);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;">اليوم</span>':''}
-      </div>`;
+    html += `<div class="day-section"><div class="day-section-header"><span class="day-section-date">${formatDate(date)}</span><span class="day-section-badge">${list.length} موعد</span>${date===today()?'<span style="background:var(--sky);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;">اليوم</span>':''}</div>`;
     list.forEach(a=>{
       const tc = TECH_COLORS[a.tech]||'#0EA5E9';
       html += `<div class="appt-card ${cc[a.status||'pending']}" onclick="openDetail('${a.id}')">
-        <div class="appt-time-block">
-          <div class="t-start">${a.time||'--:--'}</div>
-          <div class="t-dur">${a.duration||60} دق</div>
-        </div>
+        <div class="appt-time-block"><div class="t-start">${a.time||'--:--'}</div><div class="t-dur">${a.duration||60} دق</div></div>
         <div class="appt-divider"></div>
         <div class="appt-info">
           <div class="appt-client">${a.client}</div>
@@ -528,6 +450,7 @@ function renderList(){
           <button class="act-btn act-whatsapp" onclick="sendWhatsapp('${a.id}')">📲</button>
           <button class="act-btn act-edit" onclick="editAppt('${a.id}')">✏️</button>
           ${a.status!=='done'?`<button class="act-btn act-done" onclick="markDone('${a.id}')">✓</button>`:''}
+          <button class="act-btn act-delete" onclick="deleteAppt('${a.id}',event)">🗑️</button>
         </div>
       </div>`;
     });
@@ -536,7 +459,6 @@ function renderList(){
   document.getElementById('listView').innerHTML = html;
 }
 
-// ===== SWITCH VIEW =====
 function switchView(v){
   currentView = v;
   document.getElementById('vWeek').classList.toggle('active', v==='week');
@@ -555,7 +477,6 @@ function filterTech(t,btn){
   renderWeek(); renderList();
 }
 
-// ===== MODAL =====
 function openNewAppt(){
   editingId=null;
   document.getElementById('modalTitle').textContent='➕ موعد جديد';
@@ -597,16 +518,8 @@ function saveAppt(){
   const service=document.getElementById('f_service').value;
   const tech=document.getElementById('f_tech').value;
   const date=document.getElementById('f_date').value;
-  const time=document.getElementById('f_time').value;
   if(!client||!phone||!service||!tech||!date) return showToast('❌ أكمل الحقول المطلوبة');
-  const data={
-    client,phone,address,service,tech,
-    status:document.getElementById('f_status').value,
-    units:parseInt(document.getElementById('f_units').value)||1,
-    date,time,
-    notes:document.getElementById('f_notes').value.trim(),
-    duration:90
-  };
+  const data={client,phone,address,service,tech,status:document.getElementById('f_status').value,units:parseInt(document.getElementById('f_units').value)||1,date,time:document.getElementById('f_time').value,notes:document.getElementById('f_notes').value.trim(),duration:90};
   if(editingId){ const idx=appointments.findIndex(a=>a.id===editingId); appointments[idx]={...appointments[idx],...data}; showToast('✅ تم تحديث الموعد'); }
   else{ appointments.push({id:genId(),...data,createdAt:new Date().toISOString()}); showToast('✅ تم إضافة الموعد'); }
   saveData(); closeModal(); updateStats(); renderWeek(); renderList();
@@ -614,7 +527,6 @@ function saveAppt(){
 
 function closeModal(){ document.getElementById('apptModal').classList.remove('open'); editingId=null; }
 
-// ===== DETAIL =====
 function openDetail(id){
   const a=appointments.find(x=>x.id===id);
   if(!a) return;
@@ -624,37 +536,21 @@ function openDetail(id){
   document.getElementById('detailEditBtn').onclick=()=>editAppt(id);
   document.getElementById('detailBody').innerHTML=`
     <div style="background:var(--frost);border-radius:12px;padding:16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;">
-      <div>
-        <div style="font-size:18px;font-weight:800;color:var(--deep)">${a.client}</div>
-        <div style="font-size:13px;color:var(--mist);margin-top:3px;">📱 <a href="tel:${a.phone}" style="color:var(--sky)">${a.phone}</a></div>
-      </div>
+      <div><div style="font-size:18px;font-weight:800;color:var(--deep)">${a.client}</div><div style="font-size:13px;color:var(--mist);margin-top:3px;">📱 <a href="tel:${a.phone}" style="color:var(--sky)">${a.phone}</a></div></div>
       <span class="status-pill ${bm[a.status||'pending']}">${STATUS_ICONS[a.status||'pending']} ${STATUS_LABELS[a.status||'pending']}</span>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
-      <div style="background:#fff;border:1.5px solid var(--ice);border-radius:10px;padding:12px;">
-        <div style="font-size:11px;color:var(--mist);margin-bottom:4px;">🛠️ الخدمة</div>
-        <div style="font-weight:700;color:var(--deep)">${a.service||'—'}</div>
-        <div style="font-size:12px;color:var(--mist)">${a.units||1} وحدة</div>
-      </div>
-      <div style="background:#fff;border:1.5px solid var(--ice);border-radius:10px;padding:12px;">
-        <div style="font-size:11px;color:var(--mist);margin-bottom:4px;">📅 الموعد</div>
-        <div style="font-weight:700;color:var(--deep)">${formatDateShort(a.date)}</div>
-        <div style="font-size:12px;color:var(--mist)">⏰ ${a.time||'—'}</div>
-      </div>
-      <div style="background:#fff;border:1.5px solid var(--ice);border-radius:10px;padding:12px;">
-        <div style="font-size:11px;color:var(--mist);margin-bottom:4px;">👷 الفني</div>
-        <div style="font-weight:700;color:${tc}">${TECHS[a.tech]||a.tech||'—'}</div>
-      </div>
-      <div style="background:#fff;border:1.5px solid var(--ice);border-radius:10px;padding:12px;">
-        <div style="font-size:11px;color:var(--mist);margin-bottom:4px;">📍 الموقع</div>
-        <div style="font-weight:700;color:var(--deep);font-size:12px">${a.address||'—'}</div>
-      </div>
+      <div style="background:#fff;border:1.5px solid var(--ice);border-radius:10px;padding:12px;"><div style="font-size:11px;color:var(--mist);margin-bottom:4px;">🛠️ الخدمة</div><div style="font-weight:700;color:var(--deep)">${a.service||'—'}</div><div style="font-size:12px;color:var(--mist)">${a.units||1} وحدة</div></div>
+      <div style="background:#fff;border:1.5px solid var(--ice);border-radius:10px;padding:12px;"><div style="font-size:11px;color:var(--mist);margin-bottom:4px;">📅 الموعد</div><div style="font-weight:700;color:var(--deep)">${formatDateShort(a.date)}</div><div style="font-size:12px;color:var(--mist)">⏰ ${a.time||'—'}</div></div>
+      <div style="background:#fff;border:1.5px solid var(--ice);border-radius:10px;padding:12px;"><div style="font-size:11px;color:var(--mist);margin-bottom:4px;">👷 الفني</div><div style="font-weight:700;color:${tc}">${TECHS[a.tech]||a.tech||'—'}</div></div>
+      <div style="background:#fff;border:1.5px solid var(--ice);border-radius:10px;padding:12px;"><div style="font-size:11px;color:var(--mist);margin-bottom:4px;">📍 الموقع</div><div style="font-weight:700;color:var(--deep);font-size:12px">${a.address||'—'}</div></div>
     </div>
     ${a.notes?`<div style="background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:10px;padding:12px;margin-bottom:14px;font-size:13px;color:#92400E;">📝 ${a.notes}</div>`:''}
     <div style="display:flex;gap:8px;">
-      <a href="https://wa.me/966${(a.phone||'').replace(/^0/,'')}?text=${encodeURIComponent('مرحباً '+a.client+'،\nتذكير بموعدكم مع مؤسسة أطواد\nالخدمة: '+a.service+'\nالتاريخ: '+formatDateShort(a.date)+'\nالوقت: '+a.time+'\nسيتواصل معكم الفني قبل الوصول بـ 30 دقيقة 🔧')}" target="_blank" style="flex:1;text-align:center;padding:10px;background:#25D366;color:#fff;border-radius:9px;font-weight:700;text-decoration:none;font-size:13px;">📲 إرسال تذكير</a>
+      <a href="https://wa.me/966${(a.phone||'').replace(/^0/,'')}?text=${encodeURIComponent('مرحباً '+a.client+'،\nتذكير بموعدكم مع مؤسسة أطواد\nالخدمة: '+a.service+'\nالتاريخ: '+formatDateShort(a.date)+'\nالوقت: '+a.time)}" target="_blank" style="flex:1;text-align:center;padding:10px;background:#25D366;color:#fff;border-radius:9px;font-weight:700;text-decoration:none;font-size:13px;">📲 إرسال تذكير</a>
       <a href="https://maps.google.com?q=${encodeURIComponent(a.address||'')}" target="_blank" style="flex:1;text-align:center;padding:10px;background:var(--ice);color:var(--sky);border-radius:9px;font-weight:700;text-decoration:none;font-size:13px;">🗺️ خرائط جوجل</a>
       ${a.status!=='done'?`<button onclick="markDone('${a.id}');document.getElementById('detailModal').classList.remove('open')" style="flex:1;padding:10px;background:#D1FAE5;color:var(--success);border:none;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">✓ إتمام</button>`:''}
+      <button onclick="deleteAppt('${a.id}',null);document.getElementById('detailModal').classList.remove('open')" style="flex:1;padding:10px;background:#FEE2E2;color:#EF4444;border:none;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">🗑️ حذف</button>
     </div>`;
   document.getElementById('detailModal').classList.add('open');
 }
@@ -664,19 +560,28 @@ function markDone(id){
   if(idx>-1){ appointments[idx].status='done'; saveData(); updateStats(); renderWeek(); renderList(); showToast('🎉 تم إتمام الموعد'); }
 }
 
+function deleteAppt(id, e) {
+  if(e) e.stopPropagation();
+  if(!confirm('⚠️ هل تريدين حذف هذا الموعد نهائياً؟')) return;
+  appointments = appointments.filter(a => a.id !== id);
+  saveData();
+  updateStats();
+  renderWeek();
+  renderList();
+  showToast('🗑️ تم حذف الموعد');
+}
+
 function sendWhatsapp(id){
   const a=appointments.find(x=>x.id===id);
   if(!a) return;
-  const msg=encodeURIComponent(`مرحباً ${a.client}،\nتذكير بموعدكم مع مؤسسة أطواد\nالخدمة: ${a.service}\nالتاريخ: ${formatDateShort(a.date)}\nالوقت: ${a.time}\nسيتواصل معكم الفني قبل الوصول بـ 30 دقيقة 🔧`);
+  const msg=encodeURIComponent(`مرحباً ${a.client}،\nتذكير بموعدكم مع مؤسسة أطواد\nالخدمة: ${a.service}\nالتاريخ: ${formatDateShort(a.date)}\nالوقت: ${a.time}`);
   window.open(`https://wa.me/966${(a.phone||'').replace(/^0/,'')}?text=${msg}`,'_blank');
 }
 
 function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2800); }
 
-// Close modal on overlay click
 document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
 
-// ===== DEMO DATA =====
 if(appointments.length===0){
   const tod=today();
   const tom=new Date(); tom.setDate(tom.getDate()+1); const tomStr=tom.toISOString().split('T')[0];
@@ -692,56 +597,34 @@ if(appointments.length===0){
   saveData();
 }
 
-// ===== INIT =====
 updateStats();
 switchView('list');
 const calDates=getWeekDates(0);
 const ms=new Date(calDates[0]+'T00:00:00');
-const me=new Date(calDates[6]+'T00:00:00');
 document.getElementById('calMonth').textContent=ms.toLocaleDateString('ar-SA',{month:'long',year:'numeric'});
 </script>
 
-
 <script>
 var LANG = localStorage.getItem('atwad_lang') || 'ar';
-
 var NAV_TEXT = {
   ar: {clients:'العملاء', appts:'المواعيد', wo:'أوامر العمل', finance:'الإدارة المالية', reports:'التقارير', settings:'الإعدادات', brand:'أطواد', brandSub:'لصيانة المكيفات'},
   en: {clients:'Clients', appts:'Appointments', wo:'Work Orders', finance:'Finance', reports:'Reports', settings:'Settings', brand:'Atwad', brandSub:'AC Maintenance'}
 };
-
 function applySharedLang() {
   var l = LANG;
   document.documentElement.lang = l;
   document.documentElement.dir = l==='ar'?'rtl':'ltr';
   var btn = document.getElementById('langBtn');
   if(btn) btn.textContent = l==='ar'?'🌐 EN':'🌐 عر';
-  // Sidebar
   var t = NAV_TEXT[l];
-  setTxt('nav-brand', t.brand);
-  setTxt('nav-brandsub', t.brandSub);
-  setTxt('nav-clients', t.clients);
-  setTxt('nav-appts', t.appts);
-  setTxt('nav-wo', t.wo);
-  setTxt('nav-finance', t.finance);
-  setTxt('nav-reports', t.reports);
-  setTxt('nav-settings', t.settings);
-  // page specific
-  if(typeof applyPageLang === 'function') applyPageLang(l);
+  setTxt('nav-brand', t.brand); setTxt('nav-brandsub', t.brandSub);
+  setTxt('nav-clients', t.clients); setTxt('nav-appts', t.appts);
+  setTxt('nav-wo', t.wo); setTxt('nav-finance', t.finance);
+  setTxt('nav-reports', t.reports); setTxt('nav-settings', t.settings);
 }
-
 function setTxt(id, txt) { var el=document.getElementById(id); if(el) el.textContent=txt; }
-function setHTML(id, txt) { var el=document.getElementById(id); if(el) el.innerHTML=txt; }
-function setPlh(id, txt) { var el=document.getElementById(id); if(el) el.placeholder=txt; }
-
-function toggleLang() {
-  LANG = LANG==='ar'?'en':'ar';
-  localStorage.setItem('atwad_lang', LANG);
-  applySharedLang();
-}
-
+function toggleLang() { LANG = LANG==='ar'?'en':'ar'; localStorage.setItem('atwad_lang', LANG); applySharedLang(); }
 document.addEventListener('DOMContentLoaded', applySharedLang);
-
 </script>
 </body>
 </html>
