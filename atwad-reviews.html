@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>آراء العملاء — مؤسسة أطواد</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap');
+
+  :root {
+    --primary: #1a3a5c;
+    --accent: #e84393;
+    --accent2: #e8a020;
+    --bg: #f0f4f8;
+    --card: #ffffff;
+    --text: #1e2a38;
+    --muted: #6b7a8d;
+    --border: #dde3ea;
+    --shadow: 0 4px 24px rgba(26,58,92,0.10);
+    --star: #f5a623;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Tajawal', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: linear-gradient(135deg, #1a3a5c 0%, #0f2540 100%);
+    padding: 28px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .header-left { display: flex; align-items: center; gap: 16px; }
+
+  .back-btn {
+    background: rgba(255,255,255,0.12);
+    border: none;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    transition: background 0.2s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .back-btn:hover { background: rgba(255,255,255,0.2); }
+
+  .page-title { color: #fff; }
+  .page-title h1 { font-size: 22px; font-weight: 900; }
+  .page-title p { font-size: 13px; color: rgba(255,255,255,0.55); margin-top: 2px; }
+
+  /* STATS */
+  .stats-row {
+    max-width: 1100px;
+    margin: 28px auto 0;
+    padding: 0 24px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+
+  .stat-card {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: var(--shadow);
+    border: 1.5px solid var(--border);
+  }
+
+  .stat-card .num {
+    font-size: 28px;
+    font-weight: 900;
+    color: var(--primary);
+    display: block;
+  }
+
+  .stat-card .lbl {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .stat-card.accent .num { color: var(--accent); }
+  .stat-card.gold .num { color: var(--star); }
+
+  /* MAIN */
+  main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 28px 24px 60px;
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 28px;
+    align-items: start;
+  }
+
+  /* FORM */
+  .form-card {
+    background: var(--card);
+    border-radius: 18px;
+    padding: 28px;
+    box-shadow: var(--shadow);
+    border: 1.5px solid var(--border);
+    position: sticky;
+    top: 24px;
+  }
+
+  .form-card h2 {
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--primary);
+    margin-bottom: 22px;
+    padding-bottom: 14px;
+    border-bottom: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .field { margin-bottom: 18px; }
+
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 7px;
+  }
+
+  input, textarea, select {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    background: #f8fafc;
+    transition: border-color 0.2s;
+    outline: none;
+  }
+
+  input:focus, textarea:focus, select:focus {
+    border-color: var(--accent);
+    background: #fff;
+  }
+
+  textarea { resize: vertical; min-height: 90px; }
+
+  /* STARS INPUT */
+  .stars-input {
+    display: flex;
+    gap: 6px;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+  }
+
+  .stars-input input { display: none; }
+
+  .stars-input label {
+    font-size: 32px;
+    cursor: pointer;
+    color: #dde3ea;
+    transition: color 0.15s;
+    margin: 0;
+    line-height: 1;
+  }
+
+  .stars-input input:checked ~ label,
+  .stars-input label:hover,
+  .stars-input label:hover ~ label {
+    color: var(--star);
+  }
+
+  /* SERVICE TAGS */
+  .service-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .service-tag {
+    padding: 6px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #f8fafc;
+    color: var(--muted);
+    user-select: none;
+  }
+
+  .service-tag.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  /* SUBMIT BTN */
+  .submit-btn {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--accent), #c0306e);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.15s;
+    margin-top: 8px;
+  }
+
+  .submit-btn:hover { opacity: 0.92; transform: translateY(-1px); }
+  .submit-btn:active { transform: translateY(0); }
+  .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  /* REVIEWS SECTION */
+  .reviews-section h2 {
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--primary);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .filter-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .filter-btn {
+    padding: 7px 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    background: var(--card);
+    color: var(--muted);
+    transition: all 0.2s;
+  }
+
+  .filter-btn.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+  }
+
+  /* REVIEW CARD */
+  .review-card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 22px;
+    box-shadow: var(--shadow);
+    border: 1.5px solid var(--border);
+    margin-bottom: 16px;
+    transition: transform 0.2s;
+    animation: slideIn 0.3s ease;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .review-card:hover { transform: translateY(-2px); }
+
+  .review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+  }
+
+  .reviewer-info { display: flex; align-items: center; gap: 12px; }
+
+  .reviewer-avatar {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent), #c0306e);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    color: #fff;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .reviewer-name { font-size: 15px; font-weight: 700; color: var(--text); }
+  .reviewer-date { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  .stars-display {
+    color: var(--star);
+    font-size: 16px;
+    letter-spacing: 2px;
+  }
+
+  .review-service {
+    display: inline-block;
+    padding: 3px 10px;
+    background: #f0ebfa;
+    color: #7c5cbf;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+
+  .review-text {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text);
+    background: #f8fafc;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border-right: 3px solid var(--accent);
+  }
+
+  .review-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 12px;
+  }
+
+  .delete-btn {
+    background: none;
+    border: none;
+    color: #c0392b;
+    cursor: pointer;
+    font-size: 12px;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+    font-family: 'Tajawal', sans-serif;
+  }
+
+  .delete-btn:hover { opacity: 1; }
+
+  .rating-badge {
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .badge-5 { background: #e5f5ee; color: #2e9e6b; }
+  .badge-4 { background: #e8f4e8; color: #3a9e3a; }
+  .badge-3 { background: #fdf3e3; color: #e8a020; }
+  .badge-2 { background: #fdecea; color: #c0392b; }
+  .badge-1 { background: #fdecea; color: #c0392b; }
+
+  /* EMPTY */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+  }
+
+  .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-state p { font-size: 15px; }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--primary);
+    color: #fff;
+    padding: 14px 28px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+    transition: transform 0.3s ease;
+    z-index: 1000;
+  }
+
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.success { background: #2e9e6b; }
+  .toast.error { background: #c0392b; }
+
+  footer {
+    background: var(--primary);
+    color: rgba(255,255,255,0.5);
+    text-align: center;
+    padding: 18px;
+    font-size: 13px;
+  }
+
+  footer strong { color: var(--accent2); }
+
+  @media (max-width: 768px) {
+    main { grid-template-columns: 1fr; }
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .form-card { position: static; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <a href="index.html" class="back-btn">← الرئيسية</a>
+    <div class="page-title">
+      <h1>⭐ آراء العملاء</h1>
+      <p>تقييمات وتعليقات عملاء مؤسسة أطواد</p>
+    </div>
+  </div>
+</header>
+
+<div class="stats-row">
+  <div class="stat-card">
+    <span class="num" id="totalReviews">0</span>
+    <div class="lbl">إجمالي الآراء</div>
+  </div>
+  <div class="stat-card gold">
+    <span class="num" id="avgRating">--</span>
+    <div class="lbl">متوسط التقييم</div>
+  </div>
+  <div class="stat-card accent">
+    <span class="num" id="fiveStars">0</span>
+    <div class="lbl">تقييم 5 نجوم</div>
+  </div>
+  <div class="stat-card">
+    <span class="num" id="recommend">--%</span>
+    <div class="lbl">يوصون بالخدمة</div>
+  </div>
+</div>
+
+<main>
+
+  <!-- FORM -->
+  <div class="form-card">
+    <h2>✍️ إضافة رأي جديد</h2>
+
+    <div class="field">
+      <label>اسم العميل</label>
+      <input type="text" id="customerName" placeholder="أدخل اسم العميل..." list="customersList">
+      <datalist id="customersList"></datalist>
+    </div>
+
+    <div class="field">
+      <label>التقييم</label>
+      <div class="stars-input" id="starsInput">
+        <input type="radio" name="rating" id="s5" value="5">
+        <label for="s5">★</label>
+        <input type="radio" name="rating" id="s4" value="4">
+        <label for="s4">★</label>
+        <input type="radio" name="radio" id="s3" value="3">
+        <label for="s3">★</label>
+        <input type="radio" name="rating" id="s2" value="2">
+        <label for="s2">★</label>
+        <input type="radio" name="rating" id="s1" value="1">
+        <label for="s1">★</label>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>نوع الخدمة</label>
+      <div class="service-tags" id="serviceTags">
+        <span class="service-tag" data-val="تكييف">❄️ تكييف</span>
+        <span class="service-tag" data-val="تنظيف">🧹 تنظيف</span>
+        <span class="service-tag" data-val="صيانة">🔧 صيانة</span>
+        <span class="service-tag" data-val="تركيب">⚙️ تركيب</span>
+        <span class="service-tag" data-val="فحص">🔍 فحص</span>
+        <span class="service-tag" data-val="أخرى">📋 أخرى</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>التعليق</label>
+      <textarea id="reviewText" placeholder="اكتب رأي العميل وتجربته مع الخدمة..."></textarea>
+    </div>
+
+    <div class="field">
+      <label>هل يوصي بالخدمة؟</label>
+      <select id="recommend">
+        <option value="yes">✅ نعم، يوصي بها</option>
+        <option value="no">❌ لا</option>
+      </select>
+    </div>
+
+    <button class="submit-btn" onclick="addReview()">💾 حفظ الرأي</button>
+  </div>
+
+  <!-- REVIEWS LIST -->
+  <div class="reviews-section">
+    <h2>
+      <span>آراء العملاء</span>
+      <span id="reviewCount" style="font-size:13px;color:var(--muted);font-weight:500"></span>
+    </h2>
+
+    <div class="filter-bar">
+      <button class="filter-btn active" onclick="filterReviews('all', this)">الكل</button>
+      <button class="filter-btn" onclick="filterReviews(5, this)">⭐⭐⭐⭐⭐</button>
+      <button class="filter-btn" onclick="filterReviews(4, this)">⭐⭐⭐⭐</button>
+      <button class="filter-btn" onclick="filterReviews(3, this)">⭐⭐⭐</button>
+      <button class="filter-btn" onclick="filterReviews(2, this)">⭐⭐</button>
+      <button class="filter-btn" onclick="filterReviews(1, this)">⭐</button>
+    </div>
+
+    <div id="reviewsList"></div>
+  </div>
+
+</main>
+
+<footer>
+  <p>مؤسسة <strong>أطواد</strong> للتكييف والتنظيف — جدة &copy; 2026</p>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // Firebase config
+  const firebaseConfig = {
+    databaseURL: "https://atwad-booking-default-rtdb.firebaseio.com"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  let allReviews = [];
+  let selectedService = '';
+
+  // Service tags
+  document.querySelectorAll('.service-tag').forEach(tag => {
+    tag.addEventListener('click', () => {
+      document.querySelectorAll('.service-tag').forEach(t => t.classList.remove('active'));
+      tag.classList.add('active');
+      selectedService = tag.dataset.val;
+    });
+  });
+
+  // Load customers for autocomplete
+  function loadCustomers() {
+    try {
+      const customers = JSON.parse(localStorage.getItem('customers') || '[]');
+      const dl = document.getElementById('customersList');
+      customers.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.name || c.customerName || '';
+        dl.appendChild(opt);
+      });
+    } catch(e) {}
+
+    // Also try Firebase
+    db.ref('customers').once('value').then(snap => {
+      const data = snap.val();
+      if (!data) return;
+      const dl = document.getElementById('customersList');
+      dl.innerHTML = '';
+      Object.values(data).forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.name || c.customerName || '';
+        dl.appendChild(opt);
+      });
+    }).catch(() => {});
+  }
+
+  // Load reviews
+  function loadReviews() {
+    db.ref('reviews').on('value', snap => {
+      const data = snap.val();
+      allReviews = [];
+      if (data) {
+        Object.entries(data).forEach(([id, r]) => {
+          allReviews.push({ id, ...r });
+        });
+        allReviews.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+      }
+      renderReviews(allReviews);
+      updateStats();
+    });
+  }
+
+  function renderReviews(reviews) {
+    const container = document.getElementById('reviewsList');
+    document.getElementById('reviewCount').textContent = `(${reviews.length})`;
+
+    if (reviews.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="icon">💬</div>
+          <p>لا توجد آراء حتى الآن<br>أضف أول رأي عميل من النموذج</p>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = reviews.map(r => {
+      const stars = '★'.repeat(r.rating || 5) + '☆'.repeat(5 - (r.rating || 5));
+      const initial = (r.customerName || 'ع')[0];
+      const date = r.timestamp ? new Date(r.timestamp).toLocaleDateString('ar-SA') : '';
+      const badgeClass = `badge-${r.rating || 5}`;
+      const ratingText = ['', 'سيء', 'مقبول', 'جيد', 'جيد جداً', 'ممتاز'][r.rating || 5];
+
+      return `
+      <div class="review-card">
+        <div class="review-header">
+          <div class="reviewer-info">
+            <div class="reviewer-avatar">${initial}</div>
+            <div>
+              <div class="reviewer-name">${r.customerName || 'عميل'}</div>
+              <div class="reviewer-date">${date}</div>
+            </div>
+          </div>
+          <div class="stars-display">${stars}</div>
+        </div>
+        ${r.service ? `<span class="review-service">${r.service}</span>` : ''}
+        ${r.text ? `<div class="review-text">${r.text}</div>` : ''}
+        <div class="review-footer">
+          <span class="rating-badge ${badgeClass}">${ratingText}</span>
+          <div style="display:flex;gap:12px;align-items:center">
+            ${r.recommend === 'yes' ? '<span style="font-size:12px;color:#2e9e6b">✅ يوصي بالخدمة</span>' : '<span style="font-size:12px;color:#c0392b">❌ لا يوصي</span>'}
+            <button class="delete-btn" onclick="deleteReview('${r.id}')">🗑️ حذف</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function updateStats() {
+    document.getElementById('totalReviews').textContent = allReviews.length;
+
+    if (allReviews.length === 0) {
+      document.getElementById('avgRating').textContent = '--';
+      document.getElementById('fiveStars').textContent = '0';
+      document.getElementById('recommend').textContent = '--%';
+      return;
+    }
+
+    const avg = allReviews.reduce((s, r) => s + (r.rating || 5), 0) / allReviews.length;
+    document.getElementById('avgRating').textContent = avg.toFixed(1) + ' ★';
+
+    const fiveCount = allReviews.filter(r => r.rating === 5).length;
+    document.getElementById('fiveStars').textContent = fiveCount;
+
+    const recCount = allReviews.filter(r => r.recommend === 'yes').length;
+    document.getElementById('recommend').textContent = Math.round(recCount / allReviews.length * 100) + '%';
+  }
+
+  function filterReviews(val, btn) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    if (val === 'all') {
+      renderReviews(allReviews);
+    } else {
+      renderReviews(allReviews.filter(r => r.rating === val));
+    }
+  }
+
+  function addReview() {
+    const name = document.getElementById('customerName').value.trim();
+    const ratingInput = document.querySelector('input[name="rating"]:checked');
+    const text = document.getElementById('reviewText').value.trim();
+    const rec = document.getElementById('recommend').value;
+
+    if (!name) { showToast('⚠️ أدخل اسم العميل', 'error'); return; }
+    if (!ratingInput) { showToast('⚠️ اختر التقييم', 'error'); return; }
+
+    const btn = document.querySelector('.submit-btn');
+    btn.disabled = true;
+    btn.textContent = '⏳ جاري الحفظ...';
+
+    const review = {
+      customerName: name,
+      rating: parseInt(ratingInput.value),
+      service: selectedService || '',
+      text: text,
+      recommend: rec,
+      timestamp: Date.now()
+    };
+
+    db.ref('reviews').push(review)
+      .then(() => {
+        showToast('✅ تم حفظ الرأي بنجاح!', 'success');
+        // Reset form
+        document.getElementById('customerName').value = '';
+        document.querySelectorAll('input[name="rating"]').forEach(r => r.checked = false);
+        document.getElementById('reviewText').value = '';
+        document.getElementById('recommend').value = 'yes';
+        document.querySelectorAll('.service-tag').forEach(t => t.classList.remove('active'));
+        selectedService = '';
+        btn.disabled = false;
+        btn.textContent = '💾 حفظ الرأي';
+      })
+      .catch(err => {
+        showToast('❌ خطأ في الحفظ: ' + err.message, 'error');
+        btn.disabled = false;
+        btn.textContent = '💾 حفظ الرأي';
+      });
+  }
+
+  function deleteReview(id) {
+    if (!confirm('هل تريدين حذف هذا الرأي؟')) return;
+    db.ref('reviews/' + id).remove()
+      .then(() => showToast('🗑️ تم حذف الرأي', 'success'))
+      .catch(() => showToast('❌ خطأ في الحذف', 'error'));
+  }
+
+  function showToast(msg, type = '') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast ' + type;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  // Init
+  loadCustomers();
+  loadReviews();
+</script>
+</body>
+</html>
