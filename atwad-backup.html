@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>أطواد - نسخة احتياطية</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap');
+:root{--deep:#0C3B5E;--sky:#0EA5E9;--ice:#E8F4FD;--success:#10B981;--danger:#EF4444;--warning:#F59E0B;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Tajawal',sans-serif;background:#F1F5F9;min-height:100vh;}
+.header{background:linear-gradient(90deg,var(--deep),var(--sky));padding:22px 24px;text-align:center;}
+.header h1{color:#fff;font-size:20px;font-weight:800;}
+.header p{color:rgba(255,255,255,.7);font-size:13px;margin-top:4px;}
+.container{max-width:700px;margin:28px auto;padding:0 16px;}
+
+.warn-box{background:#FEF3C7;border:2px solid #F59E0B;border-radius:14px;padding:18px 20px;margin-bottom:22px;display:flex;gap:14px;align-items:flex-start;}
+.warn-icon{font-size:28px;flex-shrink:0;}
+.warn-box h3{font-size:15px;font-weight:800;color:#92400E;margin-bottom:4px;}
+.warn-box p{font-size:13px;color:#92400E;line-height:1.6;}
+
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px;}
+.stat{background:#fff;border-radius:14px;padding:16px;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.05);}
+.stat-num{font-size:26px;font-weight:800;color:var(--deep);}
+.stat-lbl{font-size:11px;color:#94A3B8;margin-top:3px;}
+
+.action-card{background:#fff;border-radius:16px;padding:22px;margin-bottom:16px;box-shadow:0 2px 10px rgba(0,0,0,.05);}
+.action-card h3{font-size:16px;font-weight:800;color:var(--deep);margin-bottom:6px;}
+.action-card p{font-size:13px;color:#94A3B8;margin-bottom:16px;line-height:1.6;}
+.btn{width:100%;padding:13px;border:none;border-radius:12px;font-family:'Tajawal',sans-serif;font-size:15px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;}
+.btn-excel{background:linear-gradient(90deg,#10B981,#059669);color:#fff;box-shadow:0 4px 14px rgba(16,185,129,.3);}
+.btn-excel:hover{transform:translateY(-2px);}
+.btn-json{background:linear-gradient(90deg,var(--deep),var(--sky));color:#fff;box-shadow:0 4px 14px rgba(14,165,233,.3);}
+.btn-json:hover{transform:translateY(-2px);}
+.btn-restore{background:#fff;color:var(--deep);border:2px solid var(--sky);font-family:'Tajawal',sans-serif;font-size:15px;font-weight:800;cursor:pointer;padding:13px;border-radius:12px;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;}
+.btn-restore:hover{background:var(--ice);}
+
+.divider{display:flex;align-items:center;gap:12px;margin:14px 0;}
+.divider span{color:#94A3B8;font-size:12px;white-space:nowrap;}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:#E2E8F0;}
+
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--deep);color:#fff;padding:10px 22px;border-radius:10px;font-size:13px;font-weight:600;transition:transform .3s;z-index:999;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+.firebase-card{background:linear-gradient(135deg,#FF6B35,#F7931E);border-radius:16px;padding:22px;margin-bottom:16px;color:#fff;}
+.firebase-card h3{font-size:16px;font-weight:800;margin-bottom:6px;}
+.firebase-card p{font-size:13px;opacity:.85;margin-bottom:16px;line-height:1.6;}
+.btn-firebase{background:#fff;color:#FF6B35;border:none;border-radius:12px;padding:12px 24px;font-family:'Tajawal',sans-serif;font-size:14px;font-weight:800;cursor:pointer;width:100%;}
+
+input[type=file]{display:none;}
+@media(max-width:600px){.stats-grid{grid-template-columns:1fr 1fr;}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>💾 النسخة الاحتياطية</h1>
+  <p>مؤسسة أطواد — حماية البيانات وصون المعلومات</p>
+</div>
+
+<div class="container">
+
+  <!-- تحذير -->
+  <div class="warn-box">
+    <div class="warn-icon">⚠️</div>
+    <div>
+      <h3>تحذير مهم — بياناتك في خطر!</h3>
+      <p>جميع بيانات العملاء والمواعيد والمالية محفوظة في متصفحك فقط. أي مسح للمتصفح أو تغيير الجهاز سيؤدي لفقدان كل شيء. احفظ نسخة احتياطية الآن.</p>
+    </div>
+  </div>
+
+  <!-- إحصائيات -->
+  <div class="stats-grid">
+    <div class="stat"><div class="stat-num" id="s-clients">0</div><div class="stat-lbl">👥 عميل</div></div>
+    <div class="stat"><div class="stat-num" id="s-appts">0</div><div class="stat-lbl">📅 موعد</div></div>
+    <div class="stat"><div class="stat-num" id="s-wo">0</div><div class="stat-lbl">🔧 أمر عمل</div></div>
+    <div class="stat"><div class="stat-num" id="s-finance">0</div><div class="stat-lbl">💰 قيد مالي</div></div>
+  </div>
+
+  <!-- تصدير Excel -->
+  <div class="action-card">
+    <h3>📊 تصدير Excel — الأفضل للنسخ الاحتياطية</h3>
+    <p>يصدر جميع بياناتك في ملف Excel منظم بأوراق منفصلة لكل قسم. يمكن استيراده لاحقاً.</p>
+    <button class="btn btn-excel" onclick="exportExcel()">📥 تنزيل نسخة Excel الكاملة</button>
+  </div>
+
+  <!-- تصدير JSON -->
+  <div class="action-card">
+    <h3>🔄 تصدير JSON — للاستيراد مرة أخرى</h3>
+    <p>يصدر البيانات بصيغة JSON يمكن استيرادها لاحقاً لاسترداد كل شيء بضغطة واحدة.</p>
+    <button class="btn btn-json" onclick="exportJSON()">💾 تنزيل ملف JSON الكامل</button>
+    <div class="divider"><span>أو استيراد نسخة سابقة</span></div>
+    <label for="importFile">
+      <div class="btn-restore">📤 استيراد نسخة JSON سابقة</div>
+    </label>
+    <input type="file" id="importFile" accept=".json" onchange="importJSON(this)">
+  </div>
+
+  <!-- Firebase -->
+  <div class="firebase-card">
+    <h3>🔥 Firebase — الحل الدائم والآمن</h3>
+    <p>انقل جميع بياناتك الحالية من المتصفح إلى Firebase السحابي — ستكون آمنة للأبد وتفتح من أي جهاز.</p>
+    <button class="btn-firebase" onclick="uploadToFirebase()">☁️ رفع كل البيانات إلى Firebase الآن</button>
+    <div id="fbProgress" style="margin-top:12px;display:none;">
+      <div style="background:rgba(255,255,255,.3);border-radius:6px;height:8px;overflow:hidden;">
+        <div id="fbFill" style="height:100%;background:#fff;border-radius:6px;transition:width .3s;width:0%"></div>
+      </div>
+      <div id="fbTxt" style="text-align:center;font-size:12px;margin-top:6px;opacity:.85"></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+
+<script>
+// Firebase
+var db=null;
+try{
+  if(!firebase.apps.length) firebase.initializeApp({databaseURL:"https://atwad-booking-default-rtdb.firebaseio.com"});
+  db=firebase.database();
+}catch(e){}
+
+// تحميل البيانات
+var DATA = {
+  clients:    JSON.parse(localStorage.getItem('atwad_clients')      || '[]'),
+  appointments:JSON.parse(localStorage.getItem('atwad_appointments') || '[]'),
+  workorders: JSON.parse(localStorage.getItem('atwad_workorders')   || '[]'),
+  finance:    JSON.parse(localStorage.getItem('atwad_finance')      || '[]'),
+};
+
+// إحصائيات
+document.getElementById('s-clients').textContent  = DATA.clients.length.toLocaleString();
+document.getElementById('s-appts').textContent    = DATA.appointments.length.toLocaleString();
+document.getElementById('s-wo').textContent       = DATA.workorders.length.toLocaleString();
+document.getElementById('s-finance').textContent  = DATA.finance.length.toLocaleString();
+
+// ===== تصدير Excel =====
+function exportExcel() {
+  var wb = XLSX.utils.book_new();
+  
+  // العملاء
+  if(DATA.clients.length > 0) {
+    var clientRows = DATA.clients.map(function(c) {
+      return {
+        'الاسم': c.name||'', 'الجوال': c.phone||'', 'المدينة': c.city||'',
+        'العنوان': c.address||'', 'النوع': c.type||'', 'الزيارات': c.visits||0,
+        'آخر زيارة': c.lastVisit||'', 'ملاحظات': c.notes||'', 'الشركة': c.company||''
+      };
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(clientRows), '👥 العملاء');
+  }
+  
+  // المواعيد
+  if(DATA.appointments.length > 0) {
+    var apptRows = DATA.appointments.map(function(a) {
+      return {
+        'العميل': a.client||'', 'الجوال': a.phone||'', 'التاريخ': a.date||'',
+        'الوقت': a.time||'', 'الخدمة': a.service||'', 'الوحدات': a.units||1,
+        'الفني': a.tech||'', 'الحالة': a.status||'', 'العنوان': a.address||'',
+        'المدة': a.duration||60, 'ملاحظات': a.notes||''
+      };
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(apptRows), '📅 المواعيد');
+  }
+  
+  // أوامر العمل
+  if(DATA.workorders.length > 0) {
+    var woRows = DATA.workorders.map(function(w) {
+      return {
+        'الرقم': w.id||'', 'العميل': w.client||'', 'الجوال': w.phone||'',
+        'الخدمة': w.service||'', 'الوحدات': w.units||1, 'التاريخ': w.date||'',
+        'الفني': w.tech||'', 'الحالة': w.status||'', 'السعر': w.price||0,
+        'قطع الغيار': w.partsCost||0, 'الخصم': w.discount||0, 'الإجمالي': w.total||0,
+        'الدفع': w.payment||'', 'التقييم': w.rating||0
+      };
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(woRows), '🔧 أوامر العمل');
+  }
+  
+  // المالية
+  if(DATA.finance.length > 0) {
+    var finRows = DATA.finance.map(function(f) {
+      return {
+        'النوع': f.type==='income'?'إيراد':'مصروف', 'البيان': f.desc||'',
+        'المبلغ': f.amount||0, 'التاريخ': f.date||'', 'الفئة': f.category||'',
+        'طريقة الدفع': f.method||'', 'الطرف': f.party||'', 'الحالة': f.status||''
+      };
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(finRows), '💰 المالية');
+  }
+  
+  // ملخص
+  var today = new Date().toLocaleDateString('ar-SA');
+  var totalIncome = DATA.finance.filter(function(f){return f.type==='income';}).reduce(function(s,f){return s+(f.amount||0);},0);
+  var totalExp    = DATA.finance.filter(function(f){return f.type==='expense';}).reduce(function(s,f){return s+(f.amount||0);},0);
+  var summaryRows = [
+    {'البيان':'تاريخ النسخة الاحتياطية', 'القيمة': today},
+    {'البيان':'إجمالي العملاء', 'القيمة': DATA.clients.length},
+    {'البيان':'إجمالي المواعيد', 'القيمة': DATA.appointments.length},
+    {'البيان':'إجمالي أوامر العمل', 'القيمة': DATA.workorders.length},
+    {'البيان':'إجمالي القيود المالية', 'القيمة': DATA.finance.length},
+    {'البيان':'إجمالي الإيرادات (ريال)', 'القيمة': totalIncome.toFixed(2)},
+    {'البيان':'إجمالي المصاريف (ريال)', 'القيمة': totalExp.toFixed(2)},
+    {'البيان':'صافي الربح (ريال)', 'القيمة': (totalIncome-totalExp).toFixed(2)},
+  ];
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summaryRows), '📋 ملخص');
+  
+  var fname = 'أطواد-نسخة-احتياطية-'+new Date().toISOString().split('T')[0]+'.xlsx';
+  XLSX.writeFile(wb, fname);
+  showToast('✅ تم تنزيل ملف Excel بنجاح');
+}
+
+// ===== تصدير JSON =====
+function exportJSON() {
+  var backup = {
+    version: '1.0',
+    date: new Date().toISOString(),
+    data: DATA
+  };
+  var blob = new Blob([JSON.stringify(backup, null, 2)], {type:'application/json'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'أطواد-نسخة-احتياطية-'+new Date().toISOString().split('T')[0]+'.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('✅ تم تنزيل ملف JSON بنجاح');
+}
+
+// ===== استيراد JSON =====
+function importJSON(input) {
+  if(!input.files[0]) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var backup = JSON.parse(e.target.result);
+      if(!backup.data) { showToast('❌ ملف غير صالح'); return; }
+      var d = backup.data;
+      if(d.clients)      localStorage.setItem('atwad_clients',      JSON.stringify(d.clients));
+      if(d.appointments) localStorage.setItem('atwad_appointments', JSON.stringify(d.appointments));
+      if(d.workorders)   localStorage.setItem('atwad_workorders',   JSON.stringify(d.workorders));
+      if(d.finance)      localStorage.setItem('atwad_finance',      JSON.stringify(d.finance));
+      showToast('✅ تم استيراد النسخة الاحتياطية بنجاح! أعيدي تحميل الصفحة');
+      setTimeout(function(){ location.reload(); }, 2000);
+    } catch(err) {
+      showToast('❌ خطأ في قراءة الملف');
+    }
+  };
+  reader.readAsText(input.files[0]);
+}
+
+// ===== رفع إلى Firebase =====
+async function uploadToFirebase() {
+  if(!db){ showToast('❌ Firebase غير متاح'); return; }
+  
+  var prog = document.getElementById('fbProgress');
+  var fill = document.getElementById('fbFill');
+  var txt  = document.getElementById('fbTxt');
+  prog.style.display = 'block';
+  
+  var steps = [
+    {key:'clients',    label:'جاري رفع العملاء...'},
+    {key:'appointments',label:'جاري رفع المواعيد...'},
+    {key:'workorders', label:'جاري رفع أوامر العمل...'},
+    {key:'finance',    label:'جاري رفع البيانات المالية...'},
+  ];
+  
+  var total = steps.length;
+  var done  = 0;
+  
+  for(var i=0; i<steps.length; i++) {
+    var step = steps[i];
+    txt.textContent = step.label;
+    fill.style.width = Math.round((i/total)*100)+'%';
+    
+    var items = DATA[step.key];
+    if(items.length === 0){ done++; continue; }
+    
+    try {
+      // رفع كل العناصر دفعة واحدة
+      var updates = {};
+      items.forEach(function(item) {
+        var id = item.id || ('item_'+Date.now()+Math.random().toString(36).slice(2,5));
+        updates['atwad_backup/'+step.key+'/'+id] = item;
+      });
+      await db.ref().update(updates);
+      done++;
+      fill.style.width = Math.round((done/total)*100)+'%';
+      await delay(300);
+    } catch(err) {
+      txt.textContent = '❌ خطأ: '+err.message;
+      return;
+    }
+  }
+  
+  fill.style.width = '100%';
+  txt.textContent = '✅ تم رفع جميع البيانات إلى Firebase بنجاح!';
+  showToast('✅ بياناتك الآن آمنة على السحابة 🎉');
+}
+
+function delay(ms){ return new Promise(function(r){setTimeout(r,ms);}); }
+function showToast(msg){ var t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(function(){t.classList.remove('show');},3000); }
+</script>
+</body>
+</html>
