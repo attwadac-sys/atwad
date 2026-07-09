@@ -4,53 +4,65 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>آراء العملاء — مؤسسة أطواد</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap');
-
   :root {
-    --primary: #1a3a5c;
-    --accent: #e84393;
-    --accent2: #e8a020;
-    --bg: #f0f4f8;
-    --card: #ffffff;
-    --text: #1e2a38;
-    --muted: #6b7a8d;
-    --border: #dde3ea;
-    --shadow: 0 4px 24px rgba(26,58,92,0.10);
-    --star: #f5a623;
+    --primary:  #0b3d6b;
+    --teal:     #00b4d8;
+    --teal2:    #0096c7;
+    --ice:      #e0f4ff;
+    --frost:    #caf0f8;
+    --bg:       #edf6fb;
+    --card:     #ffffff;
+    --text:     #0b2a3d;
+    --muted:    #5a7a8a;
+    --border:   #c8e6f5;
+    --star:     #f5a623;
+    --shadow:   0 4px 24px rgba(11,61,107,0.10);
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   body {
-    font-family: 'Tajawal', sans-serif;
+    font-family: 'Cairo', 'Tajawal', sans-serif;
     background: var(--bg);
     color: var(--text);
     min-height: 100vh;
   }
 
-  /* HEADER */
   header {
-    background: linear-gradient(135deg, #1a3a5c 0%, #0f2540 100%);
-    padding: 28px 32px;
+    background: linear-gradient(135deg, #0b3d6b 0%, #0e5fa8 60%, #00b4d8 100%);
+    padding: 24px 32px;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    position: relative;
+    overflow: hidden;
   }
 
-  .header-left { display: flex; align-items: center; gap: 16px; }
+  header::before {
+    content: '❄';
+    position: absolute;
+    right: 40px; top: -10px;
+    font-size: 100px;
+    opacity: 0.06;
+    color: #fff;
+  }
+
+  .header-left { display: flex; align-items: center; gap: 16px; position: relative; z-index: 1; }
 
   .back-btn {
-    background: rgba(255,255,255,0.12);
-    border: none;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.25);
     color: #fff;
-    padding: 10px 20px;
+    padding: 9px 18px;
     border-radius: 10px;
     cursor: pointer;
-    font-family: 'Tajawal', sans-serif;
-    font-size: 14px;
+    font-family: 'Cairo', sans-serif;
+    font-size: 13px;
     font-weight: 600;
     transition: background 0.2s;
     text-decoration: none;
@@ -59,11 +71,10 @@
     gap: 6px;
   }
 
-  .back-btn:hover { background: rgba(255,255,255,0.2); }
+  .back-btn:hover { background: rgba(255,255,255,0.25); }
 
-  .page-title { color: #fff; }
-  .page-title h1 { font-size: 22px; font-weight: 900; }
-  .page-title p { font-size: 13px; color: rgba(255,255,255,0.55); margin-top: 2px; }
+  .page-title h1 { font-size: 21px; font-weight: 900; color: #fff; font-family: 'Cairo', sans-serif; }
+  .page-title p  { font-size: 12px; color: rgba(255,255,255,0.6); margin-top: 2px; }
 
   /* STATS */
   .stats-row {
@@ -72,42 +83,31 @@
     padding: 0 24px;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
+    gap: 14px;
   }
 
   .stat-card {
     background: var(--card);
     border-radius: 14px;
-    padding: 20px;
+    padding: 18px;
     text-align: center;
     box-shadow: var(--shadow);
     border: 1.5px solid var(--border);
   }
 
-  .stat-card .num {
-    font-size: 28px;
-    font-weight: 900;
-    color: var(--primary);
-    display: block;
-  }
-
-  .stat-card .lbl {
-    font-size: 12px;
-    color: var(--muted);
-    margin-top: 4px;
-  }
-
-  .stat-card.accent .num { color: var(--accent); }
+  .stat-card .num { font-size: 26px; font-weight: 900; color: var(--primary); display: block; font-family: 'Cairo', sans-serif; }
+  .stat-card .lbl { font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .stat-card.teal .num { color: var(--teal2); }
   .stat-card.gold .num { color: var(--star); }
 
-  /* MAIN */
+  /* MAIN LAYOUT */
   main {
     max-width: 1100px;
     margin: 0 auto;
-    padding: 28px 24px 60px;
+    padding: 26px 24px 60px;
     display: grid;
-    grid-template-columns: 380px 1fr;
-    gap: 28px;
+    grid-template-columns: 360px 1fr;
+    gap: 24px;
     align-items: start;
   }
 
@@ -115,7 +115,7 @@
   .form-card {
     background: var(--card);
     border-radius: 18px;
-    padding: 28px;
+    padding: 26px;
     box-shadow: var(--shadow);
     border: 1.5px solid var(--border);
     position: sticky;
@@ -123,51 +123,53 @@
   }
 
   .form-card h2 {
-    font-size: 17px;
+    font-size: 16px;
     font-weight: 800;
     color: var(--primary);
-    margin-bottom: 22px;
+    margin-bottom: 20px;
     padding-bottom: 14px;
     border-bottom: 2px solid var(--border);
     display: flex;
     align-items: center;
     gap: 8px;
+    font-family: 'Cairo', sans-serif;
   }
 
-  .field { margin-bottom: 18px; }
+  .field { margin-bottom: 16px; }
 
   label {
     display: block;
     font-size: 13px;
     font-weight: 600;
     color: var(--text);
-    margin-bottom: 7px;
+    margin-bottom: 6px;
+    font-family: 'Cairo', sans-serif;
   }
 
   input, textarea, select {
     width: 100%;
-    padding: 11px 14px;
+    padding: 10px 13px;
     border: 1.5px solid var(--border);
     border-radius: 10px;
-    font-family: 'Tajawal', sans-serif;
+    font-family: 'Cairo', 'Tajawal', sans-serif;
     font-size: 14px;
     color: var(--text);
-    background: #f8fafc;
+    background: #f5fafd;
     transition: border-color 0.2s;
     outline: none;
   }
 
   input:focus, textarea:focus, select:focus {
-    border-color: var(--accent);
+    border-color: var(--teal);
     background: #fff;
   }
 
-  textarea { resize: vertical; min-height: 90px; }
+  textarea { resize: vertical; min-height: 85px; }
 
-  /* STARS INPUT */
+  /* STARS */
   .stars-input {
     display: flex;
-    gap: 6px;
+    gap: 4px;
     flex-direction: row-reverse;
     justify-content: flex-end;
   }
@@ -175,9 +177,9 @@
   .stars-input input { display: none; }
 
   .stars-input label {
-    font-size: 32px;
+    font-size: 30px;
     cursor: pointer;
-    color: #dde3ea;
+    color: #d0e8f0;
     transition: color 0.15s;
     margin: 0;
     line-height: 1;
@@ -190,101 +192,90 @@
   }
 
   /* SERVICE TAGS */
-  .service-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
+  .service-tags { display: flex; flex-wrap: wrap; gap: 7px; }
 
   .service-tag {
-    padding: 6px 14px;
+    padding: 5px 12px;
     border: 1.5px solid var(--border);
     border-radius: 20px;
-    font-size: 13px;
+    font-size: 12px;
     cursor: pointer;
     transition: all 0.2s;
-    background: #f8fafc;
+    background: #f5fafd;
     color: var(--muted);
+    font-family: 'Cairo', sans-serif;
     user-select: none;
   }
 
   .service-tag.active {
-    background: var(--accent);
-    border-color: var(--accent);
+    background: var(--teal);
+    border-color: var(--teal);
     color: #fff;
   }
 
-  /* SUBMIT BTN */
+  /* SUBMIT */
   .submit-btn {
     width: 100%;
-    padding: 14px;
-    background: linear-gradient(135deg, var(--accent), #c0306e);
+    padding: 13px;
+    background: linear-gradient(135deg, #0096c7, #00b4d8);
     color: #fff;
     border: none;
     border-radius: 12px;
-    font-family: 'Tajawal', sans-serif;
-    font-size: 16px;
+    font-family: 'Cairo', sans-serif;
+    font-size: 15px;
     font-weight: 700;
     cursor: pointer;
     transition: opacity 0.2s, transform 0.15s;
-    margin-top: 8px;
+    margin-top: 6px;
+    box-shadow: 0 4px 16px rgba(0,180,216,0.35);
   }
 
-  .submit-btn:hover { opacity: 0.92; transform: translateY(-1px); }
-  .submit-btn:active { transform: translateY(0); }
+  .submit-btn:hover { opacity: 0.90; transform: translateY(-1px); }
   .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-  /* REVIEWS SECTION */
+  /* REVIEWS */
   .reviews-section h2 {
-    font-size: 17px;
+    font-size: 16px;
     font-weight: 800;
     color: var(--primary);
-    margin-bottom: 20px;
+    margin-bottom: 18px;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    font-family: 'Cairo', sans-serif;
   }
 
-  .filter-bar {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-  }
+  .filter-bar { display: flex; gap: 7px; margin-bottom: 18px; flex-wrap: wrap; }
 
   .filter-btn {
-    padding: 7px 16px;
+    padding: 6px 14px;
     border: 1.5px solid var(--border);
     border-radius: 20px;
-    font-family: 'Tajawal', sans-serif;
-    font-size: 13px;
+    font-family: 'Cairo', sans-serif;
+    font-size: 12px;
     cursor: pointer;
     background: var(--card);
     color: var(--muted);
     transition: all 0.2s;
   }
 
-  .filter-btn.active {
-    background: var(--primary);
-    border-color: var(--primary);
-    color: #fff;
-  }
+  .filter-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
 
   /* REVIEW CARD */
   .review-card {
     background: var(--card);
     border-radius: 16px;
-    padding: 22px;
+    padding: 20px;
     box-shadow: var(--shadow);
     border: 1.5px solid var(--border);
-    margin-bottom: 16px;
-    transition: transform 0.2s;
+    margin-bottom: 14px;
     animation: slideIn 0.3s ease;
+    transition: transform 0.2s;
   }
 
   @keyframes slideIn {
-    from { opacity: 0; transform: translateY(12px); }
-    to { opacity: 1; transform: translateY(0); }
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
 
   .review-card:hover { transform: translateY(-2px); }
@@ -293,57 +284,55 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
   }
 
-  .reviewer-info { display: flex; align-items: center; gap: 12px; }
+  .reviewer-info { display: flex; align-items: center; gap: 11px; }
 
   .reviewer-avatar {
-    width: 44px; height: 44px;
+    width: 42px; height: 42px;
     border-radius: 12px;
-    background: linear-gradient(135deg, var(--accent), #c0306e);
+    background: linear-gradient(135deg, #0096c7, #00b4d8);
     display: flex; align-items: center; justify-content: center;
-    font-size: 18px;
+    font-size: 17px;
     color: #fff;
     font-weight: 700;
     flex-shrink: 0;
+    font-family: 'Cairo', sans-serif;
   }
 
-  .reviewer-name { font-size: 15px; font-weight: 700; color: var(--text); }
-  .reviewer-date { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .reviewer-name { font-size: 14px; font-weight: 700; color: var(--text); font-family: 'Cairo', sans-serif; }
+  .reviewer-date { font-size: 11px; color: var(--muted); margin-top: 2px; }
 
-  .stars-display {
-    color: var(--star);
-    font-size: 16px;
-    letter-spacing: 2px;
-  }
+  .stars-display { color: var(--star); font-size: 15px; letter-spacing: 1px; }
 
   .review-service {
     display: inline-block;
     padding: 3px 10px;
-    background: #f0ebfa;
-    color: #7c5cbf;
+    background: var(--ice);
+    color: var(--teal2);
     border-radius: 6px;
     font-size: 11px;
     font-weight: 600;
-    margin-bottom: 10px;
+    margin-bottom: 9px;
+    font-family: 'Cairo', sans-serif;
   }
 
   .review-text {
-    font-size: 14px;
+    font-size: 13px;
     line-height: 1.7;
     color: var(--text);
-    background: #f8fafc;
-    padding: 12px 14px;
+    background: #f5fafd;
+    padding: 11px 13px;
     border-radius: 10px;
-    border-right: 3px solid var(--accent);
+    border-right: 3px solid var(--teal);
   }
 
   .review-footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 12px;
+    margin-top: 11px;
   }
 
   .delete-btn {
@@ -352,9 +341,9 @@
     color: #c0392b;
     cursor: pointer;
     font-size: 12px;
-    opacity: 0.5;
+    opacity: 0.45;
     transition: opacity 0.2s;
-    font-family: 'Tajawal', sans-serif;
+    font-family: 'Cairo', sans-serif;
   }
 
   .delete-btn:hover { opacity: 1; }
@@ -362,56 +351,57 @@
   .rating-badge {
     padding: 3px 10px;
     border-radius: 6px;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
+    font-family: 'Cairo', sans-serif;
   }
 
-  .badge-5 { background: #e5f5ee; color: #2e9e6b; }
-  .badge-4 { background: #e8f4e8; color: #3a9e3a; }
+  .badge-5 { background: #e0f4ff; color: #0096c7; }
+  .badge-4 { background: #e5f5ee; color: #2e9e6b; }
   .badge-3 { background: #fdf3e3; color: #e8a020; }
-  .badge-2 { background: #fdecea; color: #c0392b; }
-  .badge-1 { background: #fdecea; color: #c0392b; }
+  .badge-2, .badge-1 { background: #fdecea; color: #c0392b; }
 
-  /* EMPTY */
   .empty-state {
     text-align: center;
     padding: 60px 20px;
     color: var(--muted);
   }
 
-  .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
-  .empty-state p { font-size: 15px; }
+  .empty-state .icon { font-size: 46px; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; }
 
   /* TOAST */
   .toast {
     position: fixed;
-    bottom: 30px;
+    bottom: 28px;
     left: 50%;
     transform: translateX(-50%) translateY(80px);
     background: var(--primary);
     color: #fff;
-    padding: 14px 28px;
+    padding: 13px 26px;
     border-radius: 12px;
     font-size: 14px;
     font-weight: 600;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.18);
     transition: transform 0.3s ease;
     z-index: 1000;
+    font-family: 'Cairo', sans-serif;
   }
 
   .toast.show { transform: translateX(-50%) translateY(0); }
-  .toast.success { background: #2e9e6b; }
-  .toast.error { background: #c0392b; }
+  .toast.success { background: #0096c7; }
+  .toast.error   { background: #c0392b; }
 
   footer {
     background: var(--primary);
-    color: rgba(255,255,255,0.5);
+    color: rgba(255,255,255,0.45);
     text-align: center;
     padding: 18px;
     font-size: 13px;
+    font-family: 'Cairo', sans-serif;
   }
 
-  footer strong { color: var(--accent2); }
+  footer strong { color: var(--teal); }
 
   @media (max-width: 768px) {
     main { grid-template-columns: 1fr; }
@@ -441,12 +431,12 @@
     <span class="num" id="avgRating">--</span>
     <div class="lbl">متوسط التقييم</div>
   </div>
-  <div class="stat-card accent">
+  <div class="stat-card teal">
     <span class="num" id="fiveStars">0</span>
     <div class="lbl">تقييم 5 نجوم</div>
   </div>
   <div class="stat-card">
-    <span class="num" id="recommend">--%</span>
+    <span class="num" id="recommendPct">--%</span>
     <div class="lbl">يوصون بالخدمة</div>
   </div>
 </div>
@@ -465,17 +455,12 @@
 
     <div class="field">
       <label>التقييم</label>
-      <div class="stars-input" id="starsInput">
-        <input type="radio" name="rating" id="s5" value="5">
-        <label for="s5">★</label>
-        <input type="radio" name="rating" id="s4" value="4">
-        <label for="s4">★</label>
-        <input type="radio" name="radio" id="s3" value="3">
-        <label for="s3">★</label>
-        <input type="radio" name="rating" id="s2" value="2">
-        <label for="s2">★</label>
-        <input type="radio" name="rating" id="s1" value="1">
-        <label for="s1">★</label>
+      <div class="stars-input">
+        <input type="radio" name="rating" id="s5" value="5"><label for="s5">★</label>
+        <input type="radio" name="rating" id="s4" value="4"><label for="s4">★</label>
+        <input type="radio" name="rating" id="s3" value="3"><label for="s3">★</label>
+        <input type="radio" name="rating" id="s2" value="2"><label for="s2">★</label>
+        <input type="radio" name="rating" id="s1" value="1"><label for="s1">★</label>
       </div>
     </div>
 
@@ -515,12 +500,12 @@
     </h2>
 
     <div class="filter-bar">
-      <button class="filter-btn active" onclick="filterReviews('all', this)">الكل</button>
-      <button class="filter-btn" onclick="filterReviews(5, this)">⭐⭐⭐⭐⭐</button>
-      <button class="filter-btn" onclick="filterReviews(4, this)">⭐⭐⭐⭐</button>
-      <button class="filter-btn" onclick="filterReviews(3, this)">⭐⭐⭐</button>
-      <button class="filter-btn" onclick="filterReviews(2, this)">⭐⭐</button>
-      <button class="filter-btn" onclick="filterReviews(1, this)">⭐</button>
+      <button class="filter-btn active" onclick="filterReviews('all',this)">الكل</button>
+      <button class="filter-btn" onclick="filterReviews(5,this)">⭐⭐⭐⭐⭐</button>
+      <button class="filter-btn" onclick="filterReviews(4,this)">⭐⭐⭐⭐</button>
+      <button class="filter-btn" onclick="filterReviews(3,this)">⭐⭐⭐</button>
+      <button class="filter-btn" onclick="filterReviews(2,this)">⭐⭐</button>
+      <button class="filter-btn" onclick="filterReviews(1,this)">⭐</button>
     </div>
 
     <div id="reviewsList"></div>
@@ -535,11 +520,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  // Firebase config
-  const firebaseConfig = {
-    databaseURL: "https://atwad-booking-default-rtdb.firebaseio.com"
-  };
-  firebase.initializeApp(firebaseConfig);
+  firebase.initializeApp({ databaseURL: "https://atwad-booking-default-rtdb.firebaseio.com" });
   const db = firebase.database();
 
   let allReviews = [];
@@ -554,30 +535,28 @@
     });
   });
 
-  // Load customers for autocomplete
+  // Load customers
   function loadCustomers() {
-    try {
-      const customers = JSON.parse(localStorage.getItem('customers') || '[]');
-      const dl = document.getElementById('customersList');
-      customers.forEach(c => {
-        const opt = document.createElement('option');
-        opt.value = c.name || c.customerName || '';
-        dl.appendChild(opt);
-      });
-    } catch(e) {}
-
-    // Also try Firebase
     db.ref('customers').once('value').then(snap => {
       const data = snap.val();
       if (!data) return;
       const dl = document.getElementById('customersList');
-      dl.innerHTML = '';
       Object.values(data).forEach(c => {
         const opt = document.createElement('option');
         opt.value = c.name || c.customerName || '';
         dl.appendChild(opt);
       });
-    }).catch(() => {});
+    }).catch(() => {
+      try {
+        const customers = JSON.parse(localStorage.getItem('customers') || '[]');
+        const dl = document.getElementById('customersList');
+        customers.forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c.name || c.customerName || '';
+          dl.appendChild(opt);
+        });
+      } catch(e) {}
+    });
   }
 
   // Load reviews
@@ -586,9 +565,7 @@
       const data = snap.val();
       allReviews = [];
       if (data) {
-        Object.entries(data).forEach(([id, r]) => {
-          allReviews.push({ id, ...r });
-        });
+        Object.entries(data).forEach(([id, r]) => allReviews.push({ id, ...r }));
         allReviews.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
       }
       renderReviews(allReviews);
@@ -601,20 +578,15 @@
     document.getElementById('reviewCount').textContent = `(${reviews.length})`;
 
     if (reviews.length === 0) {
-      container.innerHTML = `
-        <div class="empty-state">
-          <div class="icon">💬</div>
-          <p>لا توجد آراء حتى الآن<br>أضف أول رأي عميل من النموذج</p>
-        </div>`;
+      container.innerHTML = `<div class="empty-state"><div class="icon">💬</div><p>لا توجد آراء حتى الآن<br>أضف أول رأي عميل من النموذج</p></div>`;
       return;
     }
 
     container.innerHTML = reviews.map(r => {
-      const stars = '★'.repeat(r.rating || 5) + '☆'.repeat(5 - (r.rating || 5));
+      const stars   = '★'.repeat(r.rating || 5) + '☆'.repeat(5 - (r.rating || 5));
       const initial = (r.customerName || 'ع')[0];
-      const date = r.timestamp ? new Date(r.timestamp).toLocaleDateString('ar-SA') : '';
-      const badgeClass = `badge-${r.rating || 5}`;
-      const ratingText = ['', 'سيء', 'مقبول', 'جيد', 'جيد جداً', 'ممتاز'][r.rating || 5];
+      const date    = r.timestamp ? new Date(r.timestamp).toLocaleDateString('ar-SA') : '';
+      const labels  = ['','سيء','مقبول','جيد','جيد جداً','ممتاز'];
 
       return `
       <div class="review-card">
@@ -629,11 +601,13 @@
           <div class="stars-display">${stars}</div>
         </div>
         ${r.service ? `<span class="review-service">${r.service}</span>` : ''}
-        ${r.text ? `<div class="review-text">${r.text}</div>` : ''}
+        ${r.text    ? `<div class="review-text">${r.text}</div>` : ''}
         <div class="review-footer">
-          <span class="rating-badge ${badgeClass}">${ratingText}</span>
-          <div style="display:flex;gap:12px;align-items:center">
-            ${r.recommend === 'yes' ? '<span style="font-size:12px;color:#2e9e6b">✅ يوصي بالخدمة</span>' : '<span style="font-size:12px;color:#c0392b">❌ لا يوصي</span>'}
+          <span class="rating-badge badge-${r.rating||5}">${labels[r.rating||5]}</span>
+          <div style="display:flex;gap:10px;align-items:center">
+            ${r.recommend==='yes'
+              ? '<span style="font-size:12px;color:#0096c7">✅ يوصي بالخدمة</span>'
+              : '<span style="font-size:12px;color:#c0392b">❌ لا يوصي</span>'}
             <button class="delete-btn" onclick="deleteReview('${r.id}')">🗑️ حذف</button>
           </div>
         </div>
@@ -643,84 +617,61 @@
 
   function updateStats() {
     document.getElementById('totalReviews').textContent = allReviews.length;
-
-    if (allReviews.length === 0) {
-      document.getElementById('avgRating').textContent = '--';
-      document.getElementById('fiveStars').textContent = '0';
-      document.getElementById('recommend').textContent = '--%';
-      return;
-    }
-
-    const avg = allReviews.reduce((s, r) => s + (r.rating || 5), 0) / allReviews.length;
+    if (!allReviews.length) return;
+    const avg = allReviews.reduce((s,r) => s+(r.rating||5), 0) / allReviews.length;
     document.getElementById('avgRating').textContent = avg.toFixed(1) + ' ★';
-
-    const fiveCount = allReviews.filter(r => r.rating === 5).length;
-    document.getElementById('fiveStars').textContent = fiveCount;
-
-    const recCount = allReviews.filter(r => r.recommend === 'yes').length;
-    document.getElementById('recommend').textContent = Math.round(recCount / allReviews.length * 100) + '%';
+    document.getElementById('fiveStars').textContent = allReviews.filter(r=>r.rating===5).length;
+    const rec = allReviews.filter(r=>r.recommend==='yes').length;
+    document.getElementById('recommendPct').textContent = Math.round(rec/allReviews.length*100) + '%';
   }
 
   function filterReviews(val, btn) {
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
-    if (val === 'all') {
-      renderReviews(allReviews);
-    } else {
-      renderReviews(allReviews.filter(r => r.rating === val));
-    }
+    renderReviews(val==='all' ? allReviews : allReviews.filter(r=>r.rating===val));
   }
 
   function addReview() {
-    const name = document.getElementById('customerName').value.trim();
-    const ratingInput = document.querySelector('input[name="rating"]:checked');
-    const text = document.getElementById('reviewText').value.trim();
-    const rec = document.getElementById('recommend').value;
+    const name   = document.getElementById('customerName').value.trim();
+    const rInput = document.querySelector('input[name="rating"]:checked');
+    const text   = document.getElementById('reviewText').value.trim();
+    const rec    = document.getElementById('recommend').value;
 
-    if (!name) { showToast('⚠️ أدخل اسم العميل', 'error'); return; }
-    if (!ratingInput) { showToast('⚠️ اختر التقييم', 'error'); return; }
+    if (!name)   { showToast('⚠️ أدخل اسم العميل', 'error'); return; }
+    if (!rInput) { showToast('⚠️ اختر التقييم بالنجوم', 'error'); return; }
 
     const btn = document.querySelector('.submit-btn');
-    btn.disabled = true;
-    btn.textContent = '⏳ جاري الحفظ...';
+    btn.disabled = true; btn.textContent = '⏳ جاري الحفظ...';
 
-    const review = {
+    db.ref('reviews').push({
       customerName: name,
-      rating: parseInt(ratingInput.value),
+      rating: parseInt(rInput.value),
       service: selectedService || '',
-      text: text,
-      recommend: rec,
+      text, recommend: rec,
       timestamp: Date.now()
-    };
-
-    db.ref('reviews').push(review)
-      .then(() => {
-        showToast('✅ تم حفظ الرأي بنجاح!', 'success');
-        // Reset form
-        document.getElementById('customerName').value = '';
-        document.querySelectorAll('input[name="rating"]').forEach(r => r.checked = false);
-        document.getElementById('reviewText').value = '';
-        document.getElementById('recommend').value = 'yes';
-        document.querySelectorAll('.service-tag').forEach(t => t.classList.remove('active'));
-        selectedService = '';
-        btn.disabled = false;
-        btn.textContent = '💾 حفظ الرأي';
-      })
-      .catch(err => {
-        showToast('❌ خطأ في الحفظ: ' + err.message, 'error');
-        btn.disabled = false;
-        btn.textContent = '💾 حفظ الرأي';
-      });
+    }).then(() => {
+      showToast('✅ تم حفظ الرأي بنجاح!', 'success');
+      document.getElementById('customerName').value = '';
+      document.querySelectorAll('input[name="rating"]').forEach(r=>r.checked=false);
+      document.getElementById('reviewText').value = '';
+      document.getElementById('recommend').value = 'yes';
+      document.querySelectorAll('.service-tag').forEach(t=>t.classList.remove('active'));
+      selectedService = '';
+      btn.disabled = false; btn.textContent = '💾 حفظ الرأي';
+    }).catch(err => {
+      showToast('❌ خطأ: ' + err.message, 'error');
+      btn.disabled = false; btn.textContent = '💾 حفظ الرأي';
+    });
   }
 
   function deleteReview(id) {
     if (!confirm('هل تريدين حذف هذا الرأي؟')) return;
-    db.ref('reviews/' + id).remove()
-      .then(() => showToast('🗑️ تم حذف الرأي', 'success'))
-      .catch(() => showToast('❌ خطأ في الحذف', 'error'));
+    db.ref('reviews/'+id).remove()
+      .then(()  => showToast('🗑️ تم الحذف', 'success'))
+      .catch(()  => showToast('❌ خطأ في الحذف', 'error'));
   }
 
-  function showToast(msg, type = '') {
+  function showToast(msg, type='') {
     const t = document.getElementById('toast');
     t.textContent = msg;
     t.className = 'toast ' + type;
@@ -728,7 +679,6 @@
     setTimeout(() => t.classList.remove('show'), 3000);
   }
 
-  // Init
   loadCustomers();
   loadReviews();
 </script>

@@ -4,26 +4,30 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>مؤسسة أطواد - النظام الإداري</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap');
-
   :root {
-    --primary: #1a3a5c;
-    --accent: #e8a020;
-    --accent2: #2e7d9e;
-    --bg: #f0f4f8;
-    --card: #ffffff;
-    --text: #1e2a38;
-    --muted: #6b7a8d;
-    --border: #dde3ea;
-    --success: #2e9e6b;
-    --shadow: 0 4px 24px rgba(26,58,92,0.10);
+    --primary:   #0b3d6b;
+    --primary2:  #0e5fa8;
+    --ice:       #e0f4ff;
+    --teal:      #00b4d8;
+    --teal2:     #0096c7;
+    --frost:     #caf0f8;
+    --bg:        #edf6fb;
+    --card:      #ffffff;
+    --text:      #0b2a3d;
+    --muted:     #5a7a8a;
+    --border:    #c8e6f5;
+    --accent:    #00b4d8;
+    --gold:      #f4a820;
+    --shadow:    0 4px 24px rgba(11,61,107,0.10);
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   body {
-    font-family: 'Tajawal', sans-serif;
+    font-family: 'Cairo', 'Tajawal', sans-serif;
     background: var(--bg);
     color: var(--text);
     min-height: 100vh;
@@ -31,34 +35,34 @@
 
   /* HEADER */
   header {
-    background: linear-gradient(135deg, var(--primary) 0%, #0f2540 100%);
+    background: linear-gradient(135deg, #0b3d6b 0%, #0e5fa8 60%, #00b4d8 100%);
     padding: 0;
     position: relative;
     overflow: hidden;
   }
 
   header::before {
-    content: '';
+    content: '❄';
     position: absolute;
-    top: -60px; left: -60px;
-    width: 300px; height: 300px;
-    background: rgba(232,160,32,0.08);
-    border-radius: 50%;
+    top: -10px; left: 30px;
+    font-size: 120px;
+    opacity: 0.05;
+    color: #fff;
   }
 
   header::after {
-    content: '';
+    content: '❄';
     position: absolute;
-    bottom: -80px; right: -40px;
-    width: 250px; height: 250px;
-    background: rgba(46,125,158,0.10);
-    border-radius: 50%;
+    bottom: -20px; right: 60px;
+    font-size: 90px;
+    opacity: 0.06;
+    color: #fff;
   }
 
   .header-inner {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 36px 32px 28px;
+    padding: 32px 32px 24px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -69,12 +73,14 @@
   .logo-area { display: flex; align-items: center; gap: 18px; }
 
   .logo-icon {
-    width: 60px; height: 60px;
-    background: var(--accent);
-    border-radius: 16px;
+    width: 62px; height: 62px;
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(8px);
+    border: 2px solid rgba(255,255,255,0.25);
+    border-radius: 18px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 28px;
-    box-shadow: 0 4px 16px rgba(232,160,32,0.4);
+    font-size: 30px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
   }
 
   .logo-text h1 {
@@ -82,89 +88,101 @@
     font-weight: 900;
     color: #fff;
     letter-spacing: -0.5px;
+    font-family: 'Cairo', sans-serif;
   }
 
   .logo-text p {
     font-size: 13px;
-    color: rgba(255,255,255,0.6);
-    font-weight: 300;
+    color: rgba(255,255,255,0.65);
+    font-weight: 400;
     margin-top: 2px;
   }
 
   .header-date {
     text-align: left;
-    color: rgba(255,255,255,0.7);
+    color: rgba(255,255,255,0.75);
     font-size: 13px;
+    background: rgba(255,255,255,0.10);
+    padding: 10px 18px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.15);
   }
 
   .header-date strong {
     display: block;
-    color: var(--accent);
-    font-size: 15px;
+    color: var(--frost);
+    font-size: 14px;
     font-weight: 700;
+    margin-bottom: 2px;
   }
 
   /* STATS BAR */
   .stats-bar {
-    background: var(--accent);
-    padding: 14px 32px;
+    background: linear-gradient(90deg, #0096c7, #00b4d8);
+    padding: 0 32px;
   }
 
   .stats-inner {
     max-width: 1200px;
     margin: 0 auto;
     display: flex;
-    gap: 40px;
-    justify-content: center;
+    gap: 0;
+    justify-content: space-around;
   }
 
   .stat-item {
     text-align: center;
-    color: var(--primary);
+    padding: 16px 20px;
+    color: #fff;
+    border-left: 1px solid rgba(255,255,255,0.15);
+    flex: 1;
   }
 
+  .stat-item:last-child { border-left: none; }
+
   .stat-item strong {
-    font-size: 20px;
+    font-size: 22px;
     font-weight: 900;
     display: block;
+    font-family: 'Cairo', sans-serif;
   }
 
   .stat-item span {
     font-size: 12px;
     font-weight: 500;
-    opacity: 0.8;
+    opacity: 0.85;
   }
 
   /* MAIN */
   main {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 40px 24px 60px;
+    padding: 36px 24px 60px;
   }
 
   .section-title {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 700;
-    color: var(--muted);
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    margin-bottom: 20px;
-    padding-right: 12px;
-    border-right: 3px solid var(--accent);
+    color: var(--teal2);
+    letter-spacing: 2px;
+    margin-bottom: 22px;
+    padding-right: 14px;
+    border-right: 3px solid var(--teal);
+    font-family: 'Cairo', sans-serif;
   }
 
   /* MODULES GRID */
   .modules-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+    gap: 18px;
     margin-bottom: 48px;
   }
 
   .module-card {
     background: var(--card);
     border-radius: 18px;
-    padding: 28px 24px;
+    padding: 26px 22px;
     text-decoration: none;
     color: var(--text);
     box-shadow: var(--shadow);
@@ -172,78 +190,84 @@
     transition: all 0.25s ease;
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 12px;
     position: relative;
     overflow: hidden;
   }
 
-  .module-card::before {
+  .module-card::after {
     content: '';
     position: absolute;
     top: 0; right: 0;
     width: 4px;
     height: 100%;
-    background: var(--card-accent, var(--primary));
+    background: var(--c-accent, var(--teal));
     border-radius: 0 18px 18px 0;
   }
 
   .module-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 40px rgba(26,58,92,0.15);
-    border-color: var(--card-accent, var(--primary));
+    transform: translateY(-5px);
+    box-shadow: 0 14px 40px rgba(11,61,107,0.14);
+    border-color: var(--c-accent, var(--teal));
   }
 
   .module-icon {
-    width: 52px; height: 52px;
+    width: 50px; height: 50px;
     border-radius: 14px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 24px;
-    background: var(--icon-bg, #eef2f7);
+    font-size: 22px;
+    background: var(--c-bg, var(--ice));
   }
 
   .module-card h3 {
-    font-size: 17px;
+    font-size: 16px;
     font-weight: 700;
     color: var(--text);
+    font-family: 'Cairo', sans-serif;
   }
 
   .module-card p {
     font-size: 13px;
     color: var(--muted);
-    line-height: 1.6;
+    line-height: 1.65;
     flex: 1;
   }
 
   .module-arrow {
-    font-size: 18px;
-    color: var(--card-accent, var(--primary));
+    font-size: 16px;
+    color: var(--c-accent, var(--teal));
     align-self: flex-end;
+    opacity: 0.7;
   }
 
   /* Color variants */
-  .card-blue   { --card-accent: #1a3a5c; --icon-bg: #e8eef5; }
-  .card-teal   { --card-accent: #2e7d9e; --icon-bg: #e5f2f7; }
-  .card-green  { --card-accent: #2e9e6b; --icon-bg: #e5f5ee; }
-  .card-orange { --card-accent: #e8a020; --icon-bg: #fdf3e3; }
-  .card-purple { --card-accent: #7c5cbf; --icon-bg: #f0ebfa; }
-  .card-red    { --card-accent: #c0392b; --icon-bg: #fdecea; }
-  .card-pink   { --card-accent: #e84393; --icon-bg: #fde8f3; }
+  .c1 { --c-accent:#0b3d6b; --c-bg:#e0eef8; }
+  .c2 { --c-accent:#00b4d8; --c-bg:#e0f4ff; }
+  .c3 { --c-accent:#0096c7; --c-bg:#d0ecf7; }
+  .c4 { --c-accent:#0e5fa8; --c-bg:#dceeff; }
+  .c5 { --c-accent:#3a7bd5; --c-bg:#e3eeff; }
+  .c6 { --c-accent:#0077b6; --c-bg:#d6eaf8; }
+  .c7 { --c-accent:#48cae4; --c-bg:#e0faff; }
+  .c8 { --c-accent:#00b4d8; --c-bg:#e0f4ff; }
+  .c9 { --c-accent:#023e8a; --c-bg:#dce8f8; }
 
   /* FOOTER */
   footer {
     background: var(--primary);
-    color: rgba(255,255,255,0.5);
+    color: rgba(255,255,255,0.45);
     text-align: center;
     padding: 20px;
     font-size: 13px;
+    font-family: 'Cairo', sans-serif;
   }
 
-  footer strong { color: var(--accent); }
+  footer strong { color: var(--teal); }
 
   @media (max-width: 600px) {
-    .header-inner { flex-direction: column; gap: 16px; text-align: center; }
-    .stats-inner { gap: 20px; flex-wrap: wrap; }
-    .header-date { text-align: center; }
+    .header-inner { flex-direction: column; gap: 14px; text-align: center; }
+    .header-date { text-align: center; width: 100%; }
+    .stats-inner { flex-wrap: wrap; }
+    .stat-item { min-width: 45%; border-left: none; border-bottom: 1px solid rgba(255,255,255,0.1); }
   }
 </style>
 </head>
@@ -260,7 +284,7 @@
     </div>
     <div class="header-date">
       <strong id="currentDate">--</strong>
-      <span>جدة، المملكة العربية السعودية</span>
+      جدة، المملكة العربية السعودية
     </div>
   </div>
 </header>
@@ -295,63 +319,63 @@
 
   <div class="modules-grid">
 
-    <a href="atwad-customers.html" class="module-card card-blue">
+    <a href="atwad-customers.html" class="module-card c1">
       <div class="module-icon">👥</div>
       <h3>إدارة العملاء</h3>
       <p>عرض وإضافة وتعديل بيانات العملاء، والتواصل معهم عبر واتساب</p>
       <span class="module-arrow">←</span>
     </a>
 
-    <a href="atwad-booking.html" class="module-card card-teal">
+    <a href="atwad-booking.html" class="module-card c2">
       <div class="module-icon">📅</div>
       <h3>الحجوزات</h3>
       <p>استقبال طلبات الحجز الجديدة وإدارة تفاصيل الخدمات المطلوبة</p>
       <span class="module-arrow">←</span>
     </a>
 
-    <a href="atwad-appointments.html" class="module-card card-green">
+    <a href="atwad-appointments.html" class="module-card c3">
       <div class="module-icon">🗓️</div>
       <h3>المواعيد</h3>
       <p>جدولة المواعيد وتتبع حالتها ومنع التعارض في التوقيت</p>
       <span class="module-arrow">←</span>
     </a>
 
-    <a href="atwad-workorders.html" class="module-card card-orange">
+    <a href="atwad-workorders.html" class="module-card c4">
       <div class="module-icon">🔧</div>
       <h3>أوامر العمل</h3>
       <p>تتبع تنفيذ الخدمات الميدانية وتعيين الفنيين وإغلاق الأوامر</p>
       <span class="module-arrow">←</span>
     </a>
 
-    <a href="atwad-finance.html" class="module-card card-purple">
+    <a href="atwad-finance.html" class="module-card c5">
       <div class="module-icon">💰</div>
       <h3>الإدارة المالية</h3>
       <p>تسجيل الإيرادات والمصروفات وعرض التقارير المالية الشاملة</p>
       <span class="module-arrow">←</span>
     </a>
 
-    <a href="atwad-reports.html" class="module-card card-red">
+    <a href="atwad-reports.html" class="module-card c6">
       <div class="module-icon">📊</div>
       <h3>التقارير والإحصاء</h3>
       <p>تحليلات الأداء والنمو والتقارير التشغيلية للمؤسسة</p>
       <span class="module-arrow">←</span>
     </a>
 
-    <a href="atwad-reviews.html" class="module-card card-pink">
+    <a href="atwad-reviews.html" class="module-card c7">
       <div class="module-icon">⭐</div>
       <h3>آراء العملاء</h3>
       <p>استعراض تقييمات العملاء وإضافة آراء جديدة لتطوير الخدمة</p>
       <span class="module-arrow">←</span>
     </a>
 
-    <a href="atwad-import-excel.html" class="module-card card-teal">
+    <a href="atwad-import-excel.html" class="module-card c8">
       <div class="module-icon">📥</div>
       <h3>استيراد Excel</h3>
       <p>رفع وتحديث بيانات النظام من ملفات إكسل بضغطة واحدة</p>
       <span class="module-arrow">←</span>
     </a>
 
-    <a href="atwad-backup.html" class="module-card card-blue">
+    <a href="atwad-backup.html" class="module-card c9">
       <div class="module-icon">☁️</div>
       <h3>النسخ الاحتياطي</h3>
       <p>رفع جميع البيانات إلى Firebase وتنزيل نسخ Excel للحفظ الآمن</p>
@@ -365,7 +389,6 @@
   <p>مؤسسة <strong>أطواد</strong> للتكييف والتنظيف — جدة &copy; 2026</p>
 </footer>
 
-<script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <script>
