@@ -381,20 +381,20 @@
   <div class="sidebar-logo">
     <div class="icon">❄️</div>
     <div>
-      <h1>أطواد</h1>
-      <p>لصيانة المكيفات</p>
+      <h1 id="nav-brand">أطواد</h1>
+      <p id="nav-brandsub">لصيانة المكيفات</p>
     </div>
   </div>
   <div class="nav-section">
     <div class="nav-label">القائمة الرئيسية</div>
-    <div class="nav-item active" id="nav-clients" id="nav-clients" onclick="location.href='atwad-customers.html'"><span class="nav-icon">👥</span> العملاء <span class="nav-badge" id="navBadge">0</span></div>
-    <div class="nav-item" id="nav-appts" id="nav-appts" onclick="location.href='atwad-appointments.html'"><span class="nav-icon">📅</span> المواعيد</div>
-    <div class="nav-item" id="nav-wo" id="nav-wo" onclick="location.href='atwad-workorders.html'"><span class="nav-icon">🔧</span> أوامر العمل</div>
-    <div class="nav-item" id="nav-finance" id="nav-finance" onclick="location.href='atwad-finance.html'"><span class="nav-icon">💰</span> الإدارة المالية</div>
-    <div class="nav-item" id="nav-reports" id="nav-reports" onclick="location.href='atwad-reports.html'"><span class="nav-icon">📊</span> التقارير</div>
+    <div class="nav-item active" id="nav-clients" id="nav-clients" id="nav-clients" onclick="location.href='atwad-customers.html'"><span class="nav-icon">👥</span> العملاء <span class="nav-badge" id="navBadge">0</span></div>
+    <div class="nav-item" id="nav-appts" id="nav-appts" id="nav-appts" onclick="location.href='atwad-appointments.html'"><span class="nav-icon">📅</span> المواعيد</div>
+    <div class="nav-item" id="nav-wo" id="nav-wo" id="nav-wo" onclick="location.href='atwad-workorders.html'"><span class="nav-icon">🔧</span> أوامر العمل</div>
+    <div class="nav-item" id="nav-finance" id="nav-finance" id="nav-finance" onclick="location.href='atwad-finance.html'"><span class="nav-icon">💰</span> الإدارة المالية</div>
+    <div class="nav-item" id="nav-reports" id="nav-reports" id="nav-reports" onclick="location.href='atwad-reports.html'"><span class="nav-icon">📊</span> التقارير</div>
   </div>
   <div class="nav-section" style="margin-top:auto;border-top:1px solid rgba(255,255,255,0.08);padding-top:12px;">
-    <div class="nav-item" onclick="alert('الإعدادات — قريباً ✨')"><span class="nav-icon">⚙️</span> الإعدادات</div>
+    <div class="nav-item" id="nav-settings" onclick="alert('Settings — Coming Soon / قريباً ✨')"><span class="nav-icon">⚙️</span> الإعدادات</div>
   </div>
 </div>
 
@@ -405,11 +405,11 @@
   <div class="topbar">
     <div>
       <div class="topbar-title">👥 إدارة العملاء</div>
-      <div class="topbar-sub">تسجيل وتصنيف وإدارة قاعدة البيانات</div>
+      <div class="topbar-sub" data-lang="sub">تسجيل وتصنيف وإدارة قاعدة البيانات</div>
     </div>
     <div class="topbar-actions"><button class="lang-btn" id="langBtn" onclick="toggleLang()">🌐 EN</button>
-      <button onclick="importFromFirebase()" id="importBtn" style="background:#fff;border:1.5px solid #0EA5E9;color:#0EA5E9;border-radius:10px;padding:9px 16px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">📥 استيراد من الحجوزات</button>
-      <button class="btn-add" onclick="openAddModal()">＋ إضافة عميل</button>
+      <button onclick="importFromFirebase()" id="importBtn" style="background:#fff;border:1.5px solid #0EA5E9;color:#0EA5E9;border-radius:10px;padding:9px 16px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;" data-lang="importBtn">📥 استيراد من الحجوزات</button>
+      <button class="btn-add" onclick="openAddModal()" data-lang="addBtn">＋ إضافة عميل</button>
     </div>
   </div>
 
@@ -418,22 +418,22 @@
     <div class="stat-card total">
       <div class="stat-icon">👥</div>
       <div class="stat-num" id="statTotal">0</div>
-      <div class="stat-lbl">إجمالي العملاء</div>
+      <div class="stat-lbl" data-lang="statTotal">إجمالي العملاء</div>
     </div>
     <div class="stat-card new-c">
       <div class="stat-icon">🆕</div>
       <div class="stat-num" id="statNew">0</div>
-      <div class="stat-lbl">عملاء جدد</div>
+      <div class="stat-lbl" data-lang="statNew">عملاء جدد</div>
     </div>
     <div class="stat-card reg">
       <div class="stat-icon">⭐</div>
       <div class="stat-num" id="statReg">0</div>
-      <div class="stat-lbl">عملاء دائمون</div>
+      <div class="stat-lbl" data-lang="statReg">عملاء دائمون</div>
     </div>
     <div class="stat-card corp">
       <div class="stat-icon">🏢</div>
       <div class="stat-num" id="statCorp">0</div>
-      <div class="stat-lbl">شركات</div>
+      <div class="stat-lbl" data-lang="statCorp">شركات</div>
     </div>
   </div>
 
@@ -446,7 +446,7 @@
         <span class="search-icon">🔍</span>
         <input type="text" id="searchInput" placeholder="ابحث بالاسم أو الجوال أو المدينة..." oninput="renderTable()">
       </div>
-      <button class="filter-btn active" data-filter="all" onclick="setFilter(this,'all')">الكل</button>
+      <button class="filter-btn active" data-filter="all" onclick="setFilter(this,'all')" data-lang="filterAll">الكل</button>
       <button class="filter-btn new-f" data-filter="جديد" onclick="setFilter(this,'جديد')">🆕 جدد</button>
       <button class="filter-btn reg-f" data-filter="دائم" onclick="setFilter(this,'دائم')">⭐ دائمون</button>
       <button class="filter-btn corp-f" data-filter="شركات" onclick="setFilter(this,'شركات')">🏢 شركات</button>
@@ -458,13 +458,13 @@
         <table>
           <thead>
             <tr>
-              <th>العميل</th>
-              <th>الجوال</th>
-              <th>المدينة</th>
-              <th>التصنيف</th>
-              <th>الزيارات</th>
-              <th>آخر خدمة</th>
-              <th>الإجراءات</th>
+              <th data-lang="colClient">العميل</th>
+              <th data-lang="colPhone">الجوال</th>
+              <th data-lang="colCity">المدينة</th>
+              <th data-lang="colType">التصنيف</th>
+              <th data-lang="colVisits">الزيارات</th>
+              <th data-lang="colLast">آخر خدمة</th>
+              <th data-lang="colAct">الإجراءات</th>
             </tr>
           </thead>
           <tbody id="tableBody"></tbody>
@@ -825,210 +825,61 @@ renderTable();
 updateStats();
 </script>
 
+
 <script>
 var LANG = localStorage.getItem('atwad_lang') || 'ar';
 
-// قاموس الترجمة الكامل
-var TRANSLATIONS = {
-  // القائمة الجانبية
-  'العملاء': 'Clients',
-  'المواعيد': 'Appointments', 
-  'أوامر العمل': 'Work Orders',
-  'الإدارة المالية': 'Finance',
-  'التقارير': 'Reports',
-  'الإعدادات': 'Settings',
-  'لصيانة المكيفات': 'AC Maintenance',
-  
-  // الأزرار العامة
-  'إضافة عميل': 'Add Client',
-  'استيراد من الحجوزات': 'Import from Bookings',
-  'موعد جديد': 'New Appointment',
-  'استيراد حجوزات العملاء': 'Import Customer Bookings',
-  'أمر عمل جديد': 'New Work Order',
-  'استيراد من الحجوزات': 'Import from Bookings',
-  'إضافة قيد': 'Add Entry',
-  'استيراد إيرادات الحجوزات': 'Import Booking Revenue',
-  'طباعة': 'Print',
-  
-  // إدارة العملاء
-  'إدارة العملاء': 'Customer Management',
-  'تسجيل وتصنيف وإدارة قاعدة البيانات': 'Register, classify and manage database',
-  'إجمالي العملاء': 'Total Clients',
-  'عملاء جدد': 'New Clients',
-  'عملاء دائمون': 'Regular Clients',
-  'شركات': 'Corporate',
-  'الكل': 'All',
-  'جدد': 'New',
-  'دائمون': 'Regular',
-  'العميل': 'Client',
-  'الجوال': 'Mobile',
-  'المدينة': 'City',
-  'التصنيف': 'Type',
-  'الزيارات': 'Visits',
-  'آخر خدمة': 'Last Service',
-  'الإجراءات': 'Actions',
-  'عرض': 'View',
-  'حجز': 'Book',
-  
-  // إدارة المواعيد
-  'إدارة المواعيد': 'Appointments Management',
-  'جدولة الفنيين وتوزيع الزيارات': 'Schedule technicians and visits',
-  'مواعيد اليوم': 'Today\'s Appointments',
-  'في الانتظار': 'Pending',
-  'مكتملة الأسبوع': 'Completed This Week',
-  'فنيون نشطون': 'Active Technicians',
-  'أسبوع': 'Week',
-  'قائمة': 'List',
-  'اليوم': 'Today',
-  
-  // أوامر العمل
-  'أوامر العمل': 'Work Orders',
-  'فتح وإدارة عمليات الصيانة والتنظيف': 'Open and manage maintenance operations',
-  'مفتوح': 'Open',
-  'قيد التنفيذ': 'In Progress',
-  'مكتمل': 'Completed',
-  'فاتورة صادرة': 'Invoice Issued',
-  'إتمام': 'Complete',
-  'فاتورة': 'Invoice',
-  
-  // الإدارة المالية
-  'الإدارة المالية': 'Financial Management',
-  'إجمالي الإيرادات (ريال)': 'Total Revenue (SAR)',
-  'إجمالي المصاريف (ريال)': 'Total Expenses (SAR)',
-  'صافي الربح (ريال)': 'Net Profit (SAR)',
-  'مبالغ معلقة (ريال)': 'Pending Amounts (SAR)',
-  'آخر الإيرادات': 'Recent Revenue',
-  'آخر المصاريف': 'Recent Expenses',
-  'عرض الكل': 'View All',
-  'البيان': 'Description',
-  'المبلغ': 'Amount',
-  'الفئة': 'Category',
-  'الحالة': 'Status',
-  'التاريخ': 'Date',
-  'هذا الشهر': 'This Month',
-  'هذه السنة': 'This Year',
-  'الإيرادات والمصاريف اليومية': 'Daily Revenue & Expenses',
-  'توزيع المصاريف': 'Expense Distribution',
-  'مدفوع': 'Paid',
-  'معلق': 'Pending',
-  
-  // التقارير
-  'التقارير والإحصائيات': 'Reports & Analytics',
-  'أكثر الخدمات طلباً': 'Most Requested Services',
-  'أداء الفنيين': 'Technician Performance',
-  'أكثر العملاء تعاملاً': 'Top Clients',
-  'إجمالي الإيرادات': 'Total Revenue',
-  'صافي الربح': 'Net Profit',
-  'عمليات منجزة': 'Completed Operations',
-  
-  // نموذج الحجز
-  'مؤسسة أطواد': 'Atwad Foundation',
-  'صيانة وتنظيف المكيفات الاحترافية': 'Professional AC Maintenance & Cleaning',
-  'اختر نوع الخدمة': 'Choose Service Type',
-  'حدد الخدمة والعدد': 'Select service and quantity',
-  'أسعار تنظيف مكيفات الهواء': 'AC Cleaning Prices',
-  'عرض مؤقت': 'Special Offer',
-  'خدمات أخرى': 'Other Services',
-  'صيانة دورية': 'Periodic Maintenance',
-  'تعبئة غاز': 'Gas Refill',
-  'كشف وإصلاح': 'Diagnosis & Repair',
-  'تركيب مكيف': 'AC Installation',
-  'باقة سنوية': 'Annual Package',
-  'نوع العميل': 'Client Type',
-  'أفراد': 'Individual',
-  'دائم': 'Regular',
-  'بياناتك الشخصية': 'Your Information',
-  'حتى نتواصل معك لتأكيد الموعد': 'So we can confirm your appointment',
-  'الاسم الكريم': 'Full Name',
-  'رقم الجوال': 'Mobile Number',
-  'العنوان التفصيلي': 'Address',
-  'الموقع على الخريطة': 'Location on Map',
-  'تحديد موقعي على الخريطة': 'Pin My Location on Map',
-  'تم تحديد موقعك': 'Location Confirmed',
-  'ملاحظات إضافية': 'Additional Notes',
-  'تاريخ الزيارة': 'Visit Date',
-  'الوقت المفضل': 'Preferred Time',
-  'مراجعة الحجز': 'Review Booking',
-  'تأكد من صحة بياناتك قبل الإرسال': 'Please verify your details before submitting',
-  'السعر التقديري': 'Estimated Price',
-  'إرسال الحجز': 'Submit Booking',
-  'تم استلام طلبك': 'Booking Received',
-  'رقم الحجز': 'Booking Reference',
-  'متابعة عبر واتساب': 'Follow up on WhatsApp',
-  'حجز جديد': 'New Booking',
-  
-  // حالات الفنيين
-  'أبرار': 'Abrar',
-  'شعيب': 'Shoib', 
-  'سهيل': 'Suhail',
-  
-  // أوقات
-  'ريال': 'SAR',
-  'وحدة': 'unit',
-  'دقيقة': 'min',
-  'ساعة': 'hr',
+var NAV_TEXT = {
+  ar: {clients:'العملاء', appts:'المواعيد', wo:'أوامر العمل', finance:'الإدارة المالية', reports:'التقارير', settings:'الإعدادات', brand:'أطواد', brandSub:'لصيانة المكيفات'},
+  en: {clients:'Clients', appts:'Appointments', wo:'Work Orders', finance:'Finance', reports:'Reports', settings:'Settings', brand:'Atwad', brandSub:'AC Maintenance'}
 };
 
-function translateText(text) {
-  if(LANG === 'ar') return text;
-  var trimmed = text.trim();
-  if(TRANSLATIONS[trimmed]) return TRANSLATIONS[trimmed];
-  // بحث جزئي
-  for(var key in TRANSLATIONS) {
-    if(trimmed.includes(key)) {
-      return trimmed.replace(key, TRANSLATIONS[key]);
-    }
-  }
-  return text;
-}
-
-// تطبيق الترجمة على الصفحة
-function applyLangToPage() {
-  var dir = LANG === 'ar' ? 'rtl' : 'ltr';
-  document.documentElement.dir = dir;
-  document.documentElement.lang = LANG;
-  
-  // ترجمة كل النصوص في الصفحة
-  translateNode(document.body);
-  
-  // تحديث زر اللغة
+function applySharedLang() {
+  var l = LANG;
+  document.documentElement.lang = l;
+  document.documentElement.dir = l==='ar'?'rtl':'ltr';
   var btn = document.getElementById('langBtn');
-  if(btn) btn.textContent = LANG === 'ar' ? '🌐 EN' : '🌐 عر';
+  if(btn) btn.textContent = l==='ar'?'🌐 EN':'🌐 عر';
+  // Sidebar
+  var t = NAV_TEXT[l];
+  setTxt('nav-brand', t.brand);
+  setTxt('nav-brandsub', t.brandSub);
+  setTxt('nav-clients', t.clients);
+  setTxt('nav-appts', t.appts);
+  setTxt('nav-wo', t.wo);
+  setTxt('nav-finance', t.finance);
+  setTxt('nav-reports', t.reports);
+  setTxt('nav-settings', t.settings);
+  // page specific
+  if(typeof applyPageLang === 'function') applyPageLang(l);
 }
 
-function translateNode(node) {
-  if(!node) return;
-  // تخطي الـ script و style
-  if(node.tagName === 'SCRIPT' || node.tagName === 'STYLE') return;
-  // تخطي المدخلات
-  if(node.tagName === 'INPUT' || node.tagName === 'TEXTAREA' || node.tagName === 'SELECT') return;
-  
-  node.childNodes.forEach(function(child) {
-    if(child.nodeType === 3) { // text node
-      var original = child._originalText || child.textContent;
-      if(!child._originalText) child._originalText = child.textContent;
-      if(LANG === 'ar') {
-        child.textContent = child._originalText;
-      } else {
-        child.textContent = translateText(original);
-      }
-    } else if(child.nodeType === 1) {
-      translateNode(child);
-    }
-  });
-}
+function setTxt(id, txt) { var el=document.getElementById(id); if(el) el.textContent=txt; }
+function setHTML(id, txt) { var el=document.getElementById(id); if(el) el.innerHTML=txt; }
+function setPlh(id, txt) { var el=document.getElementById(id); if(el) el.placeholder=txt; }
 
 function toggleLang() {
-  LANG = LANG === 'ar' ? 'en' : 'ar';
+  LANG = LANG==='ar'?'en':'ar';
   localStorage.setItem('atwad_lang', LANG);
-  applyLangToPage();
+  applySharedLang();
 }
 
-function initLang() {
-  applyLangToPage();
-}
+document.addEventListener('DOMContentLoaded', applySharedLang);
 
-document.addEventListener('DOMContentLoaded', initLang);
+
+function applyPageLang(l) {
+  var P = { ar: {'title':'إدارة العملاء', 'sub':'تسجيل وتصنيف وإدارة قاعدة البيانات', 'statTotal':'إجمالي العملاء', 'statNew':'عملاء جدد', 'statReg':'عملاء دائمون', 'statCorp':'شركات', 'addBtn':'＋ إضافة عميل', 'importBtn':'📥 استيراد من الحجوزات', 'filterAll':'الكل', 'filterNew':'🆕 جدد', 'filterReg':'⭐ دائمون', 'filterCorp':'🏢 شركات', 'colClient':'العميل', 'colPhone':'الجوال', 'colCity':'المدينة', 'colType':'التصنيف', 'colVisits':'الزيارات', 'colLast':'آخر خدمة', 'colAct':'الإجراءات', 'search':'ابحث بالاسم أو الجوال أو المدينة...', 'modalAdd':'➕ إضافة عميل جديد', 'modalEdit':'✏️ تعديل بيانات العميل', 'saveBtn':'💾 حفظ العميل', 'cancelBtn':'إلغاء'}, en: {'title':'Client Management', 'sub':'Register, classify and manage database', 'statTotal':'Total Clients', 'statNew':'New Clients', 'statReg':'Regular Clients', 'statCorp':'Corporate', 'addBtn':'＋ Add Client', 'importBtn':'📥 Import from Bookings', 'filterAll':'All', 'filterNew':'🆕 New', 'filterReg':'⭐ Regular', 'filterCorp':'🏢 Corporate', 'colClient':'Client', 'colPhone':'Mobile', 'colCity':'City', 'colType':'Type', 'colVisits':'Visits', 'colLast':'Last Service', 'colAct':'Actions', 'search':'Search by name, mobile or city...', 'modalAdd':'➕ Add New Client', 'modalEdit':'✏️ Edit Client', 'saveBtn':'💾 Save Client', 'cancelBtn':'Cancel'} };
+  var t = P[l] || P['ar'];
+  // تطبيق على العناصر بـ data-lang
+  document.querySelectorAll('[data-lang]').forEach(function(el) {
+    var key = el.dataset.lang;
+    if(t[key]) el.textContent = t[key];
+  });
+  document.querySelectorAll('[data-lang-ph]').forEach(function(el) {
+    var key = el.dataset.langPh;
+    if(t[key]) el.placeholder = t[key];
+  });
+}
 </script>
 </body>
 </html>

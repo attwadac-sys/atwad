@@ -156,17 +156,17 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 
 <!-- SIDEBAR -->
 <div class="sidebar">
-  <div class="sidebar-logo"><div class="icon">❄️</div><div><h1>أطواد</h1><p>لصيانة المكيفات</p></div></div>
+  <div class="sidebar-logo"><div class="icon">❄️</div><div><h1 id="nav-brand">أطواد</h1><p id="nav-brandsub">لصيانة المكيفات</p></div></div>
   <div class="nav-section">
     <div class="nav-label">القائمة</div>
-    <div class="nav-item" id="nav-clients" id="nav-clients" onclick="location.href='atwad-customers.html'"><span class="nav-icon">👥</span> العملاء</div>
-    <div class="nav-item active" id="nav-appts" id="nav-appts" onclick="location.href='atwad-appointments.html'"><span class="nav-icon">📅</span> المواعيد</div>
-    <div class="nav-item" id="nav-wo" id="nav-wo" onclick="location.href='atwad-workorders.html'"><span class="nav-icon">🔧</span> أوامر العمل</div>
-    <div class="nav-item" id="nav-finance" id="nav-finance" onclick="location.href='atwad-finance.html'"><span class="nav-icon">💰</span> الإدارة المالية</div>
-    <div class="nav-item" id="nav-reports" id="nav-reports" onclick="location.href='atwad-reports.html'"><span class="nav-icon">📊</span> التقارير</div>
+    <div class="nav-item" id="nav-clients" id="nav-clients" id="nav-clients" onclick="location.href='atwad-customers.html'"><span class="nav-icon">👥</span> العملاء</div>
+    <div class="nav-item active" id="nav-appts" id="nav-appts" id="nav-appts" onclick="location.href='atwad-appointments.html'"><span class="nav-icon">📅</span> المواعيد</div>
+    <div class="nav-item" id="nav-wo" id="nav-wo" id="nav-wo" onclick="location.href='atwad-workorders.html'"><span class="nav-icon">🔧</span> أوامر العمل</div>
+    <div class="nav-item" id="nav-finance" id="nav-finance" id="nav-finance" onclick="location.href='atwad-finance.html'"><span class="nav-icon">💰</span> الإدارة المالية</div>
+    <div class="nav-item" id="nav-reports" id="nav-reports" id="nav-reports" onclick="location.href='atwad-reports.html'"><span class="nav-icon">📊</span> التقارير</div>
   </div>
   <div class="nav-section" style="margin-top:auto;border-top:1px solid rgba(255,255,255,.08);padding-top:10px;">
-    <div class="nav-item" onclick="alert('الإعدادات — قريباً ✨')"><span class="nav-icon">⚙️</span> الإعدادات</div>
+    <div class="nav-item" id="nav-settings" onclick="alert('Settings — Coming Soon / قريباً ✨')"><span class="nav-icon">⚙️</span> الإعدادات</div>
   </div>
 </div>
 
@@ -174,23 +174,23 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 <div class="main">
   <!-- TOPBAR -->
   <div class="topbar">
-    <div><div class="topbar-title">📅 إدارة المواعيد</div><div class="topbar-sub">جدولة الفنيين وتوزيع الزيارات</div></div>
+    <div><div class="topbar-title" data-lang="title">📅 إدارة المواعيد</div><div class="topbar-sub" data-lang="sub">جدولة الفنيين وتوزيع الزيارات</div></div>
     <div class="topbar-actions"><button class="lang-btn" id="langBtn" onclick="toggleLang()">🌐 EN</button>
       <div class="view-toggle">
         <button class="view-btn" id="vWeek" onclick="switchView('week')">📆 أسبوع</button>
         <button class="view-btn active" id="vList" onclick="switchView('list')">📋 قائمة</button>
       </div>
-      <button onclick="importFromFirebase()" style="background:#fff;border:1.5px solid #0EA5E9;color:#0EA5E9;border-radius:10px;padding:9px 16px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;" id="importFbBtn">📥 استيراد حجوزات العملاء</button>
+      <button onclick="importFromFirebase()" style="background:#fff;border:1.5px solid #0EA5E9;color:#0EA5E9;border-radius:10px;padding:9px 16px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;" id="importFbBtn" data-lang="importBtn">📥 استيراد حجوزات العملاء</button>
       <button class="btn-primary" onclick="openNewAppt()">＋ موعد جديد</button>
     </div>
   </div>
 
   <!-- STATS -->
   <div class="stats-row">
-    <div class="stat-card today"><div class="stat-icon">📅</div><div class="stat-num" id="statToday">0</div><div class="stat-lbl">مواعيد اليوم</div></div>
-    <div class="stat-card pending"><div class="stat-icon">⏳</div><div class="stat-num" id="statPending">0</div><div class="stat-lbl">في الانتظار</div></div>
-    <div class="stat-card done"><div class="stat-icon">✅</div><div class="stat-num" id="statDone">0</div><div class="stat-lbl">مكتملة الأسبوع</div></div>
-    <div class="stat-card tech"><div class="stat-icon">👷</div><div class="stat-num" id="statTechs">3</div><div class="stat-lbl">فنيون نشطون</div></div>
+    <div class="stat-card today"><div class="stat-icon">📅</div><div class="stat-num" id="statToday">0</div><div class="stat-lbl" data-lang="statToday">مواعيد اليوم</div></div>
+    <div class="stat-card pending"><div class="stat-icon">⏳</div><div class="stat-num" id="statPending">0</div><div class="stat-lbl" data-lang="statPend">في الانتظار</div></div>
+    <div class="stat-card done"><div class="stat-icon">✅</div><div class="stat-num" id="statDone">0</div><div class="stat-lbl" data-lang="statDone">مكتملة الأسبوع</div></div>
+    <div class="stat-card tech"><div class="stat-icon">👷</div><div class="stat-num" id="statTechs">3</div><div class="stat-lbl" data-lang="statTechs">فنيون نشطون</div></div>
   </div>
 
   <!-- CALENDAR NAV -->
@@ -701,210 +701,47 @@ const me=new Date(calDates[6]+'T00:00:00');
 document.getElementById('calMonth').textContent=ms.toLocaleDateString('ar-SA',{month:'long',year:'numeric'});
 </script>
 
+
 <script>
 var LANG = localStorage.getItem('atwad_lang') || 'ar';
 
-// قاموس الترجمة الكامل
-var TRANSLATIONS = {
-  // القائمة الجانبية
-  'العملاء': 'Clients',
-  'المواعيد': 'Appointments', 
-  'أوامر العمل': 'Work Orders',
-  'الإدارة المالية': 'Finance',
-  'التقارير': 'Reports',
-  'الإعدادات': 'Settings',
-  'لصيانة المكيفات': 'AC Maintenance',
-  
-  // الأزرار العامة
-  'إضافة عميل': 'Add Client',
-  'استيراد من الحجوزات': 'Import from Bookings',
-  'موعد جديد': 'New Appointment',
-  'استيراد حجوزات العملاء': 'Import Customer Bookings',
-  'أمر عمل جديد': 'New Work Order',
-  'استيراد من الحجوزات': 'Import from Bookings',
-  'إضافة قيد': 'Add Entry',
-  'استيراد إيرادات الحجوزات': 'Import Booking Revenue',
-  'طباعة': 'Print',
-  
-  // إدارة العملاء
-  'إدارة العملاء': 'Customer Management',
-  'تسجيل وتصنيف وإدارة قاعدة البيانات': 'Register, classify and manage database',
-  'إجمالي العملاء': 'Total Clients',
-  'عملاء جدد': 'New Clients',
-  'عملاء دائمون': 'Regular Clients',
-  'شركات': 'Corporate',
-  'الكل': 'All',
-  'جدد': 'New',
-  'دائمون': 'Regular',
-  'العميل': 'Client',
-  'الجوال': 'Mobile',
-  'المدينة': 'City',
-  'التصنيف': 'Type',
-  'الزيارات': 'Visits',
-  'آخر خدمة': 'Last Service',
-  'الإجراءات': 'Actions',
-  'عرض': 'View',
-  'حجز': 'Book',
-  
-  // إدارة المواعيد
-  'إدارة المواعيد': 'Appointments Management',
-  'جدولة الفنيين وتوزيع الزيارات': 'Schedule technicians and visits',
-  'مواعيد اليوم': 'Today\'s Appointments',
-  'في الانتظار': 'Pending',
-  'مكتملة الأسبوع': 'Completed This Week',
-  'فنيون نشطون': 'Active Technicians',
-  'أسبوع': 'Week',
-  'قائمة': 'List',
-  'اليوم': 'Today',
-  
-  // أوامر العمل
-  'أوامر العمل': 'Work Orders',
-  'فتح وإدارة عمليات الصيانة والتنظيف': 'Open and manage maintenance operations',
-  'مفتوح': 'Open',
-  'قيد التنفيذ': 'In Progress',
-  'مكتمل': 'Completed',
-  'فاتورة صادرة': 'Invoice Issued',
-  'إتمام': 'Complete',
-  'فاتورة': 'Invoice',
-  
-  // الإدارة المالية
-  'الإدارة المالية': 'Financial Management',
-  'إجمالي الإيرادات (ريال)': 'Total Revenue (SAR)',
-  'إجمالي المصاريف (ريال)': 'Total Expenses (SAR)',
-  'صافي الربح (ريال)': 'Net Profit (SAR)',
-  'مبالغ معلقة (ريال)': 'Pending Amounts (SAR)',
-  'آخر الإيرادات': 'Recent Revenue',
-  'آخر المصاريف': 'Recent Expenses',
-  'عرض الكل': 'View All',
-  'البيان': 'Description',
-  'المبلغ': 'Amount',
-  'الفئة': 'Category',
-  'الحالة': 'Status',
-  'التاريخ': 'Date',
-  'هذا الشهر': 'This Month',
-  'هذه السنة': 'This Year',
-  'الإيرادات والمصاريف اليومية': 'Daily Revenue & Expenses',
-  'توزيع المصاريف': 'Expense Distribution',
-  'مدفوع': 'Paid',
-  'معلق': 'Pending',
-  
-  // التقارير
-  'التقارير والإحصائيات': 'Reports & Analytics',
-  'أكثر الخدمات طلباً': 'Most Requested Services',
-  'أداء الفنيين': 'Technician Performance',
-  'أكثر العملاء تعاملاً': 'Top Clients',
-  'إجمالي الإيرادات': 'Total Revenue',
-  'صافي الربح': 'Net Profit',
-  'عمليات منجزة': 'Completed Operations',
-  
-  // نموذج الحجز
-  'مؤسسة أطواد': 'Atwad Foundation',
-  'صيانة وتنظيف المكيفات الاحترافية': 'Professional AC Maintenance & Cleaning',
-  'اختر نوع الخدمة': 'Choose Service Type',
-  'حدد الخدمة والعدد': 'Select service and quantity',
-  'أسعار تنظيف مكيفات الهواء': 'AC Cleaning Prices',
-  'عرض مؤقت': 'Special Offer',
-  'خدمات أخرى': 'Other Services',
-  'صيانة دورية': 'Periodic Maintenance',
-  'تعبئة غاز': 'Gas Refill',
-  'كشف وإصلاح': 'Diagnosis & Repair',
-  'تركيب مكيف': 'AC Installation',
-  'باقة سنوية': 'Annual Package',
-  'نوع العميل': 'Client Type',
-  'أفراد': 'Individual',
-  'دائم': 'Regular',
-  'بياناتك الشخصية': 'Your Information',
-  'حتى نتواصل معك لتأكيد الموعد': 'So we can confirm your appointment',
-  'الاسم الكريم': 'Full Name',
-  'رقم الجوال': 'Mobile Number',
-  'العنوان التفصيلي': 'Address',
-  'الموقع على الخريطة': 'Location on Map',
-  'تحديد موقعي على الخريطة': 'Pin My Location on Map',
-  'تم تحديد موقعك': 'Location Confirmed',
-  'ملاحظات إضافية': 'Additional Notes',
-  'تاريخ الزيارة': 'Visit Date',
-  'الوقت المفضل': 'Preferred Time',
-  'مراجعة الحجز': 'Review Booking',
-  'تأكد من صحة بياناتك قبل الإرسال': 'Please verify your details before submitting',
-  'السعر التقديري': 'Estimated Price',
-  'إرسال الحجز': 'Submit Booking',
-  'تم استلام طلبك': 'Booking Received',
-  'رقم الحجز': 'Booking Reference',
-  'متابعة عبر واتساب': 'Follow up on WhatsApp',
-  'حجز جديد': 'New Booking',
-  
-  // حالات الفنيين
-  'أبرار': 'Abrar',
-  'شعيب': 'Shoib', 
-  'سهيل': 'Suhail',
-  
-  // أوقات
-  'ريال': 'SAR',
-  'وحدة': 'unit',
-  'دقيقة': 'min',
-  'ساعة': 'hr',
+var NAV_TEXT = {
+  ar: {clients:'العملاء', appts:'المواعيد', wo:'أوامر العمل', finance:'الإدارة المالية', reports:'التقارير', settings:'الإعدادات', brand:'أطواد', brandSub:'لصيانة المكيفات'},
+  en: {clients:'Clients', appts:'Appointments', wo:'Work Orders', finance:'Finance', reports:'Reports', settings:'Settings', brand:'Atwad', brandSub:'AC Maintenance'}
 };
 
-function translateText(text) {
-  if(LANG === 'ar') return text;
-  var trimmed = text.trim();
-  if(TRANSLATIONS[trimmed]) return TRANSLATIONS[trimmed];
-  // بحث جزئي
-  for(var key in TRANSLATIONS) {
-    if(trimmed.includes(key)) {
-      return trimmed.replace(key, TRANSLATIONS[key]);
-    }
-  }
-  return text;
-}
-
-// تطبيق الترجمة على الصفحة
-function applyLangToPage() {
-  var dir = LANG === 'ar' ? 'rtl' : 'ltr';
-  document.documentElement.dir = dir;
-  document.documentElement.lang = LANG;
-  
-  // ترجمة كل النصوص في الصفحة
-  translateNode(document.body);
-  
-  // تحديث زر اللغة
+function applySharedLang() {
+  var l = LANG;
+  document.documentElement.lang = l;
+  document.documentElement.dir = l==='ar'?'rtl':'ltr';
   var btn = document.getElementById('langBtn');
-  if(btn) btn.textContent = LANG === 'ar' ? '🌐 EN' : '🌐 عر';
+  if(btn) btn.textContent = l==='ar'?'🌐 EN':'🌐 عر';
+  // Sidebar
+  var t = NAV_TEXT[l];
+  setTxt('nav-brand', t.brand);
+  setTxt('nav-brandsub', t.brandSub);
+  setTxt('nav-clients', t.clients);
+  setTxt('nav-appts', t.appts);
+  setTxt('nav-wo', t.wo);
+  setTxt('nav-finance', t.finance);
+  setTxt('nav-reports', t.reports);
+  setTxt('nav-settings', t.settings);
+  // page specific
+  if(typeof applyPageLang === 'function') applyPageLang(l);
 }
 
-function translateNode(node) {
-  if(!node) return;
-  // تخطي الـ script و style
-  if(node.tagName === 'SCRIPT' || node.tagName === 'STYLE') return;
-  // تخطي المدخلات
-  if(node.tagName === 'INPUT' || node.tagName === 'TEXTAREA' || node.tagName === 'SELECT') return;
-  
-  node.childNodes.forEach(function(child) {
-    if(child.nodeType === 3) { // text node
-      var original = child._originalText || child.textContent;
-      if(!child._originalText) child._originalText = child.textContent;
-      if(LANG === 'ar') {
-        child.textContent = child._originalText;
-      } else {
-        child.textContent = translateText(original);
-      }
-    } else if(child.nodeType === 1) {
-      translateNode(child);
-    }
-  });
-}
+function setTxt(id, txt) { var el=document.getElementById(id); if(el) el.textContent=txt; }
+function setHTML(id, txt) { var el=document.getElementById(id); if(el) el.innerHTML=txt; }
+function setPlh(id, txt) { var el=document.getElementById(id); if(el) el.placeholder=txt; }
 
 function toggleLang() {
-  LANG = LANG === 'ar' ? 'en' : 'ar';
+  LANG = LANG==='ar'?'en':'ar';
   localStorage.setItem('atwad_lang', LANG);
-  applyLangToPage();
+  applySharedLang();
 }
 
-function initLang() {
-  applyLangToPage();
-}
+document.addEventListener('DOMContentLoaded', applySharedLang);
 
-document.addEventListener('DOMContentLoaded', initLang);
 </script>
 </body>
 </html>
