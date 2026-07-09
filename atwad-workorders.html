@@ -161,6 +161,9 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 .toast.show{transform:translateX(-50%) translateY(0);}
 
 @media(max-width:900px){.sidebar{display:none;}.main{margin-right:0;}.stats-row{grid-template-columns:repeat(3,1fr);}.wo-grid{grid-template-columns:1fr;}}
+
+.lang-btn{padding:7px 14px;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);border-radius:8px;color:#fff;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;}
+.lang-btn:hover{background:rgba(255,255,255,.25);}
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
@@ -171,11 +174,11 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
   <div class="sidebar-logo"><div class="icon">❄️</div><div><h1>أطواد</h1><p>لصيانة المكيفات</p></div></div>
   <div class="nav-section">
     <div class="nav-label">القائمة</div>
-    <div class="nav-item" onclick="location.href='atwad-customers.html'"><span class="nav-icon">👥</span> العملاء</div>
-    <div class="nav-item" onclick="location.href='atwad-appointments.html'"><span class="nav-icon">📅</span> المواعيد</div>
-    <div class="nav-item active" onclick="location.href='atwad-workorders.html'"><span class="nav-icon">🔧</span> أوامر العمل</div>
-    <div class="nav-item" onclick="location.href='atwad-finance.html'"><span class="nav-icon">💰</span> الإدارة المالية</div>
-    <div class="nav-item" onclick="location.href='atwad-reports.html'"><span class="nav-icon">📊</span> التقارير</div>
+    <div class="nav-item" id="nav-clients" id="nav-clients" onclick="location.href='atwad-customers.html'"><span class="nav-icon">👥</span> العملاء</div>
+    <div class="nav-item" id="nav-appts" id="nav-appts" onclick="location.href='atwad-appointments.html'"><span class="nav-icon">📅</span> المواعيد</div>
+    <div class="nav-item active" id="nav-wo" id="nav-wo" onclick="location.href='atwad-workorders.html'"><span class="nav-icon">🔧</span> أوامر العمل</div>
+    <div class="nav-item" id="nav-finance" id="nav-finance" onclick="location.href='atwad-finance.html'"><span class="nav-icon">💰</span> الإدارة المالية</div>
+    <div class="nav-item" id="nav-reports" id="nav-reports" onclick="location.href='atwad-reports.html'"><span class="nav-icon">📊</span> التقارير</div>
   </div>
   <div class="nav-section" style="margin-top:auto;border-top:1px solid rgba(255,255,255,.08);padding-top:10px;">
     <div class="nav-item" onclick="alert('الإعدادات — قريباً ✨')"><span class="nav-icon">⚙️</span> الإعدادات</div>
@@ -735,6 +738,148 @@ if(workOrders.length===0){
 
 updateStats();
 renderWOs();
+</script>
+<script>
+// ===== نظام اللغة =====
+var LANG = localStorage.getItem('atwad_lang') || 'ar';
+
+var T = {
+  ar: {
+    // عام
+    clients:'العملاء', appointments:'المواعيد', workorders:'أوامر العمل',
+    finance:'الإدارة المالية', reports:'التقارير', settings:'الإعدادات',
+    new:'+ جديد', save:'💾 حفظ', cancel:'إلغاء', back:'← رجوع',
+    next:'التالي ←', edit:'✏️ تعديل', delete:'🗑️ حذف', close:'إغلاق',
+    search:'ابحث...', all:'الكل', today:'اليوم', loading:'⏳ جاري التحميل...',
+    noData:'لا توجد بيانات', error:'خطأ في الاتصال',
+    // حالات
+    pending:'في الانتظار', confirmed:'مؤكد', done:'مكتمل', cancelled:'ملغي',
+    open:'مفتوح', inprogress:'قيد التنفيذ', invoiced:'فاتورة صادرة',
+    paid:'مدفوع', unpaid:'معلق',
+    // عملاء
+    clientName:'اسم العميل', phone:'الجوال', city:'المدينة', address:'العنوان',
+    clientType:'نوع العميل', newClient:'جديد', regularClient:'دائم', corporate:'شركات',
+    visits:'الزيارات', lastVisit:'آخر زيارة', notes:'ملاحظات',
+    addClient:'+ إضافة عميل', importClients:'📥 استيراد من الحجوزات',
+    // مواعيد
+    date:'التاريخ', time:'الوقت', tech:'الفني', service:'الخدمة', units:'الوحدات',
+    duration:'المدة', addAppt:'+ موعد جديد', importAppts:'📥 استيراد حجوزات العملاء',
+    // مالية
+    revenue:'الإيرادات', expenses:'المصاريف', profit:'الربح', pending_pay:'معلقة',
+    income:'إيراد', expense:'مصروف', amount:'المبلغ', method:'طريقة الدفع',
+    cash:'كاش', transfer:'تحويل', mada:'مدى', addEntry:'+ إضافة قيد',
+    importFinance:'📥 استيراد إيرادات الحجوزات',
+    // تقارير
+    totalRevenue:'إجمالي الإيرادات', netProfit:'صافي الربح',
+    completedOps:'عمليات منجزة', newClients:'عملاء جدد',
+    topServices:'أكثر الخدمات طلباً', techPerformance:'أداء الفنيين',
+    topClients:'أكثر العملاء تعاملاً', print:'🖨️ طباعة',
+    week:'أسبوع', month:'شهر', year:'سنة',
+    // حجز
+    bookService:'اختر نوع الخدمة', yourInfo:'بياناتك الشخصية',
+    schedule:'اختر موعدك', review:'مراجعة الحجز',
+    submitBooking:'✅ إرسال الحجز', bookingSuccess:'تم استلام طلبك! 🎉',
+    bookingRef:'رقم الحجز', newBooking:'+ حجز جديد',
+    pinLocation:'📍 تحديد موقعي على الخريطة',
+    locationSet:'تم تحديد الموقع', change:'تغيير',
+    estPrice:'السعر التقديري', priceNote:'السعر تقديري — يُحدد النهائي بعد معاينة الفني',
+    // أوامر عمل
+    woNew:'+ أمر عمل جديد', importWO:'📥 استيراد من الحجوزات',
+    acType:'نوع المكيف', problem:'وصف المشكلة', parts:'قطع الغيار',
+    price:'السعر', discount:'الخصم', total:'الإجمالي',
+  },
+  en: {
+    // General
+    clients:'Clients', appointments:'Appointments', workorders:'Work Orders',
+    finance:'Finance', reports:'Reports', settings:'Settings',
+    new:'+ New', save:'💾 Save', cancel:'Cancel', back:'← Back',
+    next:'Next →', edit:'✏️ Edit', delete:'🗑️ Delete', close:'Close',
+    search:'Search...', all:'All', today:'Today', loading:'⏳ Loading...',
+    noData:'No data available', error:'Connection error',
+    // Status
+    pending:'Pending', confirmed:'Confirmed', done:'Completed', cancelled:'Cancelled',
+    open:'Open', inprogress:'In Progress', invoiced:'Invoiced',
+    paid:'Paid', unpaid:'Pending',
+    // Clients
+    clientName:'Client Name', phone:'Mobile', city:'City', address:'Address',
+    clientType:'Client Type', newClient:'New', regularClient:'Regular', corporate:'Corporate',
+    visits:'Visits', lastVisit:'Last Visit', notes:'Notes',
+    addClient:'+ Add Client', importClients:'📥 Import from Bookings',
+    // Appointments
+    date:'Date', time:'Time', tech:'Technician', service:'Service', units:'Units',
+    duration:'Duration', addAppt:'+ New Appointment', importAppts:'📥 Import Bookings',
+    // Finance
+    revenue:'Revenue', expenses:'Expenses', profit:'Profit', pending_pay:'Pending',
+    income:'Income', expense:'Expense', amount:'Amount', method:'Payment Method',
+    cash:'Cash', transfer:'Bank Transfer', mada:'Mada', addEntry:'+ Add Entry',
+    importFinance:'📥 Import Booking Revenue',
+    // Reports
+    totalRevenue:'Total Revenue', netProfit:'Net Profit',
+    completedOps:'Completed Operations', newClients:'New Clients',
+    topServices:'Top Services', techPerformance:'Technician Performance',
+    topClients:'Top Clients', print:'🖨️ Print',
+    week:'Week', month:'Month', year:'Year',
+    // Booking
+    bookService:'Choose Service', yourInfo:'Your Information',
+    schedule:'Choose Appointment', review:'Review Booking',
+    submitBooking:'✅ Submit Booking', bookingSuccess:'Booking Received! 🎉',
+    bookingRef:'Booking Reference', newBooking:'+ New Booking',
+    pinLocation:'📍 Pin My Location',
+    locationSet:'Location set', change:'Change',
+    estPrice:'Estimated Price', priceNote:'Price is estimated. Final price confirmed after inspection.',
+    // Work Orders
+    woNew:'+ New Work Order', importWO:'📥 Import from Bookings',
+    acType:'AC Type', problem:'Problem Description', parts:'Spare Parts',
+    price:'Price', discount:'Discount', total:'Total',
+  }
+};
+
+function t(key) { return (T[LANG] && T[LANG][key]) || (T['ar'] && T['ar'][key]) || key; }
+
+function toggleLang() {
+  LANG = LANG === 'ar' ? 'en' : 'ar';
+  localStorage.setItem('atwad_lang', LANG);
+  document.documentElement.lang = LANG;
+  document.documentElement.dir = LANG === 'ar' ? 'rtl' : 'ltr';
+  document.getElementById('langBtn').textContent = LANG === 'ar' ? '🌐 EN' : '🌐 عر';
+  applyTranslations();
+}
+
+function applyTranslations() {
+  // تطبيق الترجمة على كل العناصر التي لها data-t
+  document.querySelectorAll('[data-t]').forEach(function(el) {
+    var key = el.dataset.t;
+    el.textContent = t(key);
+  });
+  // تطبيق على placeholder
+  document.querySelectorAll('[data-tp]').forEach(function(el) {
+    el.placeholder = t(el.dataset.tp);
+  });
+  // تطبيق على القائمة الجانبية
+  updateNav();
+}
+
+function updateNav() {
+  var navItems = {
+    'nav-clients': 'clients', 'nav-appts': 'appointments',
+    'nav-wo': 'workorders', 'nav-finance': 'finance',
+    'nav-reports': 'reports', 'nav-settings': 'settings'
+  };
+  Object.entries(navItems).forEach(function(e) {
+    var el = document.getElementById(e[0]);
+    if(el) el.textContent = t(e[1]);
+  });
+}
+
+function initLang() {
+  document.documentElement.lang = LANG;
+  document.documentElement.dir = LANG === 'ar' ? 'rtl' : 'ltr';
+  var btn = document.getElementById('langBtn');
+  if(btn) btn.textContent = LANG === 'ar' ? '🌐 EN' : '🌐 عر';
+  applyTranslations();
+}
+
+document.addEventListener("DOMContentLoaded",initLang);
 </script>
 </body>
 </html>
