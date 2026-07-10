@@ -214,6 +214,19 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(135deg,#0C3B5E,
       <div class="err-msg" id="e_addr">حدد موقعك / Set your location</div>
     </div>
     <div class="field"><label id="lbl-notes">ملاحظات / Notes</label><textarea id="f_notes" rows="2" placeholder="أي تفاصيل للفني / Any details for technician..."></textarea></div>
+    <div class="field">
+      <label>📸 صورة المنزل / الموقع — Home / Location Photo <span style="font-size:11px;color:var(--mist);">(اختياري / Optional)</span></label>
+      <div id="bookImgArea" style="border:2px dashed #E2E8F0;border-radius:10px;padding:16px;text-align:center;cursor:pointer;background:var(--frost);transition:all .2s;" onclick="document.getElementById('book_img').click()">
+        <div id="bookImgPreview" style="display:none;"><img id="bookImgSrc" style="max-width:100%;max-height:160px;border-radius:8px;object-fit:cover;" src=""></div>
+        <div id="bookImgPlaceholder" style="color:var(--mist);font-size:13px;">
+          <div style="font-size:26px;margin-bottom:4px;">📷</div>
+          <div>اضغط لإرفاق صورة الموقع</div>
+          <div style="font-size:11px;margin-top:3px;">تساعد الفني على إيجاد الموقع بسهولة</div>
+        </div>
+      </div>
+      <input type="file" id="book_img" accept="image/*" style="display:none;" onchange="previewBookImage(this)">
+      <button type="button" id="removeBookImgBtn" onclick="removeBookImage()" style="display:none;margin-top:6px;padding:4px 12px;background:#FEE2E2;color:#EF4444;border:none;border-radius:6px;font-family:'Tajawal',sans-serif;font-size:12px;cursor:pointer;">🗑️ حذف الصورة</button>
+    </div>
     <div class="btn-row">
       <button class="btn-back" onclick="goStep(1)" id="btn-back2">← رجوع / Back</button>
       <button class="btn-next" onclick="next2()" id="btn-next2">التالي ← Next</button>
@@ -743,6 +756,38 @@ function buildSum(){
   var ci = document.getElementById('chk-inspection'); if(ci) ci.checked = false;
 }
 
+// ===== صورة الموقع في الحجز =====
+var bookImageBase64 = '';
+
+function previewBookImage(input) {
+  if(!input.files || !input.files[0]) return;
+  var file = input.files[0];
+  if(file.size > 2 * 1024 * 1024) {
+    alert(LANG==='ar' ? 'حجم الصورة يجب أن يكون أقل من 2MB' : 'Image must be less than 2MB');
+    return;
+  }
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    bookImageBase64 = e.target.result;
+    document.getElementById('bookImgSrc').src = bookImageBase64;
+    document.getElementById('bookImgPreview').style.display = 'block';
+    document.getElementById('bookImgPlaceholder').style.display = 'none';
+    document.getElementById('removeBookImgBtn').style.display = 'inline-block';
+    document.getElementById('bookImgArea').style.borderColor = 'var(--sky)';
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeBookImage() {
+  bookImageBase64 = '';
+  document.getElementById('book_img').value = '';
+  document.getElementById('bookImgSrc').src = '';
+  document.getElementById('bookImgPreview').style.display = 'none';
+  document.getElementById('bookImgPlaceholder').style.display = 'block';
+  document.getElementById('removeBookImgBtn').style.display = 'none';
+  document.getElementById('bookImgArea').style.borderColor = '#E2E8F0';
+}
+
 function submitBooking(){
   // التحقق من الموافقة على شروط الحجز
   if(!document.getElementById('chk-units').checked){
@@ -767,7 +812,7 @@ function submitBooking(){
   );
   var waUrl='https://wa.me/966509720382?text='+msg;
   document.getElementById('waLink').href=waUrl;
-  if(db){try{db.ref('bookings').push({ref:ref,date:S.date,time:S.time,duration:calcDur(),client:S.name,phone:S.phone,service:S.serviceAr,units:S.units,city:S.city,createdAt:new Date().toISOString()});}catch(e){}}
+  if(db){try{db.ref('bookings').push({ref:ref,date:S.date,time:S.time,duration:calcDur(),client:S.name,phone:S.phone,service:S.serviceAr,units:S.units,city:S.city,locationImage:bookImageBase64||'',createdAt:new Date().toISOString()});}catch(e){}}
   goStep('OK');
   setTimeout(function(){window.open(waUrl,'_blank');},800);
 }

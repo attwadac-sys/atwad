@@ -256,6 +256,19 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
         </div>
       </div>
       <div class="form-group"><label>ملاحظات</label><textarea id="f_notes" rows="2" placeholder="أي تعليمات للفني..."></textarea></div>
+      <div class="form-group">
+        <label>📸 صورة الموقع / المنزل</label>
+        <div id="imgUploadArea" style="border:2px dashed #E2E8F0;border-radius:10px;padding:16px;text-align:center;cursor:pointer;background:var(--frost);transition:all .2s;" onclick="document.getElementById('f_img').click()">
+          <div id="imgPreview" style="display:none;"><img id="imgPreviewSrc" style="max-width:100%;max-height:180px;border-radius:8px;object-fit:cover;" src=""></div>
+          <div id="imgPlaceholder" style="color:var(--mist);font-size:13px;">
+            <div style="font-size:28px;margin-bottom:6px;">📷</div>
+            <div>اضغط لرفع صورة الموقع</div>
+            <div style="font-size:11px;margin-top:4px;">JPG, PNG — حد أقصى 2MB</div>
+          </div>
+        </div>
+        <input type="file" id="f_img" accept="image/*" style="display:none;" onchange="previewImage(this)">
+        <button type="button" id="removeImgBtn" onclick="removeImage()" style="display:none;margin-top:6px;padding:4px 12px;background:#FEE2E2;color:#EF4444;border:none;border-radius:6px;font-family:'Tajawal',sans-serif;font-size:12px;cursor:pointer;">🗑️ حذف الصورة</button>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeModal()">إلغاء</button>
@@ -314,6 +327,61 @@ function autoAssignTech(date) {
   const techCount = {Abrar:0, Shoib:0, Suhail:0};
   dayAppts.forEach(a => { if(techCount[a.tech]!==undefined) techCount[a.tech]++; });
   return Object.keys(techCount).reduce((a,b) => techCount[a]<=techCount[b]?a:b);
+}
+
+// ===== وظائف الصورة =====
+var currentImageBase64 = '';
+
+function previewImage(input) {
+  if(!input.files || !input.files[0]) return;
+  var file = input.files[0];
+  if(file.size > 2 * 1024 * 1024) {
+    showToast('❌ حجم الصورة يجب أن يكون أقل من 2MB');
+    return;
+  }
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    currentImageBase64 = e.target.result;
+    document.getElementById('imgPreviewSrc').src = currentImageBase64;
+    document.getElementById('imgPreview').style.display = 'block';
+    document.getElementById('imgPlaceholder').style.display = 'none';
+    document.getElementById('removeImgBtn').style.display = 'inline-block';
+    document.getElementById('imgUploadArea').style.borderColor = 'var(--sky)';
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeImage() {
+  currentImageBase64 = '';
+  document.getElementById('f_img').value = '';
+  document.getElementById('imgPreviewSrc').src = '';
+  document.getElementById('imgPreview').style.display = 'none';
+  document.getElementById('imgPlaceholder').style.display = 'block';
+  document.getElementById('removeImgBtn').style.display = 'none';
+  document.getElementById('imgUploadArea').style.borderColor = '#E2E8F0';
+}
+
+function resetImageField() {
+  currentImageBase64 = '';
+  document.getElementById('f_img').value = '';
+  document.getElementById('imgPreviewSrc').src = '';
+  document.getElementById('imgPreview').style.display = 'none';
+  document.getElementById('imgPlaceholder').style.display = 'block';
+  document.getElementById('removeImgBtn').style.display = 'none';
+  document.getElementById('imgUploadArea').style.borderColor = '#E2E8F0';
+}
+
+function loadImageInModal(imageBase64) {
+  if(imageBase64) {
+    currentImageBase64 = imageBase64;
+    document.getElementById('imgPreviewSrc').src = imageBase64;
+    document.getElementById('imgPreview').style.display = 'block';
+    document.getElementById('imgPlaceholder').style.display = 'none';
+    document.getElementById('removeImgBtn').style.display = 'inline-block';
+    document.getElementById('imgUploadArea').style.borderColor = 'var(--sky)';
+  } else {
+    resetImageField();
+  }
 }
 
 // ===== إعداد يوم الجمعة =====
@@ -553,6 +621,7 @@ function openNewAppt(){
   document.getElementById('f_units').value='1';
   document.getElementById('f_date').value=today();
   document.getElementById('f_time').value='09:00';
+  resetImageField();
   document.getElementById('apptModal').classList.add('open');
   populateClients();
 }
@@ -573,6 +642,7 @@ function editAppt(id){
   document.getElementById('f_date').value=a.date||today();
   document.getElementById('f_time').value=a.time||'09:00';
   document.getElementById('f_notes').value=a.notes||'';
+  loadImageInModal(a.locationImage||'');
   document.getElementById('apptModal').classList.add('open');
   document.getElementById('detailModal').classList.remove('open');
   populateClients();
@@ -593,6 +663,7 @@ function saveAppt(){
     units: parseInt(document.getElementById('f_units').value)||1,
     date, time: document.getElementById('f_time').value,
     notes: document.getElementById('f_notes').value.trim(),
+    locationImage: currentImageBase64 || '',
     duration: 90,
     updatedAt: new Date().toISOString()
   };
@@ -636,6 +707,7 @@ function openDetail(id){
       <div style="background:#fff;border:1.5px solid var(--ice);border-radius:10px;padding:12px;"><div style="font-size:11px;color:var(--mist);margin-bottom:4px;">📍 الموقع</div><div style="font-weight:700;color:var(--deep);font-size:12px">${a.address||'—'}</div></div>
     </div>
     ${a.notes?`<div style="background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:10px;padding:12px;margin-bottom:14px;font-size:13px;color:#92400E;">📝 ${a.notes}</div>`:''}
+    ${a.locationImage?`<div style="margin-bottom:14px;"><div style="font-size:12px;color:var(--mist);margin-bottom:6px;">📸 صورة الموقع</div><img src="${a.locationImage}" style="width:100%;max-height:200px;object-fit:cover;border-radius:10px;border:1.5px solid var(--ice);" onclick="window.open('${a.locationImage}','_blank')"></div>`:''}
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
       <a href="https://wa.me/966${(a.phone||'').replace(/^0/,'')}?text=${encodeURIComponent('مرحباً '+a.client+'،\nتذكير بموعدكم مع مؤسسة أطواد\nالخدمة: '+a.service+'\nالتاريخ: '+formatDateShort(a.date)+'\nالوقت: '+a.time)}" target="_blank" style="flex:1;text-align:center;padding:10px;background:#25D366;color:#fff;border-radius:9px;font-weight:700;text-decoration:none;font-size:13px;min-width:100px;">📲 تذكير</a>
       <a href="https://maps.google.com?q=${encodeURIComponent(a.address||'')}" target="_blank" style="flex:1;text-align:center;padding:10px;background:var(--ice);color:var(--sky);border-radius:9px;font-weight:700;text-decoration:none;font-size:13px;min-width:100px;">🗺️ خرائط</a>
