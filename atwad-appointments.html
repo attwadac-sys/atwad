@@ -28,12 +28,17 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 .topbar{background:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1.5px solid #E2E8F0;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.04);}
 .topbar-title{font-size:18px;font-weight:800;color:var(--deep);}
 .topbar-sub{font-size:12px;color:var(--mist);margin-top:1px;}
-.topbar-actions{display:flex;gap:10px;}
+.topbar-actions{display:flex;gap:10px;align-items:center;}
 .btn-primary{background:linear-gradient(90deg,var(--deep),var(--sky));color:#fff;border:none;border-radius:10px;padding:9px 18px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(14,165,233,.3);transition:all .2s;display:flex;align-items:center;gap:6px;}
 .btn-primary:hover{transform:translateY(-1px);}
 .view-toggle{display:flex;background:#F1F5F9;border-radius:10px;padding:3px;}
 .view-btn{padding:7px 14px;border-radius:8px;border:none;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:600;cursor:pointer;background:transparent;color:var(--mist);transition:all .2s;}
 .view-btn.active{background:#fff;color:var(--deep);box-shadow:0 2px 6px rgba(0,0,0,.08);}
+.fb-status{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:6px 12px;border-radius:8px;background:var(--frost);border:1.5px solid var(--ice);}
+.fb-dot{width:8px;height:8px;border-radius:50%;background:var(--mist);}
+.fb-dot.connected{background:var(--success);box-shadow:0 0 6px rgba(16,185,129,.5);}
+.fb-dot.loading{background:var(--warning);animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:18px 22px;}
 .stat-card{background:#fff;border-radius:14px;padding:16px 18px;box-shadow:0 2px 10px rgba(0,0,0,.04);border-right:3px solid transparent;}
 .stat-card.today{border-color:var(--sky);}
@@ -85,7 +90,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 .appt-info{flex:1;}
 .appt-client{font-size:14px;font-weight:700;color:var(--deep);}
 .appt-service{font-size:12px;color:var(--mist);margin-top:2px;}
-.appt-address{font-size:12px;color:var(--sky);margin-top:2px;display:flex;align-items:center;gap:4px;}
+.appt-address{font-size:12px;color:var(--sky);margin-top:2px;}
 .tech-pill{padding:3px 10px;border-radius:20px;background:var(--frost);color:var(--steel);font-size:11px;font-weight:600;}
 .status-pill{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;}
 .sp-confirmed{background:#DBEAFE;color:#1E40AF;}
@@ -98,6 +103,9 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 .act-edit{background:var(--ice);color:var(--sky);}
 .act-done{background:#D1FAE5;color:var(--success);}
 .act-delete{background:#FEE2E2;color:#EF4444;}
+.source-badge{display:inline-block;padding:2px 7px;border-radius:5px;font-size:10px;font-weight:700;margin-top:3px;}
+.source-firebase{background:#FFF3E0;color:#E65100;}
+.source-local{background:#E8F5E9;color:#2E7D32;}
 .modal-overlay{position:fixed;inset:0;background:rgba(12,59,94,.45);z-index:500;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px);}
 .modal-overlay.open{display:flex;}
 .modal{background:#fff;border-radius:20px;width:100%;max-width:520px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(12,59,94,.25);animation:slideUp .3s cubic-bezier(.34,1.56,.64,1);}
@@ -121,7 +129,10 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 .tech-filter{display:flex;gap:8px;padding:0 22px 14px;flex-wrap:wrap;}
 .tech-chip{padding:6px 14px;border-radius:20px;border:1.5px solid #E2E8F0;background:#fff;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:600;color:var(--mist);cursor:pointer;transition:all .2s;}
 .tech-chip:hover,.tech-chip.active{border-color:var(--sky);color:var(--sky);background:var(--ice);}
-@media(max-width:900px){.sidebar{display:none;}.main{margin-right:0;}.stats-row{grid-template-columns:1fr 1fr;}.week-grid{overflow-x:auto;}}
+.loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.85);z-index:300;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
+.loading-spinner{width:48px;height:48px;border:4px solid var(--ice);border-top-color:var(--sky);border-radius:50%;animation:spin 0.8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:900px){.sidebar{display:none;}.main{margin-right:0;}.stats-row{grid-template-columns:1fr 1fr;}}
 .lang-btn{padding:7px 14px;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);border-radius:8px;color:#fff;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;}
 .lang-btn:hover{background:rgba(255,255,255,.25);}
 </style>
@@ -129,6 +140,12 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
 </head>
 <body>
+
+<!-- Loading -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-spinner"></div>
+  <div style="font-family:'Tajawal',sans-serif;font-size:15px;font-weight:700;color:var(--deep);">جاري تحميل المواعيد...</div>
+</div>
 
 <div class="sidebar">
   <div class="sidebar-logo"><div class="icon">❄️</div><div><h1 id="nav-brand">أطواد</h1><p id="nav-brandsub">لصيانة المكيفات</p></div></div>
@@ -141,19 +158,24 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
     <div class="nav-item" id="nav-reports" onclick="location.href='atwad-reports.html'"><span class="nav-icon">📊</span> التقارير</div>
   </div>
   <div class="nav-section" style="margin-top:auto;border-top:1px solid rgba(255,255,255,.08);padding-top:10px;">
-    <div class="nav-item" id="nav-settings" onclick="alert('Settings — Coming Soon / قريباً ✨')"><span class="nav-icon">⚙️</span> الإعدادات</div>
+    <div class="nav-item" id="nav-settings" onclick="alert('قريباً ✨')"><span class="nav-icon">⚙️</span> الإعدادات</div>
   </div>
 </div>
 
 <div class="main">
   <div class="topbar">
-    <div><div class="topbar-title" data-lang="title">📅 إدارة المواعيد</div><div class="topbar-sub" data-lang="sub">جدولة الفنيين وتوزيع الزيارات</div></div>
-    <div class="topbar-actions"><button class="lang-btn" id="langBtn" onclick="toggleLang()">🌐 EN</button>
+    <div><div class="topbar-title">📅 إدارة المواعيد</div><div class="topbar-sub">تزامن تلقائي مع Firebase</div></div>
+    <div class="topbar-actions">
+      <button class="lang-btn" id="langBtn" onclick="toggleLang()">🌐 EN</button>
+      <!-- مؤشر الاتصال -->
+      <div class="fb-status" id="fbStatus">
+        <div class="fb-dot loading" id="fbDot"></div>
+        <span id="fbStatusText">جاري الاتصال...</span>
+      </div>
       <div class="view-toggle">
         <button class="view-btn" id="vWeek" onclick="switchView('week')">📆 أسبوع</button>
         <button class="view-btn active" id="vList" onclick="switchView('list')">📋 قائمة</button>
       </div>
-      <button onclick="importFromFirebase()" style="background:#fff;border:1.5px solid #0EA5E9;color:#0EA5E9;border-radius:10px;padding:9px 16px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;" id="importFbBtn" data-lang="importBtn">📥 استيراد حجوزات العملاء</button>
       <button class="btn-primary" onclick="openNewAppt()">＋ موعد جديد</button>
     </div>
   </div>
@@ -162,7 +184,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
     <div class="stat-card today"><div class="stat-icon">📅</div><div class="stat-num" id="statToday">0</div><div class="stat-lbl">مواعيد اليوم</div></div>
     <div class="stat-card pending"><div class="stat-icon">⏳</div><div class="stat-num" id="statPending">0</div><div class="stat-lbl">في الانتظار</div></div>
     <div class="stat-card done"><div class="stat-icon">✅</div><div class="stat-num" id="statDone">0</div><div class="stat-lbl">مكتملة الأسبوع</div></div>
-    <div class="stat-card tech"><div class="stat-icon">👷</div><div class="stat-num" id="statTechs">3</div><div class="stat-lbl">فنيون نشطون</div></div>
+    <div class="stat-card tech"><div class="stat-icon">🌐</div><div class="stat-num" id="statTotal">0</div><div class="stat-lbl">إجمالي المواعيد</div></div>
   </div>
 
   <div class="cal-header">
@@ -171,9 +193,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
       <span class="cal-month" id="calMonth"></span>
       <button class="cal-nav-btn" onclick="changeWeek(1)">‹</button>
     </div>
-    <div style="display:flex;gap:8px;align-items:center;">
-      <button class="cal-today-btn" onclick="goToday()">اليوم</button>
-    </div>
+    <button class="cal-today-btn" onclick="goToday()">اليوم</button>
   </div>
 
   <div class="tech-filter">
@@ -186,11 +206,10 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
   <div id="weekView" style="display:none;padding:0 22px 30px;">
     <div class="week-grid" id="weekGrid"></div>
   </div>
-
   <div class="list-view" id="listView"></div>
 </div>
 
-<!-- NEW APPOINTMENT MODAL -->
+<!-- APPOINTMENT MODAL -->
 <div class="modal-overlay" id="apptModal">
   <div class="modal">
     <div class="modal-hdr">
@@ -199,60 +218,34 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
     </div>
     <div class="modal-body">
       <div class="form-row">
-        <div class="form-group">
-          <label>اسم العميل <span class="req">*</span></label>
-          <input type="text" id="f_client" placeholder="اسم العميل" list="clientsList">
-          <datalist id="clientsList"></datalist>
-        </div>
-        <div class="form-group">
-          <label>جوال العميل <span class="req">*</span></label>
-          <input type="tel" id="f_phone" placeholder="05xxxxxxxx">
-        </div>
+        <div class="form-group"><label>اسم العميل <span class="req">*</span></label><input type="text" id="f_client" placeholder="اسم العميل" list="clientsList"><datalist id="clientsList"></datalist></div>
+        <div class="form-group"><label>جوال العميل <span class="req">*</span></label><input type="tel" id="f_phone" placeholder="05xxxxxxxx"></div>
       </div>
-      <div class="form-group">
-        <label>العنوان التفصيلي <span class="req">*</span></label>
-        <input type="text" id="f_address" placeholder="الحي، الشارع...">
-      </div>
+      <div class="form-group"><label>العنوان <span class="req">*</span></label><input type="text" id="f_address" placeholder="الحي، الشارع..."></div>
       <div class="form-row">
-        <div class="form-group">
-          <label>نوع الخدمة <span class="req">*</span></label>
+        <div class="form-group"><label>نوع الخدمة <span class="req">*</span></label>
           <select id="f_service">
             <option value="">-- اختر --</option>
-            <option>تنظيف مكيف</option>
-            <option>صيانة دورية</option>
-            <option>تعبئة غاز</option>
-            <option>كشف وإصلاح أعطال</option>
-            <option>تركيب مكيف جديد</option>
+            <option>تنظيف مكيف</option><option>غسيل مكيفات</option>
+            <option>صيانة دورية</option><option>تعبئة غاز</option>
+            <option>كشف وإصلاح أعطال</option><option>تركيب مكيف جديد</option>
             <option>باقة صيانة سنوية</option>
           </select>
         </div>
-        <div class="form-group">
-          <label>عدد المكيفات</label>
-          <input type="number" id="f_units" value="1" min="1" max="30">
-        </div>
+        <div class="form-group"><label>عدد المكيفات</label><input type="number" id="f_units" value="1" min="1" max="30"></div>
       </div>
       <div class="form-row">
-        <div class="form-group">
-          <label>تاريخ الزيارة <span class="req">*</span></label>
-          <input type="date" id="f_date">
-        </div>
-        <div class="form-group">
-          <label>وقت البداية <span class="req">*</span></label>
-          <input type="time" id="f_time" value="09:00">
-        </div>
+        <div class="form-group"><label>تاريخ الزيارة <span class="req">*</span></label><input type="date" id="f_date"></div>
+        <div class="form-group"><label>وقت البداية <span class="req">*</span></label><input type="time" id="f_time" value="09:00"></div>
       </div>
       <div class="form-row">
-        <div class="form-group">
-          <label>الفني المسؤول <span class="req">*</span></label>
+        <div class="form-group"><label>الفني المسؤول <span class="req">*</span></label>
           <select id="f_tech">
             <option value="">-- اختر الفني --</option>
-            <option value="Abrar">أبرار</option>
-            <option value="Shoib">شعيب</option>
-            <option value="Suhail">سهيل</option>
+            <option value="Abrar">أبرار</option><option value="Shoib">شعيب</option><option value="Suhail">سهيل</option>
           </select>
         </div>
-        <div class="form-group">
-          <label>الحالة</label>
+        <div class="form-group"><label>الحالة</label>
           <select id="f_status">
             <option value="pending">⏳ في الانتظار</option>
             <option value="confirmed">✅ مؤكد</option>
@@ -261,10 +254,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
           </select>
         </div>
       </div>
-      <div class="form-group">
-        <label>ملاحظات</label>
-        <textarea id="f_notes" rows="2" placeholder="أي تعليمات للفني..."></textarea>
-      </div>
+      <div class="form-group"><label>ملاحظات</label><textarea id="f_notes" rows="2" placeholder="أي تعليمات للفني..."></textarea></div>
     </div>
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeModal()">إلغاء</button>
@@ -291,71 +281,26 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 <div class="toast" id="toast"></div>
 
 <script>
+// ===== FIREBASE =====
 var db = null;
 try {
   firebase.initializeApp({databaseURL:"https://atwad-booking-default-rtdb.firebaseio.com"});
   db = firebase.database();
 } catch(e){ console.log('Firebase:', e); }
 
-function importFromFirebase() {
-  if(!db) { showToast('⚠️ Firebase غير متاح'); return; }
-  var btn = document.getElementById('importFbBtn');
-  btn.textContent = '⏳ جاري الاستيراد...'; btn.disabled = true;
-  db.ref('bookings').once('value', function(snap) {
-    var added = 0, skip = 0;
-    var existing = appointments.map(function(a){ return a.firebaseRef||''; });
-    snap.forEach(function(child) {
-      var b = child.val();
-      var key = child.key;
-      if(existing.indexOf(key) >= 0){ skip++; return; }
-      if(!b.date || !b.time) return;
-      var dayAppts = appointments.filter(function(a){ return a.date === b.date; });
-      var techCount = {Abrar:0, Shoib:0, Suhail:0};
-      dayAppts.forEach(function(a){ if(techCount[a.tech]!==undefined) techCount[a.tech]++; });
-      var tech = Object.keys(techCount).reduce(function(a,b){ return techCount[a]<=techCount[b]?a:b; });
-      appointments.push({
-        id: 'A'+Date.now()+Math.random().toString(36).slice(2,5),
-        firebaseRef: key,
-        client: b.client || b.name || '—',
-        phone: b.phone || '',
-        address: b.city || 'جدة',
-        service: b.service || 'تنظيف مكيف',
-        units: b.units || 1,
-        date: b.date,
-        time: b.time.split(' - ')[0] || b.time,
-        tech: tech,
-        status: 'pending',
-        notes: 'حجز من النموذج الإلكتروني',
-        duration: b.duration || 60,
-        createdAt: b.createdAt || new Date().toISOString()
-      });
-      added++;
-    });
-    saveData(); updateStats(); renderWeek(); renderList();
-    btn.textContent = '📥 استيراد حجوزات العملاء'; btn.disabled = false;
-    if(added > 0) showToast('✅ تم استيراد ' + added + ' حجز جديد');
-    else showToast('ℹ️ لا توجد حجوزات جديدة — تم تخطي ' + skip + ' موجود');
-  }, function(err){
-    showToast('❌ خطأ: ' + err.message);
-    btn.textContent = '📥 استيراد حجوزات العملاء'; btn.disabled = false;
-  });
-}
-
-let appointments = JSON.parse(localStorage.getItem('atwad_appointments') || '[]');
-let clients = [];
-try { clients = JSON.parse(localStorage.getItem('atwad_clients') || '[]'); } catch {}
+// ===== STATE =====
+let appointments = []; // كل البيانات من Firebase
 let currentWeekOffset = 0;
 let currentView = 'list';
 let techFilter = 'all';
 let editingId = null;
+let editingFirebaseKey = null;
 
 const TECHS = { Abrar:'أبرار', Shoib:'شعيب', Suhail:'سهيل' };
 const STATUS_LABELS = { confirmed:'مؤكد', pending:'في الانتظار', done:'مكتمل', cancelled:'ملغي' };
 const STATUS_ICONS = { confirmed:'✅', pending:'⏳', done:'🎉', cancelled:'❌' };
 const TECH_COLORS = { Abrar:'#0EA5E9', Shoib:'#10B981', Suhail:'#8B5CF6' };
 
-function genId(){ return 'A' + Date.now().toString().slice(-6); }
-function saveData(){ localStorage.setItem('atwad_appointments', JSON.stringify(appointments)); }
 function today(){ return new Date().toISOString().split('T')[0]; }
 function formatDate(d){ try{ return new Date(d+'T00:00:00').toLocaleDateString('ar-SA',{weekday:'long',year:'numeric',month:'long',day:'numeric'}); } catch{ return d; } }
 function formatDateShort(d){ try{ return new Date(d+'T00:00:00').toLocaleDateString('ar-SA',{month:'short',day:'numeric'}); } catch{ return d; } }
@@ -363,24 +308,87 @@ function getWeekDates(offset=0){
   const d = new Date(); d.setDate(d.getDate() - d.getDay() + offset*7);
   return Array.from({length:7},(_,i)=>{ const dd=new Date(d); dd.setDate(d.getDate()+i); return dd.toISOString().split('T')[0]; });
 }
+function autoAssignTech(date) {
+  const dayAppts = appointments.filter(a => a.date === date);
+  const techCount = {Abrar:0, Shoib:0, Suhail:0};
+  dayAppts.forEach(a => { if(techCount[a.tech]!==undefined) techCount[a.tech]++; });
+  return Object.keys(techCount).reduce((a,b) => techCount[a]<=techCount[b]?a:b);
+}
 
-function populateClients(){
-  const dl = document.getElementById('clientsList');
-  dl.innerHTML = clients.map(c=>`<option value="${c.name}" data-phone="${c.phone}" data-address="${c.address||''}">`).join('');
-  document.getElementById('f_client').addEventListener('input', function(){
-    const c = clients.find(x=>x.name===this.value);
-    if(c){ document.getElementById('f_phone').value=c.phone; document.getElementById('f_address').value=c.address||''; }
+// ===== FIREBASE REALTIME SYNC =====
+function initFirebaseSync() {
+  if(!db) {
+    document.getElementById('fbDot').className = 'fb-dot';
+    document.getElementById('fbStatusText').textContent = 'غير متصل';
+    document.getElementById('loadingOverlay').style.display = 'none';
+    return;
+  }
+
+  document.getElementById('fbDot').className = 'fb-dot loading';
+  document.getElementById('fbStatusText').textContent = 'جاري الاتصال...';
+
+  // مزامنة مواعيد النظام الداخلي
+  db.ref('appointments').on('value', function(snap) {
+    const fbAppts = [];
+    snap.forEach(function(child) {
+      fbAppts.push({ ...child.val(), _fbKey: child.key, _source: 'appointments' });
+    });
+
+    // مزامنة حجوزات العملاء من صفحة الحجز
+    db.ref('bookings').once('value', function(bookSnap) {
+      const existingRefs = fbAppts.map(a => a._fbKey);
+      bookSnap.forEach(function(child) {
+        const b = child.val();
+        if(!b.date || !b.time) return;
+        // تحويل الحجز إلى موعد تلقائياً
+        fbAppts.push({
+          _fbKey: child.key,
+          _source: 'bookings',
+          id: 'B_' + child.key,
+          client: b.client || b.name || '—',
+          phone: b.phone || '',
+          address: b.city || 'جدة',
+          service: b.service || 'تنظيف مكيف',
+          units: b.units || 1,
+          date: b.date,
+          time: b.time.includes(' - ') ? b.time.split(' - ')[0] : b.time,
+          tech: autoAssignTech(b.date),
+          status: 'pending',
+          notes: 'حجز من النموذج الإلكتروني',
+          duration: b.duration || 60,
+          createdAt: b.createdAt || ''
+        });
+      });
+
+      appointments = fbAppts;
+      updateStats();
+      renderWeek();
+      renderList();
+
+      // تحديث مؤشر الاتصال
+      document.getElementById('fbDot').className = 'fb-dot connected';
+      document.getElementById('fbStatusText').textContent = 'متصل • ' + appointments.length + ' موعد';
+      document.getElementById('loadingOverlay').style.display = 'none';
+    });
+  }, function(err) {
+    document.getElementById('fbDot').className = 'fb-dot';
+    document.getElementById('fbStatusText').textContent = 'خطأ في الاتصال';
+    document.getElementById('loadingOverlay').style.display = 'none';
+    showToast('❌ خطأ في الاتصال: ' + err.message);
   });
 }
 
+// ===== STATS =====
 function updateStats(){
   const tod = today();
   document.getElementById('statToday').textContent = appointments.filter(a=>a.date===tod).length;
   document.getElementById('statPending').textContent = appointments.filter(a=>a.status==='pending').length;
   const weekDates = getWeekDates(0);
   document.getElementById('statDone').textContent = appointments.filter(a=>weekDates.includes(a.date)&&a.status==='done').length;
+  document.getElementById('statTotal').textContent = appointments.length;
 }
 
+// ===== WEEK VIEW =====
 function renderWeek(){
   const dates = getWeekDates(currentWeekOffset);
   const tod = today();
@@ -394,21 +402,20 @@ function renderWeek(){
   let html = `<div class="time-col"><div style="height:54px;border-bottom:2px solid var(--ice);"></div>`;
   html += hours.map(h=>`<div class="time-slot">${h}:00</div>`).join('');
   html += '</div>';
-  dates.forEach((date,di)=>{
+  dates.forEach(date=>{
     const isToday = date===tod;
     const d = new Date(date+'T00:00:00');
     html += `<div><div class="week-day-header${isToday?' today':''}"><div class="week-day-name">${dayNames[d.getDay()]}</div><div class="week-day-num">${d.getDate()}</div></div><div class="day-col">`;
-    hours.forEach(h=>{ html += `<div class="day-hour"></div>`; });
-    const dayAppts = appointments.filter(a=>a.date===date&&(techFilter==='all'||a.tech===techFilter));
-    dayAppts.forEach(a=>{
+    hours.forEach(()=>{ html += `<div class="day-hour"></div>`; });
+    appointments.filter(a=>a.date===date&&(techFilter==='all'||a.tech===techFilter)).forEach(a=>{
       const [hh,mm] = (a.time||'09:00').split(':').map(Number);
       const top = (hh - 7) * 60 + mm;
       const dur = (a.duration||60);
       const tc = TECH_COLORS[a.tech]||'#0EA5E9';
-      html += `<div class="appt-block status-${a.status||'pending'}" style="top:${top}px;height:${dur-4}px;" onclick="openDetail('${a.id}')">
+      html += `<div class="appt-block status-${a.status||'pending'}" style="top:${top}px;height:${Math.max(dur-4,20)}px;" onclick="openDetail('${a.id||a._fbKey}')">
         <div class="appt-time">${a.time}</div>
         <div class="appt-name">${a.client}</div>
-        <div class="appt-tech" style="color:${tc}">▪ ${TECHS[a.tech]||a.tech}</div>
+        <div class="appt-tech" style="color:${tc}">▪ ${TECHS[a.tech]||a.tech||'—'}</div>
       </div>`;
     });
     html += `</div></div>`;
@@ -416,6 +423,7 @@ function renderWeek(){
   document.getElementById('weekGrid').innerHTML = html;
 }
 
+// ===== LIST VIEW =====
 function renderList(){
   let appts = [...appointments];
   if(techFilter!=='all') appts = appts.filter(a=>a.tech===techFilter);
@@ -425,7 +433,7 @@ function renderList(){
   const bm = { confirmed:'sp-confirmed', pending:'sp-pending', done:'sp-done', cancelled:'sp-cancelled' };
   const cc = { confirmed:'c-confirmed', pending:'c-pending', done:'c-done', cancelled:'c-cancelled' };
   if(Object.keys(grouped).length===0){
-    document.getElementById('listView').innerHTML = `<div style="text-align:center;padding:60px 20px;color:var(--mist);"><div style="font-size:48px;margin-bottom:12px;">📅</div><p style="font-size:15px;">لا توجد مواعيد مسجلة بعد<br><small>اضغط "موعد جديد" لإضافة أول موعد</small></p></div>`;
+    document.getElementById('listView').innerHTML = `<div style="text-align:center;padding:60px 20px;color:var(--mist);"><div style="font-size:48px;margin-bottom:12px;">📅</div><p style="font-size:15px;">لا توجد مواعيد بعد<br><small>المواعيد ستظهر هنا تلقائياً عند وصول حجوزات جديدة</small></p></div>`;
     return;
   }
   let html = '';
@@ -433,24 +441,27 @@ function renderList(){
     const list = grouped[date];
     html += `<div class="day-section"><div class="day-section-header"><span class="day-section-date">${formatDate(date)}</span><span class="day-section-badge">${list.length} موعد</span>${date===today()?'<span style="background:var(--sky);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;">اليوم</span>':''}</div>`;
     list.forEach(a=>{
+      const aId = a.id || a._fbKey;
       const tc = TECH_COLORS[a.tech]||'#0EA5E9';
-      html += `<div class="appt-card ${cc[a.status||'pending']}" onclick="openDetail('${a.id}')">
+      const isBooking = a._source === 'bookings';
+      html += `<div class="appt-card ${cc[a.status||'pending']}" onclick="openDetail('${aId}')">
         <div class="appt-time-block"><div class="t-start">${a.time||'--:--'}</div><div class="t-dur">${a.duration||60} دق</div></div>
         <div class="appt-divider"></div>
         <div class="appt-info">
           <div class="appt-client">${a.client}</div>
           <div class="appt-service">🛠️ ${a.service||'—'} ${a.units>1?'('+a.units+' وحدات)':''}</div>
           <div class="appt-address">📍 ${a.address||'—'}</div>
+          ${isBooking?'<span class="source-badge source-firebase">📱 حجز إلكتروني</span>':'<span class="source-badge source-local">✏️ يدوي</span>'}
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
           <span class="status-pill ${bm[a.status||'pending']}">${STATUS_ICONS[a.status||'pending']} ${STATUS_LABELS[a.status||'pending']}</span>
           <span class="tech-pill" style="border-right:3px solid ${tc}">👷 ${TECHS[a.tech]||a.tech||'—'}</span>
         </div>
         <div class="appt-actions" onclick="event.stopPropagation()">
-          <button class="act-btn act-whatsapp" onclick="sendWhatsapp('${a.id}')">📲</button>
-          <button class="act-btn act-edit" onclick="editAppt('${a.id}')">✏️</button>
-          ${a.status!=='done'?`<button class="act-btn act-done" onclick="markDone('${a.id}')">✓</button>`:''}
-          <button class="act-btn act-delete" onclick="deleteAppt('${a.id}',event)">🗑️</button>
+          <button class="act-btn act-whatsapp" onclick="sendWhatsapp('${aId}')">📲</button>
+          <button class="act-btn act-edit" onclick="editAppt('${aId}')">✏️</button>
+          ${a.status!=='done'?`<button class="act-btn act-done" onclick="markDone('${aId}')">✓</button>`:''}
+          <button class="act-btn act-delete" onclick="deleteAppt('${aId}',event)">🗑️</button>
         </div>
       </div>`;
     });
@@ -459,6 +470,11 @@ function renderList(){
   document.getElementById('listView').innerHTML = html;
 }
 
+function findAppt(id) {
+  return appointments.find(a => (a.id===id || a._fbKey===id || ('B_'+a._fbKey)===id));
+}
+
+// ===== SWITCH VIEW =====
 function switchView(v){
   currentView = v;
   document.getElementById('vWeek').classList.toggle('active', v==='week');
@@ -467,7 +483,6 @@ function switchView(v){
   document.getElementById('listView').style.display = v==='list'?'block':'none';
   if(v==='week') renderWeek(); else renderList();
 }
-
 function changeWeek(dir){ currentWeekOffset+=dir; renderWeek(); }
 function goToday(){ currentWeekOffset=0; renderWeek(); }
 function filterTech(t,btn){
@@ -477,8 +492,20 @@ function filterTech(t,btn){
   renderWeek(); renderList();
 }
 
+// ===== MODAL =====
+function populateClients(){
+  const dl = document.getElementById('clientsList');
+  if(db) {
+    db.ref('customers').once('value', function(snap) {
+      const items = [];
+      snap.forEach(c => { const v=c.val(); if(v.name) items.push(`<option value="${v.name}" data-phone="${v.phone||''}">`); });
+      dl.innerHTML = items.join('');
+    });
+  }
+}
+
 function openNewAppt(){
-  editingId=null;
+  editingId=null; editingFirebaseKey=null;
   document.getElementById('modalTitle').textContent='➕ موعد جديد';
   ['f_client','f_phone','f_address','f_notes'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('f_service').value='';
@@ -492,9 +519,10 @@ function openNewAppt(){
 }
 
 function editAppt(id){
-  const a = appointments.find(x=>x.id===id);
+  const a = findAppt(id);
   if(!a) return;
-  editingId=id;
+  editingId = id;
+  editingFirebaseKey = a._fbKey;
   document.getElementById('modalTitle').textContent='✏️ تعديل الموعد';
   document.getElementById('f_client').value=a.client||'';
   document.getElementById('f_phone').value=a.phone||'';
@@ -519,21 +547,44 @@ function saveAppt(){
   const tech=document.getElementById('f_tech').value;
   const date=document.getElementById('f_date').value;
   if(!client||!phone||!service||!tech||!date) return showToast('❌ أكمل الحقول المطلوبة');
-  const data={client,phone,address,service,tech,status:document.getElementById('f_status').value,units:parseInt(document.getElementById('f_units').value)||1,date,time:document.getElementById('f_time').value,notes:document.getElementById('f_notes').value.trim(),duration:90};
-  if(editingId){ const idx=appointments.findIndex(a=>a.id===editingId); appointments[idx]={...appointments[idx],...data}; showToast('✅ تم تحديث الموعد'); }
-  else{ appointments.push({id:genId(),...data,createdAt:new Date().toISOString()}); showToast('✅ تم إضافة الموعد'); }
-  saveData(); closeModal(); updateStats(); renderWeek(); renderList();
+
+  const data = {
+    client, phone, address, service, tech,
+    status: document.getElementById('f_status').value,
+    units: parseInt(document.getElementById('f_units').value)||1,
+    date, time: document.getElementById('f_time').value,
+    notes: document.getElementById('f_notes').value.trim(),
+    duration: 90,
+    updatedAt: new Date().toISOString()
+  };
+
+  if(!db) { showToast('❌ Firebase غير متاح'); return; }
+
+  if(editingFirebaseKey) {
+    // تحديث موعد موجود في Firebase
+    db.ref('appointments/' + editingFirebaseKey).update(data)
+      .then(() => { showToast('✅ تم تحديث الموعد'); closeModal(); })
+      .catch(e => showToast('❌ خطأ: ' + e.message));
+  } else {
+    // إضافة موعد جديد إلى Firebase
+    data.createdAt = new Date().toISOString();
+    db.ref('appointments').push(data)
+      .then(() => { showToast('✅ تم إضافة الموعد'); closeModal(); })
+      .catch(e => showToast('❌ خطأ: ' + e.message));
+  }
 }
 
-function closeModal(){ document.getElementById('apptModal').classList.remove('open'); editingId=null; }
+function closeModal(){ document.getElementById('apptModal').classList.remove('open'); editingId=null; editingFirebaseKey=null; }
 
+// ===== DETAIL =====
 function openDetail(id){
-  const a=appointments.find(x=>x.id===id);
+  const a = findAppt(id);
   if(!a) return;
   const tc=TECH_COLORS[a.tech]||'#0EA5E9';
   const bm={confirmed:'sp-confirmed',pending:'sp-pending',done:'sp-done',cancelled:'sp-cancelled'};
+  const aId = a.id || a._fbKey;
   document.getElementById('detailTitle').textContent='📋 ' + a.client;
-  document.getElementById('detailEditBtn').onclick=()=>editAppt(id);
+  document.getElementById('detailEditBtn').onclick=()=>editAppt(aId);
   document.getElementById('detailBody').innerHTML=`
     <div style="background:var(--frost);border-radius:12px;padding:16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;">
       <div><div style="font-size:18px;font-weight:800;color:var(--deep)">${a.client}</div><div style="font-size:13px;color:var(--mist);margin-top:3px;">📱 <a href="tel:${a.phone}" style="color:var(--sky)">${a.phone}</a></div></div>
@@ -546,33 +597,37 @@ function openDetail(id){
       <div style="background:#fff;border:1.5px solid var(--ice);border-radius:10px;padding:12px;"><div style="font-size:11px;color:var(--mist);margin-bottom:4px;">📍 الموقع</div><div style="font-weight:700;color:var(--deep);font-size:12px">${a.address||'—'}</div></div>
     </div>
     ${a.notes?`<div style="background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:10px;padding:12px;margin-bottom:14px;font-size:13px;color:#92400E;">📝 ${a.notes}</div>`:''}
-    <div style="display:flex;gap:8px;">
-      <a href="https://wa.me/966${(a.phone||'').replace(/^0/,'')}?text=${encodeURIComponent('مرحباً '+a.client+'،\nتذكير بموعدكم مع مؤسسة أطواد\nالخدمة: '+a.service+'\nالتاريخ: '+formatDateShort(a.date)+'\nالوقت: '+a.time)}" target="_blank" style="flex:1;text-align:center;padding:10px;background:#25D366;color:#fff;border-radius:9px;font-weight:700;text-decoration:none;font-size:13px;">📲 إرسال تذكير</a>
-      <a href="https://maps.google.com?q=${encodeURIComponent(a.address||'')}" target="_blank" style="flex:1;text-align:center;padding:10px;background:var(--ice);color:var(--sky);border-radius:9px;font-weight:700;text-decoration:none;font-size:13px;">🗺️ خرائط جوجل</a>
-      ${a.status!=='done'?`<button onclick="markDone('${a.id}');document.getElementById('detailModal').classList.remove('open')" style="flex:1;padding:10px;background:#D1FAE5;color:var(--success);border:none;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">✓ إتمام</button>`:''}
-      <button onclick="deleteAppt('${a.id}',null);document.getElementById('detailModal').classList.remove('open')" style="flex:1;padding:10px;background:#FEE2E2;color:#EF4444;border:none;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">🗑️ حذف</button>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <a href="https://wa.me/966${(a.phone||'').replace(/^0/,'')}?text=${encodeURIComponent('مرحباً '+a.client+'،\nتذكير بموعدكم مع مؤسسة أطواد\nالخدمة: '+a.service+'\nالتاريخ: '+formatDateShort(a.date)+'\nالوقت: '+a.time)}" target="_blank" style="flex:1;text-align:center;padding:10px;background:#25D366;color:#fff;border-radius:9px;font-weight:700;text-decoration:none;font-size:13px;min-width:100px;">📲 تذكير</a>
+      <a href="https://maps.google.com?q=${encodeURIComponent(a.address||'')}" target="_blank" style="flex:1;text-align:center;padding:10px;background:var(--ice);color:var(--sky);border-radius:9px;font-weight:700;text-decoration:none;font-size:13px;min-width:100px;">🗺️ خرائط</a>
+      ${a.status!=='done'?`<button onclick="markDone('${aId}');document.getElementById('detailModal').classList.remove('open')" style="flex:1;padding:10px;background:#D1FAE5;color:var(--success);border:none;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;min-width:80px;">✓ إتمام</button>`:''}
+      <button onclick="deleteAppt('${aId}',null);document.getElementById('detailModal').classList.remove('open')" style="flex:1;padding:10px;background:#FEE2E2;color:#EF4444;border:none;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;min-width:80px;">🗑️ حذف</button>
     </div>`;
   document.getElementById('detailModal').classList.add('open');
 }
 
 function markDone(id){
-  const idx=appointments.findIndex(a=>a.id===id);
-  if(idx>-1){ appointments[idx].status='done'; saveData(); updateStats(); renderWeek(); renderList(); showToast('🎉 تم إتمام الموعد'); }
+  const a = findAppt(id);
+  if(!a || !db) return;
+  const ref = a._source==='bookings' ? 'bookings/'+a._fbKey : 'appointments/'+a._fbKey;
+  db.ref(ref).update({status:'done'})
+    .then(() => showToast('🎉 تم إتمام الموعد'))
+    .catch(e => showToast('❌ خطأ: ' + e.message));
 }
 
-function deleteAppt(id, e) {
+function deleteAppt(id, e){
   if(e) e.stopPropagation();
   if(!confirm('⚠️ هل تريدين حذف هذا الموعد نهائياً؟')) return;
-  appointments = appointments.filter(a => a.id !== id);
-  saveData();
-  updateStats();
-  renderWeek();
-  renderList();
-  showToast('🗑️ تم حذف الموعد');
+  const a = findAppt(id);
+  if(!a || !db) return;
+  const ref = a._source==='bookings' ? 'bookings/'+a._fbKey : 'appointments/'+a._fbKey;
+  db.ref(ref).remove()
+    .then(() => showToast('🗑️ تم حذف الموعد'))
+    .catch(e => showToast('❌ خطأ: ' + e.message));
 }
 
 function sendWhatsapp(id){
-  const a=appointments.find(x=>x.id===id);
+  const a = findAppt(id);
   if(!a) return;
   const msg=encodeURIComponent(`مرحباً ${a.client}،\nتذكير بموعدكم مع مؤسسة أطواد\nالخدمة: ${a.service}\nالتاريخ: ${formatDateShort(a.date)}\nالوقت: ${a.time}`);
   window.open(`https://wa.me/966${(a.phone||'').replace(/^0/,'')}?text=${msg}`,'_blank');
@@ -582,48 +637,30 @@ function showToast(msg){ const t=document.getElementById('toast'); t.textContent
 
 document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
 
-if(appointments.length===0){
-  const tod=today();
-  const tom=new Date(); tom.setDate(tom.getDate()+1); const tomStr=tom.toISOString().split('T')[0];
-  const y=new Date(); y.setDate(y.getDate()-1); const yStr=y.toISOString().split('T')[0];
-  appointments=[
-    {id:'A100001',client:'Dr. Hasan Al Shahri',phone:'0555519923',address:'Al Bsatin, Jeddah',service:'تنظيف مكيف',units:3,date:tod,time:'09:00',tech:'Abrar',status:'confirmed',notes:'3 وحدات داخلية وخارجية',duration:90,createdAt:''},
-    {id:'A100002',client:'Farash Al Shareef',phone:'0543322162',address:'Obur North, Jeddah',service:'صيانة دورية',units:1,date:tod,time:'11:30',tech:'Shoib',status:'pending',notes:'',duration:60,createdAt:''},
-    {id:'A100003',client:'أم سعود السلامة',phone:'0504332700',address:'Al Salamah, Jeddah',service:'تعبئة غاز',units:2,date:tod,time:'14:00',tech:'Suhail',status:'pending',notes:'شقة الدور الثالث',duration:90,createdAt:''},
-    {id:'A100004',client:'نوره زبونة',phone:'0596615884',address:'Al Rehab, Jeddah',service:'تنظيف مكيف',units:1,date:tomStr,time:'10:00',tech:'Abrar',status:'confirmed',notes:'',duration:60,createdAt:''},
-    {id:'A100005',client:'M. AlShaalan',phone:'0506361409',address:'Al Naeem, Jeddah',service:'كشف وإصلاح أعطال',units:1,date:tomStr,time:'13:00',tech:'Shoib',status:'confirmed',notes:'صوت غير طبيعي من الوحدة',duration:90,createdAt:''},
-    {id:'A100006',client:'Fury Rose',phone:'0563277359',address:'Al-Hamdaniya, Jeddah',service:'تنظيف مكيف',units:1,date:yStr,time:'09:30',tech:'Abrar',status:'done',notes:'',duration:60,createdAt:''},
-  ];
-  saveData();
-}
-
-updateStats();
+// ===== INIT =====
+const calDates = getWeekDates(0);
+const ms = new Date(calDates[0]+'T00:00:00');
+document.getElementById('calMonth').textContent = ms.toLocaleDateString('ar-SA',{month:'long',year:'numeric'});
 switchView('list');
-const calDates=getWeekDates(0);
-const ms=new Date(calDates[0]+'T00:00:00');
-document.getElementById('calMonth').textContent=ms.toLocaleDateString('ar-SA',{month:'long',year:'numeric'});
+initFirebaseSync(); // تشغيل المزامنة التلقائية
 </script>
 
 <script>
 var LANG = localStorage.getItem('atwad_lang') || 'ar';
 var NAV_TEXT = {
-  ar: {clients:'العملاء', appts:'المواعيد', wo:'أوامر العمل', finance:'الإدارة المالية', reports:'التقارير', settings:'الإعدادات', brand:'أطواد', brandSub:'لصيانة المكيفات'},
-  en: {clients:'Clients', appts:'Appointments', wo:'Work Orders', finance:'Finance', reports:'Reports', settings:'Settings', brand:'Atwad', brandSub:'AC Maintenance'}
+  ar: {brand:'أطواد', brandSub:'لصيانة المكيفات', clients:'العملاء', appts:'المواعيد', wo:'أوامر العمل', finance:'الإدارة المالية', reports:'التقارير', settings:'الإعدادات'},
+  en: {brand:'Atwad', brandSub:'AC Maintenance', clients:'Clients', appts:'Appointments', wo:'Work Orders', finance:'Finance', reports:'Reports', settings:'Settings'}
 };
 function applySharedLang() {
-  var l = LANG;
-  document.documentElement.lang = l;
-  document.documentElement.dir = l==='ar'?'rtl':'ltr';
-  var btn = document.getElementById('langBtn');
-  if(btn) btn.textContent = l==='ar'?'🌐 EN':'🌐 عر';
-  var t = NAV_TEXT[l];
-  setTxt('nav-brand', t.brand); setTxt('nav-brandsub', t.brandSub);
-  setTxt('nav-clients', t.clients); setTxt('nav-appts', t.appts);
-  setTxt('nav-wo', t.wo); setTxt('nav-finance', t.finance);
-  setTxt('nav-reports', t.reports); setTxt('nav-settings', t.settings);
+  var l=LANG; document.documentElement.lang=l; document.documentElement.dir=l==='ar'?'rtl':'ltr';
+  var btn=document.getElementById('langBtn'); if(btn) btn.textContent=l==='ar'?'🌐 EN':'🌐 عر';
+  var t=NAV_TEXT[l];
+  ['nav-brand','nav-brandsub','nav-clients','nav-appts','nav-wo','nav-finance','nav-reports','nav-settings'].forEach(function(id,i){
+    var keys=['brand','brandSub','clients','appts','wo','finance','reports','settings'];
+    var el=document.getElementById(id); if(el) el.textContent=t[keys[i]];
+  });
 }
-function setTxt(id, txt) { var el=document.getElementById(id); if(el) el.textContent=txt; }
-function toggleLang() { LANG = LANG==='ar'?'en':'ar'; localStorage.setItem('atwad_lang', LANG); applySharedLang(); }
+function toggleLang(){ LANG=LANG==='ar'?'en':'ar'; localStorage.setItem('atwad_lang',LANG); applySharedLang(); }
 document.addEventListener('DOMContentLoaded', applySharedLang);
 </script>
 </body>
