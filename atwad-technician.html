@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>أطواد - صفحة الفني</title>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
+:root{
+  --deep:#0C3B5E; --sky:#0EA5E9; --ice:#E8F4FD; --frost:#F0F9FF;
+  --success:#10B981; --warning:#F59E0B; --danger:#EF4444;
+  --slate:#334155; --mist:#94A3B8;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Cairo',sans-serif;background:#F1F5F9;color:var(--slate);min-height:100vh;}
+
+/* HEADER */
+.header{background:linear-gradient(135deg,var(--deep),#0e5fa8,var(--sky));padding:20px 16px;position:relative;overflow:hidden;}
+.header::before{content:'❄';position:absolute;right:16px;top:-10px;font-size:80px;opacity:.07;color:#fff;}
+.header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.logo{display:flex;align-items:center;gap:10px;}
+.logo-icon{width:44px;height:44px;background:rgba(255,255,255,.15);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;}
+.logo-text h1{color:#fff;font-size:18px;font-weight:900;}
+.logo-text p{color:rgba(255,255,255,.6);font-size:11px;}
+.date-badge{background:rgba(255,255,255,.15);border-radius:10px;padding:8px 14px;text-align:center;}
+.date-badge .day{color:#fff;font-size:14px;font-weight:700;}
+.date-badge .date{color:rgba(255,255,255,.7);font-size:11px;}
+
+/* TECH SELECTOR */
+.tech-selector{background:rgba(255,255,255,.1);border-radius:12px;padding:12px;}
+.tech-selector p{color:rgba(255,255,255,.7);font-size:12px;margin-bottom:8px;}
+.tech-btns{display:flex;gap:8px;}
+.tech-btn{flex:1;padding:9px;border:2px solid rgba(255,255,255,.2);border-radius:10px;background:transparent;color:rgba(255,255,255,.7);font-family:'Cairo',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;}
+.tech-btn.active{background:#fff;color:var(--deep);border-color:#fff;}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:16px;}
+.stat{background:#fff;border-radius:12px;padding:14px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.05);}
+.stat .num{font-size:24px;font-weight:900;color:var(--deep);}
+.stat .lbl{font-size:11px;color:var(--mist);margin-top:2px;}
+.stat.today{border-top:3px solid var(--sky);}
+.stat.pending{border-top:3px solid var(--warning);}
+.stat.done{border-top:3px solid var(--success);}
+
+/* FILTER TABS */
+.tabs{display:flex;background:#fff;padding:4px;margin:0 16px 16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.05);}
+.tab{flex:1;padding:9px;text-align:center;border:none;border-radius:9px;font-family:'Cairo',sans-serif;font-size:12px;font-weight:700;cursor:pointer;background:transparent;color:var(--mist);transition:all .2s;}
+.tab.active{background:var(--deep);color:#fff;}
+
+/* APPOINTMENT CARDS */
+.list{padding:0 16px 100px;}
+
+.appt-card{background:#fff;border-radius:16px;margin-bottom:14px;box-shadow:0 3px 12px rgba(0,0,0,.07);overflow:hidden;border-right:4px solid transparent;}
+.appt-card.pending{border-color:var(--warning);}
+.appt-card.confirmed{border-color:var(--sky);}
+.appt-card.done{border-color:var(--success);opacity:.75;}
+.appt-card.cancelled{border-color:var(--danger);opacity:.6;}
+
+.card-header{padding:14px 16px 10px;display:flex;align-items:center;justify-content:space-between;}
+.client-info{display:flex;align-items:center;gap:10px;}
+.client-avatar{width:42px;height:42px;border-radius:11px;background:linear-gradient(135deg,var(--deep),var(--sky));display:flex;align-items:center;justify-content:center;color:#fff;font-size:17px;font-weight:900;flex-shrink:0;}
+.client-name{font-size:15px;font-weight:700;color:var(--deep);}
+.client-service{font-size:12px;color:var(--mist);margin-top:1px;}
+.status-badge{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+.badge-pending{background:#FEF3C7;color:#92400E;}
+.badge-confirmed{background:#DBEAFE;color:#1E40AF;}
+.badge-done{background:#D1FAE5;color:#065F46;}
+.badge-cancelled{background:#FEE2E2;color:#991B1B;}
+
+.card-body{padding:0 16px 14px;}
+
+.info-row{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--slate);margin-bottom:6px;}
+.info-row .icon{width:20px;text-align:center;flex-shrink:0;}
+
+/* صورة الموقع */
+.location-img{width:100%;height:140px;object-fit:cover;border-radius:10px;margin-bottom:10px;cursor:pointer;border:1.5px solid var(--ice);}
+.no-img{width:100%;height:80px;background:var(--frost);border-radius:10px;margin-bottom:10px;display:flex;align-items:center;justify-content:center;color:var(--mist);font-size:12px;border:1.5px dashed #E2E8F0;}
+
+/* ACTIONS */
+.card-actions{display:flex;gap:8px;padding:0 16px 14px;}
+.act-btn{flex:1;padding:10px;border:none;border-radius:10px;font-family:'Cairo',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:5px;}
+.act-btn:active{transform:scale(.97);}
+.btn-wa{background:#25D366;color:#fff;}
+.btn-map{background:var(--ice);color:var(--sky);}
+.btn-done{background:linear-gradient(135deg,var(--success),#34D399);color:#fff;}
+.btn-done:disabled{opacity:.5;cursor:not-allowed;}
+
+/* TIME BADGE */
+.time-badge{background:var(--deep);color:#fff;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:700;display:inline-flex;align-items:center;gap:5px;}
+
+/* EMPTY STATE */
+.empty{text-align:center;padding:60px 20px;color:var(--mist);}
+.empty .icon{font-size:52px;margin-bottom:12px;}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--deep);color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.2);transition:transform .3s;z-index:999;font-family:'Cairo',sans-serif;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+/* LOADING */
+.loading{text-align:center;padding:40px;color:var(--mist);}
+.spinner{width:36px;height:36px;border:3px solid var(--ice);border-top-color:var(--sky);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 10px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* DAY SECTION */
+.day-header{font-size:13px;font-weight:700;color:var(--mist);margin-bottom:8px;margin-top:4px;padding-right:4px;display:flex;align-items:center;gap:6px;}
+.day-count{background:var(--ice);color:var(--sky);padding:2px 8px;border-radius:10px;font-size:11px;}
+.today-tag{background:var(--sky);color:#fff;padding:2px 8px;border-radius:10px;font-size:11px;}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-top">
+    <div class="logo">
+      <div class="logo-icon">❄️</div>
+      <div class="logo-text">
+        <h1>أطواد</h1>
+        <p>لوحة الفني الميداني</p>
+      </div>
+    </div>
+    <div class="date-badge">
+      <div class="day" id="dayName">--</div>
+      <div class="date" id="todayDate">--</div>
+    </div>
+  </div>
+
+  <!-- اختيار الفني -->
+  <div class="tech-selector">
+    <p>👷 اختر الفني:</p>
+    <div class="tech-btns">
+      <button class="tech-btn" onclick="selectTech('Abrar','أبرار',this)">أبرار</button>
+      <button class="tech-btn" onclick="selectTech('Shoib','شعيب',this)">شعيب</button>
+      <button class="tech-btn" onclick="selectTech('Suhail','سهيل',this)">سهيل</button>
+    </div>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats">
+  <div class="stat today">
+    <div class="num" id="statToday">0</div>
+    <div class="lbl">مواعيد اليوم</div>
+  </div>
+  <div class="stat pending">
+    <div class="num" id="statPending">0</div>
+    <div class="lbl">في الانتظار</div>
+  </div>
+  <div class="stat done">
+    <div class="num" id="statDone">0</div>
+    <div class="lbl">مكتملة</div>
+  </div>
+</div>
+
+<!-- FILTER TABS -->
+<div class="tabs">
+  <button class="tab active" onclick="filterAppts('today',this)">اليوم</button>
+  <button class="tab" onclick="filterAppts('week',this)">الأسبوع</button>
+  <button class="tab" onclick="filterAppts('all',this)">الكل</button>
+</div>
+
+<!-- LIST -->
+<div class="list" id="apptList">
+  <div class="loading">
+    <div class="spinner"></div>
+    <div>اختر الفني لعرض مواعيده...</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// Firebase
+var db = null;
+try {
+  firebase.initializeApp({databaseURL:"https://atwad-booking-default-rtdb.firebaseio.com"});
+  db = firebase.database();
+} catch(e){}
+
+var allAppts = [];
+var currentTech = '';
+var currentTechAr = '';
+var currentFilter = 'today';
+
+const STATUS_LABELS = {confirmed:'مؤكد', pending:'في الانتظار', done:'مكتمل', cancelled:'ملغي'};
+const STATUS_BADGES = {confirmed:'badge-confirmed', pending:'badge-pending', done:'badge-done', cancelled:'badge-cancelled'};
+
+function today(){ return new Date().toISOString().split('T')[0]; }
+function formatDate(d){ try{ return new Date(d+'T00:00:00').toLocaleDateString('ar-SA',{weekday:'long',month:'long',day:'numeric'}); } catch{ return d; } }
+function formatDateShort(d){ try{ return new Date(d+'T00:00:00').toLocaleDateString('ar-SA',{month:'short',day:'numeric'}); } catch{ return d; } }
+
+function getWeekDates(){
+  const dates = [];
+  for(let i=0; i<7; i++){
+    const d = new Date();
+    d.setDate(d.getDate() + i);
+    dates.push(d.toISOString().split('T')[0]);
+  }
+  return dates;
+}
+
+// تحديث التاريخ
+function updateDate(){
+  const now = new Date();
+  const days = ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+  document.getElementById('dayName').textContent = days[now.getDay()];
+  document.getElementById('todayDate').textContent = now.toLocaleDateString('ar-SA',{year:'numeric',month:'long',day:'numeric'});
+}
+
+// اختيار الفني
+function selectTech(tech, techAr, btn) {
+  currentTech = tech;
+  currentTechAr = techAr;
+  document.querySelectorAll('.tech-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  loadAppts();
+}
+
+// تحميل المواعيد من Firebase
+function loadAppts() {
+  if(!db || !currentTech) return;
+  document.getElementById('apptList').innerHTML = '<div class="loading"><div class="spinner"></div><div>جاري تحميل المواعيد...</div></div>';
+
+  // جمع من appointments و bookings
+  var combined = [];
+
+  db.ref('appointments').once('value', function(snap) {
+    snap.forEach(function(c) {
+      var a = c.val();
+      if(a.tech === currentTech) {
+        combined.push({...a, _fbKey: c.key, _source: 'appointments'});
+      }
+    });
+
+    db.ref('bookings').once('value', function(snap2) {
+      snap2.forEach(function(c) {
+        var b = c.val();
+        // تعيين الفني تلقائياً إذا لم يكن محدداً
+        var assignedTech = b.tech || autoAssign(b.date, combined);
+        if(assignedTech === currentTech) {
+          combined.push({
+            _fbKey: c.key,
+            _source: 'bookings',
+            id: 'B_' + c.key,
+            client: b.client || b.name || '—',
+            phone: b.phone || '',
+            address: b.city || 'جدة',
+            service: b.service || 'تنظيف مكيف',
+            units: b.units || 1,
+            date: b.date,
+            time: b.time ? (b.time.includes(' - ') ? b.time.split(' - ')[0] : b.time) : '09:00',
+            tech: assignedTech,
+            status: b.status || 'pending',
+            notes: 'حجز إلكتروني',
+            locationImage: b.locationImage || '',
+            duration: b.duration || 60,
+          });
+        }
+      });
+
+      allAppts = combined.sort((a,b) => ((a.date||'')+(a.time||'')).localeCompare((b.date||'')+(b.time||'')));
+      updateStats();
+      renderAppts();
+    });
+  });
+}
+
+function autoAssign(date, existing) {
+  // تعيين أبرار افتراضياً للحجوزات الجديدة
+  return 'Abrar';
+}
+
+function updateStats() {
+  const tod = today();
+  document.getElementById('statToday').textContent = allAppts.filter(a=>a.date===tod).length;
+  document.getElementById('statPending').textContent = allAppts.filter(a=>a.status==='pending'||a.status==='confirmed').length;
+  document.getElementById('statDone').textContent = allAppts.filter(a=>a.status==='done').length;
+}
+
+function filterAppts(filter, btn) {
+  currentFilter = filter;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  renderAppts();
+}
+
+function renderAppts() {
+  const tod = today();
+  const weekDates = getWeekDates();
+  let appts = [...allAppts];
+
+  if(currentFilter === 'today') appts = appts.filter(a => a.date === tod);
+  else if(currentFilter === 'week') appts = appts.filter(a => weekDates.includes(a.date));
+
+  const list = document.getElementById('apptList');
+
+  if(appts.length === 0) {
+    list.innerHTML = `<div class="empty"><div class="icon">📅</div><p>لا توجد مواعيد ${currentFilter==='today'?'اليوم':currentFilter==='week'?'هذا الأسبوع':''}</p></div>`;
+    return;
+  }
+
+  // تجميع بالتاريخ
+  const grouped = {};
+  appts.forEach(a => { if(!grouped[a.date]) grouped[a.date]=[]; grouped[a.date].push(a); });
+
+  let html = '';
+  Object.keys(grouped).sort().forEach(date => {
+    const isToday = date === tod;
+    html += `<div class="day-header">
+      ${formatDate(date)}
+      ${isToday ? '<span class="today-tag">اليوم</span>' : ''}
+      <span class="day-count">${grouped[date].length} موعد</span>
+    </div>`;
+
+    grouped[date].forEach(a => {
+      const aId = a.id || a._fbKey;
+      const initial = (a.client||'ع')[0];
+      const badgeClass = STATUS_BADGES[a.status||'pending'];
+      const statusLabel = STATUS_LABELS[a.status||'pending'];
+      const isDone = a.status === 'done';
+
+      html += `<div class="appt-card ${a.status||'pending'}" id="card-${aId}">
+        <div class="card-header">
+          <div class="client-info">
+            <div class="client-avatar">${initial}</div>
+            <div>
+              <div class="client-name">${a.client}</div>
+              <div class="client-service">🛠️ ${a.service||'—'} ${a.units>1?'('+a.units+' وحدات)':''}</div>
+            </div>
+          </div>
+          <div>
+            <span class="status-badge ${badgeClass}">${statusLabel}</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <span class="time-badge">⏰ ${a.time||'--:--'}</span>
+            <span style="font-size:12px;color:var(--mist);">${a.duration||60} دقيقة</span>
+          </div>
+          ${a.locationImage
+            ? `<img class="location-img" src="${a.locationImage}" alt="صورة الموقع" onclick="window.open('${a.locationImage}','_blank')">`
+            : `<div class="no-img">📷 لا توجد صورة للموقع</div>`
+          }
+          <div class="info-row"><span class="icon">📍</span><span>${a.address||'—'}</span></div>
+          ${a.phone ? `<div class="info-row"><span class="icon">📱</span><span>${a.phone}</span></div>` : ''}
+          ${a.notes ? `<div class="info-row"><span class="icon">📝</span><span style="font-size:12px;color:var(--mist);">${a.notes}</span></div>` : ''}
+        </div>
+        <div class="card-actions">
+          ${a.phone ? `<button class="act-btn btn-wa" onclick="openWhatsApp('${a.phone}','${a.client}','${a.service}','${a.time}')">📲 واتساب</button>` : ''}
+          <button class="act-btn btn-map" onclick="openMap('${a.address||''}')">🗺️ خريطة</button>
+          <button class="act-btn btn-done" ${isDone?'disabled':''} onclick="markDone('${aId}','${a._source}','${a._fbKey}')">
+            ${isDone ? '✅ مكتمل' : '✓ إتمام'}
+          </button>
+        </div>
+      </div>`;
+    });
+  });
+
+  list.innerHTML = html;
+}
+
+function openWhatsApp(phone, name, service, time) {
+  const msg = encodeURIComponent(`مرحباً ${name}،\nنود إبلاغكم بأن الفني في طريقه إليكم لتنفيذ خدمة: ${service}\nالوقت المتوقع للوصول: ${time}\nمؤسسة أطواد ❄️`);
+  window.open(`https://wa.me/966${phone.replace(/^0/,'')}?text=${msg}`, '_blank');
+}
+
+function openMap(address) {
+  window.open(`https://maps.google.com?q=${encodeURIComponent(address)}`, '_blank');
+}
+
+function markDone(id, source, fbKey) {
+  if(!db) { showToast('❌ Firebase غير متاح'); return; }
+  if(!confirm('هل تم إتمام العمل؟')) return;
+
+  const ref = source === 'bookings' ? 'bookings/' + fbKey : 'appointments/' + fbKey;
+  db.ref(ref).update({status: 'done'})
+    .then(() => {
+      // تحديث البطاقة محلياً
+      const card = document.getElementById('card-' + id);
+      if(card) {
+        card.className = 'appt-card done';
+        const badge = card.querySelector('.status-badge');
+        if(badge) { badge.className='status-badge badge-done'; badge.textContent='مكتمل'; }
+        const doneBtn = card.querySelector('.btn-done');
+        if(doneBtn) { doneBtn.disabled=true; doneBtn.textContent='✅ مكتمل'; }
+      }
+      // تحديث الإحصاء
+      const a = allAppts.find(x => (x.id===id || x._fbKey===id || ('B_'+x._fbKey)===id));
+      if(a) a.status = 'done';
+      updateStats();
+      showToast('🎉 تم إتمام العمل بنجاح!');
+    })
+    .catch(e => showToast('❌ خطأ: ' + e.message));
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// تهيئة
+updateDate();
+</script>
+</body>
+</html>
