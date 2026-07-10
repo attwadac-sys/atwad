@@ -176,6 +176,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
         <button class="view-btn" id="vWeek" onclick="switchView('week')">📆 أسبوع</button>
         <button class="view-btn active" id="vList" onclick="switchView('list')">📋 قائمة</button>
       </div>
+      <button id="fridayBtn" onclick="toggleFriday()" style="padding:9px 16px;border-radius:10px;border:none;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;background:#FEF3C7;color:#92400E;">⛔ الجمعة مغلق</button>
       <button class="btn-primary" onclick="openNewAppt()">＋ موعد جديد</button>
     </div>
   </div>
@@ -313,6 +314,44 @@ function autoAssignTech(date) {
   const techCount = {Abrar:0, Shoib:0, Suhail:0};
   dayAppts.forEach(a => { if(techCount[a.tech]!==undefined) techCount[a.tech]++; });
   return Object.keys(techCount).reduce((a,b) => techCount[a]<=techCount[b]?a:b);
+}
+
+// ===== إعداد يوم الجمعة =====
+var fridayClosed = true;
+
+function loadFridaySetting() {
+  if(!db) return;
+  db.ref('settings/fridayClosed').once('value', function(snap) {
+    if(snap.val() !== null) fridayClosed = snap.val();
+    updateFridayBtn();
+  });
+}
+
+function updateFridayBtn() {
+  var btn = document.getElementById('fridayBtn');
+  if(!btn) return;
+  if(fridayClosed) {
+    btn.style.background = '#FEE2E2';
+    btn.style.color = '#991B1B';
+    btn.textContent = '⛔ الجمعة مغلق';
+  } else {
+    btn.style.background = '#D1FAE5';
+    btn.style.color = '#065F46';
+    btn.textContent = '✅ الجمعة مفتوح';
+  }
+}
+
+function toggleFriday() {
+  if(!db) { showToast('❌ Firebase غير متاح'); return; }
+  fridayClosed = !fridayClosed;
+  db.ref('settings/fridayClosed').set(fridayClosed)
+    .then(function() {
+      updateFridayBtn();
+      showToast(fridayClosed
+        ? '⛔ تم إغلاق الحجز يوم الجمعة'
+        : '✅ تم تفعيل الحجز يوم الجمعة');
+    })
+    .catch(function(e) { showToast('❌ خطأ: ' + e.message); });
 }
 
 // ===== FIREBASE REALTIME SYNC =====
@@ -643,6 +682,7 @@ const ms = new Date(calDates[0]+'T00:00:00');
 document.getElementById('calMonth').textContent = ms.toLocaleDateString('ar-SA',{month:'long',year:'numeric'});
 switchView('list');
 initFirebaseSync(); // تشغيل المزامنة التلقائية
+loadFridaySetting(); // تحميل إعداد الجمعة
 </script>
 
 <script>

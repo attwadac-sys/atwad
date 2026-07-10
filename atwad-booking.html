@@ -225,7 +225,7 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(135deg,#0C3B5E,
 <div class="step-section" id="step3">
   <div class="card-header"><div class="card-icon">📅</div><div><h2 id="s3-title">اختر موعدك / Choose Appointment</h2><p id="s3-sub">التاريخ والوقت المناسب / Select date & time</p></div></div>
   <div class="card-body">
-    <div class="field"><label id="lbl-date">تاريخ الزيارة / Visit Date <span class="req">*</span></label><input type="date" id="f_date" onchange="checkSlots(this.value)"><div class="err-msg" id="e_date">اختر التاريخ / Select date</div></div>
+    <div class="field"><label id="lbl-date">تاريخ الزيارة / Visit Date <span class="req">*</span></label><input type="date" id="f_date" onchange="checkDateAndSlots(this.value)"><div class="err-msg" id="e_date">اختر التاريخ / Select date</div></div>
     <div class="dur-note" id="durNote"></div>
     <div class="section-lbl" id="lbl-time">الوقت المفضل / Preferred Time <span class="req">*</span></div>
     <div class="slots-grid" id="slotsGrid"></div>
@@ -597,6 +597,44 @@ function calcDur(){
 function fmtDur(m){
   if(LANG==='ar') return m<60?m+' دقيقة':Math.floor(m/60)+' ساعة'+(m%60>0?' و'+m%60+' دقيقة':'');
   return m<60?m+' min':Math.floor(m/60)+'h'+(m%60>0?' '+m%60+'m':'');
+}
+
+// ===== إعداد إغلاق يوم الجمعة =====
+// يمكن تغيير هذا الإعداد من هنا: true = مغلق، false = مفتوح
+var FRIDAY_CLOSED = true; // القيمة الافتراضية
+
+// قراءة إعداد الجمعة من Firebase
+function loadFridaySetting() {
+  if(!db) return;
+  db.ref('settings/fridayClosed').once('value', function(snap) {
+    if(snap.val() !== null) {
+      FRIDAY_CLOSED = snap.val();
+    }
+  });
+}
+loadFridaySetting();
+
+function checkDateAndSlots(date) {
+  if(!date) return;
+  var d = new Date(date + 'T00:00:00');
+  var dayOfWeek = d.getDay(); // 5 = الجمعة
+
+  if(FRIDAY_CLOSED && dayOfWeek === 5) {
+    // يوم الجمعة مغلق
+    document.getElementById('slotsGrid').innerHTML = '';
+    document.getElementById('durNote').style.display = 'none';
+    document.getElementById('e_date').className = 'err-msg show';
+    document.getElementById('e_date').textContent = LANG === 'ar'
+      ? '⛔ نعتذر — لا تتوفر مواعيد يوم الجمعة. يرجى اختيار يوم آخر.'
+      : '⛔ Sorry — No appointments available on Fridays. Please choose another day.';
+    S.time = '';
+    return;
+  }
+
+  // يوم عادي — تابع التحقق من المواعيد
+  document.getElementById('e_date').className = 'err-msg';
+  document.getElementById('e_date').textContent = LANG === 'ar' ? 'اختر التاريخ / Select date' : 'Select date';
+  checkSlots(date);
 }
 
 function checkSlots(date){
