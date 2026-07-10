@@ -150,23 +150,24 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(135deg,#0C3B5E,
 
     <div class="section-lbl" id="lbl-other">🔧 خدمات أخرى / Other Services</div>
     <div class="service-grid">
-      <div class="svc-card" id="sv1" onclick="selSvc('صيانة دورية','Periodic Maintenance',120,'sv1')"><div class="s-icon">🔧</div><div class="s-name" id="sv1n">صيانة دورية</div><div class="s-price">From 120 SAR</div></div>
+      <div class="svc-card" id="sv1" onclick="selSvc('غسيل مكيفات','AC Washing',120,'sv1')"><div class="s-icon">🚿</div><div class="s-name" id="sv1n">غسيل مكيفات</div><div class="s-price">From 120 SAR</div></div>
       <div class="svc-card" id="sv2" onclick="selSvc('تعبئة غاز','Gas Refill',150,'sv2')"><div class="s-icon">💨</div><div class="s-name" id="sv2n">تعبئة غاز</div><div class="s-price">From 150 SAR</div></div>
       <div class="svc-card" id="sv3" onclick="selSvc('كشف وإصلاح أعطال','Diagnosis & Repair',100,'sv3')"><div class="s-icon">🔍</div><div class="s-name" id="sv3n">كشف وإصلاح</div><div class="s-price">From 100 SAR</div></div>
       <div class="svc-card" id="sv4" onclick="selSvc('تركيب مكيف جديد','AC Installation',200,'sv4')"><div class="s-icon">📦</div><div class="s-name" id="sv4n">تركيب مكيف</div><div class="s-price">From 200 SAR</div></div>
       <div class="svc-card" id="sv5" onclick="selSvc('باقة صيانة سنوية','Annual Package',400,'sv5')"><div class="s-icon">⭐</div><div class="s-name" id="sv5n">باقة سنوية</div><div class="s-price">From 400 SAR</div></div>
+      <div class="svc-card" id="sv6" onclick="selSvc('صيانة دورية','Periodic Maintenance',120,'sv6')"><div class="s-icon">🔧</div><div class="s-name" id="sv6n">صيانة دورية</div><div class="s-price">From 120 SAR</div></div>
     </div>
 
     <!-- خانة عدد المكيفات للخدمات الأخرى -->
     <div class="units-box" id="units-box">
       <div class="units-lbl" id="lbl-units-other">❄️ كم عدد المكيفات المطلوب خدمتها؟ <span class="req">*</span></div>
       <div class="units-ctrl">
-        <button class="units-btn minus" onclick="changeUnits(-1)">−</button>
+        <button class="units-btn plus" onclick="changeUnits(1)">+</button>
         <div class="units-num">
           <div class="n" id="units-display">1</div>
           <div class="sub" id="lbl-units-sub">مكيف</div>
         </div>
-        <button class="units-btn plus" onclick="changeUnits(1)">+</button>
+        <button class="units-btn minus" onclick="changeUnits(-1)">−</button>
       </div>
     </div>
 
@@ -281,7 +282,7 @@ var UI = {
     ct1:'1 مكيف', ct2:'2 مكيف', ct3:'3 مكيفات', ct4:'4 مكيفات',
     offerBadge:'⚡ عرض مؤقت', offerTitle:'5 مكيفات أو أكثر', offerPer:'للمكيف',
     otherLbl:'🔧 خدمات أخرى',
-    sv1:'صيانة دورية', sv2:'تعبئة غاز', sv3:'كشف وإصلاح', sv4:'تركيب مكيف', sv5:'باقة سنوية',
+    sv1:'غسيل مكيفات', sv2:'تعبئة غاز', sv3:'كشف وإصلاح', sv4:'تركيب مكيف', sv5:'باقة سنوية', sv6:'صيانة دورية',
     unitsLbl:'❄️ كم عدد المكيفات المطلوب خدمتها؟', unitsSub:'مكيف',
     typeLbl:'👥 نوع العميل',
     tb1:'أفراد', tb2:'شركات', tb3:'دائم',
@@ -321,7 +322,7 @@ var UI = {
     ct1:'1 AC Unit', ct2:'2 AC Units', ct3:'3 AC Units', ct4:'4 AC Units',
     offerBadge:'⚡ Special Offer', offerTitle:'5+ AC Units', offerPer:'per unit',
     otherLbl:'🔧 Other Services',
-    sv1:'Periodic Maintenance', sv2:'Gas Refill', sv3:'Diagnosis & Repair', sv4:'AC Installation', sv5:'Annual Package',
+    sv1:'AC Washing', sv2:'Gas Refill', sv3:'Diagnosis & Repair', sv4:'AC Installation', sv5:'Annual Package', sv6:'Periodic Maintenance',
     unitsLbl:'❄️ How many AC units need service?', unitsSub:'AC unit(s)',
     typeLbl:'👥 Client Type',
     tb1:'Individual', tb2:'Corporate', tb3:'Regular',
@@ -384,6 +385,7 @@ function applyLang() {
   document.getElementById('sv3n').textContent = L('sv3');
   document.getElementById('sv4n').textContent = L('sv4');
   document.getElementById('sv5n').textContent = L('sv5');
+  document.getElementById('sv6n').textContent = L('sv6');
   document.getElementById('lbl-units-other').innerHTML = L('unitsLbl')+' <span class="req">*</span>';
   document.getElementById('lbl-units-sub').textContent = L('unitsSub');
   document.getElementById('lbl-type').innerHTML = L('typeLbl')+' <span class="req">*</span>';
@@ -460,7 +462,7 @@ function changeUnits(dir) {
 function selClean(u,p) {
   ['ct1','ct2','ct3','ct4'].forEach(function(id){document.getElementById(id).className='clean-tile';});
   document.getElementById('ct5').className='offer-tile';
-  ['sv1','sv2','sv3','sv4','sv5'].forEach(function(id){document.getElementById(id).className='svc-card';});
+  ['sv1','sv2','sv3','sv4','sv5','sv6'].forEach(function(id){document.getElementById(id).className='svc-card';});
   var id=u<=4?'ct'+u:'ct5';
   document.getElementById(id).className=(u<=4?'clean-tile sel':'offer-tile sel');
   S.service=LANG==='ar'?'تنظيف مكيف':'AC Cleaning'; S.serviceAr='تنظيف مكيف';
@@ -473,7 +475,7 @@ function selClean(u,p) {
 function selSvc(nameAr,nameEn,price,id) {
   ['ct1','ct2','ct3','ct4'].forEach(function(i){document.getElementById(i).className='clean-tile';});
   document.getElementById('ct5').className='offer-tile';
-  ['sv1','sv2','sv3','sv4','sv5'].forEach(function(i){document.getElementById(i).className='svc-card';});
+  ['sv1','sv2','sv3','sv4','sv5','sv6'].forEach(function(i){document.getElementById(i).className='svc-card';});
   document.getElementById(id).className='svc-card sel';
   S.service=LANG==='ar'?nameAr:nameEn; S.serviceAr=nameAr;
   S.price=price; S.isClean=false;
