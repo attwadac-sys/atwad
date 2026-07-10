@@ -8,7 +8,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
 :root{--deep:#0C3B5E;--sky:#0EA5E9;--ice:#E8F4FD;--frost:#F0F9FF;--slate:#334155;--mist:#94A3B8;--success:#10B981;--danger:#EF4444;--warning:#F59E0B;}
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Tajawal',sans-serif;background:linear-gradient(135deg,#0C3B5E,#0EA5E9 60%,#E8F4FD);min-height:100vh;}
+body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(135deg,#0C3B5E,#0EA5E9 60%,#E8F4FD);min-height:100vh;}
 .header{background:linear-gradient(90deg,#0C3B5E,#0EA5E9);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;}
 .header h1{color:#fff;font-size:22px;font-weight:800;}
 .header p{color:rgba(255,255,255,.7);font-size:12px;}
@@ -27,28 +27,28 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(135deg,#0C3B5E,
 .card{background:#fff;border-radius:20px;box-shadow:0 4px 24px rgba(12,59,94,.1);overflow:hidden;}
 .card-header{background:linear-gradient(90deg,var(--frost),var(--ice));padding:18px 22px;border-bottom:1.5px solid rgba(14,165,233,.12);display:flex;align-items:center;gap:12px;}
 .card-icon{width:44px;height:44px;background:#fff;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 2px 8px rgba(14,165,233,.15);}
-.card-header h2{font-size:17px;font-weight:800;color:var(--deep);}
+.card-header h2{font-size:22px;font-weight:900;color:var(--deep);}
 .card-header p{font-size:12px;color:var(--mist);}
 .card-body{padding:22px;}
-.section-lbl{font-size:13px;font-weight:700;color:var(--slate);margin-bottom:8px;}
+.section-lbl{font-size:16px;font-weight:900;color:var(--slate);margin-bottom:12px;}
 .req{color:var(--danger);}
 .clean-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
-.clean-tile{border:2px solid #E2E8F0;border-radius:12px;padding:14px;text-align:center;cursor:pointer;background:var(--frost);transition:all .2s;}
+.clean-tile{border:2px solid #E2E8F0;border-radius:14px;padding:22px 14px;text-align:center;cursor:pointer;background:var(--frost);transition:all .2s;}
 .clean-tile:hover,.clean-tile.sel{border-color:var(--sky);background:var(--ice);box-shadow:0 0 0 3px rgba(14,165,233,.15);}
-.clean-tile .t-num{font-size:18px;margin-bottom:4px;}
-.clean-tile .t-name{font-size:13px;font-weight:700;color:var(--deep);}
-.clean-tile .t-price{font-size:14px;font-weight:800;color:var(--sky);}
+.clean-tile .t-num{font-size:42px;margin-bottom:8px;}
+.clean-tile .t-name{font-size:17px;font-weight:900;color:var(--deep);}
+.clean-tile .t-price{font-size:18px;font-weight:900;color:var(--sky);}
 .offer-tile{background:linear-gradient(90deg,#EF4444,#F59E0B);border-radius:12px;padding:14px;text-align:center;cursor:pointer;margin-bottom:12px;border:2px solid transparent;transition:all .2s;}
 .offer-tile.sel{box-shadow:0 0 0 3px rgba(239,68,68,.3);}
 .offer-badge{display:inline-block;background:rgba(0,0,0,.2);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;margin-bottom:4px;}
-.offer-tile .o-title{color:#fff;font-size:14px;font-weight:800;}
-.offer-tile .o-price{color:#FEF08A;font-size:20px;font-weight:800;}
+.offer-tile .o-title{color:#fff;font-size:20px;font-weight:900;}
+.offer-tile .o-price{color:#FEF08A;font-size:30px;font-weight:900;}
 .service-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
-.svc-card{border:2px solid #E2E8F0;border-radius:12px;padding:13px;text-align:center;cursor:pointer;background:var(--frost);transition:all .2s;}
+.svc-card{border:2px solid #E2E8F0;border-radius:14px;padding:22px 13px;text-align:center;cursor:pointer;background:var(--frost);transition:all .2s;}
 .svc-card:hover,.svc-card.sel{border-color:var(--sky);background:var(--ice);box-shadow:0 0 0 3px rgba(14,165,233,.15);}
-.svc-card .s-icon{font-size:24px;margin-bottom:5px;}
-.svc-card .s-name{font-size:12px;font-weight:700;color:var(--deep);}
-.svc-card .s-price{font-size:11px;color:var(--sky);margin-top:2px;}
+.svc-card .s-icon{font-size:46px;margin-bottom:10px;}
+.svc-card .s-name{font-size:16px;font-weight:900;color:var(--deep);}
+.svc-card .s-price{font-size:13px;font-weight:700;color:var(--sky);margin-top:4px;}
 .units-box{display:none;margin-bottom:16px;background:linear-gradient(135deg,var(--frost),var(--ice));border:2px solid rgba(14,165,233,.2);border-radius:14px;padding:16px;}
 .units-box.show{display:block;}
 .units-lbl{font-size:13px;font-weight:700;color:var(--slate);margin-bottom:12px;}
@@ -147,25 +147,105 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(135deg,#0C3B5E,
     <div class="section-lbl">💧 أسعار تنظيف وغسيل المكيفات</div>
     <div style="background:linear-gradient(135deg,#0C3B5E,#1E5F8A);border-radius:14px;padding:14px;margin-bottom:10px;">
       <div class="clean-grid">
-        <div class="clean-tile" id="ct1" onclick="selClean(1,110)"><div class="t-num">1️⃣</div><div class="t-name">1 مكيف</div><div class="t-price">110 SAR</div></div>
-        <div class="clean-tile" id="ct2" onclick="selClean(2,180)"><div class="t-num">2️⃣</div><div class="t-name">2 مكيف</div><div class="t-price">180 SAR</div></div>
-        <div class="clean-tile" id="ct3" onclick="selClean(3,240)"><div class="t-num">3️⃣</div><div class="t-name">3 مكيفات</div><div class="t-price">240 SAR</div></div>
-        <div class="clean-tile" id="ct4" onclick="selClean(4,280)"><div class="t-num">4️⃣</div><div class="t-name">4 مكيفات</div><div class="t-price">280 SAR</div></div>
+        <div class="clean-tile" id="ct1" onclick="selClean(1,110)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 100" style="width:80px;height:36px;margin-bottom:6px;">
+<defs><linearGradient id="ag" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0C3B5E"/><stop offset="100%" stop-color="#0EA5E9"/></linearGradient><linearGradient id="bg2" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#e8f4fd"/><stop offset="100%" stop-color="#cde8f7"/></linearGradient></defs>
+<rect x="0" y="0" width="220" height="52" rx="8" fill="url(#bg2)" stroke="#0EA5E9" stroke-width="2"/>
+<rect x="0" y="0" width="220" height="10" rx="8" fill="url(#ag)"/>
+<rect x="0" y="5" width="220" height="5" fill="url(#ag)"/>
+<rect x="75" y="14" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
+<rect x="75" y="20" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
+<rect x="75" y="26" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
+<rect x="75" y="32" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
+<rect x="75" y="38" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
+<path d="M18 52 Q110 64 202 52" fill="none" stroke="#0EA5E9" stroke-width="2" opacity="0.6"/>
+<line x1="95" y1="64" x2="95" y2="80" stroke="#94A3B8" stroke-width="2.5" stroke-dasharray="3,2"/>
+<line x1="103" y1="64" x2="103" y2="80" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="3,2"/>
+<rect x="65" y="78" width="70" height="20" rx="5" fill="#334155" stroke="#475569" stroke-width="1"/>
+<circle cx="90" cy="88" r="8" fill="none" stroke="#64748B" stroke-width="1"/>
+<circle cx="90" cy="88" r="2.5" fill="#64748B"/>
+<path d="M90 80 Q94 84 90 88 Q86 84 90 80" fill="#475569" opacity="0.8"/>
+<path d="M98 88 Q94 92 90 88 Q94 84 98 88" fill="#475569" opacity="0.8"/>
+<path d="M90 96 Q86 92 90 88 Q94 92 90 96" fill="#475569" opacity="0.8"/>
+<path d="M82 88 Q86 84 90 88 Q86 92 82 88" fill="#475569" opacity="0.8"/>
+</svg><div class="t-name">1 مكيف</div><div class="t-price">110 SAR</div></div>
+        <div class="clean-tile" id="ct2" onclick="selClean(2,180)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 100" style="width:80px;height:36px;margin-bottom:6px;">
+<defs><linearGradient id="ag" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0C3B5E"/><stop offset="100%" stop-color="#0EA5E9"/></linearGradient><linearGradient id="bg2" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#e8f4fd"/><stop offset="100%" stop-color="#cde8f7"/></linearGradient></defs>
+<rect x="0" y="0" width="220" height="52" rx="8" fill="url(#bg2)" stroke="#0EA5E9" stroke-width="2"/>
+<rect x="0" y="0" width="220" height="10" rx="8" fill="url(#ag)"/>
+<rect x="0" y="5" width="220" height="5" fill="url(#ag)"/>
+<rect x="75" y="14" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
+<rect x="75" y="20" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
+<rect x="75" y="26" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
+<rect x="75" y="32" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
+<rect x="75" y="38" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
+<path d="M18 52 Q110 64 202 52" fill="none" stroke="#0EA5E9" stroke-width="2" opacity="0.6"/>
+<line x1="95" y1="64" x2="95" y2="80" stroke="#94A3B8" stroke-width="2.5" stroke-dasharray="3,2"/>
+<line x1="103" y1="64" x2="103" y2="80" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="3,2"/>
+<rect x="65" y="78" width="70" height="20" rx="5" fill="#334155" stroke="#475569" stroke-width="1"/>
+<circle cx="90" cy="88" r="8" fill="none" stroke="#64748B" stroke-width="1"/>
+<circle cx="90" cy="88" r="2.5" fill="#64748B"/>
+<path d="M90 80 Q94 84 90 88 Q86 84 90 80" fill="#475569" opacity="0.8"/>
+<path d="M98 88 Q94 92 90 88 Q94 84 98 88" fill="#475569" opacity="0.8"/>
+<path d="M90 96 Q86 92 90 88 Q94 92 90 96" fill="#475569" opacity="0.8"/>
+<path d="M82 88 Q86 84 90 88 Q86 92 82 88" fill="#475569" opacity="0.8"/>
+</svg><div class="t-name">2 مكيف</div><div class="t-price">180 SAR</div></div>
+        <div class="clean-tile" id="ct3" onclick="selClean(3,240)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 100" style="width:80px;height:36px;margin-bottom:6px;">
+<defs><linearGradient id="ag" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0C3B5E"/><stop offset="100%" stop-color="#0EA5E9"/></linearGradient><linearGradient id="bg2" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#e8f4fd"/><stop offset="100%" stop-color="#cde8f7"/></linearGradient></defs>
+<rect x="0" y="0" width="220" height="52" rx="8" fill="url(#bg2)" stroke="#0EA5E9" stroke-width="2"/>
+<rect x="0" y="0" width="220" height="10" rx="8" fill="url(#ag)"/>
+<rect x="0" y="5" width="220" height="5" fill="url(#ag)"/>
+<rect x="75" y="14" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
+<rect x="75" y="20" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
+<rect x="75" y="26" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
+<rect x="75" y="32" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
+<rect x="75" y="38" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
+<path d="M18 52 Q110 64 202 52" fill="none" stroke="#0EA5E9" stroke-width="2" opacity="0.6"/>
+<line x1="95" y1="64" x2="95" y2="80" stroke="#94A3B8" stroke-width="2.5" stroke-dasharray="3,2"/>
+<line x1="103" y1="64" x2="103" y2="80" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="3,2"/>
+<rect x="65" y="78" width="70" height="20" rx="5" fill="#334155" stroke="#475569" stroke-width="1"/>
+<circle cx="90" cy="88" r="8" fill="none" stroke="#64748B" stroke-width="1"/>
+<circle cx="90" cy="88" r="2.5" fill="#64748B"/>
+<path d="M90 80 Q94 84 90 88 Q86 84 90 80" fill="#475569" opacity="0.8"/>
+<path d="M98 88 Q94 92 90 88 Q94 84 98 88" fill="#475569" opacity="0.8"/>
+<path d="M90 96 Q86 92 90 88 Q94 92 90 96" fill="#475569" opacity="0.8"/>
+<path d="M82 88 Q86 84 90 88 Q86 92 82 88" fill="#475569" opacity="0.8"/>
+</svg><div class="t-name">3 مكيفات</div><div class="t-price">240 SAR</div></div>
+        <div class="clean-tile" id="ct4" onclick="selClean(4,280)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 100" style="width:80px;height:36px;margin-bottom:6px;">
+<defs><linearGradient id="ag" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0C3B5E"/><stop offset="100%" stop-color="#0EA5E9"/></linearGradient><linearGradient id="bg2" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#e8f4fd"/><stop offset="100%" stop-color="#cde8f7"/></linearGradient></defs>
+<rect x="0" y="0" width="220" height="52" rx="8" fill="url(#bg2)" stroke="#0EA5E9" stroke-width="2"/>
+<rect x="0" y="0" width="220" height="10" rx="8" fill="url(#ag)"/>
+<rect x="0" y="5" width="220" height="5" fill="url(#ag)"/>
+<rect x="75" y="14" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
+<rect x="75" y="20" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
+<rect x="75" y="26" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
+<rect x="75" y="32" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
+<rect x="75" y="38" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
+<path d="M18 52 Q110 64 202 52" fill="none" stroke="#0EA5E9" stroke-width="2" opacity="0.6"/>
+<line x1="95" y1="64" x2="95" y2="80" stroke="#94A3B8" stroke-width="2.5" stroke-dasharray="3,2"/>
+<line x1="103" y1="64" x2="103" y2="80" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="3,2"/>
+<rect x="65" y="78" width="70" height="20" rx="5" fill="#334155" stroke="#475569" stroke-width="1"/>
+<circle cx="90" cy="88" r="8" fill="none" stroke="#64748B" stroke-width="1"/>
+<circle cx="90" cy="88" r="2.5" fill="#64748B"/>
+<path d="M90 80 Q94 84 90 88 Q86 84 90 80" fill="#475569" opacity="0.8"/>
+<path d="M98 88 Q94 92 90 88 Q94 84 98 88" fill="#475569" opacity="0.8"/>
+<path d="M90 96 Q86 92 90 88 Q94 92 90 96" fill="#475569" opacity="0.8"/>
+<path d="M82 88 Q86 84 90 88 Q86 92 82 88" fill="#475569" opacity="0.8"/>
+</svg><div class="t-name">4 مكيفات</div><div class="t-price">280 SAR</div></div>
       </div>
       <div class="offer-tile" id="ct5" onclick="selClean(5,300)">
         <div class="offer-badge">⚡ عرض مؤقت / Special Offer</div>
-        <div class="o-title">5 مكيفات أو أكثر / 5+ AC Units</div>
+        <div style="font-size:36px;margin-bottom:6px;">🏠❄️</div><div class="o-title">5 مكيفات أو أكثر / 5+ AC Units</div>
         <div class="o-price">60 SAR <span style="font-size:12px;font-weight:500">للمكيف / per unit</span></div>
       </div>
     </div>
     <div class="section-lbl">🔧 خدمات أخرى / Other Services</div>
     <div class="service-grid">
       <div class="svc-card" id="sv1" onclick="selSvc('تنظيف وغسيل المكيفات','AC Cleaning & Washing',120,'sv1')"><div class="s-icon">🚿</div><div class="s-name">تنظيف وغسيل</div><div class="s-price">From 120 SAR</div></div>
-      <div class="svc-card" id="sv2" onclick="selSvc('تعبئة غاز','Gas Refill',150,'sv2')"><div class="s-icon">💨</div><div class="s-name">تعبئة غاز</div><div class="s-price">From 150 SAR</div></div>
+      <div class="svc-card" id="sv2" onclick="selSvc('تعبئة غاز','Gas Refill',150,'sv2')"><div class="s-icon">🧪</div><div class="s-name">تعبئة غاز</div><div class="s-price">From 150 SAR</div></div>
       <div class="svc-card" id="sv3" onclick="selSvc('كشف وإصلاح أعطال','Diagnosis & Repair',100,'sv3')"><div class="s-icon">🔍</div><div class="s-name">كشف وإصلاح</div><div class="s-price">From 100 SAR</div></div>
-      <div class="svc-card" id="sv4" onclick="selSvc('تركيب مكيف جديد','AC Installation',200,'sv4')"><div class="s-icon">📦</div><div class="s-name">تركيب مكيف</div><div class="s-price">From 200 SAR</div></div>
-      <div class="svc-card" id="sv5" onclick="selSvc('باقة صيانة سنوية','Annual Package',400,'sv5')"><div class="s-icon">⭐</div><div class="s-name">باقة سنوية</div><div class="s-price">From 400 SAR</div></div>
-      <div class="svc-card" id="sv6" onclick="selSvc('صيانة دورية','Periodic Maintenance',120,'sv6')"><div class="s-icon">🔧</div><div class="s-name">صيانة دورية</div><div class="s-price">From 120 SAR</div></div>
+      <div class="svc-card" id="sv4" onclick="selSvc('تركيب مكيف جديد','AC Installation',200,'sv4')"><div class="s-icon">⚙️</div><div class="s-name">تركيب مكيف</div><div class="s-price">From 200 SAR</div></div>
+      <div class="svc-card" id="sv5" onclick="selSvc('باقة صيانة سنوية','Annual Package',400,'sv5')"><div class="s-icon">👑</div><div class="s-name">باقة سنوية</div><div class="s-price">From 400 SAR</div></div>
+      <div class="svc-card" id="sv6" onclick="selSvc('صيانة دورية','Periodic Maintenance',120,'sv6')"><div class="s-icon">🛠️</div><div class="s-name">صيانة دورية</div><div class="s-price">From 120 SAR</div></div>
     </div>
     <!-- عدد المكيفات للخدمات الأخرى -->
     <div class="units-box" id="units-box">
