@@ -434,6 +434,25 @@ function importWOFromFirebase() {
 }
 // ===== STATE =====
 let workOrders = JSON.parse(localStorage.getItem('atwad_workorders') || '[]');
+
+// مزامنة Firebase
+function syncFromFirebase() {
+  if(!db) return;
+  document.getElementById('fbDot') && (document.getElementById('fbDot').className='fb-dot loading');
+  db.ref('workOrders').on('value', function(snap) {
+    var fbData = [];
+    snap.forEach(function(child) {
+      fbData.push({...child.val(), _fbKey: child.key});
+    });
+    if(fbData.length > 0) {
+      workOrders = fbData;
+      localStorage.setItem('atwad_workorders', JSON.stringify(workOrders));
+    }
+    updateStats();
+    renderWOs();
+    document.getElementById('fbDot') && (document.getElementById('fbDot').className='fb-dot connected');
+  });
+}
 let clients = []; try { clients = JSON.parse(localStorage.getItem('atwad_clients') || '[]'); } catch {}
 let currentFilter = 'all';
 let currentStep = 1;
@@ -447,7 +466,22 @@ const TECHS = { Abrar:'أبرار', Shoib:'شعيب', Suhail:'سهيل' };
 const RATING_LABELS = ['','ضعيف','مقبول','جيد','جيد جداً','ممتاز 🌟'];
 
 function genId(){ return 'WO-' + String(workOrders.length + 1001).padStart(5,'0'); }
-function saveData(){ localStorage.setItem('atwad_workorders', JSON.stringify(workOrders)); }
+function saveData(){
+  localStorage.setItem('atwad_workorders', JSON.stringify(workOrders));
+  // حفظ في Firebase أيضاً
+  if(db) {
+    workOrders.forEach(function(wo) {
+      if(wo._fbKey) {
+        var copy = {...wo}; delete copy._fbKey;
+        db.ref('workOrders/' + wo._fbKey).set(copy);
+      } else {
+        var ref = db.ref('workOrders').push();
+        wo._fbKey = ref.key;
+        ref.set(wo);
+      }
+    });
+  }
+}
 function today(){ return new Date().toISOString().split('T')[0]; }
 function fmtDate(d){ try{ return new Date(d+'T00:00:00').toLocaleDateString('ar-SA',{year:'numeric',month:'short',day:'numeric'}); } catch{ return d||'—'; } }
 
@@ -739,6 +773,7 @@ if(workOrders.length===0){
 
 updateStats();
 renderWOs();
+syncFromFirebase();
 </script>
 
 

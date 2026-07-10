@@ -555,8 +555,33 @@
 <div class="toast" id="toast"></div>
 
 <script>
+var db = null;
+try {
+  if(typeof firebase !== 'undefined' && !firebase.apps.length) {
+    firebase.initializeApp({databaseURL:"https://atwad-booking-default-rtdb.firebaseio.com"});
+  }
+  db = firebase.database();
+} catch(e){ console.log('Firebase:', e); }
+
 // ========== DATA ==========
 let clients = JSON.parse(localStorage.getItem('atwad_clients') || '[]');
+
+// مزامنة Firebase
+function syncFromFirebase() {
+  if(!db) return;
+  db.ref('customers').on('value', function(snap) {
+    var fbData = [];
+    snap.forEach(function(child) {
+      fbData.push({...child.val(), _fbKey: child.key});
+    });
+    if(fbData.length > 0) {
+      clients = fbData;
+      localStorage.setItem('atwad_clients', JSON.stringify(clients));
+    }
+    updateStats();
+    renderTable();
+  });
+}
 let editingId = null;
 let currentFilter = 'all';
 let selectedType = '';
@@ -565,6 +590,20 @@ const avatarColors = ['#0EA5E9','#8B5CF6','#10B981','#F59E0B','#EF4444','#EC4899
 
 function saveData() {
   localStorage.setItem('atwad_clients', JSON.stringify(clients));
+
+  // حفظ في Firebase
+  if(db) {
+    clients.forEach(function(c) {
+      if(c._fbKey) {
+        var copy = {...c}; delete copy._fbKey;
+        db.ref('customers/' + c._fbKey).set(copy);
+      } else {
+        var ref = db.ref('customers').push();
+        c._fbKey = ref.key;
+        ref.set(c);
+      }
+    });
+  }
 }
 
 function genId() {

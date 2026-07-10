@@ -96,6 +96,8 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 .lang-btn{padding:7px 14px;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);border-radius:8px;color:#fff;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;}
 .lang-btn:hover{background:rgba(255,255,255,.25);}
 </style>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
 </head>
 <body>
 
@@ -194,6 +196,14 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 <div class="toast" id="toast"></div>
 
 <script>
+var db = null;
+try {
+  if(typeof firebase !== 'undefined' && !firebase.apps.length) {
+    firebase.initializeApp({databaseURL:"https://atwad-booking-default-rtdb.firebaseio.com"});
+  }
+  db = firebase.database();
+} catch(e){ console.log('Firebase:', e); }
+
 // ===== DATA =====
 var period = 'month';
 var entries = [], workOrders = [], clients = [], appointments = [];
@@ -201,6 +211,31 @@ try { entries     = JSON.parse(localStorage.getItem('atwad_finance')      || '[]
 try { workOrders  = JSON.parse(localStorage.getItem('atwad_workorders')   || '[]'); } catch(e){}
 try { clients     = JSON.parse(localStorage.getItem('atwad_clients')      || '[]'); } catch(e){}
 try { appointments= JSON.parse(localStorage.getItem('atwad_appointments') || '[]'); } catch(e){}
+
+// مزامنة Firebase للتقارير
+function syncReportsFromFirebase() {
+  if(!db) return;
+  var loaded = {t:false, w:false, c:false, a:false};
+  function tryRender() {
+    if(loaded.t && loaded.w && loaded.c && loaded.a) renderAll();
+  }
+  db.ref('transactions').once('value', function(snap) {
+    var d=[]; snap.forEach(function(c){d.push(c.val());}); if(d.length>0){entries=d;} loaded.t=true; tryRender();
+  });
+  db.ref('workOrders').once('value', function(snap) {
+    var d=[]; snap.forEach(function(c){d.push(c.val());}); if(d.length>0){workOrders=d;} loaded.w=true; tryRender();
+  });
+  db.ref('customers').once('value', function(snap) {
+    var d=[]; snap.forEach(function(c){d.push(c.val());}); if(d.length>0){clients=d;} loaded.c=true; tryRender();
+  });
+  db.ref('appointments').once('value', function(snap) {
+    var d=[]; snap.forEach(function(c){d.push(c.val());}); if(d.length>0){appointments=d;} loaded.a=true; tryRender();
+    // حجوزات العملاء أيضاً
+    db.ref('bookings').once('value', function(s2) {
+      s2.forEach(function(c){appointments.push(c.val());}); tryRender();
+    });
+  });
+}
 
 function today(){ return new Date().toISOString().split('T')[0]; }
 function fmt(n){ return Number(n||0).toLocaleString('ar-SA'); }
@@ -388,6 +423,7 @@ function printReport() { window.print(); }
 function showToast(msg){ var t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(function(){t.classList.remove('show');},2800); }
 
 renderAll();
+syncReportsFromFirebase();
 </script>
 
 
