@@ -150,7 +150,7 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(135deg,#0C3B5E,
 
     <div class="section-lbl" id="lbl-other">🔧 خدمات أخرى / Other Services</div>
     <div class="service-grid">
-      <div class="svc-card" id="sv1" onclick="selSvc('غسيل مكيفات','AC Washing',120,'sv1')"><div class="s-icon">🚿</div><div class="s-name" id="sv1n">غسيل مكيفات</div><div class="s-price">From 120 SAR</div></div>
+      <div class="svc-card" id="sv1" onclick="selSvc('تنظيف وغسيل المكيفات','AC Cleaning & Washing',120,'sv1')"><div class="s-icon">🚿</div><div class="s-name" id="sv1n">تنظيف وغسيل المكيفات</div><div class="s-price">From 120 SAR</div></div>
       <div class="svc-card" id="sv2" onclick="selSvc('تعبئة غاز','Gas Refill',150,'sv2')"><div class="s-icon">💨</div><div class="s-name" id="sv2n">تعبئة غاز</div><div class="s-price">From 150 SAR</div></div>
       <div class="svc-card" id="sv3" onclick="selSvc('كشف وإصلاح أعطال','Diagnosis & Repair',100,'sv3')"><div class="s-icon">🔍</div><div class="s-name" id="sv3n">كشف وإصلاح</div><div class="s-price">From 100 SAR</div></div>
       <div class="svc-card" id="sv4" onclick="selSvc('تركيب مكيف جديد','AC Installation',200,'sv4')"><div class="s-icon">📦</div><div class="s-name" id="sv4n">تركيب مكيف</div><div class="s-price">From 200 SAR</div></div>
@@ -307,7 +307,7 @@ var UI = {
     ct1:'1 مكيف', ct2:'2 مكيف', ct3:'3 مكيفات', ct4:'4 مكيفات',
     offerBadge:'⚡ عرض مؤقت', offerTitle:'5 مكيفات أو أكثر', offerPer:'للمكيف',
     otherLbl:'🔧 خدمات أخرى',
-    sv1:'غسيل مكيفات', sv2:'تعبئة غاز', sv3:'كشف وإصلاح', sv4:'تركيب مكيف', sv5:'باقة سنوية', sv6:'صيانة دورية',
+    sv1:'تنظيف وغسيل المكيفات', sv2:'تعبئة غاز', sv3:'كشف وإصلاح', sv4:'تركيب مكيف', sv5:'باقة سنوية', sv6:'صيانة دورية',
     unitsLbl:'❄️ كم عدد المكيفات المطلوب خدمتها؟', unitsSub:'مكيف',
     typeLbl:'👥 نوع العميل',
     tb1:'أفراد', tb2:'شركات', tb3:'دائم',
@@ -347,7 +347,7 @@ var UI = {
     ct1:'1 AC Unit', ct2:'2 AC Units', ct3:'3 AC Units', ct4:'4 AC Units',
     offerBadge:'⚡ Special Offer', offerTitle:'5+ AC Units', offerPer:'per unit',
     otherLbl:'🔧 Other Services',
-    sv1:'AC Washing', sv2:'Gas Refill', sv3:'Diagnosis & Repair', sv4:'AC Installation', sv5:'Annual Package', sv6:'Periodic Maintenance',
+    sv1:'AC Cleaning & Washing', sv2:'Gas Refill', sv3:'Diagnosis & Repair', sv4:'AC Installation', sv5:'Annual Package', sv6:'Periodic Maintenance',
     unitsLbl:'❄️ How many AC units need service?', unitsSub:'AC unit(s)',
     typeLbl:'👥 Client Type',
     tb1:'Individual', tb2:'Corporate', tb3:'Regular',
@@ -667,7 +667,20 @@ function next3(){
 // ===== Step 4 =====
 function fmtDate(d){try{return new Date(d+'T00:00:00').toLocaleDateString(LANG==='ar'?'ar-SA':'en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});}catch(e){return d;}}
 function buildSum(){
-  var total=S.isClean?(S.units>=5?S.units*60:S.price):S.price;
+  // حساب السعر
+  var isWashing = S.serviceAr === 'تنظيف وغسيل المكيفات';
+  var total;
+  if(S.isClean){
+    total = S.units >= 5 ? S.units * 60 : S.price;
+  } else if(isWashing){
+    if(S.units===1) total=110;
+    else if(S.units===2) total=180;
+    else if(S.units===3) total=240;
+    else if(S.units===4) total=280;
+    else total=S.units*60;
+  } else {
+    total = S.price;
+  }
   var rows=[
     [L('sumService'),S.service],
     [L('sumUnits'),S.units+' '+(LANG==='ar'?'مكيف':'AC unit(s)')],
