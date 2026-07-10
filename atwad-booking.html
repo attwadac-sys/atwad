@@ -564,7 +564,11 @@ function next2(){
 var DUR_MAP={'تنظيف مكيف':30,'AC Cleaning':30,'صيانة دورية':45,'Periodic Maintenance':45,'تعبئة غاز':40,'Gas Refill':40,'كشف وإصلاح أعطال':60,'Diagnosis & Repair':60,'تركيب مكيف جديد':90,'AC Installation':90,'باقة صيانة سنوية':45,'Annual Package':45};
 var SLOTS=[{t:'8:00 - 10:00',start:480,icon:'🌅',ar:'8-10 ص',en:'8-10 AM'},{t:'10:00 - 12:00',start:600,icon:'☀️',ar:'10-12 ص',en:'10-12 AM'},{t:'12:00 - 14:00',start:720,icon:'🕛',ar:'12-2 م',en:'12-2 PM'},{t:'14:00 - 16:00',start:840,icon:'🕑',ar:'2-4 م',en:'2-4 PM'},{t:'16:00 - 18:00',start:960,icon:'🌤️',ar:'4-6 م',en:'4-6 PM'},{t:'18:00 - 20:00',start:1080,icon:'🌙',ar:'6-8 م',en:'6-8 PM'}];
 
-function calcDur(){return (DUR_MAP[S.serviceAr]||DUR_MAP[S.service]||30)*S.units;}
+function calcDur(){
+  var perUnit = DUR_MAP[S.serviceAr]||DUR_MAP[S.service]||30;
+  var total = perUnit * S.units;
+  return Math.min(total, 240); // الحد الأقصى 4 ساعات
+}
 function fmtDur(m){
   if(LANG==='ar') return m<60?m+' دقيقة':Math.floor(m/60)+' ساعة'+(m%60>0?' و'+m%60+' دقيقة':'');
   return m<60?m+' min':Math.floor(m/60)+'h'+(m%60>0?' '+m%60+'m':'');
@@ -576,15 +580,19 @@ function checkSlots(date){
   var dn=document.getElementById('durNote');
   dn.style.display='block';
   dn.textContent=L('durText')+': '+fmtDur(dur)+' ('+S.units+' × '+(dur/S.units)+' '+(LANG==='ar'?'د':'min')+')';
-  var note=document.getElementById('slotsGrid');
-  note.innerHTML='<div style="text-align:center;color:var(--mist);padding:10px;font-size:12px">'+L('checking')+'</div>';
+  document.getElementById('slotsGrid').innerHTML='<div style="text-align:center;color:var(--mist);padding:10px;font-size:12px">'+L('checking')+'</div>';
   if(db){
-    db.ref('bookings').orderByChild('date').equalTo(date).once('value',function(snap){
+    db.ref('bookings').once('value', function(snap){
       var booked=[];
-      snap.forEach(function(c){var b=c.val();if(b.time) booked.push({time:b.time,dur:b.duration||90});});
-      renderSlots(booked,dur);
+      snap.forEach(function(c){
+        var b=c.val();
+        if(b.date && b.date === date && b.time){
+          booked.push({time:b.time, dur:b.duration||90});
+        }
+      });
+      renderSlots(booked, dur);
     });
-  } else { renderSlots([],dur); }
+  } else { renderSlots([], dur); }
 }
 
 function renderSlots(booked,dur){
