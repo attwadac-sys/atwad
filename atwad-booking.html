@@ -9,14 +9,12 @@
 :root{--deep:#0C3B5E;--sky:#0EA5E9;--ice:#E8F4FD;--frost:#F0F9FF;--slate:#334155;--mist:#94A3B8;--success:#10B981;--danger:#EF4444;--warning:#F59E0B;}
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:'Tajawal',sans-serif;background:linear-gradient(135deg,#0C3B5E,#0EA5E9 60%,#E8F4FD);min-height:100vh;}
-
 .header{background:linear-gradient(90deg,#0C3B5E,#0EA5E9);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;}
 .header-left{display:flex;flex-direction:column;}
 .header h1{color:#fff;font-size:22px;font-weight:800;}
 .header p{color:rgba(255,255,255,.7);font-size:12px;}
 .lang-btn{padding:8px 16px;background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.4);border-radius:8px;color:#fff;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap;}
 .lang-btn:hover{background:rgba(255,255,255,.35);}
-
 .steps-bar{display:flex;justify-content:center;align-items:center;background:#fff;padding:4px;border-bottom:2px solid var(--ice);position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.05);}
 .step-item{display:flex;flex-direction:column;align-items:center;padding:10px 18px;border-bottom:3px solid transparent;flex:1;max-width:160px;}
 .step-item.active{border-bottom-color:var(--sky);}
@@ -27,7 +25,6 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(135deg,#0C3B5E,
 .step-label{font-size:10px;color:var(--mist);}
 .step-item.active .step-label{color:var(--sky);}
 .step-item.done .step-label{color:var(--success);}
-
 .container{max-width:640px;margin:24px auto 60px;padding:0 14px;}
 .card{background:#fff;border-radius:20px;box-shadow:0 4px 24px rgba(12,59,94,.1);overflow:hidden;}
 .card-header{background:linear-gradient(90deg,var(--frost),var(--ice));padding:18px 22px;border-bottom:1.5px solid rgba(14,165,233,.12);display:flex;align-items:center;gap:12px;}
@@ -35,23 +32,19 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(135deg,#0C3B5E,
 .card-header h2{font-size:17px;font-weight:800;color:var(--deep);}
 .card-header p{font-size:12px;color:var(--mist);}
 .card-body{padding:22px;}
-
 .section-lbl{font-size:13px;font-weight:700;color:var(--slate);margin-bottom:8px;}
 .req{color:var(--danger);}
-
 .clean-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
 .clean-tile{border:2px solid #E2E8F0;border-radius:12px;padding:14px;text-align:center;cursor:pointer;background:var(--frost);transition:all .2s;}
 .clean-tile:hover,.clean-tile.sel{border-color:var(--sky);background:var(--ice);box-shadow:0 0 0 3px rgba(14,165,233,.15);}
 .clean-tile .t-num{font-size:18px;margin-bottom:4px;}
 .clean-tile .t-name{font-size:13px;font-weight:700;color:var(--deep);}
 .clean-tile .t-price{font-size:14px;font-weight:800;color:var(--sky);}
-
 .offer-tile{background:linear-gradient(90deg,#EF4444,#F59E0B);border-radius:12px;padding:14px;text-align:center;cursor:pointer;margin-bottom:12px;border:2px solid transparent;transition:all .2s;}
 .offer-tile.sel{box-shadow:0 0 0 3px rgba(239,68,68,.3);}
 .offer-badge{display:inline-block;background:rgba(0,0,0,.2);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;margin-bottom:4px;}
 .offer-tile .o-title{color:#fff;font-size:14px;font-weight:800;}
 .offer-tile .o-price{color:#FEF08A;font-size:20px;font-weight:800;}
-
 .service-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
 .svc-card{border:2px solid #E2E8F0;border-radius:12px;padding:13px;text-align:center;cursor:pointer;background:var(--frost);transition:all .2s;}
 .svc-card:hover,.svc-card.sel{border-color:var(--sky);background:var(--ice);box-shadow:0 0 0 3px rgba(14,165,233,.15);}
@@ -59,10 +52,23 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(135deg,#0C3B5E,
 .svc-card .s-name{font-size:12px;font-weight:700;color:var(--deep);}
 .svc-card .s-price{font-size:11px;color:var(--sky);margin-top:2px;}
 
+/* UNITS BOX */
+.units-box{display:none;margin-bottom:16px;background:linear-gradient(135deg,var(--frost),var(--ice));border:2px solid rgba(14,165,233,.2);border-radius:14px;padding:16px;}
+.units-box.show{display:block;}
+.units-box .units-lbl{font-size:13px;font-weight:700;color:var(--slate);margin-bottom:12px;}
+.units-ctrl{display:flex;align-items:center;gap:16px;justify-content:center;}
+.units-btn{width:42px;height:42px;border-radius:50%;border:2px solid var(--sky);font-size:22px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.units-btn.minus{background:var(--ice);color:var(--sky);}
+.units-btn.minus:hover{background:var(--sky);color:#fff;}
+.units-btn.plus{background:var(--sky);color:#fff;}
+.units-btn.plus:hover{background:var(--deep);}
+.units-num{min-width:70px;text-align:center;}
+.units-num .n{font-size:36px;font-weight:900;color:var(--deep);line-height:1;}
+.units-num .sub{font-size:12px;color:var(--mist);margin-top:2px;}
+
 .type-row{display:flex;gap:8px;margin-bottom:14px;}
 .type-btn{flex:1;padding:10px;border:2px solid #E2E8F0;border-radius:10px;background:var(--frost);font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;color:var(--slate);cursor:pointer;transition:all .2s;text-align:center;}
 .type-btn:hover,.type-btn.sel{border-color:var(--sky);background:var(--sky);color:#fff;}
-
 .field{margin-bottom:14px;}
 .field label{display:block;font-size:13px;font-weight:700;color:var(--slate);margin-bottom:5px;}
 .field input,.field select,.field textarea{width:100%;padding:10px 13px;border:1.5px solid #E2E8F0;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:14px;color:var(--slate);background:var(--frost);outline:none;transition:all .2s;}
@@ -71,18 +77,15 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(135deg,#0C3B5E,
 .err-msg{color:var(--danger);font-size:12px;margin-top:4px;display:none;}
 .err-msg.show{display:block;}
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-
 .loc-btn{width:100%;padding:12px;background:linear-gradient(90deg,var(--deep),var(--sky));color:#fff;border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;}
 .loc-result{display:none;background:#fff;border:1.5px solid #E2E8F0;border-radius:10px;padding:11px;margin-top:8px;align-items:center;gap:10px;}
 .loc-result.show{display:flex;}
-
 .dur-note{background:var(--ice);border:1.5px solid var(--sky);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--deep);margin-bottom:10px;display:none;}
 .slots-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
 .slot{border:1.5px solid #E2E8F0;border-radius:10px;padding:10px;text-align:center;cursor:pointer;font-size:12px;font-weight:700;color:var(--slate);background:var(--frost);transition:all .2s;}
 .slot:hover{border-color:var(--sky);color:var(--sky);}
 .slot.sel{border-color:var(--sky);background:var(--sky);color:#fff;}
 .slot.booked{opacity:.4;cursor:not-allowed;background:#F1F5F9;}
-
 .sum-box{background:linear-gradient(135deg,var(--frost),var(--ice));border:1.5px solid rgba(14,165,233,.15);border-radius:14px;padding:16px;margin-bottom:14px;}
 .sum-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px dashed rgba(14,165,233,.15);font-size:13px;}
 .sum-row:last-child{border-bottom:none;}
@@ -91,11 +94,9 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(135deg,#0C3B5E,
 .total-box{background:var(--deep);color:#fff;border-radius:12px;padding:13px 17px;display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
 .total-box .t-lbl{font-size:14px;font-weight:600;}
 .total-box .t-price{font-size:22px;font-weight:800;color:var(--sky);}
-
 .btn-row{display:flex;gap:10px;margin-top:20px;}
 .btn-next{flex:2;padding:13px;background:linear-gradient(90deg,var(--deep),var(--sky));color:#fff;border:none;border-radius:12px;font-family:'Tajawal',sans-serif;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 4px 14px rgba(14,165,233,.3);}
 .btn-back{flex:1;padding:13px;background:var(--frost);color:var(--slate);border:1.5px solid #E2E8F0;border-radius:12px;font-family:'Tajawal',sans-serif;font-size:14px;font-weight:600;cursor:pointer;}
-
 .success-wrap{text-align:center;padding:40px 20px;}
 .success-circle{width:78px;height:78px;background:linear-gradient(135deg,var(--success),#34D399);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:34px;margin:0 auto 16px;box-shadow:0 0 0 12px rgba(16,185,129,.12);animation:pop .5s cubic-bezier(.34,1.56,.64,1);}
 @keyframes pop{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
@@ -104,7 +105,6 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(135deg,#0C3B5E,
 .ref-num{font-size:24px;font-weight:800;color:var(--deep);direction:ltr;}
 .wa-btn{display:inline-flex;align-items:center;gap:8px;background:#25D366;color:#fff;border:none;border-radius:12px;padding:12px 26px;font-family:'Tajawal',sans-serif;font-size:14px;font-weight:700;cursor:pointer;text-decoration:none;margin-top:14px;}
 .new-btn{margin-top:10px;padding:10px 20px;background:var(--frost);border:1.5px solid #E2E8F0;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:600;cursor:pointer;color:var(--slate);}
-
 .step-section{display:none;}
 .step-section.active{display:block;}
 @media(max-width:480px){.two-col{grid-template-columns:1fr;}.slots-grid{grid-template-columns:1fr 1fr;}}
@@ -147,6 +147,7 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(135deg,#0C3B5E,
         <div class="o-price">60 SAR <span style="font-size:12px;font-weight:500" id="offer-per">للمكيف / per unit</span></div>
       </div>
     </div>
+
     <div class="section-lbl" id="lbl-other">🔧 خدمات أخرى / Other Services</div>
     <div class="service-grid">
       <div class="svc-card" id="sv1" onclick="selSvc('صيانة دورية','Periodic Maintenance',120,'sv1')"><div class="s-icon">🔧</div><div class="s-name" id="sv1n">صيانة دورية</div><div class="s-price">From 120 SAR</div></div>
@@ -155,6 +156,20 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(135deg,#0C3B5E,
       <div class="svc-card" id="sv4" onclick="selSvc('تركيب مكيف جديد','AC Installation',200,'sv4')"><div class="s-icon">📦</div><div class="s-name" id="sv4n">تركيب مكيف</div><div class="s-price">From 200 SAR</div></div>
       <div class="svc-card" id="sv5" onclick="selSvc('باقة صيانة سنوية','Annual Package',400,'sv5')"><div class="s-icon">⭐</div><div class="s-name" id="sv5n">باقة سنوية</div><div class="s-price">From 400 SAR</div></div>
     </div>
+
+    <!-- خانة عدد المكيفات للخدمات الأخرى -->
+    <div class="units-box" id="units-box">
+      <div class="units-lbl" id="lbl-units-other">❄️ كم عدد المكيفات المطلوب خدمتها؟ <span class="req">*</span></div>
+      <div class="units-ctrl">
+        <button class="units-btn minus" onclick="changeUnits(-1)">−</button>
+        <div class="units-num">
+          <div class="n" id="units-display">1</div>
+          <div class="sub" id="lbl-units-sub">مكيف</div>
+        </div>
+        <button class="units-btn plus" onclick="changeUnits(1)">+</button>
+      </div>
+    </div>
+
     <div class="section-lbl" id="lbl-type">👥 نوع العميل / Client Type <span class="req">*</span></div>
     <div class="type-row">
       <button class="type-btn" id="tb1" onclick="selType('أفراد','Individual','tb1')">🏠 <span id="tb1t">أفراد / Individual</span></button>
@@ -251,12 +266,10 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(135deg,#0C3B5E,
 
 </div></div>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
 
 <script>
-// ===== LANG =====
 var LANG = localStorage.getItem('atwad_lang') || 'ar';
 
 var UI = {
@@ -269,6 +282,7 @@ var UI = {
     offerBadge:'⚡ عرض مؤقت', offerTitle:'5 مكيفات أو أكثر', offerPer:'للمكيف',
     otherLbl:'🔧 خدمات أخرى',
     sv1:'صيانة دورية', sv2:'تعبئة غاز', sv3:'كشف وإصلاح', sv4:'تركيب مكيف', sv5:'باقة سنوية',
+    unitsLbl:'❄️ كم عدد المكيفات المطلوب خدمتها؟', unitsSub:'مكيف',
     typeLbl:'👥 نوع العميل',
     tb1:'أفراد', tb2:'شركات', tb3:'دائم',
     eSvc:'الرجاء اختيار نوع الخدمة', eType:'الرجاء اختيار نوع العميل',
@@ -291,12 +305,12 @@ var UI = {
     editBtn:'← تعديل', submitBtn:'✅ إرسال الحجز',
     okTitle:'تم استلام طلبك! 🎉', okSub:'سيتواصل معك فريقنا خلال ساعة لتأكيد الموعد',
     okRefLbl:'رقم الحجز', okWa:'متابعة عبر واتساب', okNew:'+ حجز جديد',
-    sumService:'🛠️ الخدمة', sumUnits:'🔢 العدد', sumName:'👤 الاسم',
+    sumService:'🛠️ الخدمة', sumUnits:'❄️ عدد المكيفات', sumName:'👤 الاسم',
     sumPhone:'📱 الجوال', sumCity:'📍 المدينة', sumDate:'📅 التاريخ',
     sumTime:'🕐 الوقت', sumType:'👥 نوع العميل', sumDur:'⏱️ المدة',
     durText:'المدة التقديرية', timeEnd:'ينتهي', booked:'محجوز',
     checking:'⏳ جاري التحقق...', allFree:'✅ جميع الفترات متاحة',
-    slotsBooked:'⚠️ فترات محجوزة —',slotsAvail:'فترة متاحة',
+    slotsBooked:'⚠️ فترات محجوزة —', slotsAvail:'فترة متاحة',
     citySelect:'-- اختر --',
   },
   en: {
@@ -308,6 +322,7 @@ var UI = {
     offerBadge:'⚡ Special Offer', offerTitle:'5+ AC Units', offerPer:'per unit',
     otherLbl:'🔧 Other Services',
     sv1:'Periodic Maintenance', sv2:'Gas Refill', sv3:'Diagnosis & Repair', sv4:'AC Installation', sv5:'Annual Package',
+    unitsLbl:'❄️ How many AC units need service?', unitsSub:'AC unit(s)',
     typeLbl:'👥 Client Type',
     tb1:'Individual', tb2:'Corporate', tb3:'Regular',
     eSvc:'Please select a service type', eType:'Please select client type',
@@ -330,7 +345,7 @@ var UI = {
     editBtn:'← Edit', submitBtn:'✅ Submit Booking',
     okTitle:'Booking Received! 🎉', okSub:'Our team will contact you within an hour to confirm',
     okRefLbl:'Booking Reference', okWa:'Follow up on WhatsApp', okNew:'+ New Booking',
-    sumService:'🛠️ Service', sumUnits:'🔢 Units', sumName:'👤 Name',
+    sumService:'🛠️ Service', sumUnits:'❄️ AC Units', sumName:'👤 Name',
     sumPhone:'📱 Mobile', sumCity:'📍 City', sumDate:'📅 Date',
     sumTime:'🕐 Time', sumType:'👥 Client Type', sumDur:'⏱️ Duration',
     durText:'Estimated duration', timeEnd:'ends', booked:'Booked',
@@ -349,12 +364,10 @@ function applyLang() {
   document.title = L('title');
   document.getElementById('h-brand').textContent = L('brand');
   document.getElementById('h-sub').textContent = L('sub');
-  // Steps
   document.getElementById('sl1').textContent = L('s1');
   document.getElementById('sl2').textContent = L('s2');
   document.getElementById('sl3').textContent = L('s3');
   document.getElementById('sl4').textContent = L('s4');
-  // Step 1
   document.getElementById('s1-title').textContent = L('s1t');
   document.getElementById('s1-sub').textContent = L('s1s');
   document.getElementById('lbl-clean').textContent = L('cleanLbl');
@@ -371,6 +384,8 @@ function applyLang() {
   document.getElementById('sv3n').textContent = L('sv3');
   document.getElementById('sv4n').textContent = L('sv4');
   document.getElementById('sv5n').textContent = L('sv5');
+  document.getElementById('lbl-units-other').innerHTML = L('unitsLbl')+' <span class="req">*</span>';
+  document.getElementById('lbl-units-sub').textContent = L('unitsSub');
   document.getElementById('lbl-type').innerHTML = L('typeLbl')+' <span class="req">*</span>';
   document.getElementById('tb1t').textContent = L('tb1');
   document.getElementById('tb2t').textContent = L('tb2');
@@ -378,7 +393,6 @@ function applyLang() {
   document.getElementById('e_svc').textContent = L('eSvc');
   document.getElementById('e_type').textContent = L('eType');
   document.getElementById('btn-next1').textContent = L('next1');
-  // Step 2
   document.getElementById('s2-title').textContent = L('s2t');
   document.getElementById('s2-sub').textContent = L('s2s');
   document.getElementById('lbl-name').innerHTML = L('lblName')+' <span class="req">*</span>';
@@ -397,7 +411,6 @@ function applyLang() {
   document.getElementById('e_addr').textContent = L('eAddr');
   document.getElementById('btn-back2').textContent = L('back');
   document.getElementById('btn-next2').textContent = L('next2');
-  // Step 3
   document.getElementById('s3-title').textContent = L('s3t');
   document.getElementById('s3-sub').textContent = L('s3s');
   document.getElementById('lbl-date').innerHTML = L('lblDate')+' <span class="req">*</span>';
@@ -406,20 +419,17 @@ function applyLang() {
   document.getElementById('e_time').textContent = L('eTime');
   document.getElementById('btn-back3').textContent = L('back');
   document.getElementById('btn-next3').textContent = L('next3');
-  // Step 4
   document.getElementById('s4-title').textContent = L('s4t');
   document.getElementById('s4-sub').textContent = L('s4s');
   document.getElementById('lbl-est').textContent = L('estPrice');
   document.getElementById('price-note').textContent = L('priceNote');
   document.getElementById('btn-back4').textContent = L('editBtn');
   document.getElementById('btn-submit').textContent = L('submitBtn');
-  // Success
   document.getElementById('ok-title').textContent = L('okTitle');
   document.getElementById('ok-sub').textContent = L('okSub');
   document.getElementById('ok-ref-lbl').textContent = L('okRefLbl');
   document.getElementById('ok-wa').textContent = L('okWa');
   document.getElementById('ok-new').textContent = L('okNew');
-  // City select
   document.getElementById('f_city').options[0].text = L('citySelect');
 }
 
@@ -430,16 +440,21 @@ function toggleLang() {
   applyLang();
 }
 
-// ===== Firebase =====
 var db = null;
 try { firebase.initializeApp({databaseURL:"https://atwad-booking-default-rtdb.firebaseio.com"}); db=firebase.database(); } catch(e){}
 
-// ===== State =====
 var S = {service:'',serviceAr:'',price:0,units:1,isClean:false,clientType:'',clientTypeAr:'',
   name:'',phone:'',city:'',addr:'',lat:'',lng:'',notes:'',date:'',time:'',duration:0};
 
 var tom=new Date(); tom.setDate(tom.getDate()+1);
 document.getElementById('f_date').min=tom.toISOString().split('T')[0];
+
+// ===== عدد المكيفات =====
+function changeUnits(dir) {
+  var n = Math.max(1, Math.min(20, S.units + dir));
+  S.units = n;
+  document.getElementById('units-display').textContent = n;
+}
 
 // ===== Step 1 =====
 function selClean(u,p) {
@@ -450,34 +465,46 @@ function selClean(u,p) {
   document.getElementById(id).className=(u<=4?'clean-tile sel':'offer-tile sel');
   S.service=LANG==='ar'?'تنظيف مكيف':'AC Cleaning'; S.serviceAr='تنظيف مكيف';
   S.units=u; S.price=p; S.isClean=true;
+  // إخفاء خانة العدد لأن العدد محدد من البطاقات
+  document.getElementById('units-box').className='units-box';
   document.getElementById('e_svc').className='err-msg';
 }
+
 function selSvc(nameAr,nameEn,price,id) {
   ['ct1','ct2','ct3','ct4'].forEach(function(i){document.getElementById(i).className='clean-tile';});
   document.getElementById('ct5').className='offer-tile';
   ['sv1','sv2','sv3','sv4','sv5'].forEach(function(i){document.getElementById(i).className='svc-card';});
   document.getElementById(id).className='svc-card sel';
   S.service=LANG==='ar'?nameAr:nameEn; S.serviceAr=nameAr;
-  S.price=price; S.units=1; S.isClean=false;
+  S.price=price; S.isClean=false;
+  // إظهار خانة العدد وتعيين القيمة
+  S.units = parseInt(document.getElementById('units-display').textContent) || 1;
+  document.getElementById('units-box').className='units-box show';
   document.getElementById('e_svc').className='err-msg';
 }
+
 function selType(ar,en,id) {
   ['tb1','tb2','tb3'].forEach(function(i){document.getElementById(i).className='type-btn';});
   document.getElementById(id).className='type-btn sel';
   S.clientType=LANG==='ar'?ar:en; S.clientTypeAr=ar;
   document.getElementById('e_type').className='err-msg';
 }
+
 function next1() {
   var ok=true;
   if(!S.service){document.getElementById('e_svc').className='err-msg show';ok=false;}
   if(!S.clientType){document.getElementById('e_type').className='err-msg show';ok=false;}
+  // تحديث العدد إذا كانت خدمة أخرى
+  if(!S.isClean && S.service) {
+    S.units = parseInt(document.getElementById('units-display').textContent) || 1;
+  }
   if(ok) goStep(2);
 }
 
 // ===== Step 2 =====
 function pickLoc() {
   var btn=document.getElementById('locBtn');
-  btn.innerHTML='⏳ '+( LANG==='ar'?'جاري تحديد موقعك...':'Locating...');
+  btn.innerHTML='⏳ '+(LANG==='ar'?'جاري تحديد موقعك...':'Locating...');
   btn.disabled=true;
   if(!navigator.geolocation){fallbackLoc();return;}
   navigator.geolocation.getCurrentPosition(function(pos){
@@ -498,6 +525,7 @@ function pickLoc() {
       }).catch(function(){setAddr(lat,lng,btn);});
   },function(){fallbackLoc();},{enableHighAccuracy:true,timeout:10000});
 }
+
 function setAddr(lat,lng,btn){
   var addr=lat.toFixed(4)+', '+lng.toFixed(4);
   document.getElementById('f_addr').value=addr; S.addr=addr;
@@ -507,6 +535,7 @@ function setAddr(lat,lng,btn){
   btn.style.background='linear-gradient(90deg,#10B981,#34D399)'; btn.disabled=false;
   document.getElementById('e_addr').className='err-msg';
 }
+
 function fallbackLoc(){
   var btn=document.getElementById('locBtn');
   btn.innerHTML='📍 '+(LANG==='ar'?'إدخال العنوان يدوياً':'Enter Address Manually'); btn.disabled=false;
@@ -515,6 +544,7 @@ function fallbackLoc(){
     if(v){document.getElementById('f_addr').value=v; S.addr=v; document.getElementById('locText').textContent=v; document.getElementById('locResult').className='loc-result show'; document.getElementById('e_addr').className='err-msg';}
   };
 }
+
 function next2(){
   var name=document.getElementById('f_name').value.trim();
   var phone=document.getElementById('f_phone').value.trim();
@@ -570,7 +600,6 @@ function renderSlots(booked,dur){
     var noTime=newEnd>1200;
     if(conflict||noTime){
       div.className='slot booked';
-      var endH=Math.floor(newEnd/60),endM=newEnd%60;
       div.innerHTML=sl.icon+'<br>'+(LANG==='ar'?sl.ar:sl.en)+'<br><span style="font-size:9px;color:'+(conflict?'#EF4444':'#F59E0B')+';font-weight:700">'+(conflict?L('booked'):(LANG==='ar'?'وقت غير كافٍ':'Insufficient time'))+'</span>';
       blocked++;
     } else {
@@ -582,7 +611,6 @@ function renderSlots(booked,dur){
     }
     grid.appendChild(div);
   });
-  // slot note
   var dn=document.getElementById('durNote');
   if(blocked>0) dn.textContent+=' | '+L('slotsBooked')+' '+(6-blocked)+' '+L('slotsAvail');
 }
@@ -605,8 +633,18 @@ function next3(){
 function fmtDate(d){try{return new Date(d+'T00:00:00').toLocaleDateString(LANG==='ar'?'ar-SA':'en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});}catch(e){return d;}}
 function buildSum(){
   var total=S.isClean?(S.units>=5?S.units*60:S.price):S.price;
-  var rows=[[L('sumService'),S.service],[L('sumUnits'),S.units+(LANG==='ar'?' وحدة':' unit(s)')],[L('sumName'),S.name],[L('sumPhone'),S.phone],[L('sumCity'),S.city],[L('sumDate'),fmtDate(S.date)],[L('sumTime'),S.time],[L('sumType'),S.clientType],[L('sumDur'),fmtDur(calcDur())]];
-  if(S.notes) rows.push([L('sumNotes')||'📝',S.notes]);
+  var rows=[
+    [L('sumService'),S.service],
+    [L('sumUnits'),S.units+' '+(LANG==='ar'?'مكيف':'AC unit(s)')],
+    [L('sumName'),S.name],
+    [L('sumPhone'),S.phone],
+    [L('sumCity'),S.city],
+    [L('sumDate'),fmtDate(S.date)],
+    [L('sumTime'),S.time],
+    [L('sumType'),S.clientType],
+    [L('sumDur'),fmtDur(calcDur())]
+  ];
+  if(S.notes) rows.push(['📝',S.notes]);
   document.getElementById('sumBox').innerHTML=rows.map(function(r){return '<div class="sum-row"><span class="lbl">'+r[0]+'</span><span class="val">'+r[1]+'</span></div>';}).join('');
   document.getElementById('totalPr').textContent=total+'+ SAR';
 }
@@ -615,7 +653,16 @@ function submitBooking(){
   var ref='ATW-'+Math.floor(10000+Math.random()*90000);
   document.getElementById('refNum').textContent=ref;
   var mapsLink=S.lat&&S.lng?('\nhttps://maps.google.com/?q='+S.lat+','+S.lng):'';
-  var msg=encodeURIComponent((LANG==='ar'?'مرحباً مؤسسة أطواد 👋\nرقم الحجز: ':'Hello Atwad Foundation 👋\nBooking Ref: ')+ref+'\n'+(LANG==='ar'?'الخدمة: ':'Service: ')+S.serviceAr+'\n'+(LANG==='ar'?'العدد: ':'Units: ')+S.units+'\n'+(LANG==='ar'?'الاسم: ':'Name: ')+S.name+'\n'+(LANG==='ar'?'الجوال: ':'Mobile: ')+S.phone+'\n'+(LANG==='ar'?'التاريخ: ':'Date: ')+fmtDate(S.date)+'\n'+(LANG==='ar'?'الوقت: ':'Time: ')+S.time+'\n'+(LANG==='ar'?'المدينة: ':'City: ')+S.city+mapsLink);
+  var msg=encodeURIComponent(
+    (LANG==='ar'?'مرحباً مؤسسة أطواد 👋\nرقم الحجز: ':'Hello Atwad Foundation 👋\nBooking Ref: ')+ref+
+    '\n'+(LANG==='ar'?'الخدمة: ':'Service: ')+S.serviceAr+
+    '\n'+(LANG==='ar'?'عدد المكيفات: ':'AC Units: ')+S.units+
+    '\n'+(LANG==='ar'?'الاسم: ':'Name: ')+S.name+
+    '\n'+(LANG==='ar'?'الجوال: ':'Mobile: ')+S.phone+
+    '\n'+(LANG==='ar'?'التاريخ: ':'Date: ')+fmtDate(S.date)+
+    '\n'+(LANG==='ar'?'الوقت: ':'Time: ')+S.time+
+    '\n'+(LANG==='ar'?'المدينة: ':'City: ')+S.city+mapsLink
+  );
   var waUrl='https://wa.me/966509720382?text='+msg;
   document.getElementById('waLink').href=waUrl;
   if(db){try{db.ref('bookings').push({ref:ref,date:S.date,time:S.time,duration:calcDur(),client:S.name,phone:S.phone,service:S.serviceAr,units:S.units,city:S.city,createdAt:new Date().toISOString()});}catch(e){}}
@@ -635,7 +682,6 @@ function goStep(n){
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
-// Init
 if(LANG!=='ar'){
   document.querySelector('.lang-btn').textContent='🌐 عر';
   applyLang();
