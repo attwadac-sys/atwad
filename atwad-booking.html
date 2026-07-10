@@ -668,6 +668,8 @@ function next3(){
 function fmtDate(d){try{return new Date(d+'T00:00:00').toLocaleDateString(LANG==='ar'?'ar-SA':'en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});}catch(e){return d;}}
 function buildSum(){
   // حساب السعر
+  // تحديث العدد من العنصر المرئي
+  if(!S.isClean) S.units = parseInt(document.getElementById('units-display').textContent) || S.units;
   var isWashing = S.serviceAr === 'تنظيف وغسيل المكيفات';
   var total;
   if(S.isClean){
