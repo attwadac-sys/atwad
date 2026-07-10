@@ -244,6 +244,31 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(135deg,#0C3B5E,
     <div class="sum-box" id="sumBox"></div>
     <div class="total-box"><span class="t-lbl" id="lbl-est">السعر التقديري / Estimated Price</span><span class="t-price" id="totalPr">--</span></div>
     <div style="background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:10px;padding:10px 14px;font-size:12px;color:#92400E;margin-bottom:12px;" id="price-note">ℹ️ السعر تقديري، يُحدد النهائي بعد معاينة الفني / Price is estimated, final price after inspection.</div>
+
+    <!-- سياسة الكشف -->
+    <div id="inspection-policy" style="display:none;background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:10px;padding:12px 14px;font-size:12px;color:#1E40AF;margin-bottom:12px;">
+      <div style="font-weight:700;font-size:13px;margin-bottom:6px;">🔍 سياسة رسوم الكشف / Inspection Fee Policy</div>
+      <div>• رسوم الكشف: <strong>100 ريال</strong></div>
+      <div>• تُخصم من تكلفة الإصلاح عند الاتفاق على العمل</div>
+      <div>• تُدفع كاملة إذا لم يتم الاتفاق على الإصلاح</div>
+      <div style="margin-top:4px;font-size:11px;color:#3B82F6;">• 100 SAR inspection fee | Deducted from repair if agreed | Paid in full if no repair</div>
+    </div>
+
+    <!-- موافقة العدد -->
+    <div id="chk-units-wrap" style="background:#F0FFF4;border:1.5px solid #86EFAC;border-radius:10px;padding:12px 14px;margin-bottom:12px;">
+      <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;">
+        <input type="checkbox" id="chk-units" style="width:18px;height:18px;margin-top:2px;flex-shrink:0;accent-color:#10B981;">
+        <span style="font-size:12px;color:#065F46;line-height:1.6;" id="chk-units-txt">✅ أقر بأن عدد المكيفات المحدد في الحجز هو العدد الفعلي، وأن السعر يُحسب على العدد الفعلي عند الزيارة. أي تخفيض في العدد يعني تغيير السعر تلقائياً.<br><span style="color:#059669;font-size:11px;">I confirm the AC units count is actual. Price calculated on actual units visited, not booked number.</span></span>
+      </label>
+    </div>
+
+    <!-- موافقة الكشف -->
+    <div id="chk-inspection-wrap" style="display:none;background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:10px;padding:12px 14px;margin-bottom:12px;">
+      <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;">
+        <input type="checkbox" id="chk-inspection" style="width:18px;height:18px;margin-top:2px;flex-shrink:0;accent-color:#3B82F6;">
+        <span style="font-size:12px;color:#1E40AF;line-height:1.6;">✅ أقر بسياسة رسوم الكشف: <strong>100 ريال</strong> تُخصم من تكلفة الإصلاح عند الاتفاق، وتُدفع كاملة إذا لم يتم الإصلاح.<br><span style="color:#3B82F6;font-size:11px;">I agree: 100 SAR inspection fee deducted from repair if agreed, paid in full if no repair.</span></span>
+      </label>
+    </div>
     <div class="btn-row">
       <button class="btn-back" onclick="goStep(3)" id="btn-back4">← تعديل / Edit</button>
       <button class="btn-next" onclick="submitBooking()" id="btn-submit">✅ إرسال الحجز / Submit</button>
@@ -657,9 +682,23 @@ function buildSum(){
   if(S.notes) rows.push(['📝',S.notes]);
   document.getElementById('sumBox').innerHTML=rows.map(function(r){return '<div class="sum-row"><span class="lbl">'+r[0]+'</span><span class="val">'+r[1]+'</span></div>';}).join('');
   document.getElementById('totalPr').textContent=total+'+ SAR';
+  // اظهار سياسة الكشف عند اختيار خدمة الكشف والاصلاح
+  var isInsp = S.serviceAr === 'كشف وإصلاح أعطال';
+  document.getElementById('inspection-policy').style.display = isInsp ? 'block' : 'none';
+  document.getElementById('chk-inspection-wrap').style.display = isInsp ? 'block' : 'none';
+  document.getElementById('chk-units').checked = false;
+  var ci = document.getElementById('chk-inspection'); if(ci) ci.checked = false;
 }
 
 function submitBooking(){
+  // التحقق من الموافقة على شروط الحجز
+  if(!document.getElementById('chk-units').checked){
+    showToast(LANG==='ar' ? '⚠️ يرجى الموافقة على شرط العدد الملزم' : '⚠️ Please confirm the unit count agreement'); return;
+  }
+  var isInsp2 = S.serviceAr === 'كشف وإصلاح أعطال';
+  if(isInsp2 && !document.getElementById('chk-inspection').checked){
+    showToast(LANG==='ar' ? '⚠️ يرجى الموافقة على سياسة رسوم الكشف' : '⚠️ Please confirm the inspection fee policy'); return;
+  }
   var ref='ATW-'+Math.floor(10000+Math.random()*90000);
   document.getElementById('refNum').textContent=ref;
   var mapsLink=S.lat&&S.lng?('\nhttps://maps.google.com/?q='+S.lat+','+S.lng):'';
