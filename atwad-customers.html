@@ -569,17 +569,52 @@ let clients = JSON.parse(localStorage.getItem('atwad_clients') || '[]');
 // مزامنة Firebase
 function syncFromFirebase() {
   if(!db) return;
-  db.ref('customers').on('value', function(snap) {
+  // تحميل العملاء من customers و bookings معاً
+  db.ref('customers').once('value', function(snapC) {
     var fbData = [];
-    snap.forEach(function(child) {
-      fbData.push({...child.val(), _fbKey: child.key});
+    var phones = {};
+    snapC.forEach(function(child) {
+      var c = {...child.val(), _fbKey: child.key, _src: 'customers'};
+      fbData.push(c);
+      if(c.phone) phones[c.phone] = true;
     });
-    if(fbData.length > 0) {
-      clients = fbData;
-      localStorage.setItem('atwad_clients', JSON.stringify(clients));
-    }
-    updateStats();
-    renderTable();
+
+    // إضافة العملاء من الحجوزات الإلكترونية
+    db.ref('bookings').once('value', function(snapB) {
+      snapB.forEach(function(child) {
+        var b = child.val();
+        var phone = b.phone || '';
+        // تجنب التكرار
+        if(phone && !phones[phone] && (b.client||b.name)) {
+          phones[phone] = true;
+          fbData.push({
+            _fbKey: 'B_'+child.key,
+            _src: 'booking',
+            name: b.client || b.name || '',
+            phone: phone,
+            city: b.city || 'جدة',
+            type: 'أفراد',
+            notes: 'حجز إلكتروني',
+            createdAt: b.createdAt || new Date().toISOString(),
+            visits: 1,
+            lastService: b.service || '',
+            lastVisit: b.date || ''
+          });
+        }
+      });
+
+      if(fbData.length > 0) {
+        clients = fbData;
+        localStorage.setItem('atwad_clients', JSON.stringify(clients));
+      }
+      updateStats();
+      renderTable();
+    });
+  });
+
+  // مراقبة التغييرات في customers
+  db.ref('customers').on('child_added', function() {
+    syncFromFirebase();
   });
 }
 let editingId = null;
