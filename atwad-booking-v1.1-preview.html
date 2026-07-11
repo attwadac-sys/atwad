@@ -130,6 +130,11 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
 .geo-privacy{font-size:10px;color:var(--mist);margin-top:5px;padding-right:2px;}
 .maps-ok-coords{display:none;margin-top:6px;background:#F0FFF4;border:1.5px solid #86EFAC;border-radius:9px;padding:9px 12px;font-size:12px;color:#065F46;}
 .maps-shortlink{display:none;margin-top:6px;background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:9px;padding:9px 12px;font-size:12px;color:#92400E;}
+/* عناصر تأكيد الدقة */
+.geo-verify-wrap{display:none;margin-top:8px;background:var(--frost);border:1.5px solid #E2E8F0;border-radius:10px;padding:10px 12px;}
+.geo-open-map-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:8px;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;color:#1E40AF;cursor:pointer;text-decoration:none;margin-bottom:8px;}
+.geo-chk-label{display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:12px;color:var(--slate);}
+.geo-chk-label input{width:16px;height:16px;margin-top:1px;flex-shrink:0;accent-color:var(--success);}
 </style>
 </head>
 <body>
@@ -316,6 +321,7 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
       <!-- حقول الإحداثيات المخفية -->
       <input type="hidden" id="f_lat">
       <input type="hidden" id="f_lng">
+      <input type="hidden" id="f_accuracy">
       <input type="hidden" id="f_addr">
       <div class="err-msg" id="e_addr">أدخل رابط موقعك من Google Maps</div>
     </div>
@@ -326,6 +332,14 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
       </button>
       <p class="geo-privacy">يُستخدم الموقع فقط لتنظيم الزيارة والوصول إليك.</p>
       <div class="geo-msg" id="geoMsg"></div>
+      <!-- نتائج تحديد الموقع: زر التأكيد + مربع التحقق — تظهر بعد النجاح -->
+      <div class="geo-verify-wrap" id="geoVerifyWrap">
+        <a class="geo-open-map-btn" id="geoOpenMap" href="#" target="_blank">🗺️ فتح الموقع للتأكد</a>
+        <label class="geo-chk-label">
+          <input type="checkbox" id="chk-location-verified">
+          <span>تأكدت أن الموقع الظاهر صحيح</span>
+        </label>
+      </div>
     </div>
     <!-- صورة المنزل -->
     <div class="field">
@@ -446,8 +460,9 @@ try { firebase.initializeApp({databaseURL:"https://atwad-booking-default-rtdb.fi
 var S = {service:'',serviceAr:'',price:0,units:1,isClean:false,clientType:'',name:'',phone:'',city:'',addr:'',notes:'',date:'',time:'',duration:0};
 
 // متغيرات الإحداثيات الاختيارية — تُملأ من زر الموقع أو من استخراج الرابط
-var selectedLat = null;
-var selectedLng = null;
+var selectedLat      = null;
+var selectedLng      = null;
+var selectedAccuracy = null; // دقة الموقع بالمتر
 
 // ============================================================
 // extractCoordinatesFromMapUrl — استخراج إحداثيات من رابط كامل فقط
@@ -485,10 +500,12 @@ function isValidCoord(lat, lng) {
 
 // ============================================================
 // useCurrentLocation — يُستدعى فقط بضغط المستخدم على الزر
+// enableHighAccuracy: true لطلب GPS الدقيق (الجوال)
+// maximumAge: 0 لمنع استخدام موقع مخزّن قديم
+// timeout: 15000 منح وقت أطول للحصول على دقة جيدة
 // ============================================================
 function useCurrentLocation() {
-  var btn   = document.getElementById('geoBtn');
-  var msg   = document.getElementById('geoMsg');
+  var btn = document.getElementById('geoBtn');
 
   if(!navigator.geolocation) {
     showGeoMsg('err', 'متصفحك لا يدعم تحديد الموقع تلقائيًا. استخدم رابط Google Maps.');
@@ -498,50 +515,71 @@ function useCurrentLocation() {
   btn.disabled = true;
   btn.innerHTML = '<span>⏳</span> جاري تحديد موقعك...';
   showGeoMsg('', '');
+  document.getElementById('geoVerifyWrap').style.display = 'none';
 
   navigator.geolocation.getCurrentPosition(
     function(pos) {
-      // نجاح
-      var lat = pos.coords.latitude;
-      var lng = pos.coords.longitude;
-      selectedLat = lat;
-      selectedLng = lng;
-      document.getElementById('f_lat').value = lat;
-      document.getElementById('f_lng').value = lng;
+      var lat      = pos.coords.latitude;
+      var lng      = pos.coords.longitude;
+      var accuracy = Math.round(pos.coords.accuracy); // بالمتر
 
-      // إنشاء رابط Google Maps بالإحداثيات
+      selectedLat      = lat;
+      selectedLng      = lng;
+      selectedAccuracy = accuracy;
+
+      document.getElementById('f_lat').value      = lat;
+      document.getElementById('f_lng').value      = lng;
+      document.getElementById('f_accuracy').value = accuracy;
+
       var mapsUrl = 'https://www.google.com/maps?q='+lat+','+lng;
 
-      // ملء حقل الرابط فقط إذا كان فارغاً
+      // ملء حقل الرابط بالإحداثيات:
+      // - إذا كان فارغاً: يُملأ دائماً
+      // - إذا كانت accuracy > 200: يُملأ فقط إذا كان فارغاً (الموقع تقريبي)
       var mapsInput = document.getElementById('f_maps_link');
       var addrInput = document.getElementById('f_addr');
-      if(!mapsInput.value.trim()) {
+      var fieldEmpty = !mapsInput.value.trim();
+
+      if(fieldEmpty || accuracy <= 200) {
         mapsInput.value = mapsUrl;
         addrInput.value = mapsUrl;
         S.addr = mapsUrl;
         document.getElementById('maps-ok').style.display = 'block';
         document.getElementById('e_addr').className = 'err-msg';
+      }
+      // إذا accuracy > 200 والحقل ممتلئ: نحتفظ برابط العميل
+
+      // زر فتح الخريطة
+      document.getElementById('geoOpenMap').href = mapsUrl;
+      document.getElementById('geoVerifyWrap').style.display = 'block';
+
+      // رسالة حسب الدقة
+      if(accuracy <= 50) {
+        showGeoMsg('ok', '✅ تم تحديد موقعك بدقة جيدة (±'+accuracy+' متر)');
+        btn.innerHTML = '<span>✅</span> تم تحديد الموقع';
+      } else if(accuracy <= 200) {
+        showGeoMsg('warn', '⚠️ تم تحديد موقع تقريبي بدقة ±'+accuracy+' متر، يرجى التأكد');
+        btn.innerHTML = '<span>⚠️</span> موقع تقريبي';
       } else {
-        // يوجد رابط مُدخل — نحدّث الإحداثيات فقط بدون استبدال الرابط
-        // الإحداثيات ستُضاف إلى Firebase مستقلة عن mapsLink
+        showGeoMsg('warn', '⚠️ الموقع غير دقيق (±'+accuracy+' متر). يُفضّل مشاركة رابط موقع المنزل من تطبيق خرائط Google');
+        btn.innerHTML = '<span>⚠️</span> موقع غير دقيق';
       }
 
-      showGeoMsg('ok', '✅ تم تحديد موقعك الحالي');
       btn.disabled = false;
-      btn.innerHTML = '<span>✅</span> تم تحديد الموقع';
     },
     function(err) {
       btn.disabled = false;
       btn.innerHTML = '<span>📍</span> استخدام موقعي الحالي';
+      document.getElementById('geoVerifyWrap').style.display = 'none';
       if(err.code === err.PERMISSION_DENIED) {
-        showGeoMsg('err', 'تعذر تحديد الموقع. يمكنك متابعة الحجز باستخدام رابط Google Maps.');
+        showGeoMsg('err', 'تعذر تحديد الموقع بدقة. يرجى مشاركة رابط موقع المنزل من خرائط Google.');
       } else if(err.code === err.TIMEOUT) {
         showGeoMsg('warn', 'تعذر الحصول على الموقع، حاول مرة أخرى أو استخدم رابط Google Maps.');
       } else {
         showGeoMsg('warn', 'تعذر الحصول على الموقع، حاول مرة أخرى أو استخدم رابط Google Maps.');
       }
     },
-    {timeout:10000, maximumAge:60000}
+    {enableHighAccuracy: true, timeout: 15000, maximumAge: 0}
   );
 }
 
@@ -823,13 +861,32 @@ function submitBooking(){
     var bookingData = {ref:ref,date:S.date,time:S.time,duration:calcDur(),client:S.name,phone:S.phone,service:S.serviceAr,units:S.units,city:S.city,mapsLink:S.addr,locationImage:bookImageBase64||'',createdAt:new Date().toISOString()};
 
     // إضافة lat/lng اختياريًا فقط إذا كانت صالحة
-    var latValue = document.getElementById('f_lat').value.trim();
-    var lngValue = document.getElementById('f_lng').value.trim();
-    var parsedLat = Number(latValue);
-    var parsedLng = Number(lngValue);
+    var latValue      = document.getElementById('f_lat').value.trim();
+    var lngValue      = document.getElementById('f_lng').value.trim();
+    var accuracyValue = document.getElementById('f_accuracy').value.trim();
+    var parsedLat     = Number(latValue);
+    var parsedLng     = Number(lngValue);
+    var parsedAccuracy = Number(accuracyValue);
+
     if(isValidCoord(parsedLat, parsedLng)) {
       bookingData.lat = parsedLat;
       bookingData.lng = parsedLng;
+
+      // إضافة دقة الموقع إذا كانت صالحة
+      if(Number.isFinite(parsedAccuracy) && parsedAccuracy > 0) {
+        bookingData.locationAccuracy = parsedAccuracy;
+      }
+
+      // locationVerified:
+      // - true إذا ضغط العميل على «تأكدت أن الموقع الظاهر صحيح»
+      // - false إذا كانت accuracy > 500 ولم يؤكد العميل
+      var locationConfirmed = document.getElementById('chk-location-verified') &&
+                              document.getElementById('chk-location-verified').checked;
+      if(locationConfirmed) {
+        bookingData.locationVerified = true;
+      } else if(Number.isFinite(parsedAccuracy) && parsedAccuracy > 500) {
+        bookingData.locationVerified = false;
+      }
     }
 
     db.ref('bookings').push(bookingData);
