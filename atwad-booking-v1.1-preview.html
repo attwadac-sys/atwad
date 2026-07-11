@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" id="html-root">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مؤسسة أطواد - حجز خدمة</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
+:root{--deep:#0C3B5E;--sky:#0EA5E9;--ice:#E8F4FD;--frost:#F0F9FF;--slate:#334155;--mist:#94A3B8;--success:#10B981;--danger:#EF4444;--warning:#F59E0B;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(135deg,#0C3B5E,#0EA5E9 60%,#E8F4FD);min-height:100vh;}
+.header{background:linear-gradient(90deg,#0C3B5E,#0EA5E9);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;}
+.header h1{color:#fff;font-size:22px;font-weight:800;}
+.header p{color:rgba(255,255,255,.7);font-size:12px;}
+.lang-btn{padding:8px 16px;background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.4);border-radius:8px;color:#fff;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
+.steps-bar{display:flex;justify-content:center;background:#fff;padding:4px;border-bottom:2px solid var(--ice);position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.05);}
+.step-item{display:flex;flex-direction:column;align-items:center;padding:10px 18px;border-bottom:3px solid transparent;flex:1;max-width:160px;}
+.step-item.active{border-bottom-color:var(--sky);}
+.step-item.done{border-bottom-color:var(--success);}
+.step-num{width:26px;height:26px;border-radius:50%;background:var(--ice);color:var(--mist);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;margin-bottom:3px;}
+.step-item.active .step-num{background:var(--sky);color:#fff;}
+.step-item.done .step-num{background:var(--success);color:#fff;}
+.step-label{font-size:10px;color:var(--mist);}
+.step-item.active .step-label{color:var(--sky);}
+.step-item.done .step-label{color:var(--success);}
+.container{max-width:640px;margin:24px auto 60px;padding:0 14px;}
+.card{background:#fff;border-radius:20px;box-shadow:0 4px 24px rgba(12,59,94,.1);overflow:hidden;}
+.card-header{background:linear-gradient(90deg,var(--frost),var(--ice));padding:18px 22px;border-bottom:1.5px solid rgba(14,165,233,.12);display:flex;align-items:center;gap:12px;}
+.card-icon{width:44px;height:44px;background:#fff;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 2px 8px rgba(14,165,233,.15);}
+.card-header h2{font-size:22px;font-weight:900;color:var(--deep);}
+.card-header p{font-size:12px;color:var(--mist);}
+.card-body{padding:22px;}
+.section-lbl{font-size:16px;font-weight:900;color:var(--slate);margin-bottom:12px;}
+.req{color:var(--danger);}
+.clean-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.clean-tile{border:2px solid #E2E8F0;border-radius:14px;padding:22px 14px;text-align:center;cursor:pointer;background:var(--frost);transition:all .2s;}
+.clean-tile:hover,.clean-tile.sel{border-color:var(--sky);background:var(--ice);box-shadow:0 0 0 3px rgba(14,165,233,.15);}
+.clean-tile .t-num{font-size:42px;margin-bottom:8px;}
+.clean-tile .t-name{font-size:17px;font-weight:900;color:var(--deep);}
+.clean-tile .t-price{font-size:18px;font-weight:900;color:var(--sky);}
+.offer-tile{background:linear-gradient(90deg,#EF4444,#F59E0B);border-radius:12px;padding:14px;text-align:center;cursor:pointer;margin-bottom:12px;border:2px solid transparent;transition:all .2s;}
+.offer-tile.sel{box-shadow:0 0 0 3px rgba(239,68,68,.3);}
+.offer-badge{display:inline-block;background:rgba(0,0,0,.2);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;margin-bottom:4px;}
+.offer-tile .o-title{color:#fff;font-size:20px;font-weight:900;}
+.offer-tile .o-price{color:#FEF08A;font-size:30px;font-weight:900;}
+.service-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.svc-card{border:2px solid #E2E8F0;border-radius:14px;padding:22px 13px;text-align:center;cursor:pointer;background:var(--frost);transition:all .2s;}
+.svc-card:hover,.svc-card.sel{border-color:var(--sky);background:var(--ice);box-shadow:0 0 0 3px rgba(14,165,233,.15);}
+.svc-card .s-icon{font-size:46px;margin-bottom:10px;}
+.svc-card .s-name{font-size:16px;font-weight:900;color:var(--deep);}
+.svc-card .s-price{font-size:13px;font-weight:700;color:var(--sky);margin-top:4px;}
+.units-box{display:none;margin-bottom:16px;background:linear-gradient(135deg,var(--frost),var(--ice));border:2px solid rgba(14,165,233,.2);border-radius:14px;padding:16px;}
+.units-box.show{display:block;}
+.units-lbl{font-size:13px;font-weight:700;color:var(--slate);margin-bottom:12px;}
+.units-ctrl{display:flex;align-items:center;gap:16px;justify-content:center;}
+.units-btn{width:42px;height:42px;border-radius:50%;font-size:22px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;border:2px solid var(--sky);}
+.units-btn.minus{background:var(--ice);color:var(--sky);}
+.units-btn.plus{background:var(--sky);color:#fff;}
+.units-num{min-width:70px;text-align:center;}
+.units-num .n{font-size:36px;font-weight:900;color:var(--deep);line-height:1;}
+.units-num .sub{font-size:12px;color:var(--mist);margin-top:2px;}
+.type-row{display:flex;gap:8px;margin-bottom:14px;}
+.type-btn{flex:1;padding:10px;border:2px solid #E2E8F0;border-radius:10px;background:var(--frost);font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;color:var(--slate);cursor:pointer;transition:all .2s;text-align:center;}
+.type-btn:hover,.type-btn.sel{border-color:var(--sky);background:var(--sky);color:#fff;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:13px;font-weight:700;color:var(--slate);margin-bottom:5px;}
+.field input,.field select,.field textarea{width:100%;padding:10px 13px;border:1.5px solid #E2E8F0;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:14px;color:var(--slate);background:var(--frost);outline:none;transition:all .2s;}
+.field input:focus,.field select:focus{border-color:var(--sky);background:#fff;}
+.field input.err{border-color:var(--danger);}
+.err-msg{color:var(--danger);font-size:12px;margin-top:4px;display:none;}
+.err-msg.show{display:block;}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.maps-guide{background:var(--ice);border-radius:10px;padding:10px 12px;margin-bottom:8px;font-size:12px;color:var(--deep);line-height:1.7;}
+.maps-guide strong{color:var(--deep);}
+.maps-ok{display:none;margin-top:8px;background:#F0FFF4;border:1.5px solid #86EFAC;border-radius:9px;padding:10px 12px;font-size:13px;color:#065F46;}
+.dur-note{background:var(--ice);border:1.5px solid var(--sky);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--deep);margin-bottom:10px;display:none;}
+.slots-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
+.slot{border:1.5px solid #E2E8F0;border-radius:10px;padding:10px;text-align:center;cursor:pointer;font-size:12px;font-weight:700;color:var(--slate);background:var(--frost);transition:all .2s;}
+.slot:hover{border-color:var(--sky);color:var(--sky);}
+.slot.sel{border-color:var(--sky);background:var(--sky);color:#fff;}
+.slot.booked{opacity:.4;cursor:not-allowed;background:#F1F5F9;}
+.sum-box{background:linear-gradient(135deg,var(--frost),var(--ice));border:1.5px solid rgba(14,165,233,.15);border-radius:14px;padding:16px;margin-bottom:14px;}
+.sum-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px dashed rgba(14,165,233,.15);font-size:13px;}
+.sum-row:last-child{border-bottom:none;}
+.sum-row .lbl{color:var(--mist);}
+.sum-row .val{font-weight:700;color:var(--deep);}
+.total-box{background:var(--deep);color:#fff;border-radius:12px;padding:13px 17px;display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.total-box .t-lbl{font-size:14px;font-weight:600;}
+.total-box .t-price{font-size:22px;font-weight:800;color:var(--sky);}
+.img-upload{border:2px dashed #E2E8F0;border-radius:10px;padding:16px;text-align:center;cursor:pointer;background:var(--frost);transition:all .2s;margin-bottom:8px;}
+.img-upload:hover{border-color:var(--sky);}
+.img-preview{display:none;}
+.img-preview img{max-width:100%;max-height:160px;border-radius:8px;object-fit:cover;}
+.img-placeholder{color:var(--mist);font-size:13px;}
+.img-placeholder .icon{font-size:28px;margin-bottom:6px;}
+.chk-box{border-radius:10px;padding:12px 14px;margin-bottom:12px;}
+.chk-box.green{background:#F0FFF4;border:1.5px solid #86EFAC;}
+.chk-box.blue{background:#EFF6FF;border:1.5px solid #BFDBFE;display:none;}
+.chk-label{display:flex;align-items:flex-start;gap:10px;cursor:pointer;}
+.chk-label input[type=checkbox]{width:18px;height:18px;margin-top:2px;flex-shrink:0;accent-color:var(--success);}
+.chk-text{font-size:12px;color:#065F46;line-height:1.6;}
+.chk-text.blue-text{color:#1E40AF;}
+.chk-sub{font-size:11px;color:#059669;margin-top:2px;}
+.chk-sub.blue-sub{color:#3B82F6;}
+.inspection-info{display:none;background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:10px;padding:12px 14px;font-size:12px;color:#1E40AF;margin-bottom:12px;}
+.btn-row{display:flex;gap:10px;margin-top:20px;}
+.btn-next{flex:2;padding:13px;background:linear-gradient(90deg,var(--deep),var(--sky));color:#fff;border:none;border-radius:12px;font-family:'Tajawal',sans-serif;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 4px 14px rgba(14,165,233,.3);}
+.btn-back{flex:1;padding:13px;background:var(--frost);color:var(--slate);border:1.5px solid #E2E8F0;border-radius:12px;font-family:'Tajawal',sans-serif;font-size:14px;font-weight:600;cursor:pointer;}
+.success-wrap{text-align:center;padding:40px 20px;}
+.success-circle{width:78px;height:78px;background:linear-gradient(135deg,var(--success),#34D399);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:34px;margin:0 auto 16px;box-shadow:0 0 0 12px rgba(16,185,129,.12);animation:pop .5s cubic-bezier(.34,1.56,.64,1);}
+@keyframes pop{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+.ref-box{background:var(--frost);border:2px dashed var(--sky);border-radius:12px;padding:13px;margin:14px auto;display:inline-block;}
+.ref-num{font-size:24px;font-weight:800;color:var(--deep);direction:ltr;}
+.wa-btn{display:inline-flex;align-items:center;gap:8px;background:#25D366;color:#fff;border:none;border-radius:12px;padding:12px 26px;font-family:'Tajawal',sans-serif;font-size:14px;font-weight:700;cursor:pointer;text-decoration:none;margin-top:14px;}
+.new-btn{margin-top:10px;padding:10px 20px;background:var(--frost);border:1.5px solid #E2E8F0;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:600;cursor:pointer;color:var(--slate);}
+.step-section{display:none;}
+.step-section.active{display:block;}
+.friday-closed{background:#FEE2E2;border:1.5px solid #FECACA;border-radius:10px;padding:14px;text-align:center;margin-bottom:12px;display:none;}
+.friday-closed .icon{font-size:28px;margin-bottom:6px;}
+.friday-closed p{font-size:13px;color:#991B1B;font-weight:700;}
+@media(max-width:480px){.two-col{grid-template-columns:1fr;}.slots-grid{grid-template-columns:1fr 1fr;}}
+/* --- زر الموقع الحالي --- */
+.geo-btn{width:100%;margin-top:8px;padding:10px 14px;background:var(--frost);border:1.5px solid #86EFAC;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;color:#065F46;cursor:pointer;display:flex;align-items:center;gap:7px;transition:all .2s;}
+.geo-btn:hover{background:#F0FFF4;border-color:var(--success);}
+.geo-btn:disabled{opacity:.5;cursor:not-allowed;}
+.geo-msg{margin-top:7px;padding:9px 12px;border-radius:9px;font-size:12px;display:none;}
+.geo-msg.ok{background:#F0FFF4;border:1.5px solid #86EFAC;color:#065F46;}
+.geo-msg.warn{background:#FFFBEB;border:1.5px solid #FDE68A;color:#92400E;}
+.geo-msg.err{background:#FEF2F2;border:1.5px solid #FECACA;color:#991B1B;}
+.geo-privacy{font-size:10px;color:var(--mist);margin-top:5px;padding-right:2px;}
+.maps-ok-coords{display:none;margin-top:6px;background:#F0FFF4;border:1.5px solid #86EFAC;border-radius:9px;padding:9px 12px;font-size:12px;color:#065F46;}
+.maps-shortlink{display:none;margin-top:6px;background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:9px;padding:9px 12px;font-size:12px;color:#92400E;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>مؤسسة أطواد ❄️</h1>
+    <p>صيانة وتنظيف المكيفات الاحترافية</p>
+  </div>
+  <button class="lang-btn" onclick="toggleLang()">🌐 EN</button>
+</div>
+
+<div class="steps-bar">
+  <div class="step-item active" id="sb1"><div class="step-num" id="sn1">1</div><div class="step-label">الخدمة</div></div>
+  <div class="step-item" id="sb2"><div class="step-num" id="sn2">2</div><div class="step-label">بياناتك</div></div>
+  <div class="step-item" id="sb3"><div class="step-num" id="sn3">3</div><div class="step-label">الموعد</div></div>
+  <div class="step-item" id="sb4"><div class="step-num" id="sn4">4</div><div class="step-label">التأكيد</div></div>
+</div>
+
+<div class="container"><div class="card">
+
+<!-- STEP 1 -->
+<div class="step-section active" id="step1">
+  <div class="card-header"><div class="card-icon">🛠️</div><div><h2>اختر نوع الخدمة</h2><p>حدد الخدمة والعدد</p></div></div>
+  <div class="card-body">
+    <div class="section-lbl">💧 أسعار تنظيف وغسيل المكيفات</div>
+    <div style="background:linear-gradient(135deg,#0C3B5E,#1E5F8A);border-radius:14px;padding:14px;margin-bottom:10px;">
+      <div class="clean-grid">
+        <div class="clean-tile" id="ct1" onclick="selClean(1,110)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 100" style="width:80px;height:36px;margin-bottom:6px;">
+<defs><linearGradient id="ag" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0C3B5E"/><stop offset="100%" stop-color="#0EA5E9"/></linearGradient><linearGradient id="bg2" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#e8f4fd"/><stop offset="100%" stop-color="#cde8f7"/></linearGradient></defs>
+<rect x="0" y="0" width="220" height="52" rx="8" fill="url(#bg2)" stroke="#0EA5E9" stroke-width="2"/>
+<rect x="0" y="0" width="220" height="10" rx="8" fill="url(#ag)"/>
+<rect x="0" y="5" width="220" height="5" fill="url(#ag)"/>
+<rect x="75" y="14" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
+<rect x="75" y="20" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
+<rect x="75" y="26" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
+<rect x="75" y="32" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
+<rect x="75" y="38" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
+<path d="M18 52 Q110 64 202 52" fill="none" stroke="#0EA5E9" stroke-width="2" opacity="0.6"/>
+<line x1="95" y1="64" x2="95" y2="80" stroke="#94A3B8" stroke-width="2.5" stroke-dasharray="3,2"/>
+<line x1="103" y1="64" x2="103" y2="80" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="3,2"/>
+<rect x="65" y="78" width="70" height="20" rx="5" fill="#334155" stroke="#475569" stroke-width="1"/>
+<circle cx="90" cy="88" r="8" fill="none" stroke="#64748B" stroke-width="1"/>
+<circle cx="90" cy="88" r="2.5" fill="#64748B"/>
+<path d="M90 80 Q94 84 90 88 Q86 84 90 80" fill="#475569" opacity="0.8"/>
+<path d="M98 88 Q94 92 90 88 Q94 84 98 88" fill="#475569" opacity="0.8"/>
+<path d="M90 96 Q86 92 90 88 Q94 92 90 96" fill="#475569" opacity="0.8"/>
+<path d="M82 88 Q86 84 90 88 Q86 92 82 88" fill="#475569" opacity="0.8"/>
+</svg><div class="t-name">1 مكيف</div><div class="t-price">110 SAR</div></div>
+        <div class="clean-tile" id="ct2" onclick="selClean(2,180)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 100" style="width:80px;height:36px;margin-bottom:6px;">
+<defs><linearGradient id="ag" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0C3B5E"/><stop offset="100%" stop-color="#0EA5E9"/></linearGradient><linearGradient id="bg2" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#e8f4fd"/><stop offset="100%" stop-color="#cde8f7"/></linearGradient></defs>
+<rect x="0" y="0" width="220" height="52" rx="8" fill="url(#bg2)" stroke="#0EA5E9" stroke-width="2"/>
+<rect x="0" y="0" width="220" height="10" rx="8" fill="url(#ag)"/>
+<rect x="0" y="5" width="220" height="5" fill="url(#ag)"/>
+<rect x="75" y="14" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
+<rect x="75" y="20" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
+<rect x="75" y="26" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
+<rect x="75" y="32" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
+<rect x="75" y="38" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
+<path d="M18 52 Q110 64 202 52" fill="none" stroke="#0EA5E9" stroke-width="2" opacity="0.6"/>
+<line x1="95" y1="64" x2="95" y2="80" stroke="#94A3B8" stroke-width="2.5" stroke-dasharray="3,2"/>
+<line x1="103" y1="64" x2="103" y2="80" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="3,2"/>
+<rect x="65" y="78" width="70" height="20" rx="5" fill="#334155" stroke="#475569" stroke-width="1"/>
+<circle cx="90" cy="88" r="8" fill="none" stroke="#64748B" stroke-width="1"/>
+<circle cx="90" cy="88" r="2.5" fill="#64748B"/>
+<path d="M90 80 Q94 84 90 88 Q86 84 90 80" fill="#475569" opacity="0.8"/>
+<path d="M98 88 Q94 92 90 88 Q94 84 98 88" fill="#475569" opacity="0.8"/>
+<path d="M90 96 Q86 92 90 88 Q94 92 90 96" fill="#475569" opacity="0.8"/>
+<path d="M82 88 Q86 84 90 88 Q86 92 82 88" fill="#475569" opacity="0.8"/>
+</svg><div class="t-name">2 مكيف</div><div class="t-price">180 SAR</div></div>
+        <div class="clean-tile" id="ct3" onclick="selClean(3,240)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 100" style="width:80px;height:36px;margin-bottom:6px;">
+<defs><linearGradient id="ag" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0C3B5E"/><stop offset="100%" stop-color="#0EA5E9"/></linearGradient><linearGradient id="bg2" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#e8f4fd"/><stop offset="100%" stop-color="#cde8f7"/></linearGradient></defs>
+<rect x="0" y="0" width="220" height="52" rx="8" fill="url(#bg2)" stroke="#0EA5E9" stroke-width="2"/>
+<rect x="0" y="0" width="220" height="10" rx="8" fill="url(#ag)"/>
+<rect x="0" y="5" width="220" height="5" fill="url(#ag)"/>
+<rect x="75" y="14" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
+<rect x="75" y="20" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
+<rect x="75" y="26" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
+<rect x="75" y="32" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
+<rect x="75" y="38" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
+<path d="M18 52 Q110 64 202 52" fill="none" stroke="#0EA5E9" stroke-width="2" opacity="0.6"/>
+<line x1="95" y1="64" x2="95" y2="80" stroke="#94A3B8" stroke-width="2.5" stroke-dasharray="3,2"/>
+<line x1="103" y1="64" x2="103" y2="80" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="3,2"/>
+<rect x="65" y="78" width="70" height="20" rx="5" fill="#334155" stroke="#475569" stroke-width="1"/>
+<circle cx="90" cy="88" r="8" fill="none" stroke="#64748B" stroke-width="1"/>
+<circle cx="90" cy="88" r="2.5" fill="#64748B"/>
+<path d="M90 80 Q94 84 90 88 Q86 84 90 80" fill="#475569" opacity="0.8"/>
+<path d="M98 88 Q94 92 90 88 Q94 84 98 88" fill="#475569" opacity="0.8"/>
+<path d="M90 96 Q86 92 90 88 Q94 92 90 96" fill="#475569" opacity="0.8"/>
+<path d="M82 88 Q86 84 90 88 Q86 92 82 88" fill="#475569" opacity="0.8"/>
+</svg><div class="t-name">3 مكيفات</div><div class="t-price">240 SAR</div></div>
+        <div class="clean-tile" id="ct4" onclick="selClean(4,280)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 100" style="width:80px;height:36px;margin-bottom:6px;">
+<defs><linearGradient id="ag" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0C3B5E"/><stop offset="100%" stop-color="#0EA5E9"/></linearGradient><linearGradient id="bg2" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#e8f4fd"/><stop offset="100%" stop-color="#cde8f7"/></linearGradient></defs>
+<rect x="0" y="0" width="220" height="52" rx="8" fill="url(#bg2)" stroke="#0EA5E9" stroke-width="2"/>
+<rect x="0" y="0" width="220" height="10" rx="8" fill="url(#ag)"/>
+<rect x="0" y="5" width="220" height="5" fill="url(#ag)"/>
+<rect x="75" y="14" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
+<rect x="75" y="20" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
+<rect x="75" y="26" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
+<rect x="75" y="32" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
+<rect x="75" y="38" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
+<path d="M18 52 Q110 64 202 52" fill="none" stroke="#0EA5E9" stroke-width="2" opacity="0.6"/>
+<line x1="95" y1="64" x2="95" y2="80" stroke="#94A3B8" stroke-width="2.5" stroke-dasharray="3,2"/>
+<line x1="103" y1="64" x2="103" y2="80" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="3,2"/>
+<rect x="65" y="78" width="70" height="20" rx="5" fill="#334155" stroke="#475569" stroke-width="1"/>
+<circle cx="90" cy="88" r="8" fill="none" stroke="#64748B" stroke-width="1"/>
+<circle cx="90" cy="88" r="2.5" fill="#64748B"/>
+<path d="M90 80 Q94 84 90 88 Q86 84 90 80" fill="#475569" opacity="0.8"/>
+<path d="M98 88 Q94 92 90 88 Q94 84 98 88" fill="#475569" opacity="0.8"/>
+<path d="M90 96 Q86 92 90 88 Q94 92 90 96" fill="#475569" opacity="0.8"/>
+<path d="M82 88 Q86 84 90 88 Q86 92 82 88" fill="#475569" opacity="0.8"/>
+</svg><div class="t-name">4 مكيفات</div><div class="t-price">280 SAR</div></div>
+      </div>
+      <div class="offer-tile" id="ct5" onclick="selClean(5,300)">
+        <div class="offer-badge">⚡ عرض مؤقت / Special Offer</div>
+        <div style="font-size:36px;margin-bottom:6px;">🏠❄️</div><div class="o-title">5 مكيفات أو أكثر / 5+ AC Units</div>
+        <div class="o-price">60 SAR <span style="font-size:12px;font-weight:500">للمكيف / per unit</span></div>
+      </div>
+    </div>
+    <div class="section-lbl">🔧 خدمات أخرى / Other Services</div>
+    <div class="service-grid">
+      <div class="svc-card" id="sv1" onclick="selSvc('تنظيف وغسيل المكيفات','AC Cleaning & Washing',120,'sv1')"><div class="s-icon">🚿</div><div class="s-name">تنظيف وغسيل</div><div class="s-price">From 120 SAR</div></div>
+      <div class="svc-card" id="sv2" onclick="selSvc('تعبئة غاز','Gas Refill',150,'sv2')"><div class="s-icon">🧪</div><div class="s-name">تعبئة غاز</div><div class="s-price">From 150 SAR</div></div>
+      <div class="svc-card" id="sv3" onclick="selSvc('كشف وإصلاح أعطال','Diagnosis & Repair',100,'sv3')"><div class="s-icon">🔍</div><div class="s-name">كشف وإصلاح</div><div class="s-price">From 100 SAR</div></div>
+      <div class="svc-card" id="sv4" onclick="selSvc('تركيب مكيف جديد','AC Installation',200,'sv4')"><div class="s-icon">⚙️</div><div class="s-name">تركيب مكيف</div><div class="s-price">From 200 SAR</div></div>
+      <div class="svc-card" id="sv5" onclick="selSvc('باقة صيانة سنوية','Annual Package',400,'sv5')"><div class="s-icon">👑</div><div class="s-name">باقة سنوية</div><div class="s-price">From 400 SAR</div></div>
+      <div class="svc-card" id="sv6" onclick="selSvc('صيانة دورية','Periodic Maintenance',120,'sv6')"><div class="s-icon">🛠️</div><div class="s-name">صيانة دورية</div><div class="s-price">From 120 SAR</div></div>
+    </div>
+    <!-- عدد المكيفات للخدمات الأخرى -->
+    <div class="units-box" id="units-box">
+      <div class="units-lbl">❄️ كم عدد المكيفات المطلوب خدمتها؟ <span class="req">*</span></div>
+      <div class="units-ctrl">
+        <button class="units-btn plus" onclick="changeUnits(1)">+</button>
+        <div class="units-num"><div class="n" id="units-display">1</div><div class="sub">مكيف</div></div>
+        <button class="units-btn minus" onclick="changeUnits(-1)">−</button>
+      </div>
+    </div>
+    <div class="section-lbl">👥 نوع العميل <span class="req">*</span></div>
+    <div class="type-row">
+      <button class="type-btn" id="tb1" onclick="selType('أفراد','tb1')">🏠 أفراد</button>
+      <button class="type-btn" id="tb2" onclick="selType('شركات','tb2')">🏢 شركات</button>
+      <button class="type-btn" id="tb3" onclick="selType('دائم','tb3')">⭐ دائم</button>
+    </div>
+    <div class="err-msg" id="e_svc">الرجاء اختيار نوع الخدمة</div>
+    <div class="err-msg" id="e_type">الرجاء اختيار نوع العميل</div>
+    <div class="btn-row"><button class="btn-next" onclick="next1()">التالي ←</button></div>
+  </div>
+</div>
+
+<!-- STEP 2 -->
+<div class="step-section" id="step2">
+  <div class="card-header"><div class="card-icon">👤</div><div><h2>بياناتك الشخصية</h2><p>حتى نتواصل معك لتأكيد الموعد</p></div></div>
+  <div class="card-body">
+    <div class="two-col">
+      <div class="field"><label>الاسم <span class="req">*</span></label><input type="text" id="f_name" placeholder="اسمك الكريم"><div class="err-msg" id="e_name">أدخل اسمك</div></div>
+      <div class="field"><label>الجوال <span class="req">*</span></label><input type="tel" id="f_phone" placeholder="05xxxxxxxx" maxlength="10"><div class="err-msg" id="e_phone">رقم غير صحيح</div></div>
+    </div>
+    <div class="field">
+      <label>المدينة <span class="req">*</span></label>
+      <select id="f_city">
+        <option value="">-- اختر --</option>
+        <option>جدة / Jeddah</option><option>الرياض / Riyadh</option>
+        <option>مكة المكرمة / Makkah</option><option>المدينة المنورة / Madinah</option>
+        <option>الدمام / Dammam</option><option>الطائف / Taif</option><option>أخرى / Other</option>
+      </select>
+      <div class="err-msg" id="e_city">اختر المدينة</div>
+    </div>
+    <!-- رابط الموقع من Google Maps -->
+    <div class="field">
+      <label>📍 رابط موقعك من Google Maps <span class="req">*</span></label>
+      <div class="maps-guide">
+        <strong>كيف تحصل على الرابط؟</strong><br>
+        ١. افتح تطبيق Google Maps<br>
+        ٢. حدد موقعك بدقة على الخريطة<br>
+        ٣. اضغط <strong>مشاركة</strong> ← انسخ الرابط<br>
+        ٤. الصقه في الخانة أدناه
+      </div>
+      <input type="url" id="f_maps_link" placeholder="https://maps.app.goo.gl/..." style="direction:ltr;" oninput="validateMapsLink(this.value)">
+      <div class="maps-ok" id="maps-ok">✅ تم تسجيل رابط الموقع بنجاح</div>
+      <!-- رسالة استخراج الإحداثيات من الرابط الكامل -->
+      <div class="maps-ok-coords" id="maps-ok-coords">✅ تم استخراج الإحداثيات من الرابط</div>
+      <!-- رسالة الرابط المختصر -->
+      <div class="maps-shortlink" id="maps-shortlink">ℹ️ سيتم حفظ رابط الموقع، لكن لن يدخل ضمن الجولة التلقائية إلا إذا استخدمت زر «موقعي الحالي».</div>
+      <!-- حقول الإحداثيات المخفية -->
+      <input type="hidden" id="f_lat">
+      <input type="hidden" id="f_lng">
+      <input type="hidden" id="f_addr">
+      <div class="err-msg" id="e_addr">أدخل رابط موقعك من Google Maps</div>
+    </div>
+    <!-- زر الموقع الحالي — اختياري، لا يُستدعى تلقائياً -->
+    <div style="margin-bottom:14px;">
+      <button type="button" class="geo-btn" id="geoBtn" onclick="useCurrentLocation()">
+        <span>📍</span> استخدام موقعي الحالي
+      </button>
+      <p class="geo-privacy">يُستخدم الموقع فقط لتنظيم الزيارة والوصول إليك.</p>
+      <div class="geo-msg" id="geoMsg"></div>
+    </div>
+    <!-- صورة المنزل -->
+    <div class="field">
+      <label>📸 صورة المنزل / الموقع <span style="font-size:11px;color:var(--mist);">(اختياري)</span></label>
+      <div class="img-upload" id="imgArea" onclick="document.getElementById('f_img').click()">
+        <div class="img-preview" id="imgPreview"><img id="imgSrc" src=""></div>
+        <div class="img-placeholder" id="imgPlaceholder"><div class="icon">📷</div><div>اضغط لإرفاق صورة الموقع</div><div style="font-size:11px;margin-top:3px;">تساعد الفني على إيجاد موقعك</div></div>
+      </div>
+      <input type="file" id="f_img" accept="image/*" style="display:none;" onchange="previewImage(this)">
+      <button type="button" id="removeImgBtn" onclick="removeImage()" style="display:none;margin-top:6px;padding:4px 12px;background:#FEE2E2;color:#EF4444;border:none;border-radius:6px;font-family:'Tajawal',sans-serif;font-size:12px;cursor:pointer;">🗑️ حذف الصورة</button>
+    </div>
+    <div class="field"><label>ملاحظات</label><textarea id="f_notes" rows="2" placeholder="أي تفاصيل للفني..."></textarea></div>
+    <div class="btn-row">
+      <button class="btn-back" onclick="goStep(1)">← رجوع</button>
+      <button class="btn-next" onclick="next2()">التالي ←</button>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 3 -->
+<div class="step-section" id="step3">
+  <div class="card-header"><div class="card-icon">📅</div><div><h2>اختر موعدك</h2><p>التاريخ والوقت المناسب</p></div></div>
+  <div class="card-body">
+    <div class="field">
+      <label>تاريخ الزيارة <span class="req">*</span></label>
+      <input type="date" id="f_date" onchange="checkDateAndSlots(this.value)">
+      <div class="friday-closed" id="fridayClosed">
+        <div class="icon">⛔</div>
+        <p>نعتذر — لا تتوفر مواعيد يوم الجمعة<br>يرجى اختيار يوم آخر</p>
+      </div>
+      <div class="err-msg" id="e_date">اختر التاريخ</div>
+    </div>
+    <div class="dur-note" id="durNote"></div>
+    <div class="section-lbl">الوقت المفضل <span class="req">*</span></div>
+    <div class="slots-grid" id="slotsGrid"></div>
+    <div class="err-msg" id="e_time">اختر الوقت</div>
+    <div class="btn-row">
+      <button class="btn-back" onclick="goStep(2)">← رجوع</button>
+      <button class="btn-next" onclick="next3()">مراجعة</button>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 4 -->
+<div class="step-section" id="step4">
+  <div class="card-header"><div class="card-icon">📋</div><div><h2>مراجعة الحجز</h2><p>تأكد من صحة البيانات</p></div></div>
+  <div class="card-body">
+    <div class="sum-box" id="sumBox"></div>
+    <div class="total-box"><span class="t-lbl">السعر التقديري</span><span class="t-price" id="totalPr">--</span></div>
+    <div style="background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:10px;padding:10px 14px;font-size:12px;color:#92400E;margin-bottom:12px;">ℹ️ السعر تقديري، يُحدد النهائي بعد معاينة الفني. لا تشمل قطع الغيار.</div>
+    <!-- سياسة الكشف -->
+    <div class="inspection-info" id="inspection-info">
+      <strong>🔍 سياسة رسوم الكشف:</strong><br>
+      • رسوم الكشف: <strong>100 ريال</strong><br>
+      • تُخصم من تكلفة الإصلاح عند الاتفاق<br>
+      • تُدفع كاملة إذا لم يتم الإصلاح
+    </div>
+    <!-- موافقة العدد -->
+    <div class="chk-box green">
+      <label class="chk-label">
+        <input type="checkbox" id="chk-units">
+        <span class="chk-text">✅ أقر بأن عدد المكيفات المحدد هو العدد الفعلي، وأن السعر يُحسب على العدد الفعلي عند الزيارة. أي تخفيض في العدد يعني تغيير السعر تلقائياً.<br><span class="chk-sub">I confirm the AC units count is actual. Price calculated on actual units visited.</span></span>
+      </label>
+    </div>
+    <!-- موافقة الكشف -->
+    <div class="chk-box blue" id="chk-inspection-wrap">
+      <label class="chk-label">
+        <input type="checkbox" id="chk-inspection" style="accent-color:#3B82F6;">
+        <span class="chk-text blue-text">✅ أقر بسياسة رسوم الكشف: <strong>100 ريال</strong> تُخصم من تكلفة الإصلاح عند الاتفاق، وتُدفع كاملة إذا لم يتم الإصلاح.<br><span class="chk-sub blue-sub">I agree: 100 SAR inspection fee, deducted from repair if agreed.</span></span>
+      </label>
+    </div>
+    <div class="btn-row">
+      <button class="btn-back" onclick="goStep(3)">← تعديل</button>
+      <button class="btn-next" onclick="submitBooking()">✅ إرسال الحجز</button>
+    </div>
+  </div>
+</div>
+
+<!-- SUCCESS -->
+<div class="step-section" id="stepOK">
+  <div class="success-wrap">
+    <div class="success-circle">✓</div>
+    <h2 style="font-size:20px;font-weight:800;color:var(--deep);margin-bottom:6px;">تم استلام طلبك! 🎉</h2>
+    <p style="font-size:13px;color:var(--mist);">سيتواصل معك فريقنا خلال ساعة لتأكيد الموعد</p>
+    <div class="ref-box"><div style="font-size:11px;color:var(--mist);">رقم الحجز</div><div class="ref-num" id="refNum">ATW-00000</div></div>
+    <br>
+    <a id="waLink" class="wa-btn" href="#" target="_blank">📲 متابعة عبر واتساب</a>
+    <br>
+    <button class="new-btn" onclick="location.reload()">+ حجز جديد</button>
+  </div>
+</div>
+
+</div></div>
+
+<div style="text-align:center;padding:20px 16px;background:linear-gradient(135deg,#0C3B5E,#0e5fa8);margin-top:20px;">
+  <p style="color:rgba(255,255,255,.6);font-size:12px;margin-bottom:12px;font-family:'Tajawal',sans-serif;">تابعنا على منصات التواصل</p>
+  <div style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;">
+    <a href="https://wa.me/message/3MKXWHOJKS5NM1" target="_blank" style="display:flex;align-items:center;gap:6px;background:#25D366;color:#fff;padding:9px 18px;border-radius:10px;text-decoration:none;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;">
+      💬 واتساب
+    </a>
+    <a href="https://x.com/Mainten_Ac" target="_blank" style="display:flex;align-items:center;gap:6px;background:#000;color:#fff;padding:9px 18px;border-radius:10px;text-decoration:none;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;">
+      𝕏 تويتر
+    </a>
+    <a href="https://www.snapchat.com/add/attwad23?share_id=U076WJwYfBo&locale=ar-AE" target="_blank" style="display:flex;align-items:center;gap:6px;background:#FFFC00;color:#000;padding:9px 18px;border-radius:10px;text-decoration:none;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;">
+      👻 سناب شات
+    </a>
+  </div>
+  <p style="color:rgba(255,255,255,.4);font-size:11px;margin-top:12px;font-family:'Tajawal',sans-serif;">مؤسسة أطواد لصيانة المكيفات © 2026</p>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+<script>
+var LANG = 'ar';
+var db = null;
+try { firebase.initializeApp({databaseURL:"https://atwad-booking-default-rtdb.firebaseio.com"}); db=firebase.database(); } catch(e){}
+
+var S = {service:'',serviceAr:'',price:0,units:1,isClean:false,clientType:'',name:'',phone:'',city:'',addr:'',notes:'',date:'',time:'',duration:0};
+
+// متغيرات الإحداثيات الاختيارية — تُملأ من زر الموقع أو من استخراج الرابط
+var selectedLat = null;
+var selectedLng = null;
+
+// ============================================================
+// extractCoordinatesFromMapUrl — استخراج إحداثيات من رابط كامل فقط
+// تدعم: ?q=lat,lng | @lat,lng,Xz
+// لا تحاول فك روابط maps.app.goo.gl بسبب قيود CORS
+// ============================================================
+function extractCoordinatesFromMapUrl(url) {
+  if(!url || typeof url !== 'string') return null;
+  var s = url.trim();
+  // روابط مختصرة — لا يمكن استخراج إحداثياتها بدون fetch (CORS)
+  if(s.indexOf('maps.app.goo.gl') !== -1 || s.indexOf('goo.gl/maps') !== -1) return null;
+  // صيغة ?q=LAT,LNG
+  var qm = s.match(/[?&]q=([-\d.]+),([-\d.]+)/);
+  if(qm) {
+    var lat = Number(qm[1]), lng = Number(qm[2]);
+    if(isValidCoord(lat, lng)) return {lat:lat, lng:lng};
+  }
+  // صيغة @LAT,LNG,Xz
+  var am = s.match(/@([-\d.]+),([-\d.]+)/);
+  if(am) {
+    var lat2 = Number(am[1]), lng2 = Number(am[2]);
+    if(isValidCoord(lat2, lng2)) return {lat:lat2, lng:lng2};
+  }
+  return null;
+}
+
+// التحقق من صحة الإحداثيات
+function isValidCoord(lat, lng) {
+  if(!Number.isFinite(lat) || !Number.isFinite(lng)) return false;
+  if(lat === 0 && lng === 0) return false;
+  if(lat < -90 || lat > 90) return false;
+  if(lng < -180 || lng > 180) return false;
+  return true;
+}
+
+// ============================================================
+// useCurrentLocation — يُستدعى فقط بضغط المستخدم على الزر
+// ============================================================
+function useCurrentLocation() {
+  var btn   = document.getElementById('geoBtn');
+  var msg   = document.getElementById('geoMsg');
+
+  if(!navigator.geolocation) {
+    showGeoMsg('err', 'متصفحك لا يدعم تحديد الموقع تلقائيًا. استخدم رابط Google Maps.');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span>⏳</span> جاري تحديد موقعك...';
+  showGeoMsg('', '');
+
+  navigator.geolocation.getCurrentPosition(
+    function(pos) {
+      // نجاح
+      var lat = pos.coords.latitude;
+      var lng = pos.coords.longitude;
+      selectedLat = lat;
+      selectedLng = lng;
+      document.getElementById('f_lat').value = lat;
+      document.getElementById('f_lng').value = lng;
+
+      // إنشاء رابط Google Maps بالإحداثيات
+      var mapsUrl = 'https://www.google.com/maps?q='+lat+','+lng;
+
+      // ملء حقل الرابط فقط إذا كان فارغاً
+      var mapsInput = document.getElementById('f_maps_link');
+      var addrInput = document.getElementById('f_addr');
+      if(!mapsInput.value.trim()) {
+        mapsInput.value = mapsUrl;
+        addrInput.value = mapsUrl;
+        S.addr = mapsUrl;
+        document.getElementById('maps-ok').style.display = 'block';
+        document.getElementById('e_addr').className = 'err-msg';
+      } else {
+        // يوجد رابط مُدخل — نحدّث الإحداثيات فقط بدون استبدال الرابط
+        // الإحداثيات ستُضاف إلى Firebase مستقلة عن mapsLink
+      }
+
+      showGeoMsg('ok', '✅ تم تحديد موقعك الحالي');
+      btn.disabled = false;
+      btn.innerHTML = '<span>✅</span> تم تحديد الموقع';
+    },
+    function(err) {
+      btn.disabled = false;
+      btn.innerHTML = '<span>📍</span> استخدام موقعي الحالي';
+      if(err.code === err.PERMISSION_DENIED) {
+        showGeoMsg('err', 'تعذر تحديد الموقع. يمكنك متابعة الحجز باستخدام رابط Google Maps.');
+      } else if(err.code === err.TIMEOUT) {
+        showGeoMsg('warn', 'تعذر الحصول على الموقع، حاول مرة أخرى أو استخدم رابط Google Maps.');
+      } else {
+        showGeoMsg('warn', 'تعذر الحصول على الموقع، حاول مرة أخرى أو استخدم رابط Google Maps.');
+      }
+    },
+    {timeout:10000, maximumAge:60000}
+  );
+}
+
+function showGeoMsg(type, text) {
+  var el = document.getElementById('geoMsg');
+  el.className = 'geo-msg' + (type ? ' '+type : '');
+  el.textContent = text;
+  el.style.display = text ? 'block' : 'none';
+}
+var bookImageBase64 = '';
+var FRIDAY_CLOSED = true;
+
+// تحميل إعداد الجمعة
+if(db) db.ref('settings/fridayClosed').once('value',function(s){if(s.val()!==null)FRIDAY_CLOSED=s.val();});
+
+var tom=new Date(); tom.setDate(tom.getDate()+1);
+document.getElementById('f_date').min=tom.toISOString().split('T')[0];
+
+// ===== خانة العدد =====
+function changeUnits(dir){
+  var n=Math.max(1,Math.min(20,S.units+dir));
+  S.units=n;
+  document.getElementById('units-display').textContent=n;
+}
+
+// ===== الخدمة =====
+function selClean(u,p){
+  ['ct1','ct2','ct3','ct4'].forEach(function(id){document.getElementById(id).className='clean-tile';});
+  document.getElementById('ct5').className='offer-tile';
+  ['sv1','sv2','sv3','sv4','sv5','sv6'].forEach(function(id){document.getElementById(id).className='svc-card';});
+  var id=u<=4?'ct'+u:'ct5';
+  document.getElementById(id).className=(u<=4?'clean-tile sel':'offer-tile sel');
+  S.service='تنظيف وغسيل المكيفات'; S.serviceAr='تنظيف وغسيل المكيفات';
+  S.units=u; S.price=p; S.isClean=true;
+  document.getElementById('units-box').className='units-box';
+  document.getElementById('e_svc').className='err-msg';
+}
+
+function selSvc(nameAr,nameEn,price,id){
+  ['ct1','ct2','ct3','ct4'].forEach(function(i){document.getElementById(i).className='clean-tile';});
+  document.getElementById('ct5').className='offer-tile';
+  ['sv1','sv2','sv3','sv4','sv5','sv6'].forEach(function(i){document.getElementById(i).className='svc-card';});
+  document.getElementById(id).className='svc-card sel';
+  S.service=nameAr; S.serviceAr=nameAr;
+  S.price=price; S.isClean=false;
+  S.units=parseInt(document.getElementById('units-display').textContent)||1;
+  document.getElementById('units-box').className='units-box show';
+  document.getElementById('e_svc').className='err-msg';
+}
+
+function selType(type,id){
+  ['tb1','tb2','tb3'].forEach(function(i){document.getElementById(i).className='type-btn';});
+  document.getElementById(id).className='type-btn sel';
+  S.clientType=type;
+  document.getElementById('e_type').className='err-msg';
+}
+
+function next1(){
+  var ok=true;
+  if(!S.service){document.getElementById('e_svc').className='err-msg show';ok=false;}
+  if(!S.clientType){document.getElementById('e_type').className='err-msg show';ok=false;}
+  if(!S.isClean&&S.service) S.units=parseInt(document.getElementById('units-display').textContent)||1;
+  if(ok) goStep(2);
+}
+
+// ===== رابط الموقع =====
+function validateMapsLink(val){
+  var raw=val.trim();
+  // استخراج الرابط النظيف فقط — أول URL يبدأ بـ http
+  var urlMatch = raw.match(/(https?:\/\/[^\s]+)/);
+  var link = urlMatch ? urlMatch[1] : raw;
+  // تنظيف أي نص إضافي بعد الرابط
+  link = link.split(' ')[0].split('\n')[0];
+  // تحديث خانة الإدخال بالرابط النظيف
+  if(urlMatch && link !== raw) {
+    document.getElementById('f_maps_link').value = link;
+  }
+  var ok=document.getElementById('maps-ok');
+  var okCoords=document.getElementById('maps-ok-coords');
+  var shortMsg=document.getElementById('maps-shortlink');
+  var err=document.getElementById('e_addr');
+  var isValid=link.length>10&&(link.includes('maps.app.goo.gl')||link.includes('google.com/maps')||link.includes('goo.gl/maps')||link.includes('maps.google'));
+
+  // إخفاء الرسائل الإضافية
+  okCoords.style.display='none';
+  shortMsg.style.display='none';
+
+  if(isValid){
+    document.getElementById('f_addr').value=link; S.addr=link;
+    ok.style.display='block'; err.className='err-msg';
+    document.getElementById('f_maps_link').style.borderColor='var(--success)';
+
+    // محاولة استخراج الإحداثيات من الرابط الكامل
+    var extracted = extractCoordinatesFromMapUrl(link);
+    if(extracted) {
+      selectedLat = extracted.lat;
+      selectedLng = extracted.lng;
+      document.getElementById('f_lat').value = selectedLat;
+      document.getElementById('f_lng').value = selectedLng;
+      ok.style.display='none';
+      okCoords.style.display='block';
+    } else if(link.includes('maps.app.goo.gl') || link.includes('goo.gl/maps')) {
+      // رابط مختصر — لا يمكن استخراج إحداثيات منه بدون CORS
+      shortMsg.style.display='block';
+      // لا تمسح الإحداثيات السابقة إذا كانت موجودة من زر الموقع
+    }
+  } else {
+    document.getElementById('f_addr').value=''; S.addr='';
+    ok.style.display='none';
+    document.getElementById('f_maps_link').style.borderColor=link.length>0?'var(--danger)':'#E2E8F0';
+  }
+}
+
+// ===== صورة الموقع =====
+function previewImage(input){
+  if(!input.files||!input.files[0]) return;
+  var file=input.files[0];
+  if(file.size>2*1024*1024){alert('حجم الصورة يجب أن يكون أقل من 2MB');return;}
+  var reader=new FileReader();
+  reader.onload=function(e){
+    bookImageBase64=e.target.result;
+    document.getElementById('imgSrc').src=bookImageBase64;
+    document.getElementById('imgPreview').style.display='block';
+    document.getElementById('imgPlaceholder').style.display='none';
+    document.getElementById('removeImgBtn').style.display='inline-block';
+    document.getElementById('imgArea').style.borderColor='var(--sky)';
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeImage(){
+  bookImageBase64='';
+  document.getElementById('f_img').value='';
+  document.getElementById('imgSrc').src='';
+  document.getElementById('imgPreview').style.display='none';
+  document.getElementById('imgPlaceholder').style.display='block';
+  document.getElementById('removeImgBtn').style.display='none';
+  document.getElementById('imgArea').style.borderColor='#E2E8F0';
+}
+
+function next2(){
+  var name=document.getElementById('f_name').value.trim();
+  var phone=document.getElementById('f_phone').value.trim();
+  var city=document.getElementById('f_city').value;
+  var mapsLink=document.getElementById('f_maps_link').value.trim();
+  var ok=true;
+  if(!name){document.getElementById('e_name').className='err-msg show';document.getElementById('f_name').className='err';ok=false;}else{document.getElementById('e_name').className='err-msg';document.getElementById('f_name').className='';}
+  if(!phone||!/^05\d{8}$/.test(phone)){document.getElementById('e_phone').className='err-msg show';document.getElementById('f_phone').className='err';ok=false;}else{document.getElementById('e_phone').className='err-msg';document.getElementById('f_phone').className='';}
+  if(!city){document.getElementById('e_city').className='err-msg show';ok=false;}else{document.getElementById('e_city').className='err-msg';}
+  if(!mapsLink){document.getElementById('e_addr').className='err-msg show';ok=false;}else{document.getElementById('e_addr').className='err-msg';}
+  if(ok){S.name=name;S.phone=phone;S.city=city;S.addr=mapsLink;S.notes=document.getElementById('f_notes').value.trim();goStep(3);}
+}
+
+// ===== الموعد =====
+var FRIDAY_VAR=true;
+var DUR_MAP={'تنظيف وغسيل المكيفات':30,'صيانة دورية':45,'تعبئة غاز':40,'كشف وإصلاح أعطال':60,'تركيب مكيف جديد':90,'باقة صيانة سنوية':45};
+var SLOTS=[{t:'8:00 - 10:00',start:480,ar:'8-10 ص'},{t:'10:00 - 12:00',start:600,ar:'10-12 ص'},{t:'12:00 - 14:00',start:720,ar:'12-2 م'},{t:'14:00 - 16:00',start:840,ar:'2-4 م'},{t:'16:00 - 18:00',start:960,ar:'4-6 م'},{t:'18:00 - 20:00',start:1080,ar:'6-8 م'}];
+
+function calcDur(){return Math.min((DUR_MAP[S.serviceAr]||30)*S.units,240);}
+function fmtDur(m){return m<60?m+' دقيقة':Math.floor(m/60)+' ساعة'+(m%60>0?' و'+m%60+' دقيقة':'');}
+
+function checkDateAndSlots(date){
+  if(!date) return;
+  document.getElementById('fridayClosed').style.display='none';
+  document.getElementById('e_date').className='err-msg';
+  var d=new Date(date+'T00:00:00');
+  if(FRIDAY_CLOSED&&d.getDay()===5){
+    document.getElementById('fridayClosed').style.display='block';
+    document.getElementById('slotsGrid').innerHTML='';
+    document.getElementById('durNote').style.display='none';
+    S.time=''; return;
+  }
+  checkSlots(date);
+}
+
+function checkSlots(date){
+  var dur=calcDur(); S.duration=dur;
+  var dn=document.getElementById('durNote');
+  dn.style.display='block';
+  dn.textContent='المدة التقديرية: '+fmtDur(dur)+' ('+S.units+' × '+(dur/S.units)+' د)';
+  document.getElementById('slotsGrid').innerHTML='<div style="text-align:center;color:var(--mist);padding:10px;font-size:12px">⏳ جاري التحقق...</div>';
+  if(db){
+    db.ref('bookings').once('value',function(snap){
+      var booked=[];
+      snap.forEach(function(c){var b=c.val();if(b.date&&b.date===date&&b.time)booked.push({time:b.time,dur:b.duration||90});});
+      renderSlots(booked,dur);
+    });
+  } else { renderSlots([],dur); }
+}
+
+function renderSlots(booked,dur){
+  var grid=document.getElementById('slotsGrid'); grid.innerHTML='';
+  var icons=['🌅','☀️','🕛','🕑','🌤️','🌙'];
+  SLOTS.forEach(function(sl,idx){
+    var div=document.createElement('div');
+    var newEnd=sl.start+dur;
+    var conflict=booked.some(function(b){
+      var ex=SLOTS.find(function(s){return s.t===b.time;});
+      if(!ex) return false;
+      return sl.start<(ex.start+(b.dur||90))&&newEnd>ex.start;
+    });
+    if(conflict||newEnd>1200){
+      div.className='slot booked';
+      div.innerHTML=icons[idx]+'<br>'+sl.ar+'<br><span style="font-size:9px;color:#EF4444;font-weight:700">'+(conflict?'محجوز':'وقت غير كافٍ')+'</span>';
+    } else {
+      var endH=Math.floor(newEnd/60),endM=newEnd%60;
+      div.className='slot';
+      div.innerHTML=icons[idx]+'<br>'+sl.ar+'<br><span style="font-size:9px;color:var(--success);font-weight:600">ينتهي '+endH+':'+(endM===0?'00':endM)+'</span>';
+      div.onclick=(function(t){return function(){selSlot(div,t);};})(sl.t);
+    }
+    grid.appendChild(div);
+  });
+}
+
+function selSlot(el,t){
+  document.querySelectorAll('#slotsGrid .slot').forEach(function(s){if(!s.classList.contains('booked'))s.className='slot';});
+  el.className='slot sel'; S.time=t;
+  document.getElementById('e_time').className='err-msg';
+}
+
+function next3(){
+  var date=document.getElementById('f_date').value;
+  var ok=true;
+  if(!date){document.getElementById('e_date').className='err-msg show';ok=false;}else{S.date=date;}
+  if(!S.time){document.getElementById('e_time').className='err-msg show';ok=false;}
+  if(ok){buildSum();goStep(4);}
+}
+
+// ===== المراجعة =====
+function fmtDate(d){try{return new Date(d+'T00:00:00').toLocaleDateString('ar-SA',{weekday:'long',year:'numeric',month:'long',day:'numeric'});}catch(e){return d;}}
+
+function buildSum(){
+  if(!S.isClean) S.units=parseInt(document.getElementById('units-display').textContent)||S.units;
+  var isWashing=S.serviceAr==='تنظيف وغسيل المكيفات';
+  var total;
+  if(S.isClean){total=S.units>=5?S.units*60:S.price;}
+  else if(isWashing){if(S.units===1)total=110;else if(S.units===2)total=180;else if(S.units===3)total=240;else if(S.units===4)total=280;else total=S.units*60;}
+  else{total=S.price;}
+
+  var rows=[
+    ['🛠️ الخدمة',S.service],
+    ['❄️ عدد المكيفات',S.units+' مكيف'],
+    ['👤 الاسم',S.name],
+    ['📱 الجوال',S.phone],
+    ['📍 المدينة',S.city],
+    ['🗺️ رابط الموقع',S.addr.length>40?S.addr.substring(0,40)+'...':S.addr],
+    ['📅 التاريخ',fmtDate(S.date)],
+    ['🕐 الوقت',S.time],
+    ['👥 نوع العميل',S.clientType],
+    ['⏱️ المدة',fmtDur(calcDur())]
+  ];
+  if(S.notes) rows.push(['📝 ملاحظات',S.notes]);
+  document.getElementById('sumBox').innerHTML=rows.map(function(r){return '<div class="sum-row"><span class="lbl">'+r[0]+'</span><span class="val">'+r[1]+'</span></div>';}).join('');
+  document.getElementById('totalPr').textContent=total+'+ SAR';
+
+  var isInspection=S.serviceAr==='كشف وإصلاح أعطال';
+  document.getElementById('inspection-info').style.display=isInspection?'block':'none';
+  document.getElementById('chk-inspection-wrap').style.display=isInspection?'block':'none';
+  document.getElementById('chk-units').checked=false;
+  var ci=document.getElementById('chk-inspection'); if(ci) ci.checked=false;
+}
+
+function submitBooking(){
+  if(!document.getElementById('chk-units').checked){
+    alert('يرجى الموافقة على شرط العدد الملزم');
+    return;
+  }
+  var isInspection=S.serviceAr==='كشف وإصلاح أعطال';
+  if(isInspection&&!document.getElementById('chk-inspection').checked){
+    alert('يرجى الموافقة على سياسة رسوم الكشف');
+    return;
+  }
+  var ref='ATW-'+Math.floor(10000+Math.random()*90000);
+  document.getElementById('refNum').textContent=ref;
+  var msg=encodeURIComponent('مرحباً مؤسسة أطواد 👋\nرقم الحجز: '+ref+'\nالخدمة: '+S.serviceAr+'\nعدد المكيفات: '+S.units+'\nالاسم: '+S.name+'\nالجوال: '+S.phone+'\nالتاريخ: '+fmtDate(S.date)+'\nالوقت: '+S.time+'\nالمدينة: '+S.city+'\nالموقع: '+S.addr);
+  var waUrl='https://wa.me/966509720382?text='+msg;
+  document.getElementById('waLink').href=waUrl;
+  if(db){try{
+    var bookingData = {ref:ref,date:S.date,time:S.time,duration:calcDur(),client:S.name,phone:S.phone,service:S.serviceAr,units:S.units,city:S.city,mapsLink:S.addr,locationImage:bookImageBase64||'',createdAt:new Date().toISOString()};
+
+    // إضافة lat/lng اختياريًا فقط إذا كانت صالحة
+    var latValue = document.getElementById('f_lat').value.trim();
+    var lngValue = document.getElementById('f_lng').value.trim();
+    var parsedLat = Number(latValue);
+    var parsedLng = Number(lngValue);
+    if(isValidCoord(parsedLat, parsedLng)) {
+      bookingData.lat = parsedLat;
+      bookingData.lng = parsedLng;
+    }
+
+    db.ref('bookings').push(bookingData);
+    // إشعار فوري للمشرف
+    db.ref('notifications').push({
+      title: '?? حجز جديد من الموقع',
+      body: 'عميل: '+S.name+' | '+S.serviceAr+' | '+S.date+' '+S.time,
+      ref: ref,
+      phone: S.phone,
+      createdAt: new Date().toISOString(),
+      read: false
+    });
+  }catch(e){}}
+  goStep('OK');
+  setTimeout(function(){window.open(waUrl,'_blank');},800);
+}
+
+function goStep(n){
+  document.querySelectorAll('.step-section').forEach(function(s){s.className='step-section';});
+  document.getElementById('step'+n).className='step-section active';
+  for(var i=1;i<=4;i++){
+    var sb=document.getElementById('sb'+i),sn=document.getElementById('sn'+i);
+    sb.className='step-item'; sn.textContent=i;
+    if(n!=='OK'){if(i<parseInt(n)){sb.className='step-item done';sn.textContent='✓';}else if(i===parseInt(n)){sb.className='step-item active';}}
+    else{sb.className='step-item done';sn.textContent='✓';}
+  }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function toggleLang(){
+  LANG=LANG==='ar'?'en':'ar';
+  document.querySelector('.lang-btn').textContent=LANG==='ar'?'🌐 EN':'🌐 عر';
+}
+</script>
+</body>
+</html>
