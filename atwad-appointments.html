@@ -177,6 +177,10 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
         <button class="view-btn active" id="vList" onclick="switchView('list')">📋 قائمة</button>
       </div>
       <button id="fridayBtn" onclick="toggleFriday()" style="padding:9px 16px;border-radius:10px;border:none;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;background:#FEF3C7;color:#92400E;">⛔ الجمعة مغلق</button>
+      <div style="position:relative;display:inline-block;">
+        <button onclick="openNotifications()" style="padding:9px 16px;border-radius:10px;border:1.5px solid #E2E8F0;background:#fff;font-family:'Tajawal',sans-serif;font-size:13px;cursor:pointer;color:var(--slate);">?? الإشعارات</button>
+        <span id="notifBadge" style="display:none;position:absolute;top:-6px;right:-6px;background:#EF4444;color:#fff;border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:'Tajawal',sans-serif;">0</span>
+      </div>
       <button class="btn-primary" onclick="openNewAppt()">＋ موعد جديد</button>
     </div>
   </div>
@@ -648,6 +652,35 @@ function editAppt(id){
   populateClients();
 }
 
+
+// ===== الإشعارات الفورية =====
+function sendAdminNotification(booking) {
+  if(!db) return;
+  db.ref('notifications').push({
+    title: 'حجز جديد',
+    body: 'عميل: '+(booking.client||'')+' | '+(booking.service||'')+' | '+(booking.date||''),
+    data: JSON.stringify(booking),
+    createdAt: new Date().toISOString(),
+    read: false
+  });
+}
+
+// ===== تأكيد واتساب للعميل =====
+function sendWhatsAppConfirmation(appt) {
+  if(!appt.phone) return;
+  var phone = appt.phone.replace(/^0/,'966');
+  var techNames = {Abrar:'أبرار',Shoib:'شعيب',Suhail:'سهيل'};
+  var msg = 'مرحباً ' + (appt.client||'') + '\n\n' +
+    '✅ تم تأكيد موعدكم مع مؤسسة أطواد\n\n' +
+    'الخدمة: '+(appt.service||'')+'\n' +
+    'عدد المكيفات: '+(appt.units||1)+'\n' +
+    'التاريخ: '+(appt.date||'')+'\n' +
+    'الوقت: '+(appt.time||'')+'\n' +
+    'الفني: '+(techNames[appt.tech]||appt.tech||'')+'\n\n' +
+    'شكراً لثقتكم';
+  window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank');
+}
+
 function saveAppt(){
   const client=document.getElementById('f_client').value.trim();
   const phone=document.getElementById('f_phone').value.trim();
@@ -679,7 +712,7 @@ function saveAppt(){
     // إضافة موعد جديد إلى Firebase
     data.createdAt = new Date().toISOString();
     db.ref('appointments').push(data)
-      .then(() => { showToast('✅ تم إضافة الموعد'); closeModal(); })
+      .then(() => { showToast('✅ تم إضافة الموعد'); sendAdminNotification(data); closeModal(); })
       .catch(e => showToast('❌ خطأ: ' + e.message));
   }
 }
@@ -710,6 +743,7 @@ function openDetail(id){
     ${a.locationImage?`<div style="margin-bottom:14px;"><div style="font-size:12px;color:var(--mist);margin-bottom:6px;">📸 صورة الموقع</div><img src="${a.locationImage}" style="width:100%;max-height:200px;object-fit:cover;border-radius:10px;border:1.5px solid var(--ice);" onclick="window.open('${a.locationImage}','_blank')"></div>`:''}
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
       <a href="https://wa.me/966${(a.phone||'').replace(/^0/,'')}?text=${encodeURIComponent('مرحباً '+a.client+'،\nتذكير بموعدكم مع مؤسسة أطواد\nالخدمة: '+a.service+'\nالتاريخ: '+formatDateShort(a.date)+'\nالوقت: '+a.time)}" target="_blank" style="flex:1;text-align:center;padding:10px;background:#25D366;color:#fff;border-radius:9px;font-weight:700;text-decoration:none;font-size:13px;min-width:100px;">📲 تذكير</a>
+      <button onclick="sendWhatsAppConfirmation(findAppt('${aId}'))" style="flex:1;padding:10px;background:#DBEAFE;color:#1E40AF;border:none;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;min-width:100px;">✅ تأكيد للعميل</button>
       <a href="https://maps.google.com?q=${encodeURIComponent(a.address||'')}" target="_blank" style="flex:1;text-align:center;padding:10px;background:var(--ice);color:var(--sky);border-radius:9px;font-weight:700;text-decoration:none;font-size:13px;min-width:100px;">🗺️ خرائط</a>
       ${a.status!=='done'?`<button onclick="markDone('${aId}');document.getElementById('detailModal').classList.remove('open')" style="flex:1;padding:10px;background:#D1FAE5;color:var(--success);border:none;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;min-width:80px;">✓ إتمام</button>`:''}
       <button onclick="deleteAppt('${aId}',null);document.getElementById('detailModal').classList.remove('open')" style="flex:1;padding:10px;background:#FEE2E2;color:#EF4444;border:none;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;min-width:80px;">🗑️ حذف</button>
@@ -775,5 +809,69 @@ function applySharedLang() {
 function toggleLang(){ LANG=LANG==='ar'?'en':'ar'; localStorage.setItem('atwad_lang',LANG); applySharedLang(); }
 document.addEventListener('DOMContentLoaded', applySharedLang);
 </script>
+
+<!-- نافذة الإشعارات -->
+<div id="notifModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:2000;align-items:flex-start;justify-content:flex-end;">
+  <div style="background:#fff;width:360px;max-width:100%;height:100%;overflow-y:auto;padding:20px;box-shadow:-4px 0 20px rgba(0,0,0,.15);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h3 style="font-size:16px;font-weight:800;color:var(--deep);">?? الإشعارات</h3>
+      <button onclick="closeNotifications()" style="border:none;background:none;font-size:18px;cursor:pointer;">&#x2715;</button>
+    </div>
+    <div id="notifList"><div style="text-align:center;color:var(--mist);padding:30px;">لا توجد إشعارات</div></div>
+  </div>
+</div>
+
+<script>
+// مراقبة الإشعارات من Firebase
+function watchNotifications() {
+  if(!db) return;
+  db.ref('notifications').orderByChild('read').equalTo(false).on('value', function(snap) {
+    var count = 0;
+    snap.forEach(function() { count++; });
+    var badge = document.getElementById('notifBadge');
+    if(badge) {
+      badge.textContent = count;
+      badge.style.display = count > 0 ? 'flex' : 'none';
+    }
+  });
+}
+
+function openNotifications() {
+  document.getElementById('notifModal').style.display = 'flex';
+  if(!db) return;
+  db.ref('notifications').orderByChild('createdAt').limitToLast(20).once('value', function(snap) {
+    var items = [];
+    snap.forEach(function(c) { items.unshift({key:c.key, ...c.val()}); });
+    var list = document.getElementById('notifList');
+    if(items.length === 0) {
+      list.innerHTML = '<div style="text-align:center;color:var(--mist);padding:30px;">لا توجد إشعارات</div>';
+      return;
+    }
+    list.innerHTML = items.map(function(n) {
+      return '<div style="background:'+(n.read?'#F8FAFC':'#EFF6FF')+';border-radius:10px;padding:12px;margin-bottom:8px;border-right:3px solid '+(n.read?'#E2E8F0':'#0EA5E9')+';">' +
+        '<div style="font-size:13px;font-weight:700;color:var(--deep);">' + (n.title||'') + '</div>' +
+        '<div style="font-size:12px;color:var(--mist);margin-top:4px;">' + (n.body||'') + '</div>' +
+        '<div style="font-size:11px;color:var(--mist);margin-top:4px;">' + (n.createdAt?new Date(n.createdAt).toLocaleString('ar-SA'):'') + '</div>' +
+        (!n.read ? '<button onclick="markNotifRead(\'' + n.key + '\')" style="margin-top:6px;padding:3px 10px;background:var(--sky);color:#fff;border:none;border-radius:6px;font-family:Tajawal,sans-serif;font-size:11px;cursor:pointer;">تم القراءة</button>' : '') +
+        '</div>';
+    }).join('');
+  });
+}
+
+function closeNotifications() {
+  document.getElementById('notifModal').style.display = 'none';
+}
+
+function markNotifRead(key) {
+  if(!db) return;
+  db.ref('notifications/'+key).update({read:true}).then(function() {
+    openNotifications();
+  });
+}
+
+// تشغيل مراقبة الإشعارات
+watchNotifications();
+</script>
+
 </body>
 </html>

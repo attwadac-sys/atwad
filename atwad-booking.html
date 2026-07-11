@@ -655,7 +655,19 @@ function submitBooking(){
   var msg=encodeURIComponent('مرحباً مؤسسة أطواد 👋\nرقم الحجز: '+ref+'\nالخدمة: '+S.serviceAr+'\nعدد المكيفات: '+S.units+'\nالاسم: '+S.name+'\nالجوال: '+S.phone+'\nالتاريخ: '+fmtDate(S.date)+'\nالوقت: '+S.time+'\nالمدينة: '+S.city+'\nالموقع: '+S.addr);
   var waUrl='https://wa.me/966509720382?text='+msg;
   document.getElementById('waLink').href=waUrl;
-  if(db){try{db.ref('bookings').push({ref:ref,date:S.date,time:S.time,duration:calcDur(),client:S.name,phone:S.phone,service:S.serviceAr,units:S.units,city:S.city,mapsLink:S.addr,locationImage:bookImageBase64||'',createdAt:new Date().toISOString()});}catch(e){}}
+  if(db){try{
+    var bookingData = {ref:ref,date:S.date,time:S.time,duration:calcDur(),client:S.name,phone:S.phone,service:S.serviceAr,units:S.units,city:S.city,mapsLink:S.addr,locationImage:bookImageBase64||'',createdAt:new Date().toISOString()};
+    db.ref('bookings').push(bookingData);
+    // إشعار فوري للمشرف
+    db.ref('notifications').push({
+      title: '?? حجز جديد من الموقع',
+      body: 'عميل: '+S.name+' | '+S.serviceAr+' | '+S.date+' '+S.time,
+      ref: ref,
+      phone: S.phone,
+      createdAt: new Date().toISOString(),
+      read: false
+    });
+  }catch(e){}}
   goStep('OK');
   setTimeout(function(){window.open(waUrl,'_blank');},800);
 }
