@@ -190,6 +190,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
     <div><div class="topbar-title" data-lang="title">🔧 أوامر العمل</div><div class="topbar-sub" data-lang="sub">فتح وإدارة عمليات الصيانة والتنظيف</div></div>
     <button onclick="importWOFromFirebase()" id="importWOBtn" style="background:#fff;border:1.5px solid #0EA5E9;color:#0EA5E9;border-radius:10px;padding:9px 16px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;" data-lang="importBtn">📥 استيراد من الحجوزات</button>
 <button class="lang-btn" id="langBtn" onclick="toggleLang()">🌐 EN</button>
+      <button onclick="generateDailyReport()" style="padding:9px 14px;border-radius:10px;border:1.5px solid #E2E8F0;background:#fff;font-family:'Tajawal',sans-serif;font-size:13px;cursor:pointer;color:var(--slate);">📊 تقرير يومي</button>
     <button class="btn-primary" onclick="openNewWO()">＋ أمر عمل جديد</button>
   </div>
 
@@ -370,7 +371,9 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
             <div style="font-size:24px;font-weight:800;color:var(--deep);letter-spacing:2px;direction:ltr;">WO-00000</div>
           </div>
           <div style="display:flex;gap:10px;justify-content:center;">
-            <button onclick="shareWhatsapp()" style="padding:10px 18px;background:#25D366;color:#fff;border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">📲 إرسال الفاتورة</button>
+            <button onclick="shareWhatsapp()" style="padding:10px 14px;background:#25D366;color:#fff;border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">📲 إرسال الفاتورة</button>
+            <button onclick="printInvoicePDF()" style="padding:10px 14px;background:var(--deep);color:#fff;border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">📄 PDF</button>
+            <button onclick="sendReviewRequest()" style="padding:10px 14px;background:#F59E0B;color:#fff;border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">⭐ تقييم</button>
             <button onclick="closeWOModal()" style="padding:10px 18px;background:var(--ice);color:var(--sky);border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">إغلاق</button>
           </div>
         </div>
@@ -816,6 +819,72 @@ function toggleLang() {
 }
 
 document.addEventListener('DOMContentLoaded', applySharedLang);
+
+
+// ===== ?? طباعة الفاتورة PDF =====
+function printInvoicePDF() {
+  var invEl = document.querySelector('.invoice-preview');
+  if(!invEl) { showToast('❌ لا توجد فاتورة'); return; }
+  var printWin = window.open('','_blank');
+  printWin.document.write('<html dir="rtl"><head><meta charset="UTF-8">');
+  printWin.document.write('<title>فاتورة أطواد</title>');
+  printWin.document.write('<style>');
+  printWin.document.write('body{font-family:Tajawal,Arial,sans-serif;margin:20px;direction:rtl;}');
+  printWin.document.write('.invoice-top{background:#0C3B5E;color:#fff;padding:16px;border-radius:8px 8px 0 0;}');
+  printWin.document.write('.invoice-top h2{margin:0;font-size:18px;}');
+  printWin.document.write('.invoice-body{border:1px solid #E2E8F0;padding:16px;border-radius:0 0 8px 8px;}');
+  printWin.document.write('.inv-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed #E2E8F0;}');
+  printWin.document.write('.inv-total{background:#0C3B5E;color:#fff;padding:12px;border-radius:8px;margin-top:12px;display:flex;justify-content:space-between;font-size:18px;font-weight:800;}');
+  printWin.document.write('@media print{button{display:none!important;}}');
+  printWin.document.write('</style></head><body>');
+  printWin.document.write(invEl.outerHTML);
+  printWin.document.write('<br><button onclick="window.print()" style="padding:10px 20px;background:#0C3B5E;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;">طباعة / حفظ PDF</button>');
+  printWin.document.write('</body></html>');
+  printWin.document.close();
+  setTimeout(function(){ printWin.print(); }, 500);
+}
+
+// ===== ⭐ طلب تقييم العميل =====
+function sendReviewRequest() {
+  var wo = workOrders[currentWOIndex];
+  if(!wo || !wo.phone) { showToast('❌ لا يوجد رقم جوال'); return; }
+  var phone = wo.phone.replace(/^0/,'966');
+  var msg = 'مرحباً ' + (wo.client||'') + ' ??\n\n' +
+    'شكراً لاختياركم مؤسسة أطواد ❄️\n' +
+    'نتمنى أن تكونوا راضين عن خدمة ' + (wo.service||'الصيانة') + '\n\n' +
+    'هل يمكنكم تقييم خدمتنا؟\n' +
+    '⭐⭐⭐⭐⭐ ممتاز\n' +
+    '⭐⭐⭐⭐ جيد جداً\n' +
+    '⭐⭐⭐ جيد\n' +
+    '⭐⭐ مقبول\n\n' +
+    'رد برقم النجموم وسنستفيد من رأيكم لتحسين خدماتنا ??';
+  window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank');
+  showToast('✅ تم فتح رسالة طلب التقييم');
+}
+
+// ===== ?? التقرير اليومي =====
+function generateDailyReport() {
+  var today = new Date().toISOString().split('T')[0];
+  var todayWOs = workOrders.filter(function(w){ return w.date === today; });
+  var completed = todayWOs.filter(function(w){ return w.status==='done'||w.status==='invoiced'; });
+  var totalRevenue = completed.reduce(function(sum,w){
+    var p = parseFloat(w.price)||0;
+    var parts = parseFloat(w.partsCost)||0;
+    var disc = parseFloat(w.discount)||0;
+    return sum + Math.max(0, p+parts-disc);
+  }, 0);
+  var msg = '?? التقرير اليومي - مؤسسة أطواد ❄️\n' +
+    '?? ' + today + '\n\n' +
+    'إجمالي المواعيد: ' + todayWOs.length + '\n' +
+    'المكتملة: ' + completed.length + '\n' +
+    'الإيرادات: ' + totalRevenue.toLocaleString('ar') + ' ريال\n\n' +
+    'تفاصيل الأعمال:\n' +
+    completed.map(function(w,i){
+      return (i+1)+'. '+w.client+' | '+(w.service||'')+' | '+(parseFloat(w.price)||0)+' ريال';
+    }).join('\n');
+  window.open('https://wa.me/966509720382?text='+encodeURIComponent(msg),'_blank');
+  showToast('✅ تم إرسال التقرير اليومي');
+}
 
 </script>
 </body>
