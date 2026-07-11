@@ -52,10 +52,10 @@ body{font-family:'Cairo',sans-serif;background:#F1F5F9;color:var(--slate);}
 .tour-btn.active{background:#10B981;color:#fff;}
 .tour-btn.disabled{background:rgba(255,255,255,.15);color:rgba(255,255,255,.5);cursor:not-allowed;border:1px solid rgba(255,255,255,.2);}
 
-/* MAP SPLIT LAYOUT — قائمة 35% (يمين RTL) | خريطة 65% (يسار) */
+/* MAP SPLIT LAYOUT — قائمة 30% (يمين RTL) | خريطة 70% (يسار) */
 .map-body{
   display:grid;
-  grid-template-columns:minmax(280px,35%) 1fr;
+  grid-template-columns:minmax(300px,30%) 1fr;
   gap:0;
   min-height:560px;
 }
@@ -77,6 +77,12 @@ body{font-family:'Cairo',sans-serif;background:#F1F5F9;color:var(--slate);}
   font-size:11px;color:var(--mist);padding:5px 12px;
   background:var(--frost);border-bottom:1px solid var(--ice);
   display:none;min-height:26px;
+}
+
+/* عداد مواقع الجولة */
+#tourCount{
+  font-size:10px;color:rgba(255,255,255,.6);
+  margin-top:3px;display:none;
 }
 
 /* no-coords notice */
@@ -205,9 +211,12 @@ body{font-family:'Cairo',sans-serif;background:#F1F5F9;color:var(--slate);}
         <div class="map-date" id="mapDate"></div>
       </div>
       <!-- زر بدء الجولة — واحد فقط، يُحدَّث عبر JS ولا يُعاد إنشاؤه -->
-      <button class="tour-btn disabled" id="tourBtn" onclick="startTour()" disabled>
-        لا توجد مواقع للجولة
-      </button>
+      <div style="text-align:left;">
+        <button class="tour-btn disabled" id="tourBtn" onclick="startTour()" disabled>
+          لا توجد مواقع للجولة
+        </button>
+        <div id="tourCount"></div>
+      </div>
     </div>
     <!-- ملاحظة تقنية: الخريطة iframe وليست Google Maps JavaScript API.
          لذلك لا يمكن إضافة علامات برمجية متعددة.
@@ -269,26 +278,173 @@ var selectedIdx = -1;
 // ============================================================
 
 /**
+ * extractCoordinatesFromMapUrl — استخراج إحداثيات من رابط Google Maps
+ * تدعم الصيغ:
+ *   ?q=LAT,LNG  |  /?q=LAT,LNG  |  @LAT,LNG,Xz
+ *
+ * تحذير: روابط maps.app.goo.gl المختصرة لا يمكن استخراج إحداثياتها مباشرة
+ * داخل المتصفح دون متابعة إعادة التوجيه (تحتاج fetch + CORS).
+ * هذه الدالة ترجع null لهذه الروابط — يبقى زر "الموقع" فعّالاً.
+ */
+function extractCoordinatesFromMapUrl(url) {
+  if(!url || typeof url !== 'string') return null;
+  var s = url.trim();
+
+  // روابط مختصرة maps.app.goo.gl — لا يمكن استخراج إحداثياتها بدون fetch/CORS
+  if(s.indexOf('maps.app.goo.gl') !== -1) return null;
+
+  // صيغة ?q=LAT,LNG أو &q=LAT,LNG
+  var qMatch = s.match(/[?&]q=([-\d.]+),([-\d.]+)/);
+  if(qMatch) {
+    var lat = Number(qMatch[1]), lng = Number(qMatch[2]);
+    if(isValidCoord(lat, lng)) return {lat:lat, lng:lng};
+  }
+
+  // صيغة @LAT,LNG,Xz (من روابط google.com/maps/@...)
+  var atMatch = s.match(/@([-\d.]+),([-\d.]+)/);
+  if(atMatch) {
+    var lat2 = Number(atMatch[1]), lng2 = Number(atMatch[2]);
+    if(isValidCoord(lat2, lng2)) return {lat:lat2, lng:lng2};
+  }
+
+  return null;
+}
+
+/**
+ * isValidCoord — التحقق من صحة إحداثيات
+ * - يرفض NaN وInfinity والأصفار المزدوجة (0,0) والنص الفارغ
+ */
+function isValidCoord(lat, lng) {
+  if(!Number.isFinite(lat) || !Number.isFinite(lng)) return false;
+  if(lat === 0 && lng === 0) return false; // 0,0 = وسط المحيط الأطلسي وليس موقعاً حقيقياً
+  if(lat < -90 || lat > 90) return false;
+  if(lng < -180 || lng > 180) return false;
+  return true;
+}
+
+/**
  * getCoordinates — استخراج إحداثيات صالحة من سجل
- * تبحث بالترتيب في: lat/lng ← latitude/longitude ← location.lat/lng ← coordinates.lat/lng
- * تُعيد {lat, lng} أو null
+ * الترتيب:
+ *  1. lat/lng مباشرة
+ *  2. latitude/longitude
+ *  3. location.lat/lng أو location.latitude/longitude
+ *  4. coordinates.lat/lng أو coordinates.latitude/longitude
+ *  5. استخراج من روابط URL في الحقول المعروفة
  */
 function getCoordinates(record) {
   if(!record) return null;
-  var pairs = [
+
+  // 1-2: قيم رقمية مباشرة
+  var directPairs = [
     [record.lat,       record.lng],
-    [record.latitude,  record.longitude],
-    [record.location  && record.location.lat,  record.location  && record.location.lng],
-    [record.coordinates && record.coordinates.lat, record.coordinates && record.coordinates.lng]
+    [record.latitude,  record.longitude]
   ];
-  for(var i = 0; i < pairs.length; i++) {
-    var lat = parseFloat(pairs[i][0]);
-    var lng = parseFloat(pairs[i][1]);
-    if(!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
-      return {lat: lat, lng: lng};
+  for(var i = 0; i < directPairs.length; i++) {
+    var lat = Number(directPairs[i][0]);
+    var lng = Number(directPairs[i][1]);
+    if(isValidCoord(lat, lng)) return {lat:lat, lng:lng};
+  }
+
+  // 3: location object
+  if(record.location && typeof record.location === 'object') {
+    var loc = record.location;
+    var ll = [
+      [Number(loc.lat),       Number(loc.lng)],
+      [Number(loc.latitude),  Number(loc.longitude)]
+    ];
+    for(var j = 0; j < ll.length; j++) {
+      if(isValidCoord(ll[j][0], ll[j][1])) return {lat:ll[j][0], lng:ll[j][1]};
     }
   }
+
+  // 4: coordinates object
+  if(record.coordinates && typeof record.coordinates === 'object') {
+    var co = record.coordinates;
+    var cc = [
+      [Number(co.lat),       Number(co.lng)],
+      [Number(co.latitude),  Number(co.longitude)]
+    ];
+    for(var k = 0; k < cc.length; k++) {
+      if(isValidCoord(cc[k][0], cc[k][1])) return {lat:cc[k][0], lng:cc[k][1]};
+    }
+  }
+
+  // 5: استخراج من روابط URL
+  var urlFields = [
+    record.mapUrl, record.locationUrl, record.googleMapsUrl,
+    record.mapsUrl, record.customerLocation, record.locationLink,
+    record.addressUrl, record.mapsLink
+  ];
+  for(var u = 0; u < urlFields.length; u++) {
+    var extracted = extractCoordinatesFromMapUrl(urlFields[u]);
+    if(extracted) return extracted;
+  }
+
   return null;
+}
+
+/**
+ * hasLocationUrl — هل يوجد رابط موقع (مختصر أو غير ذلك) حتى لو بلا إحداثيات؟
+ * يُستخدم لإظهار زر الموقع حتى عند غياب الإحداثيات الصالحة للجولة.
+ */
+function hasLocationUrl(record) {
+  var fields = [
+    record.mapUrl, record.locationUrl, record.googleMapsUrl,
+    record.mapsUrl, record.customerLocation, record.locationLink,
+    record.addressUrl, record.mapsLink
+  ];
+  return fields.some(function(f){ return f && typeof f === 'string' && f.trim().length > 0; });
+}
+
+/**
+ * getDistrict — استخراج الحي أو المنطقة من سجل
+ * يبحث بالترتيب في الحقول الأدق أولاً
+ */
+function getDistrict(record) {
+  if(!record) return '';
+  var fields = [
+    record.district,
+    record.neighborhood,
+    record.area,
+    record.subArea,
+    record.region,
+    record.zone,
+    record.address && typeof record.address === 'object' && record.address.district,
+    record.location && typeof record.location === 'object' && record.location.district,
+    record.customerDistrict,
+    record.customerArea
+  ];
+  for(var i = 0; i < fields.length; i++) {
+    var v = fields[i];
+    if(v && typeof v === 'string' && v.trim().length > 0) return v.trim();
+  }
+  return '';
+}
+
+/**
+ * debugLocationFields — تشخيص حقول الموقع في Console (preview فقط، لا يعرض للمستخدم)
+ */
+function debugLocationFields(record, source, key) {
+  console.log('[LocationDebug]', {
+    source: source,
+    key: key,
+    customer: record.customerName || record.client || record.name || '',
+    lat: record.lat,
+    lng: record.lng,
+    latitude: record.latitude,
+    longitude: record.longitude,
+    location: record.location,
+    coordinates: record.coordinates,
+    mapUrl: record.mapUrl,
+    locationUrl: record.locationUrl,
+    googleMapsUrl: record.googleMapsUrl,
+    mapsUrl: record.mapsUrl,
+    customerLocation: record.customerLocation,
+    locationLink: record.locationLink,
+    addressUrl: record.addressUrl,
+    mapsLink: record.mapsLink,
+    resolvedCoords: getCoordinates(record)
+  });
 }
 
 /**
@@ -392,10 +548,18 @@ function loadAll() {
   var mapListEl = document.getElementById('mapList');
   db.ref('appointments').once('value').then(function(snap) {
     allAppts = [];
-    snap.forEach(function(c){ allAppts.push(Object.assign({}, c.val(), {_key:c.key})); });
+    snap.forEach(function(c){
+      var rec = c.val();
+      allAppts.push(Object.assign({}, rec, {_key:c.key}));
+      debugLocationFields(rec, 'appointments', c.key); // تشخيص — preview فقط
+    });
     return db.ref('bookings').once('value');
   }).then(function(snap2) {
-    snap2.forEach(function(c){ allAppts.push(Object.assign({}, c.val(), {_key:c.key, _src:'booking'})); });
+    snap2.forEach(function(c){
+      var rec = c.val();
+      allAppts.push(Object.assign({}, rec, {_key:c.key, _src:'booking'}));
+      debugLocationFields(rec, 'bookings', c.key); // تشخيص — preview فقط
+    });
     renderMap(today);
   }).catch(function(e) {
     console.error('Firebase read error (appointments/bookings):', e);
@@ -470,15 +634,25 @@ function renderMap(today) {
   selectedIdx = -1;
 
   // ===== زر بدء الجولة — يُحدَّث نصه وحالته ولا يُعاد إنشاؤه =====
-  var tourBtn = document.getElementById('tourBtn');
+  var tourBtn   = document.getElementById('tourBtn');
+  var tourCount = document.getElementById('tourCount');
   if(withCoords.length === 0) {
-    tourBtn.disabled = true;
-    tourBtn.className = 'tour-btn disabled';
+    tourBtn.disabled   = true;
+    tourBtn.className  = 'tour-btn disabled';
     tourBtn.textContent = 'لا توجد مواقع للجولة';
+    tourCount.style.display = 'none';
+  } else if(withCoords.length === 1) {
+    tourBtn.disabled   = false;
+    tourBtn.className  = 'tour-btn active';
+    tourBtn.textContent = '📍 فتح الموقع';
+    tourCount.style.display = 'block';
+    tourCount.textContent = 'المواقع المتاحة للجولة: 1 من '+todayAppts.length;
   } else {
-    tourBtn.disabled = false;
-    tourBtn.className = 'tour-btn active';
+    tourBtn.disabled   = false;
+    tourBtn.className  = 'tour-btn active';
     tourBtn.textContent = '🚗 بدء الجولة';
+    tourCount.style.display = 'block';
+    tourCount.textContent = 'المواقع المتاحة للجولة: '+withCoords.length+' من '+todayAppts.length;
   }
 
   // ===== قائمة المواعيد — innerHTML = (لا +=) لمنع التكرار =====
@@ -502,16 +676,31 @@ function renderMap(today) {
     var phone    = a.phone || a.mobile || a.tel || '';
     var waNum    = toWaNumber(phone);
     var techName = TECHS[a.tech] || a.tech || '';
-    // الموقع: الأولوية للحي/المنطقة ثم العنوان ثم المدينة
-    var area     = a.area || a.district || a.subArea || a.zone || a.region || '';
-    var location = area || a.address || a.city || '';
 
-    // رابط Google Maps — فقط إذا وجدت إحداثيات صالحة
+    // الحي/المنطقة عبر دالة getDistrict، ثم العنوان، ثم المدينة
+    var district = getDistrict(a);
+    var location = district || a.address || a.city || '';
+    var locationLabel = district
+      ? '📍 حي/منطقة: '+district
+      : (location ? '📍 '+location : '');
+
+    // رابط Google Maps:
+    // إذا وجدت إحداثيات صالحة → استخدمها
+    // إذا لم توجد → ابحث في حقول URL المعروفة (تشمل روابط مختصرة)
     var mapsUrl = null;
     if(coords) {
       mapsUrl = 'https://www.google.com/maps?q='+coords.lat+','+coords.lng;
-    } else if(a.mapsLink) {
-      mapsUrl = a.mapsLink;
+    } else {
+      var urlFields = [
+        a.mapUrl, a.locationUrl, a.googleMapsUrl, a.mapsUrl,
+        a.customerLocation, a.locationLink, a.addressUrl, a.mapsLink
+      ];
+      for(var ui = 0; ui < urlFields.length; ui++) {
+        if(urlFields[ui] && typeof urlFields[ui] === 'string' && urlFields[ui].trim()) {
+          mapsUrl = urlFields[ui].trim();
+          break;
+        }
+      }
     }
 
     // أزرار — لا تظهر إذا لم توجد البيانات
@@ -533,9 +722,9 @@ function renderMap(today) {
         '<div class="appt-time">'+timeStr+'</div>' +
       '</div>' +
       '<div class="appt-row2">' +
-        (a.service ? '<span class="appt-service">🛠️ '+a.service+'</span>' : '') +
-        (location  ? '<span class="appt-location">📍 '+location+'</span>' : '') +
-        (techName  ? '<span class="appt-tech">👷 '+techName+'</span>' : '') +
+        (a.service    ? '<span class="appt-service">🛠️ '+a.service+'</span>' : '') +
+        (locationLabel ? '<span class="appt-location">'+locationLabel+'</span>' : '') +
+        (techName     ? '<span class="appt-tech">👷 '+techName+'</span>' : '') +
       '</div>' +
       '<div class="appt-row3">' +
         '<span class="status-badge '+cls+'">'+label+'</span>' +
@@ -565,18 +754,22 @@ function selectCard(idx) {
   var a = todayAppts[idx];
   if(!a) return;
 
-  // تحديث مؤشر الموعد المختار فوق الخريطة
-  var selLabel = document.getElementById('mapSelectedLabel');
+  var selLabel   = document.getElementById('mapSelectedLabel');
   var clientName = a.client || a.customerName || 'موعد '+(idx+1);
-  selLabel.textContent = '📍 الموقع المحدد: '+clientName+' — موعد '+(idx+1);
-  selLabel.style.display = 'block';
+  var coords     = getCoordinates(a);
 
-  // تحريك الخريطة إلى إحداثيات الموعد إن وجدت
-  var coords = getCoordinates(a);
   if(coords) {
+    // إحداثيات صالحة — حرّك الخريطة
     document.getElementById('mapFrame').src =
       'https://maps.google.com/maps?q='+coords.lat+','+coords.lng+'&output=embed&z=16';
+    selLabel.textContent = '📍 الموقع المحدد: '+clientName+' — موعد '+(idx+1);
+  } else if(hasLocationUrl(a)) {
+    // رابط موجود لكن بلا إحداثيات (قد يكون مختصراً) — لا تغيّر الخريطة
+    selLabel.textContent = '🔗 الموقع متاح عبر الرابط فقط — '+clientName;
+  } else {
+    selLabel.textContent = '📍 '+clientName+' — لا يوجد موقع محفوظ';
   }
+  selLabel.style.display = 'block';
 }
 
 // ============================================================
