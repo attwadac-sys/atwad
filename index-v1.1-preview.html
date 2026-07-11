@@ -3,500 +3,724 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>مؤسسة أطواد — مركز التحكم | v1.1 Preview</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+<title>أطواد - التحليلات v1.1</title>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
 :root{
-  --primary:#0b3d6b;--primary2:#0e5fa8;
-  --ice:#e0f4ff;--teal:#00b4d8;--teal2:#0096c7;
-  --frost:#caf0f8;--bg:#edf6fb;--card:#fff;
-  --text:#0b2a3d;--muted:#5a7a8a;--border:#c8e6f5;
-  --shadow:0 4px 24px rgba(11,61,107,.10);
-  --success:#10B981;
+  --deep:#0C3B5E;--sky:#0EA5E9;--ice:#E8F4FD;--frost:#F0F9FF;
+  --success:#10B981;--warning:#F59E0B;--danger:#EF4444;
+  --purple:#8B5CF6;--slate:#334155;--mist:#94A3B8;
+  --c-done:#10B981;--c-onway:#F59E0B;--c-inprog:#8B5CF6;
+  --c-late:#EF4444;--c-new:#0EA5E9;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Cairo','Tajawal',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+body{font-family:'Cairo',sans-serif;background:#F1F5F9;color:var(--slate);}
 
 /* HEADER */
-header{background:linear-gradient(135deg,#0b3d6b 0%,#0e5fa8 60%,#00b4d8 100%);position:relative;overflow:hidden;}
-header::before{content:'❄';position:absolute;top:-10px;left:30px;font-size:120px;opacity:.05;color:#fff;pointer-events:none;}
-header::after{content:'❄';position:absolute;bottom:-20px;right:60px;font-size:90px;opacity:.06;color:#fff;pointer-events:none;}
-.header-inner{max-width:1200px;margin:0 auto;padding:24px 28px 18px;display:flex;align-items:center;justify-content:space-between;position:relative;z-index:1;flex-wrap:wrap;gap:12px;}
-.logo-area{display:flex;align-items:center;gap:16px;}
-.logo-icon{width:58px;height:58px;background:rgba(255,255,255,.15);backdrop-filter:blur(8px);border:2px solid rgba(255,255,255,.25);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;}
-.logo-text h1{font-size:23px;font-weight:900;color:#fff;}
-.logo-text .sub{font-size:12px;color:rgba(255,255,255,.65);margin-top:2px;}
-.logo-text .ver{display:inline-block;margin-top:4px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:rgba(255,255,255,.9);font-size:10px;font-weight:700;padding:2px 10px;border-radius:20px;}
-.header-date{text-align:left;color:rgba(255,255,255,.75);font-size:13px;background:rgba(255,255,255,.10);padding:10px 16px;border-radius:12px;border:1px solid rgba(255,255,255,.15);}
-.header-date strong{display:block;color:var(--frost);font-size:14px;font-weight:700;margin-bottom:2px;}
+.header{background:linear-gradient(135deg,var(--deep),#0e5fa8,var(--sky));padding:18px 20px;display:flex;align-items:center;justify-content:space-between;}
+.header h1{color:#fff;font-size:20px;font-weight:900;}
+.header p{color:rgba(255,255,255,.7);font-size:12px;}
+.back-btn{padding:8px 14px;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);border-radius:8px;color:#fff;font-family:'Cairo',sans-serif;font-size:12px;cursor:pointer;text-decoration:none;}
 
-/* KPI STRIP */
-.kpi-strip{background:linear-gradient(90deg,#0096c7,#00b4d8);padding:0 28px;}
-.kpi-inner{max-width:1200px;margin:0 auto;display:flex;justify-content:space-around;}
-.kpi-item{flex:1;text-align:center;padding:14px 10px;color:#fff;border-left:1px solid rgba(255,255,255,.15);}
-.kpi-item:last-child{border-left:none;}
-.kpi-val{font-size:26px;font-weight:900;display:block;min-height:32px;line-height:1.1;}
-.kpi-val.loading{font-size:20px;opacity:.6;}
-.kpi-label{font-size:11px;font-weight:600;opacity:.9;margin-top:2px;}
-.kpi-sub{font-size:10px;opacity:.6;margin-top:1px;}
+/* TABS */
+.tabs{display:flex;background:#fff;border-bottom:2px solid var(--ice);position:sticky;top:0;z-index:100;}
+.tab{flex:1;padding:14px;text-align:center;border:none;background:transparent;font-family:'Cairo',sans-serif;font-size:13px;font-weight:700;cursor:pointer;color:var(--mist);border-bottom:3px solid transparent;transition:all .2s;}
+.tab.active{color:var(--sky);border-bottom-color:var(--sky);}
+.tab-content{display:none;padding:16px;}
+.tab-content.active{display:block;}
 
-/* MAIN */
-main{max-width:1200px;margin:0 auto;padding:28px 24px 56px;}
-.section-title{font-size:11px;font-weight:700;color:var(--teal2);letter-spacing:2px;margin-bottom:18px;padding-right:12px;border-right:3px solid var(--teal);}
+/* KPI CARDS */
+.kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px;}
+.kpi{background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);text-align:center;}
+.kpi .num{font-size:28px;font-weight:900;color:var(--deep);}
+.kpi .lbl{font-size:12px;color:var(--mist);margin-top:4px;}
+.kpi.blue{border-top:3px solid var(--sky);}
+.kpi.green{border-top:3px solid var(--success);}
+.kpi.orange{border-top:3px solid var(--warning);}
+.kpi.purple{border-top:3px solid var(--purple);}
 
-/* MODULES */
-.modules-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:16px;margin-bottom:36px;}
-.module-card{background:var(--card);border-radius:16px;padding:22px 20px;text-decoration:none;color:var(--text);box-shadow:var(--shadow);border:1.5px solid var(--border);transition:transform .2s,box-shadow .2s,border-color .2s;display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden;min-height:132px;}
-.module-card::after{content:'';position:absolute;top:0;right:0;width:4px;height:100%;background:var(--c,var(--teal));border-radius:0 16px 16px 0;}
-.module-card:hover{transform:translateY(-4px);box-shadow:0 12px 36px rgba(11,61,107,.14);border-color:var(--c,var(--teal));}
-.module-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;background:var(--cb,var(--ice));}
-.module-card h3{font-size:14px;font-weight:700;}
-.module-card p{font-size:12px;color:var(--muted);line-height:1.6;flex:1;}
-.module-arrow{font-size:13px;color:var(--c,var(--teal));align-self:flex-end;opacity:.7;}
-.c1{--c:#0b3d6b;--cb:#e0eef8;}.c2{--c:#00b4d8;--cb:#e0f4ff;}.c3{--c:#0096c7;--cb:#d0ecf7;}.c4{--c:#0e5fa8;--cb:#dceeff;}.c5{--c:#3a7bd5;--cb:#e3eeff;}.c6{--c:#0077b6;--cb:#d6eaf8;}.c7{--c:#48cae4;--cb:#e0faff;}.c8{--c:#00b4d8;--cb:#e0f4ff;}.c9{--c:#023e8a;--cb:#dce8f8;}.ca{--c:#8B5CF6;--cb:#EDE9FE;}
+/* MAP CONTAINER */
+.map-container{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:16px;}
+.map-header{background:var(--deep);color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
+.map-header h3{font-size:15px;font-weight:700;}
+.map-date{font-size:11px;opacity:.7;}
 
-/* ACTIVITIES */
-.activity-list{display:flex;flex-direction:column;gap:10px;margin-bottom:36px;}
-.act-item{background:var(--card);border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:14px;box-shadow:0 2px 10px rgba(11,61,107,.06);border:1.5px solid var(--border);text-decoration:none;color:var(--text);transition:border-color .2s;}
-.act-item:hover{border-color:var(--teal);}
-.act-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;background:var(--ice);flex-shrink:0;}
-.act-body{flex:1;min-width:0;}
-.act-type{font-size:10px;font-weight:700;color:var(--teal);letter-spacing:.5px;}
-.act-name{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.act-meta{font-size:11px;color:var(--muted);margin-top:2px;}
-.act-status{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--ice);color:var(--teal2);white-space:nowrap;flex-shrink:0;}
-.act-empty{text-align:center;color:var(--muted);padding:22px;font-size:13px;background:var(--card);border-radius:12px;border:1.5px dashed var(--border);}
+/* TOUR BUTTON */
+.tour-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;border:none;font-family:'Cairo',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;}
+.tour-btn.active{background:#10B981;color:#fff;}
+.tour-btn.disabled{background:rgba(255,255,255,.15);color:rgba(255,255,255,.5);cursor:not-allowed;border:1px solid rgba(255,255,255,.2);}
 
-/* CONTACT */
-.contact-row{background:var(--card);border-radius:16px;box-shadow:var(--shadow);border:1.5px solid var(--border);padding:18px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:32px;}
-.contact-qr{display:flex;align-items:center;gap:16px;}
-.contact-qr img{width:80px;height:80px;border-radius:10px;}
-.contact-qr-text p{font-size:13px;font-weight:700;color:var(--primary);margin-bottom:4px;}
-.contact-qr-text small{font-size:11px;color:var(--muted);}
-.contact-actions{display:flex;gap:10px;flex-wrap:wrap;}
-.wa-btn{display:inline-flex;align-items:center;gap:7px;background:#25D366;color:#fff;padding:10px 20px;border-radius:10px;text-decoration:none;font-size:13px;font-weight:700;transition:opacity .2s;}
-.wa-btn:hover{opacity:.88;}
-.social-btn{display:inline-flex;align-items:center;gap:5px;padding:9px 14px;border-radius:9px;text-decoration:none;font-size:12px;font-weight:700;}
+/* MAP SPLIT LAYOUT */
+.map-body{display:flex;gap:0;}
+#mapFrame{width:50%;height:420px;border:none;flex-shrink:0;}
+.map-list-wrap{flex:1;overflow-y:auto;max-height:420px;border-right:1px solid var(--ice);}
 
-/* FOOTER */
-footer{background:var(--primary);color:rgba(255,255,255,.45);text-align:center;padding:18px 20px;font-size:12px;}
-footer strong{color:var(--teal);}
-footer .ver-tag{display:inline-block;margin-top:6px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.5);font-size:10px;font-weight:700;padding:2px 10px;border-radius:20px;font-family:monospace;}
-.footer-links{display:flex;justify-content:center;gap:14px;margin-top:8px;flex-wrap:wrap;}
-.footer-links a{color:rgba(255,255,255,.35);text-decoration:none;font-size:11px;transition:color .2s;}
-.footer-links a:hover{color:var(--teal);}
+/* no-coords notice */
+.no-coords{font-size:11px;color:var(--mist);padding:8px 16px 4px;text-align:center;font-style:italic;}
 
-/* RESPONSIVE */
-@media(max-width:800px){.kpi-inner{flex-wrap:wrap;}.kpi-item{min-width:45%;border-left:none;border-bottom:1px solid rgba(255,255,255,.1);}.kpi-item:last-child{border-bottom:none;}}
-@media(max-width:560px){.header-inner{flex-direction:column;text-align:center;}.modules-grid{grid-template-columns:1fr;}.contact-row{flex-direction:column;}.kpi-item{min-width:48%;}}
+/* APPOINTMENT CARDS (compact) */
+.appt-card{padding:10px 12px;border-bottom:1px solid var(--ice);cursor:pointer;transition:background .15s;position:relative;}
+.appt-card:last-child{border-bottom:none;}
+.appt-card:hover{background:var(--frost);}
+.appt-card.selected{background:var(--ice);border-right:3px solid var(--sky);}
+.appt-card.highlighted{animation:flashCard .6s ease-out;}
+@keyframes flashCard{0%,100%{background:transparent;}50%{background:#FEF9C3;}}
+
+.appt-row1{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.appt-num{width:24px;height:24px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;flex-shrink:0;}
+.appt-name{font-size:13px;font-weight:800;color:var(--deep);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.appt-time{font-size:12px;font-weight:700;color:var(--sky);flex-shrink:0;}
+
+.appt-row2{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px;padding-right:32px;}
+.appt-service{font-size:11px;color:var(--slate);}
+.appt-location{font-size:11px;color:var(--mist);}
+.appt-tech{font-size:11px;color:var(--mist);}
+
+.appt-row3{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-right:32px;}
+.status-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;flex-shrink:0;}
+.appt-phone{font-size:11px;color:var(--mist);}
+
+.appt-actions{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px;padding-right:32px;}
+.act-btn{display:inline-flex;align-items:center;gap:3px;padding:4px 9px;border-radius:6px;text-decoration:none;font-size:11px;font-weight:700;border:none;cursor:pointer;font-family:'Cairo',sans-serif;transition:opacity .2s;}
+.act-btn:hover{opacity:.85;}
+.btn-call{background:#E0F2FE;color:#0369A1;}
+.btn-wa{background:#DCFCE7;color:#15803D;}
+.btn-map{background:#FEF3C7;color:#92400E;}
+
+/* Status badge colors */
+.s-done{background:#DCFCE7;color:#15803D;}
+.s-onway{background:#FEF9C3;color:#92400E;}
+.s-inprog{background:#EDE9FE;color:#5B21B6;}
+.s-late{background:#FEE2E2;color:#991B1B;}
+.s-new{background:#E0F2FE;color:#0369A1;}
+
+/* TECH PERFORMANCE */
+.tech-card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:12px;}
+.tech-header{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+.tech-avatar{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff;}
+.tech-name{font-size:16px;font-weight:800;color:var(--deep);}
+.tech-role{font-size:12px;color:var(--mist);}
+.tech-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.tech-stat{text-align:center;background:var(--frost);border-radius:10px;padding:10px;}
+.tech-stat .n{font-size:20px;font-weight:900;color:var(--deep);}
+.tech-stat .l{font-size:11px;color:var(--mist);}
+.progress-bar{background:#E2E8F0;border-radius:20px;height:6px;margin-top:10px;overflow:hidden;}
+.progress-fill{height:100%;border-radius:20px;transition:width .5s;}
+.stars{color:#F59E0B;font-size:14px;margin-top:4px;}
+
+/* LOYALTY */
+.loyalty-search{background:#fff;border-radius:14px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:14px;}
+.loyalty-search input{width:100%;padding:10px 14px;border:1.5px solid #E2E8F0;border-radius:10px;font-family:'Cairo',sans-serif;font-size:14px;outline:none;}
+.loyalty-search input:focus{border-color:var(--sky);}
+.client-loyalty{background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:10px;}
+.loyalty-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.loyalty-name{font-size:15px;font-weight:800;color:var(--deep);}
+.loyalty-tier{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;}
+.tier-bronze{background:#FEF3C7;color:#92400E;}
+.tier-silver{background:#F1F5F9;color:#475569;}
+.tier-gold{background:#FEF9C3;color:#854D0E;}
+.tier-platinum{background:#EDE9FE;color:#5B21B6;}
+.points-display{text-align:center;background:linear-gradient(135deg,var(--deep),var(--sky));border-radius:12px;padding:14px;color:#fff;margin-bottom:12px;}
+.points-num{font-size:32px;font-weight:900;}
+.points-lbl{font-size:12px;opacity:.8;}
+.loyalty-history{font-size:12px;color:var(--mist);}
+.history-item{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed #E2E8F0;}
+
+/* LOADING / EMPTY */
+.loading{text-align:center;padding:40px;color:var(--mist);}
+.spinner{width:32px;height:32px;border:3px solid var(--ice);border-top-color:var(--sky);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 10px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:30px;color:var(--mist);font-size:13px;}
+.section-title{font-size:15px;font-weight:800;color:var(--deep);margin-bottom:12px;}
+
+/* RESPONSIVE: على الجوال الخريطة فوق والقائمة تحتها */
+@media(max-width:640px){
+  .map-body{flex-direction:column;}
+  #mapFrame{width:100%;height:240px;}
+  .map-list-wrap{max-height:none;border-right:none;border-top:1px solid var(--ice);}
+}
 </style>
 </head>
 <body>
 
-<!-- HEADER -->
-<header>
-  <div class="header-inner">
-    <div class="logo-area">
-      <div class="logo-icon">❄️</div>
-      <div class="logo-text">
-        <h1>مؤسسة أطواد</h1>
-        <div class="sub">مركز التحكم التشغيلي — صيانة وتنظيف المكيفات</div>
-        <span class="ver">ATTWAD ACMS v1.1 Preview</span>
+<div class="header">
+  <div>
+    <h1>📊 التحليلات المتقدمة</h1>
+    <p>خريطة المواعيد • أداء الفنيين • ولاء العملاء</p>
+  </div>
+  <a href="index.html" class="back-btn">← الرئيسية</a>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('map',this)">🗺️ خريطة</button>
+  <button class="tab" onclick="switchTab('techs',this)">👷 الفنيون</button>
+  <button class="tab" onclick="switchTab('loyalty',this)">⭐ الولاء</button>
+</div>
+
+<!-- TAB: MAP -->
+<div class="tab-content active" id="tab-map">
+  <div class="kpi-grid">
+    <div class="kpi blue"><div class="num" id="kpiTotal">0</div><div class="lbl">مواعيد اليوم</div></div>
+    <div class="kpi green"><div class="num" id="kpiDone">0</div><div class="lbl">مكتملة</div></div>
+    <div class="kpi orange"><div class="num" id="kpiPending">0</div><div class="lbl">في الانتظار</div></div>
+    <div class="kpi purple"><div class="num" id="kpiTechs">3</div><div class="lbl">فنيون نشطون</div></div>
+  </div>
+
+  <div class="map-container">
+    <div class="map-header">
+      <div>
+        <h3>🗺️ مواعيد اليوم</h3>
+        <div class="map-date" id="mapDate"></div>
+      </div>
+      <button class="tour-btn disabled" id="tourBtn" onclick="startTour()" disabled>
+        🚗 بدء الجولة
+      </button>
+    </div>
+    <!-- ملاحظة: الخريطة هي iframe وليست Google Maps JavaScript API
+         لذلك لا يمكن إضافة علامات برمجية متعددة عليها مباشرة.
+         الحل المستخدم: iframe يتركز على أول موعد / على جدة، + قائمة مواعيد جانبية
+         مع روابط Google Maps منفصلة لكل موعد وزر بدء الجولة -->
+    <div class="map-body">
+      <iframe id="mapFrame" src="about:blank"></iframe>
+      <div class="map-list-wrap">
+        <div id="mapList">
+          <div class="loading"><div class="spinner"></div><div>جاري تحميل المواعيد...</div></div>
+        </div>
       </div>
     </div>
-    <div class="header-date">
-      <strong id="currentDate">--</strong>
-      جدة، المملكة العربية السعودية
-    </div>
-  </div>
-</header>
-
-<!--
-  KPI مصادر البيانات:
-  1. kpiTodayAppts  → appointments + bookings  (فلترة d.date === today)
-  2. kpiNewBookings → bookings                 (حالة: pending أو new أو جديد فقط)
-  3. kpiOpenWOs     → workOrders               (حالة: open أو inprogress أو pending)
-  4. kpiTodayIncome → transactions             (تاريخ اليوم + type=income أو دخل)
-  5. kpiAvgRating   → reviews                  (متوسط rating أو stars)
-  عند الفشل: يُعرض — بدلاً من الانهيار
--->
-<div class="kpi-strip">
-  <div class="kpi-inner">
-    <div class="kpi-item">
-      <span class="kpi-val loading" id="kpiTodayAppts">…</span>
-      <div class="kpi-label">مواعيد اليوم</div>
-      <div class="kpi-sub" id="kpiTodaySub">من appointments + bookings</div>
-    </div>
-    <div class="kpi-item">
-      <span class="kpi-val loading" id="kpiNewBookings">…</span>
-      <div class="kpi-label">حجوزات جديدة</div>
-      <div class="kpi-sub">حالة: pending</div>
-    </div>
-    <div class="kpi-item">
-      <span class="kpi-val loading" id="kpiOpenWOs">…</span>
-      <div class="kpi-label">أوامر مفتوحة</div>
-      <div class="kpi-sub">open / inprogress</div>
-    </div>
-    <div class="kpi-item">
-      <span class="kpi-val loading" id="kpiTodayIncome">…</span>
-      <div class="kpi-label">دخل اليوم (ر.س)</div>
-      <div class="kpi-sub">transactions / income</div>
-    </div>
-    <div class="kpi-item">
-      <span class="kpi-val loading" id="kpiAvgRating">…</span>
-      <div class="kpi-label">متوسط التقييم</div>
-      <div class="kpi-sub">reviews.rating / 5</div>
+    <div id="noCoordsNotice" style="display:none;" class="no-coords">
+      ℹ️ لا توجد إحداثيات محفوظة لمواعيد اليوم
     </div>
   </div>
 </div>
 
-<main>
-
-  <!-- الوحدات الرئيسية -->
-  <p class="section-title">الوحدات الرئيسية</p>
-  <div class="modules-grid">
-
-    <a href="atwad-customers.html" class="module-card c1">
-      <div class="module-icon">👥</div>
-      <h3>إدارة العملاء</h3>
-      <p>عرض وإضافة وتعديل بيانات العملاء، والتواصل معهم عبر واتساب</p>
-      <span class="module-arrow">←</span>
-    </a>
-
-    <a href="atwad-booking.html" class="module-card c2">
-      <div class="module-icon">📅</div>
-      <h3>الحجوزات</h3>
-      <p>استقبال طلبات الحجز الجديدة وإدارة تفاصيل الخدمات المطلوبة</p>
-      <span class="module-arrow">←</span>
-    </a>
-
-    <a href="atwad-appointments.html" class="module-card c3">
-      <div class="module-icon">🗓️</div>
-      <h3>المواعيد</h3>
-      <p>جدولة المواعيد وتتبع حالتها ومنع التعارض في التوقيت</p>
-      <span class="module-arrow">←</span>
-    </a>
-
-    <a href="atwad-workorders.html" class="module-card c4">
-      <div class="module-icon">🔧</div>
-      <h3>أوامر العمل</h3>
-      <p>تتبع تنفيذ الخدمات الميدانية وتعيين الفنيين وإغلاق الأوامر</p>
-      <span class="module-arrow">←</span>
-    </a>
-
-    <a href="atwad-finance.html" class="module-card c5">
-      <div class="module-icon">💰</div>
-      <h3>الإدارة المالية</h3>
-      <p>تسجيل الإيرادات والمصروفات وعرض التقارير المالية الشاملة</p>
-      <span class="module-arrow">←</span>
-    </a>
-
-    <a href="atwad-reports.html" class="module-card c6">
-      <div class="module-icon">📊</div>
-      <h3>التقارير والإحصاء</h3>
-      <p>تحليلات الأداء والنمو والتقارير التشغيلية للمؤسسة</p>
-      <span class="module-arrow">←</span>
-    </a>
-
-    <a href="atwad-reviews.html" class="module-card c7">
-      <div class="module-icon">⭐</div>
-      <h3>آراء العملاء</h3>
-      <p>استعراض تقييمات العملاء وإضافة آراء جديدة لتطوير الخدمة</p>
-      <span class="module-arrow">←</span>
-    </a>
-
-    <a href="atwad-technician.html" class="module-card c8">
-      <div class="module-icon">👷</div>
-      <h3>صفحة الفني</h3>
-      <p>لوحة تحكم الفني الميداني — المواعيد والخريطة وإتمام الخدمة</p>
-      <span class="module-arrow">←</span>
-    </a>
-
-    <a href="atwad-analytics.html" class="module-card ca">
-      <div class="module-icon">🗺️</div>
-      <h3>التحليلات المتقدمة</h3>
-      <p>خريطة المواعيد وأداء الفنيين وبرنامج ولاء العملاء</p>
-      <span class="module-arrow">←</span>
-    </a>
-
-    <a href="atwad-backup.html" class="module-card c9">
-      <div class="module-icon">☁️</div>
-      <h3>النسخ الاحتياطي</h3>
-      <p>رفع جميع البيانات إلى Firebase وتنزيل نسخ Excel للحفظ الآمن</p>
-      <span class="module-arrow">←</span>
-    </a>
-
+<!-- TAB: TECH PERFORMANCE -->
+<div class="tab-content" id="tab-techs">
+  <p class="section-title">📈 أداء الفنيين — آخر 30 يوم</p>
+  <div id="techCards">
+    <div class="loading"><div class="spinner"></div><div>جاري التحميل...</div></div>
   </div>
+</div>
 
-  <!--
-    آخر النشاطات: أحدث 3 سجلات من bookings مرتبة بـ createdAt (تنازلياً)
-    لا يوجد collection جديد — نقرأ من bookings فقط
-  -->
-  <p class="section-title">آخر النشاطات</p>
-  <div class="activity-list" id="activityList">
-    <div class="act-empty">⏳ جاري تحميل النشاطات…</div>
+<!-- TAB: LOYALTY -->
+<div class="tab-content" id="tab-loyalty">
+  <div class="loyalty-search">
+    <input type="text" id="loyaltySearch" placeholder="🔍 ابحث باسم العميل أو رقمه..." oninput="searchLoyalty(this.value)">
   </div>
-
-  <!-- واتساب / QR -->
-  <div class="contact-row">
-    <div class="contact-qr">
-      <img src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=https://wa.me/966509720382"
-           alt="QR واتساب أطواد"
-           onerror="this.style.display='none'">
-      <div class="contact-qr-text">
-        <p>📲 احجز عبر واتساب مباشرة</p>
-        <small>امسح الكود أو اضغط الزر للتواصل الفوري</small>
-      </div>
-    </div>
-    <div class="contact-actions">
-      <a href="https://wa.me/966509720382" target="_blank" class="wa-btn">💬 تواصل الآن</a>
-      <a href="https://x.com/Mainten_Ac" target="_blank" class="social-btn" style="background:#000;color:#fff;">𝕏 تويتر</a>
-      <a href="https://www.snapchat.com/add/attwad23" target="_blank" class="social-btn" style="background:#FFFC00;color:#000;">👻 سناب</a>
-    </div>
+  <div id="loyaltyList">
+    <div class="loading"><div class="spinner"></div><div>جاري تحميل بيانات الولاء...</div></div>
   </div>
-
-</main>
-
-<footer>
-  <p>مؤسسة <strong>أطواد</strong> لصيانة المكيفات — جدة، المملكة العربية السعودية</p>
-  <p style="margin-top:4px;font-size:11px;">جميع الحقوق محفوظة © 2026</p>
-  <div><span class="ver-tag">ATTWAD ACMS v1.1 Preview</span></div>
-  <div class="footer-links">
-    <a href="atwad-customers.html">العملاء</a>
-    <a href="atwad-appointments.html">المواعيد</a>
-    <a href="atwad-workorders.html">أوامر العمل</a>
-    <a href="atwad-finance.html">المالية</a>
-    <a href="atwad-reports.html">التقارير</a>
-    <a href="atwad-backup.html">النسخ الاحتياطي</a>
-  </div>
-</footer>
-
-<!-- Firebase SDK — Compat 9.22.0 — يُحمَّل أولاً قبل أي كود يستخدم firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+</div>
 
 <script>
-// ===== التاريخ =====
-(function(){
-  var d = new Date();
-  var el = document.getElementById('currentDate');
-  if(el) el.textContent = d.toLocaleDateString('ar-SA',{
-    weekday:'long', year:'numeric', month:'long', day:'numeric'
-  });
-})();
-
-// ===== Firebase =====
+// ============================================================
+// Firebase — لا تغيير
+// ============================================================
 var db = null;
-var TODAY = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+try {
+  firebase.initializeApp({databaseURL:'https://atwad-booking-default-rtdb.firebaseio.com'});
+  db = firebase.database();
+} catch(e){ console.error('Firebase initialization error:', e); }
 
-if(typeof firebase === 'undefined'){
-  console.error('Firebase SDK failed to load');
-  setAllDash();
-} else {
-  try {
-    firebase.initializeApp({
-      databaseURL: 'https://atwad-booking-default-rtdb.firebaseio.com'
-    });
-    db = firebase.database();
-    loadAllKPIs();
-    loadActivities();
-  } catch(e){
-    console.error('Firebase init error:', e);
-    setAllDash();
+var allAppts = [], allWOs = [], allClients = [];
+var TECHS = {Abrar:'أبرار', Shoib:'شعيب', Suhail:'سهيل'};
+var TECH_COLORS = {Abrar:'#0EA5E9', Shoib:'#10B981', Suhail:'#8B5CF6'};
+
+// مواعيد اليوم المرتبة (مرجع عالمي للربط بين البطاقة والخريطة)
+var todayAppts = [];
+var selectedIdx = -1;
+
+// ============================================================
+// دوال مساعدة موحدة
+// ============================================================
+
+/**
+ * getCoordinates — استخراج إحداثيات صالحة من سجل
+ * تبحث بالترتيب في: lat/lng ← latitude/longitude ← location.lat/lng ← coordinates.lat/lng
+ * تُعيد {lat, lng} أو null
+ */
+function getCoordinates(record) {
+  if(!record) return null;
+  var pairs = [
+    [record.lat,       record.lng],
+    [record.latitude,  record.longitude],
+    [record.location  && record.location.lat,  record.location  && record.location.lng],
+    [record.coordinates && record.coordinates.lat, record.coordinates && record.coordinates.lng]
+  ];
+  for(var i = 0; i < pairs.length; i++) {
+    var lat = parseFloat(pairs[i][0]);
+    var lng = parseFloat(pairs[i][1]);
+    if(!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+      return {lat: lat, lng: lng};
+    }
   }
-}
-
-function setAllDash(){
-  ['kpiTodayAppts','kpiNewBookings','kpiOpenWOs','kpiTodayIncome','kpiAvgRating'].forEach(function(id){
-    var el = document.getElementById(id);
-    if(el){ el.textContent = '—'; el.classList.remove('loading'); }
-  });
-  document.getElementById('activityList').innerHTML =
-    '<div class="act-empty">⚠️ تعذّر الاتصال بقاعدة البيانات</div>';
-}
-
-function setKPI(id, val){
-  var el = document.getElementById(id);
-  if(el){ el.textContent = val; el.classList.remove('loading'); }
+  return null;
 }
 
 /**
- * toYMD — دالة موحدة لتحويل أي قيمة تاريخ إلى صيغة YYYY-MM-DD
- * تتعامل مع:
- *   - نص ISO   "2026-07-11T08:30:00.000Z"
- *   - نص بسيط "2026-07-11"
- *   - timestamp رقمي بالميلي ثانية  1752220800000
- *   - Firebase ServerTimestamp: كائن {.sv:"timestamp"} → يُعاد null
- * تُعيد null عند الفشل (لا تُطلق استثناءً)
+ * normalizeStatus — توحيد قيم الحالة إلى فئة واحدة
  */
-function toYMD(raw){
-  if(raw === null || raw === undefined) return null;
-  // Firebase ServerTimestamp placeholder قبل الكتابة الفعلية
-  if(typeof raw === 'object') return null;
-  // timestamp رقمي (milliseconds)
-  if(typeof raw === 'number'){
+function normalizeStatus(raw) {
+  var s = (raw || '').toString().toLowerCase().trim().replace(/[\s_-]/g,'');
+  if(s === 'done' || s === 'completed' || s === 'مكتمل' || s === 'منجز') return 'done';
+  if(s === 'ontheway' || s === 'onway' || s === 'enroute' || s === 'في الطريق') return 'onway';
+  if(s === 'inprogress' || s === 'inwork' || s === 'قيد التنفيذ' || s === 'جاري') return 'inprog';
+  if(s === 'late' || s === 'delayed' || s === 'متأخر') return 'late';
+  return 'new'; // pending / scheduled / جديد / بدون حالة → أزرق
+}
+
+var STATUS_LABELS = {done:'مكتمل', onway:'في الطريق', inprog:'قيد التنفيذ', late:'متأخر', new:'جديد'};
+var STATUS_CLASSES = {done:'s-done', onway:'s-onway', inprog:'s-inprog', late:'s-late', new:'s-new'};
+var STATUS_COLORS  = {done:'#10B981', onway:'#F59E0B', inprog:'#8B5CF6', late:'#EF4444', new:'#0EA5E9'};
+
+/**
+ * formatTime — تنسيق الوقت إلى صيغة 12 ساعة بالعربية
+ * تقبل: "10:00" | "10:00:00" | ISO string | timestamp | startTime/endTime | time | from/to
+ */
+function formatTime(record) {
+  // جمع حقول الوقت المحتملة
+  var startRaw = record.time || record.startTime || record.from || record.timeFrom || '';
+  var endRaw   = record.endTime || record.to || record.timeTo || '';
+
+  var startStr = parseTimeStr(startRaw);
+  var endStr   = endRaw ? parseTimeStr(endRaw) : null;
+
+  if(!startStr) return '—';
+  return endStr ? startStr + ' - ' + endStr : startStr;
+}
+
+function parseTimeStr(raw) {
+  if(!raw) return null;
+  // إذا كان timestamp رقمياً
+  if(typeof raw === 'number') {
     var d = new Date(raw);
-    if(isNaN(d.getTime())) return null;
-    return d.toISOString().substring(0, 10);
+    if(!isNaN(d.getTime())) return to12h(d.getHours(), d.getMinutes());
   }
   var s = String(raw).trim();
   if(!s) return null;
-  // إذا يبدأ بـ YYYY-MM-DD خذ أول 10 محارف مباشرة
-  if(/^\d{4}-\d{2}-\d{2}/.test(s)) return s.substring(0, 10);
-  // محاولة Parse عام
+  // HH:MM أو HH:MM:SS
+  var m = s.match(/^(\d{1,2}):(\d{2})/);
+  if(m) return to12h(parseInt(m[1]), parseInt(m[2]));
+  // ISO
   var d2 = new Date(s);
-  if(!isNaN(d2.getTime())) return d2.toISOString().substring(0, 10);
+  if(!isNaN(d2.getTime())) return to12h(d2.getHours(), d2.getMinutes());
   return null;
 }
 
-/** إيجاد أفضل حقل تاريخ من سجل وتحويله عبر toYMD */
-function recordDate(v, fields){
-  for(var i = 0; i < fields.length; i++){
-    var ymd = toYMD(v[fields[i]]);
-    if(ymd) return ymd;
-  }
-  return null;
+function to12h(h, m) {
+  var period = h >= 12 ? 'م' : 'ص';
+  var h12 = h % 12 || 12;
+  var mm = m < 10 ? '0'+m : m;
+  return h12 + ':' + mm + ' ' + period;
 }
 
-function loadAllKPIs(){
-  if(!db){ setAllDash(); return; }
-
-  // 1. مواعيد اليوم: appointments + bookings — يُفلتر بـ toYMD
-  Promise.all([
-    db.ref('appointments').once('value').catch(function(){ return null; }),
-    db.ref('bookings').once('value').catch(function(){ return null; })
-  ]).then(function(snaps){
-    var count = 0, done = 0;
-    snaps.forEach(function(snap){
-      if(!snap) return;
-      snap.forEach(function(c){
-        var v = c.val();
-        var ymd = recordDate(v, ['date','appointmentDate','createdAt']);
-        if(ymd === TODAY){
-          count++;
-          if(v.status === 'done' || v.status === 'completed') done++;
-        }
-      });
-    });
-    setKPI('kpiTodayAppts', count.toLocaleString('ar'));
-    var sub = document.getElementById('kpiTodaySub');
-    if(sub) sub.textContent = done + ' مكتمل';
-  }).catch(function(){ setKPI('kpiTodayAppts','—'); });
-
-  // 2. حجوزات جديدة: bookings — فقط الحالات الصريحة (pending / new / جديد)
-  //    الحجز الذي لا يحتوي على status لا يُحسب
-  db.ref('bookings').once('value').then(function(snap){
-    var n = 0;
-    snap.forEach(function(c){
-      var st = (c.val().status || '').trim().toLowerCase();
-      if(st === 'pending' || st === 'new' || st === 'جديد') n++;
-    });
-    setKPI('kpiNewBookings', n.toLocaleString('ar'));
-  }).catch(function(){ setKPI('kpiNewBookings','—'); });
-
-  // 3. أوامر مفتوحة: workOrders بحالة open أو inprogress
-  db.ref('workOrders').once('value').then(function(snap){
-    var n = 0;
-    snap.forEach(function(c){
-      var st = (c.val().status || '').trim().toLowerCase();
-      if(st === 'open' || st === 'inprogress' || st === 'pending' || st === 'مفتوح') n++;
-    });
-    setKPI('kpiOpenWOs', n.toLocaleString('ar'));
-  }).catch(function(){ setKPI('kpiOpenWOs','—'); });
-
-  // 4. دخل اليوم: transactions — يُفلتر بـ toYMD على date أو createdAt
-  db.ref('transactions').once('value').then(function(snap){
-    var total = 0;
-    snap.forEach(function(c){
-      var v = c.val();
-      var tp = (v.type || '').trim().toLowerCase();
-      var isIncome = tp === 'income' || tp === 'دخل' || tp === 'إيراد';
-      var ymd = recordDate(v, ['date','createdAt','timestamp']);
-      if(isIncome && ymd === TODAY) total += parseFloat(v.amount) || 0;
-    });
-    setKPI('kpiTodayIncome', total.toLocaleString('ar'));
-  }).catch(function(){ setKPI('kpiTodayIncome','—'); });
-
-  // 5. متوسط التقييم: reviews.rating أو reviews.stars
-  db.ref('reviews').once('value').then(function(snap){
-    var total = 0, count = 0;
-    snap.forEach(function(c){
-      var v = c.val();
-      var r = parseFloat(v.rating || v.stars || 0);
-      if(r > 0){ total += r; count++; }
-    });
-    setKPI('kpiAvgRating', count > 0 ? (total / count).toFixed(1) + ' ⭐' : '—');
-  }).catch(function(){ setKPI('kpiAvgRating','—'); });
+/**
+ * toWaNumber — تحويل رقم سعودي إلى صيغة دولية
+ */
+function toWaNumber(phone) {
+  if(!phone) return null;
+  var s = String(phone).replace(/\D/g,'');
+  if(s.startsWith('05') && s.length === 10) return '966' + s.substring(1);
+  if(s.startsWith('5') && s.length === 9) return '966' + s;
+  if(s.startsWith('966')) return s;
+  return s;
 }
 
-// آخر 3 حجوزات من bookings — التاريخ المعروض عبر toYMD
-function loadActivities(){
-  if(!db){
-    document.getElementById('activityList').innerHTML =
-      '<div class="act-empty">⚠️ غير متصل بقاعدة البيانات</div>';
+/**
+ * sortByTime — مقارنة للترتيب التصاعدي حسب الوقت
+ */
+function timeKey(a) {
+  var raw = a.time || a.startTime || a.from || '';
+  if(!raw) return 'Z'; // بلا وقت → نهاية القائمة
+  if(typeof raw === 'number') return String(raw).padStart(15,'0');
+  var m = String(raw).match(/^(\d{1,2}):(\d{2})/);
+  if(m) return ('0'+m[1]).slice(-2) + ':' + m[2];
+  return String(raw);
+}
+
+// ============================================================
+// تحميل البيانات
+// ============================================================
+function loadAll() {
+  if(!db) {
+    console.error('Firebase not initialized — cannot load data');
+    document.getElementById('mapList').innerHTML   = '<div class="empty">⚠️ تعذّر الاتصال بقاعدة البيانات</div>';
+    document.getElementById('techCards').innerHTML  = '<div class="empty">⚠️ تعذّر الاتصال بقاعدة البيانات</div>';
+    document.getElementById('loyaltyList').innerHTML = '<div class="empty">⚠️ تعذّر الاتصال بقاعدة البيانات</div>';
     return;
   }
-  db.ref('bookings').orderByChild('createdAt').limitToLast(5).once('value').then(function(snap){
-    var items = [];
-    snap.forEach(function(c){ items.unshift({ _k: c.key, _v: c.val() }); });
-    items = items.slice(0, 3);
 
-    if(!items.length){
-      document.getElementById('activityList').innerHTML =
-        '<div class="act-empty">📋 لا توجد حجوزات بعد</div>';
-      return;
-    }
+  var today = new Date().toISOString().split('T')[0];
+  document.getElementById('mapDate').textContent =
+    new Date().toLocaleDateString('ar-SA',{weekday:'long', month:'long', day:'numeric'});
 
-    var html = items.map(function(item){
-      var v = item._v;
-      var name    = v.client || v.name || v.customerName || '—';
-      var service = v.service || v.serviceType || '';
-      var st      = v.status || '—';
+  // appointments + bookings
+  var mapListEl = document.getElementById('mapList');
+  db.ref('appointments').once('value').then(function(snap) {
+    allAppts = [];
+    snap.forEach(function(c){ allAppts.push(Object.assign({}, c.val(), {_key:c.key})); });
+    return db.ref('bookings').once('value');
+  }).then(function(snap2) {
+    snap2.forEach(function(c){ allAppts.push(Object.assign({}, c.val(), {_key:c.key, _src:'booking'})); });
+    renderMap(today);
+  }).catch(function(e) {
+    console.error('Firebase read error (appointments/bookings):', e);
+    mapListEl.innerHTML = '<div class="empty">⚠️ تعذّر تحميل المواعيد، يرجى المحاولة مرة أخرى</div>';
+  });
 
-      // تحويل التاريخ عبر الدالة الموحدة toYMD → عرض مقروء
-      var rawDate = v.createdAt || v.date || v.appointmentDate || null;
-      var dateStr = '—';
-      if(rawDate !== null && rawDate !== undefined){
-        // للعرض نحتاج كائن Date لا YYYY-MM-DD فقط
-        var dt = null;
-        if(typeof rawDate === 'number'){
-          dt = new Date(rawDate);
-        } else if(typeof rawDate === 'string' && rawDate.trim()){
-          dt = new Date(rawDate);
-        }
-        if(dt && !isNaN(dt.getTime())){
-          try{
-            dateStr = dt.toLocaleString('ar-SA',{
-              month:'short', day:'numeric',
-              hour:'2-digit', minute:'2-digit'
-            });
-          } catch(e){
-            // fallback: YYYY-MM-DD من toYMD
-            dateStr = toYMD(rawDate) || '—';
-          }
-        } else {
-          // لا يمكن Parse → اعرض YYYY-MM-DD
-          dateStr = toYMD(rawDate) || '—';
-        }
-      }
+  // workOrders
+  db.ref('workOrders').once('value').then(function(snap) {
+    allWOs = [];
+    snap.forEach(function(c){ allWOs.push(Object.assign({}, c.val(), {_key:c.key})); });
+    renderTechs();
+  }).catch(function(e) {
+    console.error('Firebase read error (workOrders):', e);
+    document.getElementById('techCards').innerHTML =
+      '<div class="empty">⚠️ تعذّر تحميل بيانات الفنيين، يرجى المحاولة مرة أخرى</div>';
+  });
 
-      return '<a href="atwad-appointments.html" class="act-item">' +
-        '<div class="act-icon">📋</div>' +
-        '<div class="act-body">' +
-          '<div class="act-type">حجز</div>' +
-          '<div class="act-name">' + name + (service ? ' — ' + service : '') + '</div>' +
-          '<div class="act-meta">🕐 ' + dateStr + '</div>' +
-        '</div>' +
-        '<span class="act-status">' + st + '</span>' +
-        '</a>';
-    }).join('');
-    document.getElementById('activityList').innerHTML = html;
-  }).catch(function(){
-    document.getElementById('activityList').innerHTML =
-      '<div class="act-empty">⚠️ تعذّر تحميل النشاطات</div>';
+  // customers
+  db.ref('customers').once('value').then(function(snap) {
+    allClients = [];
+    snap.forEach(function(c){ allClients.push(Object.assign({}, c.val(), {_key:c.key})); });
+    renderLoyalty('');
+  }).catch(function(e) {
+    console.error('Firebase read error (customers):', e);
+    document.getElementById('loyaltyList').innerHTML =
+      '<div class="empty">⚠️ تعذّر تحميل بيانات العملاء، يرجى المحاولة مرة أخرى</div>';
   });
 }
+
+// ============================================================
+// 🗺️ خريطة المواعيد — محسّنة
+// ============================================================
+function renderMap(today) {
+  // فلترة مواعيد اليوم + ترتيب تصاعدي بالوقت
+  todayAppts = allAppts
+    .filter(function(a){ return a.date === today; })
+    .sort(function(a,b){ return timeKey(a).localeCompare(timeKey(b)); });
+
+  // KPIs
+  document.getElementById('kpiTotal').textContent   = todayAppts.length;
+  document.getElementById('kpiDone').textContent    = todayAppts.filter(function(a){ return normalizeStatus(a.status)==='done'; }).length;
+  document.getElementById('kpiPending').textContent = todayAppts.filter(function(a){
+    var s = normalizeStatus(a.status);
+    return s === 'new' || s === 'onway' || s === 'inprog';
+  }).length;
+
+  // إحداثيات صالحة
+  var withCoords = todayAppts.map(function(a, i){
+    return {appt:a, idx:i, coords: getCoordinates(a)};
+  }).filter(function(x){ return x.coords !== null; });
+
+  // ===== IFRAME =====
+  // الخريطة iframe — لا تدعم علامات برمجية متعددة.
+  // الحل: إذا وجد موعد بإحداثيات، نركز على أول موعد.
+  // إذا لا توجد إحداثيات، نعرض جدة العامة.
+  var noCoordsEl = document.getElementById('noCoordsNotice');
+  if(withCoords.length > 0) {
+    var first = withCoords[0].coords;
+    document.getElementById('mapFrame').src =
+      'https://maps.google.com/maps?q='+first.lat+','+first.lng+'&output=embed&z=14';
+    noCoordsEl.style.display = 'none';
+  } else {
+    document.getElementById('mapFrame').src =
+      'https://maps.google.com/maps?q='+encodeURIComponent('جدة، المملكة العربية السعودية')+'&output=embed&z=12';
+    if(todayAppts.length > 0) noCoordsEl.style.display = 'block';
+    else noCoordsEl.style.display = 'none';
+  }
+
+  // ===== زر بدء الجولة =====
+  var tourBtn = document.getElementById('tourBtn');
+  if(withCoords.length === 0) {
+    tourBtn.disabled = true;
+    tourBtn.className = 'tour-btn disabled';
+    tourBtn.title = 'لا توجد مواقع كافية لبدء الجولة';
+  } else {
+    tourBtn.disabled = false;
+    tourBtn.className = 'tour-btn active';
+    tourBtn.title = 'بدء الجولة عبر خرائط Google';
+  }
+
+  // ===== قائمة المواعيد =====
+  var list = document.getElementById('mapList');
+
+  if(todayAppts.length === 0) {
+    list.innerHTML = '<div class="empty">📅 لا توجد مواعيد اليوم</div>';
+    return;
+  }
+
+  var html = '<div style="padding:8px 12px 4px;font-size:11px;font-weight:700;color:var(--mist);">'+
+    '📋 قائمة المواعيد ('+todayAppts.length+')</div>';
+
+  html += todayAppts.map(function(a, idx) {
+    var st    = normalizeStatus(a.status);
+    var color = STATUS_COLORS[st];
+    var label = STATUS_LABELS[st];
+    var cls   = STATUS_CLASSES[st];
+    var timeStr = formatTime(a);
+    var coords  = getCoordinates(a);
+    var phone   = a.phone || a.mobile || a.tel || '';
+    var waNum   = toWaNumber(phone);
+    var techName = TECHS[a.tech] || a.tech || '';
+    var location = a.address || a.city || a.area || '';
+
+    // رابط Google Maps
+    var mapsUrl = coords
+      ? 'https://www.google.com/maps?q='+coords.lat+','+coords.lng
+      : (a.mapsLink || (location ? 'https://maps.google.com?q='+encodeURIComponent(location) : null));
+
+    var actBtns = '';
+    if(phone) {
+      actBtns += '<a class="act-btn btn-call" href="tel:'+phone+'">📞 اتصال</a>';
+    }
+    if(waNum) {
+      actBtns += '<a class="act-btn btn-wa" href="https://wa.me/'+waNum+'" target="_blank">💬 واتساب</a>';
+    }
+    if(mapsUrl) {
+      actBtns += '<a class="act-btn btn-map" href="'+mapsUrl+'" target="_blank">📍 الموقع</a>';
+    }
+
+    // عند الضغط على البطاقة: إذا وجدت إحداثيات، حرّك الخريطة إليها
+    var onClickAttr = 'onclick="selectCard('+idx+')"';
+
+    return '<div class="appt-card" id="card-'+idx+'" '+onClickAttr+'>' +
+      '<div class="appt-row1">' +
+        '<div class="appt-num" style="background:'+color+'">'+( idx+1)+'</div>' +
+        '<div class="appt-name">'+(a.client || a.customerName || '—')+'</div>' +
+        '<div class="appt-time">'+timeStr+'</div>' +
+      '</div>' +
+      '<div class="appt-row2">' +
+        (a.service ? '<span class="appt-service">🛠️ '+(a.service)+'</span>' : '') +
+        (location  ? '<span class="appt-location">📍 '+location+'</span>' : '') +
+        (techName  ? '<span class="appt-tech">👷 '+techName+'</span>' : '') +
+      '</div>' +
+      '<div class="appt-row3">' +
+        '<span class="status-badge '+cls+'">'+label+'</span>' +
+        (phone ? '<span class="appt-phone">📱 '+phone+'</span>' : '') +
+      '</div>' +
+      (actBtns ? '<div class="appt-actions">'+actBtns+'</div>' : '') +
+      '</div>';
+  }).join('');
+
+  list.innerHTML = html;
+}
+
+// ============================================================
+// selectCard — ربط البطاقة بالخريطة
+// ============================================================
+function selectCard(idx) {
+  // إلغاء تمييز البطاقة السابقة
+  if(selectedIdx >= 0) {
+    var prev = document.getElementById('card-'+selectedIdx);
+    if(prev) prev.classList.remove('selected');
+  }
+  selectedIdx = idx;
+  var card = document.getElementById('card-'+idx);
+  if(card) card.classList.add('selected');
+
+  // تحريك الخريطة إلى إحداثيات الموعد إن وجدت
+  var a = todayAppts[idx];
+  if(!a) return;
+  var coords = getCoordinates(a);
+  if(coords) {
+    document.getElementById('mapFrame').src =
+      'https://maps.google.com/maps?q='+coords.lat+','+coords.lng+'&output=embed&z=16';
+  }
+}
+
+// ============================================================
+// زر بدء الجولة
+// ============================================================
+function startTour() {
+  // جمع المواعيد التي لها إحداثيات، بترتيبها
+  var pts = todayAppts.map(function(a){ return getCoordinates(a); }).filter(Boolean);
+
+  if(pts.length === 0) {
+    alert('لا توجد مواقع كافية لبدء الجولة');
+    return;
+  }
+
+  if(pts.length === 1) {
+    // موقع واحد فقط — افتح كوجهة مباشرة
+    window.open('https://www.google.com/maps?q='+pts[0].lat+','+pts[0].lng, '_blank');
+    return;
+  }
+
+  // Google Maps Directions:
+  // origin = أول موعد، destination = آخر موعد
+  // waypoints = المواعيد الوسطية
+  // تحذير: Google Maps يقبل حداً أقصى من 10 waypoints للمستخدم العادي.
+  // نأخذ حداً أقصى 8 waypoints (بين origin و destination) لتجنب تجاوز الحد.
+  var MAX_WAYPOINTS = 8; // حد Google Maps للمستخدم العادي
+  var origin      = pts[0].lat+','+pts[0].lng;
+  var destination = pts[pts.length-1].lat+','+pts[pts.length-1].lng;
+  var middle      = pts.slice(1, pts.length-1).slice(0, MAX_WAYPOINTS);
+  var waypointStr = middle.map(function(p){ return p.lat+','+p.lng; }).join('|');
+
+  var url = 'https://www.google.com/maps/dir/?api=1' +
+    '&origin='+encodeURIComponent(origin) +
+    '&destination='+encodeURIComponent(destination) +
+    (waypointStr ? '&waypoints='+encodeURIComponent(waypointStr) : '') +
+    '&travelmode=driving';
+
+  window.open(url, '_blank');
+}
+
+// ============================================================
+// 👷 أداء الفنيين — بدون تغيير
+// ============================================================
+function renderTechs() {
+  var cards = document.getElementById('techCards');
+  var thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate()-30);
+  var since = thirtyDaysAgo.toISOString().split('T')[0];
+
+  var techData = {};
+  ['Abrar','Shoib','Suhail'].forEach(function(t) {
+    techData[t] = {total:0, done:0, revenue:0, ratings:[], appts:0};
+  });
+
+  allWOs.forEach(function(w) {
+    if(!w.tech || !techData[w.tech]) return;
+    if(w.date && w.date >= since) {
+      techData[w.tech].total++;
+      if(w.status==='done'||w.status==='invoiced') {
+        techData[w.tech].done++;
+        var price = parseFloat(w.price)||0;
+        var parts = parseFloat(w.partsCost)||0;
+        var disc  = parseFloat(w.discount)||0;
+        techData[w.tech].revenue += Math.max(0, price+parts-disc);
+      }
+      if(w.rating) techData[w.tech].ratings.push(parseFloat(w.rating));
+    }
+  });
+
+  allAppts.forEach(function(a) {
+    if(!a.tech || !techData[a.tech]) return;
+    if(a.date && a.date >= since) techData[a.tech].appts++;
+  });
+
+  cards.innerHTML = ['Abrar','Shoib','Suhail'].map(function(t) {
+    var d = techData[t];
+    var avgRating = d.ratings.length
+      ? (d.ratings.reduce(function(s,r){return s+r;},0)/d.ratings.length).toFixed(1) : '—';
+    var completionRate = d.total ? Math.round((d.done/d.total)*100) : 0;
+    var stars = avgRating !== '—'
+      ? '★'.repeat(Math.round(avgRating))+'☆'.repeat(5-Math.round(avgRating)) : '—';
+    return '<div class="tech-card">' +
+      '<div class="tech-header">' +
+        '<div class="tech-avatar" style="background:'+TECH_COLORS[t]+'">'+TECHS[t][0]+'</div>' +
+        '<div><div class="tech-name">'+TECHS[t]+'</div><div class="tech-role">فني ميداني • آخر 30 يوم</div></div>' +
+      '</div>' +
+      '<div class="tech-stats">' +
+        '<div class="tech-stat"><div class="n">'+d.appts+'</div><div class="l">المواعيد</div></div>' +
+        '<div class="tech-stat"><div class="n">'+d.done+'</div><div class="l">المكتملة</div></div>' +
+        '<div class="tech-stat"><div class="n">'+d.revenue.toLocaleString('ar')+'</div><div class="l">ريال</div></div>' +
+      '</div>' +
+      '<div style="margin-top:12px;">' +
+        '<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--mist);margin-bottom:4px;"><span>معدل الإنجاز</span><span>'+completionRate+'%</span></div>' +
+        '<div class="progress-bar"><div class="progress-fill" style="width:'+completionRate+'%;background:'+TECH_COLORS[t]+'"></div></div>' +
+      '</div>' +
+      '<div style="margin-top:10px;display:flex;justify-content:space-between;align-items:center;">' +
+        '<span style="font-size:12px;color:var(--mist);">متوسط التقييم</span>' +
+        '<span style="color:#F59E0B;font-size:14px;">'+(avgRating!=='—'?stars+' '+avgRating:'لا توجد تقييمات')+'</span>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+// ============================================================
+// ⭐ ولاء العملاء — بدون تغيير
+// ============================================================
+function calcPoints(client) {
+  var clientWOs = allWOs.filter(function(w){
+    return w.client && (w.client.includes(client.name)||w.phone===client.phone);
+  });
+  var points = 0, history = [];
+  clientWOs.forEach(function(w) {
+    if(w.status==='done'||w.status==='invoiced') {
+      var price = parseFloat(w.price)||0;
+      var earned = Math.floor(price/10);
+      points += earned;
+      history.push({date:w.date||'—', service:w.service||'—', earned:earned});
+    }
+  });
+  return {points:points, history:history.slice(-5).reverse()};
+}
+
+function getTier(points) {
+  if(points >= 500) return {name:'بلاتيني 💎', class:'tier-platinum', min:500, max:1000};
+  if(points >= 200) return {name:'ذهبي 🥇',   class:'tier-gold',     min:200, max:500};
+  if(points >= 50)  return {name:'فضي 🥈',     class:'tier-silver',   min:50,  max:200};
+  return {name:'برونزي 🥉', class:'tier-bronze', min:0, max:50};
+}
+
+function renderLoyalty(search) {
+  var list = document.getElementById('loyaltyList');
+  var clients = allClients;
+  if(search) {
+    search = search.toLowerCase();
+    clients = clients.filter(function(c){
+      return (c.name||'').toLowerCase().includes(search)||(c.phone||'').includes(search);
+    });
+  }
+  var withPoints = clients.map(function(c){
+    var p = calcPoints(c);
+    return Object.assign({}, c, {points:p.points, history:p.history});
+  }).sort(function(a,b){return b.points-a.points;}).slice(0,20);
+
+  if(withPoints.length === 0) {
+    list.innerHTML = '<div class="empty">👥 لا توجد نتائج</div>';
+    return;
+  }
+
+  list.innerHTML = withPoints.map(function(c,idx) {
+    var tier = getTier(c.points);
+    var tierProgress = Math.min(100, Math.round(((c.points-tier.min)/(tier.max-tier.min))*100));
+    return '<div class="client-loyalty">' +
+      '<div class="loyalty-header">' +
+        '<div>' +
+          (idx<3?['🥇','🥈','🥉'][idx]+' ':'') +
+          '<span class="loyalty-name">'+(c.name||'—')+'</span>' +
+          '<div style="font-size:11px;color:var(--mist);margin-top:2px;">📱 '+(c.phone||'—')+'</div>' +
+        '</div>' +
+        '<span class="loyalty-tier '+tier.class+'">'+tier.name+'</span>' +
+      '</div>' +
+      '<div class="points-display">' +
+        '<div class="points-num">'+c.points.toLocaleString('ar')+'</div>' +
+        '<div class="points-lbl">نقطة مكافأة</div>' +
+      '</div>' +
+      '<div style="margin-bottom:10px;">' +
+        '<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--mist);margin-bottom:4px;">' +
+          '<span>التقدم نحو المستوى التالي</span><span>'+tierProgress+'%</span>' +
+        '</div>' +
+        '<div class="progress-bar"><div class="progress-fill" style="width:'+tierProgress+'%;background:linear-gradient(90deg,var(--warning),var(--success))"></div></div>' +
+      '</div>' +
+      (c.history.length>0 ? '<div class="loyalty-history">' +
+        '<div style="font-size:12px;font-weight:700;color:var(--slate);margin-bottom:6px;">آخر المعاملات</div>' +
+        c.history.map(function(h){ return '<div class="history-item"><span>'+(h.service||'—')+'</span><span style="color:var(--success);font-weight:700;">+'+h.earned+' نقطة</span></div>'; }).join('') +
+        '</div>' : '') +
+    '</div>';
+  }).join('');
+}
+
+function searchLoyalty(val) { renderLoyalty(val); }
+
+// ============================================================
+// TABS — بدون تغيير
+// ============================================================
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
+  document.querySelectorAll('.tab-content').forEach(function(t){t.classList.remove('active');});
+  btn.classList.add('active');
+  document.getElementById('tab-'+id).classList.add('active');
+}
+
+// تشغيل
+loadAll();
 </script>
 </body>
 </html>
