@@ -476,7 +476,16 @@ function next1(){
 
 // ===== رابط الموقع =====
 function validateMapsLink(val){
-  var link=val.trim();
+  var raw=val.trim();
+  // استخراج الرابط النظيف فقط — أول URL يبدأ بـ http
+  var urlMatch = raw.match(/(https?:\/\/[^\s]+)/);
+  var link = urlMatch ? urlMatch[1] : raw;
+  // تنظيف أي نص إضافي بعد الرابط
+  link = link.split(' ')[0].split('\n')[0];
+  // تحديث خانة الإدخال بالرابط النظيف
+  if(urlMatch && link !== raw) {
+    document.getElementById('f_maps_link').value = link;
+  }
   var ok=document.getElementById('maps-ok');
   var err=document.getElementById('e_addr');
   var isValid=link.length>10&&(link.includes('maps.app.goo.gl')||link.includes('google.com/maps')||link.includes('goo.gl/maps')||link.includes('maps.google'));
