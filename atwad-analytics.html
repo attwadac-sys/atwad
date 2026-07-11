@@ -149,7 +149,7 @@ var db = null;
 try {
   firebase.initializeApp({databaseURL:"https://atwad-booking-default-rtdb.firebaseio.com"});
   db = firebase.database();
-} catch(e){}
+} catch(e){ console.error('Firebase initialization error:', e); }
 
 var allAppts = [], allWOs = [], allClients = [];
 var TECHS = {Abrar:'أبرار', Shoib:'شعيب', Suhail:'سهيل'};
@@ -157,32 +157,53 @@ var TECH_COLORS = {Abrar:'#0EA5E9', Shoib:'#10B981', Suhail:'#8B5CF6'};
 
 // ===== تحميل البيانات =====
 function loadAll() {
-  if(!db) return;
+  if(!db) {
+    console.error('Firebase not initialized — cannot load data');
+    document.getElementById('mapList').innerHTML =
+      '<div class="empty">⚠️ تعذّر الاتصال بقاعدة البيانات</div>';
+    document.getElementById('techCards').innerHTML =
+      '<div class="empty">⚠️ تعذّر الاتصال بقاعدة البيانات</div>';
+    document.getElementById('loyaltyList').innerHTML =
+      '<div class="empty">⚠️ تعذّر الاتصال بقاعدة البيانات</div>';
+    return;
+  }
   var today = new Date().toISOString().split('T')[0];
   document.getElementById('mapDate').textContent = new Date().toLocaleDateString('ar-SA',{weekday:'long',month:'long',day:'numeric'});
 
-  // تحميل المواعيد
-  db.ref('appointments').once('value', function(snap) {
+  // تحميل المواعيد من appointments + bookings مع معالجة أخطاء واضحة
+  var mapListEl = document.getElementById('mapList');
+  db.ref('appointments').once('value').then(function(snap) {
     allAppts = [];
-    snap.forEach(function(c){ allAppts.push({...c.val(), _key:c.key}); });
-    db.ref('bookings').once('value', function(snap2) {
-      snap2.forEach(function(c){ allAppts.push({...c.val(), _key:c.key, _src:'booking'}); });
-      renderMap(today);
-    });
+    snap.forEach(function(c){ allAppts.push(Object.assign({}, c.val(), {_key:c.key})); });
+    return db.ref('bookings').once('value');
+  }).then(function(snap2) {
+    snap2.forEach(function(c){ allAppts.push(Object.assign({}, c.val(), {_key:c.key, _src:'booking'})); });
+    renderMap(today);
+  }).catch(function(e) {
+    console.error('Firebase read error (appointments/bookings):', e);
+    mapListEl.innerHTML = '<div class="empty">⚠️ تعذّر تحميل المواعيد، يرجى المحاولة مرة أخرى</div>';
   });
 
   // تحميل أوامر العمل
-  db.ref('workOrders').once('value', function(snap) {
+  db.ref('workOrders').once('value').then(function(snap) {
     allWOs = [];
-    snap.forEach(function(c){ allWOs.push({...c.val(), _key:c.key}); });
+    snap.forEach(function(c){ allWOs.push(Object.assign({}, c.val(), {_key:c.key})); });
     renderTechs();
+  }).catch(function(e) {
+    console.error('Firebase read error (workOrders):', e);
+    document.getElementById('techCards').innerHTML =
+      '<div class="empty">⚠️ تعذّر تحميل بيانات الفنيين، يرجى المحاولة مرة أخرى</div>';
   });
 
   // تحميل العملاء
-  db.ref('customers').once('value', function(snap) {
+  db.ref('customers').once('value').then(function(snap) {
     allClients = [];
-    snap.forEach(function(c){ allClients.push({...c.val(), _key:c.key}); });
+    snap.forEach(function(c){ allClients.push(Object.assign({}, c.val(), {_key:c.key})); });
     renderLoyalty('');
+  }).catch(function(e) {
+    console.error('Firebase read error (customers):', e);
+    document.getElementById('loyaltyList').innerHTML =
+      '<div class="empty">⚠️ تعذّر تحميل بيانات العملاء، يرجى المحاولة مرة أخرى</div>';
   });
 }
 
@@ -217,7 +238,6 @@ function renderMap(today) {
 
   list.innerHTML = '<p class="section-title" style="padding:8px 0 4px;">📋 قائمة المواعيد</p>' +
     todayAppts.map(function(a, idx) {
-      var tc = TECH_COLORS[a.tech]||var(--sky);
       var mapsUrl = a.mapsLink || ('https://maps.google.com?q='+encodeURIComponent(a.address||a.city||'جدة'));
       return '<div class="map-appt" onclick="window.open(\''+mapsUrl+'\',\'_blank\')">' +
         '<div class="map-num" style="background:'+( TECH_COLORS[a.tech]||'#0EA5E9')+'">'+((idx+1))+'</div>' +
@@ -330,7 +350,7 @@ function renderLoyalty(search) {
   // فرز بالنقاط
   var withPoints = clients.map(function(c){
     var p = calcPoints(c);
-    return {...c, points:p.points, history:p.history};
+    return Object.assign({}, c, {points:p.points, history:p.history});
   }).sort(function(a,b){return b.points-a.points;}).slice(0,20);
 
   if(withPoints.length === 0) {
