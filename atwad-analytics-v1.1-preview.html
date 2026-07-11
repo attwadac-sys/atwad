@@ -52,13 +52,35 @@ body{font-family:'Cairo',sans-serif;background:#F1F5F9;color:var(--slate);}
 .tour-btn.active{background:#10B981;color:#fff;}
 .tour-btn.disabled{background:rgba(255,255,255,.15);color:rgba(255,255,255,.5);cursor:not-allowed;border:1px solid rgba(255,255,255,.2);}
 
-/* MAP SPLIT LAYOUT */
-.map-body{display:flex;gap:0;}
-#mapFrame{width:50%;height:420px;border:none;flex-shrink:0;}
-.map-list-wrap{flex:1;overflow-y:auto;max-height:420px;border-right:1px solid var(--ice);}
+/* MAP SPLIT LAYOUT — قائمة 35% (يمين RTL) | خريطة 65% (يسار) */
+.map-body{
+  display:grid;
+  grid-template-columns:minmax(280px,35%) 1fr;
+  gap:0;
+  min-height:560px;
+}
+/* في RTL: العمود الأول = القائمة (يمين)، العمود الثاني = الخريطة (يسار) */
+.map-list-wrap{
+  overflow-y:auto;
+  height:560px;
+  border-left:1px solid var(--ice);
+}
+#mapFrame{
+  width:100%;
+  height:560px;
+  border:0;
+  display:block;
+}
+
+/* مؤشر الموعد المختار */
+#mapSelectedLabel{
+  font-size:11px;color:var(--mist);padding:5px 12px;
+  background:var(--frost);border-bottom:1px solid var(--ice);
+  display:none;min-height:26px;
+}
 
 /* no-coords notice */
-.no-coords{font-size:11px;color:var(--mist);padding:8px 16px 4px;text-align:center;font-style:italic;}
+.no-coords{font-size:11px;color:var(--mist);padding:6px 16px;text-align:center;font-style:italic;border-top:1px solid var(--ice);}
 
 /* APPOINTMENT CARDS (compact) */
 .appt-card{padding:10px 12px;border-bottom:1px solid var(--ice);cursor:pointer;transition:background .15s;position:relative;}
@@ -135,11 +157,19 @@ body{font-family:'Cairo',sans-serif;background:#F1F5F9;color:var(--slate);}
 .empty{text-align:center;padding:30px;color:var(--mist);font-size:13px;}
 .section-title{font-size:15px;font-weight:800;color:var(--deep);margin-bottom:12px;}
 
-/* RESPONSIVE: على الجوال الخريطة فوق والقائمة تحتها */
-@media(max-width:640px){
-  .map-body{flex-direction:column;}
-  #mapFrame{width:100%;height:240px;}
-  .map-list-wrap{max-height:none;border-right:none;border-top:1px solid var(--ice);}
+/* RESPONSIVE: جوال/لوحي — الخريطة فوق، القائمة تحتها */
+@media(max-width:900px){
+  .map-body{
+    grid-template-columns:1fr;
+    min-height:auto;
+  }
+  #mapFrame{height:350px;}
+  .map-list-wrap{
+    height:auto;
+    max-height:420px;
+    border-left:none;
+    border-top:1px solid var(--ice);
+  }
 }
 </style>
 </head>
@@ -171,24 +201,26 @@ body{font-family:'Cairo',sans-serif;background:#F1F5F9;color:var(--slate);}
   <div class="map-container">
     <div class="map-header">
       <div>
-        <h3>🗺️ مواعيد اليوم</h3>
+        <h3>🗺️ مواعيد اليوم على الخريطة</h3>
         <div class="map-date" id="mapDate"></div>
       </div>
+      <!-- زر بدء الجولة — واحد فقط، يُحدَّث عبر JS ولا يُعاد إنشاؤه -->
       <button class="tour-btn disabled" id="tourBtn" onclick="startTour()" disabled>
-        🚗 بدء الجولة
+        لا توجد مواقع للجولة
       </button>
     </div>
-    <!-- ملاحظة: الخريطة هي iframe وليست Google Maps JavaScript API
-         لذلك لا يمكن إضافة علامات برمجية متعددة عليها مباشرة.
-         الحل المستخدم: iframe يتركز على أول موعد / على جدة، + قائمة مواعيد جانبية
-         مع روابط Google Maps منفصلة لكل موعد وزر بدء الجولة -->
+    <!-- ملاحظة تقنية: الخريطة iframe وليست Google Maps JavaScript API.
+         لذلك لا يمكن إضافة علامات برمجية متعددة.
+         الحل: تغيير src الـ iframe عند اختيار موعد، + قائمة بطاقات جانبية
+         مع روابط Google Maps منفصلة وزر بدء الجولة. -->
+    <div id="mapSelectedLabel"></div>
     <div class="map-body">
-      <iframe id="mapFrame" src="about:blank"></iframe>
       <div class="map-list-wrap">
         <div id="mapList">
           <div class="loading"><div class="spinner"></div><div>جاري تحميل المواعيد...</div></div>
         </div>
       </div>
+      <iframe id="mapFrame" src="about:blank"></iframe>
     </div>
     <div id="noCoordsNotice" style="display:none;" class="no-coords">
       ℹ️ لا توجد إحداثيات محفوظة لمواعيد اليوم
@@ -394,7 +426,7 @@ function loadAll() {
 }
 
 // ============================================================
-// 🗺️ خريطة المواعيد — محسّنة
+// 🗺️ خريطة المواعيد
 // ============================================================
 function renderMap(today) {
   // فلترة مواعيد اليوم + ترتيب تصاعدي بالوقت
@@ -417,8 +449,8 @@ function renderMap(today) {
 
   // ===== IFRAME =====
   // الخريطة iframe — لا تدعم علامات برمجية متعددة.
-  // الحل: إذا وجد موعد بإحداثيات، نركز على أول موعد.
-  // إذا لا توجد إحداثيات، نعرض جدة العامة.
+  // عند التحميل الأول: نركز على أول موعد له إحداثيات، أو على جدة.
+  // عند اختيار بطاقة: تتغير الإحداثيات عبر selectCard().
   var noCoordsEl = document.getElementById('noCoordsNotice');
   if(withCoords.length > 0) {
     var first = withCoords[0].coords;
@@ -428,23 +460,28 @@ function renderMap(today) {
   } else {
     document.getElementById('mapFrame').src =
       'https://maps.google.com/maps?q='+encodeURIComponent('جدة، المملكة العربية السعودية')+'&output=embed&z=12';
-    if(todayAppts.length > 0) noCoordsEl.style.display = 'block';
-    else noCoordsEl.style.display = 'none';
+    noCoordsEl.style.display = todayAppts.length > 0 ? 'block' : 'none';
   }
 
-  // ===== زر بدء الجولة =====
+  // إخفاء مؤشر الموعد المختار عند إعادة التحميل
+  var selLabel = document.getElementById('mapSelectedLabel');
+  selLabel.style.display = 'none';
+  selLabel.textContent = '';
+  selectedIdx = -1;
+
+  // ===== زر بدء الجولة — يُحدَّث نصه وحالته ولا يُعاد إنشاؤه =====
   var tourBtn = document.getElementById('tourBtn');
   if(withCoords.length === 0) {
     tourBtn.disabled = true;
     tourBtn.className = 'tour-btn disabled';
-    tourBtn.title = 'لا توجد مواقع كافية لبدء الجولة';
+    tourBtn.textContent = 'لا توجد مواقع للجولة';
   } else {
     tourBtn.disabled = false;
     tourBtn.className = 'tour-btn active';
-    tourBtn.title = 'بدء الجولة عبر خرائط Google';
+    tourBtn.textContent = '🚗 بدء الجولة';
   }
 
-  // ===== قائمة المواعيد =====
+  // ===== قائمة المواعيد — innerHTML = (لا +=) لمنع التكرار =====
   var list = document.getElementById('mapList');
 
   if(todayAppts.length === 0) {
@@ -452,48 +489,51 @@ function renderMap(today) {
     return;
   }
 
-  var html = '<div style="padding:8px 12px 4px;font-size:11px;font-weight:700;color:var(--mist);">'+
-    '📋 قائمة المواعيد ('+todayAppts.length+')</div>';
+  var html = '<div style="padding:6px 12px 3px;font-size:11px;font-weight:700;color:var(--mist);">'+
+    '📋 المواعيد ('+todayAppts.length+')</div>';
 
   html += todayAppts.map(function(a, idx) {
-    var st    = normalizeStatus(a.status);
-    var color = STATUS_COLORS[st];
-    var label = STATUS_LABELS[st];
-    var cls   = STATUS_CLASSES[st];
-    var timeStr = formatTime(a);
-    var coords  = getCoordinates(a);
-    var phone   = a.phone || a.mobile || a.tel || '';
-    var waNum   = toWaNumber(phone);
+    var st       = normalizeStatus(a.status);
+    var color    = STATUS_COLORS[st];
+    var label    = STATUS_LABELS[st];
+    var cls      = STATUS_CLASSES[st];
+    var timeStr  = formatTime(a);
+    var coords   = getCoordinates(a);
+    var phone    = a.phone || a.mobile || a.tel || '';
+    var waNum    = toWaNumber(phone);
     var techName = TECHS[a.tech] || a.tech || '';
-    var location = a.address || a.city || a.area || '';
+    // الموقع: الأولوية للحي/المنطقة ثم العنوان ثم المدينة
+    var area     = a.area || a.district || a.subArea || a.zone || a.region || '';
+    var location = area || a.address || a.city || '';
 
-    // رابط Google Maps
-    var mapsUrl = coords
-      ? 'https://www.google.com/maps?q='+coords.lat+','+coords.lng
-      : (a.mapsLink || (location ? 'https://maps.google.com?q='+encodeURIComponent(location) : null));
+    // رابط Google Maps — فقط إذا وجدت إحداثيات صالحة
+    var mapsUrl = null;
+    if(coords) {
+      mapsUrl = 'https://www.google.com/maps?q='+coords.lat+','+coords.lng;
+    } else if(a.mapsLink) {
+      mapsUrl = a.mapsLink;
+    }
 
+    // أزرار — لا تظهر إذا لم توجد البيانات
     var actBtns = '';
     if(phone) {
-      actBtns += '<a class="act-btn btn-call" href="tel:'+phone+'">📞 اتصال</a>';
-    }
-    if(waNum) {
-      actBtns += '<a class="act-btn btn-wa" href="https://wa.me/'+waNum+'" target="_blank">💬 واتساب</a>';
+      actBtns += '<a class="act-btn btn-call" href="tel:'+phone+'" onclick="event.stopPropagation()">📞 اتصال</a>';
+      if(waNum) {
+        actBtns += '<a class="act-btn btn-wa" href="https://wa.me/'+waNum+'" target="_blank" onclick="event.stopPropagation()">💬 واتساب</a>';
+      }
     }
     if(mapsUrl) {
-      actBtns += '<a class="act-btn btn-map" href="'+mapsUrl+'" target="_blank">📍 الموقع</a>';
+      actBtns += '<a class="act-btn btn-map" href="'+mapsUrl+'" target="_blank" onclick="event.stopPropagation()">📍 الموقع</a>';
     }
 
-    // عند الضغط على البطاقة: إذا وجدت إحداثيات، حرّك الخريطة إليها
-    var onClickAttr = 'onclick="selectCard('+idx+')"';
-
-    return '<div class="appt-card" id="card-'+idx+'" '+onClickAttr+'>' +
+    return '<div class="appt-card" id="card-'+idx+'" onclick="selectCard('+idx+')">' +
       '<div class="appt-row1">' +
         '<div class="appt-num" style="background:'+color+'">'+( idx+1)+'</div>' +
         '<div class="appt-name">'+(a.client || a.customerName || '—')+'</div>' +
         '<div class="appt-time">'+timeStr+'</div>' +
       '</div>' +
       '<div class="appt-row2">' +
-        (a.service ? '<span class="appt-service">🛠️ '+(a.service)+'</span>' : '') +
+        (a.service ? '<span class="appt-service">🛠️ '+a.service+'</span>' : '') +
         (location  ? '<span class="appt-location">📍 '+location+'</span>' : '') +
         (techName  ? '<span class="appt-tech">👷 '+techName+'</span>' : '') +
       '</div>' +
@@ -502,7 +542,7 @@ function renderMap(today) {
         (phone ? '<span class="appt-phone">📱 '+phone+'</span>' : '') +
       '</div>' +
       (actBtns ? '<div class="appt-actions">'+actBtns+'</div>' : '') +
-      '</div>';
+    '</div>';
   }).join('');
 
   list.innerHTML = html;
@@ -510,6 +550,7 @@ function renderMap(today) {
 
 // ============================================================
 // selectCard — ربط البطاقة بالخريطة
+// الخريطة iframe لا تدعم علامات متعددة، لذلك نغير src عند اختيار كل موعد
 // ============================================================
 function selectCard(idx) {
   // إلغاء تمييز البطاقة السابقة
@@ -521,9 +562,16 @@ function selectCard(idx) {
   var card = document.getElementById('card-'+idx);
   if(card) card.classList.add('selected');
 
-  // تحريك الخريطة إلى إحداثيات الموعد إن وجدت
   var a = todayAppts[idx];
   if(!a) return;
+
+  // تحديث مؤشر الموعد المختار فوق الخريطة
+  var selLabel = document.getElementById('mapSelectedLabel');
+  var clientName = a.client || a.customerName || 'موعد '+(idx+1);
+  selLabel.textContent = '📍 الموقع المحدد: '+clientName+' — موعد '+(idx+1);
+  selLabel.style.display = 'block';
+
+  // تحريك الخريطة إلى إحداثيات الموعد إن وجدت
   var coords = getCoordinates(a);
   if(coords) {
     document.getElementById('mapFrame').src =
