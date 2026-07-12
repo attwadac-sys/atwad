@@ -106,6 +106,23 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 .act-send-tech{background:#7C3AED;color:#fff;}
 .act-send-tech:disabled{background:#E9D5FF;color:#A78BFA;cursor:not-allowed;}
 .act-copy-task{background:#F3F4F6;color:#374151;border:1px solid #D1D5DB;}
+/* Modal إرسال للفني */
+#technicianSendModal .modal{max-width:460px;}
+.tech-modal-tech-info{background:var(--frost);border:1.5px solid #E2E8F0;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:13px;}
+.tech-modal-tech-info strong{color:var(--deep);}
+.tech-modal-copied-badge{display:none;background:#F0FFF4;border:1.5px solid #86EFAC;border-radius:9px;padding:9px 13px;font-size:12px;color:#065F46;font-weight:700;margin-bottom:12px;text-align:center;}
+.tech-modal-copied-badge.show{display:block;}
+.tech-modal-preview{background:#F8FAFC;border:1px solid #E2E8F0;border-radius:9px;padding:10px 12px;font-size:11px;color:var(--slate);direction:rtl;white-space:pre-wrap;max-height:130px;overflow-y:auto;margin-bottom:14px;line-height:1.7;}
+.tech-modal-note{font-size:11px;color:var(--mist);margin-bottom:14px;line-height:1.6;padding:8px 12px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;}
+.tech-modal-btns{display:flex;flex-direction:column;gap:9px;}
+.tech-modal-btns button, .tech-modal-btns a{display:block;width:100%;padding:11px;border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;text-align:center;text-decoration:none;transition:opacity .15s;}
+.tech-modal-btns button:hover, .tech-modal-btns a:hover{opacity:.88;}
+.btn-wa-open{background:#25D366;color:#fff;}
+.btn-wa-biz{background:#075E54;color:#fff;}
+.btn-copy-again{background:var(--ice);color:var(--sky);border:1.5px solid #BFDBFE !important;}
+.btn-confirm-sent{background:#D1FAE5;color:#065F46;border:1.5px solid #86EFAC !important;}
+.btn-close-tech{background:#F1F5F9;color:var(--slate);}
+@media(max-width:500px){#technicianSendModal .modal{margin:10px;}}
 .source-badge{display:inline-block;padding:2px 7px;border-radius:5px;font-size:10px;font-weight:700;margin-top:3px;}
 .source-firebase{background:#FFF3E0;color:#E65100;}
 .source-local{background:#E8F5E9;color:#2E7D32;}
@@ -1244,7 +1261,15 @@ function buildTechnicianMessage(a) {
 }
 
 // ============================================================
-// sendToTechnician — إرسال المهمة للفني عبر wa.me
+// متغيرات مؤقتة لنافذة إرسال المهمة
+// ============================================================
+var pendingTechnicianMessage = '';
+var pendingTechnicianPhone   = '';
+var pendingTechnicianName    = '';
+var pendingTechApptId        = '';
+
+// ============================================================
+// sendToTechnician — ينسخ الرسالة تلقائياً ثم يفتح النافذة
 // ============================================================
 function sendToTechnician(id) {
   var a = findAppt(id);
@@ -1252,7 +1277,6 @@ function sendToTechnician(id) {
 
   if(!a.tech) { showToast('⚠️ لم يُعيَّن فني لهذا الموعد'); return; }
 
-  // جلب رقم الفني من الكائن المركزي
   var rawPhone = TECHNICIAN_PHONES[a.tech] || '';
   var phone    = normalizeSaudiPhone(rawPhone);
 
@@ -1261,26 +1285,113 @@ function sendToTechnician(id) {
     return;
   }
 
-  var msg = buildTechnicianMessage(a);
-  var url = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msg);
-  window.open(url, '_blank', 'noopener');
+  var msg      = buildTechnicianMessage(a);
+  var techName = TECHS[a.tech] || a.tech;
 
-  // سؤال اختياري: هل تم الإرسال؟
-  setTimeout(function() {
-    if(confirm('هل تم إرسال المهمة للفني بنجاح؟')) {
-      if(db && a._fbKey) {
-        var ref = a._source === 'bookings'
-          ? 'bookings/' + a._fbKey
-          : 'appointments/' + a._fbKey;
-        db.ref(ref).update({
-          sentToTechnician: true,
-          sentToTechnicianAt: firebase.database.ServerValue.TIMESTAMP,
-          sentToTechnicianName: TECHS[a.tech] || a.tech
-        }).catch(function(e){ console.error('sentToTechnician update:', e); });
-      }
+  // خزّن البيانات المؤقتة
+  pendingTechnicianMessage = msg;
+  pendingTechnicianPhone   = phone;
+  pendingTechnicianName    = techName;
+  pendingTechApptId        = id;
+
+  // 1. انسخ الرسالة تلقائياً
+  var badge = document.getElementById('techCopiedBadge');
+  badge.classList.remove('show');
+
+  function openModal() {
+    // حدّث محتوى النافذة
+    document.getElementById('techModalName').textContent   = techName;
+    document.getElementById('techModalPhone').textContent  = rawPhone;
+    document.getElementById('techMsgPreview').textContent  = msg;
+
+    // رابط wa.me
+    var waUrl = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msg);
+    document.getElementById('openWhatsappBtn').href = waUrl;
+
+    // زر واتساب الأعمال على Android فقط
+    var bizBtn = document.getElementById('openWhatsappBusinessBtn');
+    bizBtn.style.display = /Android/i.test(navigator.userAgent) ? 'block' : 'none';
+
+    // افتح النافذة
+    document.getElementById('technicianSendModal').classList.add('open');
+  }
+
+  if(navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(msg).then(function() {
+      badge.classList.add('show');
+      openModal();
+    }).catch(function() {
+      fallbackCopy(msg);
+      openModal();
+    });
+  } else {
+    fallbackCopy(msg);
+    openModal();
+  }
+}
+
+// فتح واتساب — يُسجّل فقط أن المستخدم ضغط (لا تحديث Firebase هنا)
+function onOpenWhatsapp() {
+  // لا شيء إضافي — الرابط يعمل عبر href في العنصر <a>
+}
+
+// واتساب الأعمال على Android عبر Intent
+function openWhatsappBusiness() {
+  if(!/Android/i.test(navigator.userAgent)) return;
+  var intentUrl = 'intent://send?phone=' + pendingTechnicianPhone +
+    '&text=' + encodeURIComponent(pendingTechnicianMessage) +
+    '#Intent;scheme=whatsapp;package=com.whatsapp.w4b;end';
+  try {
+    window.location.href = intentUrl;
+  } catch(e) {
+    showToast('⚠️ تعذّر فتح واتساب الأعمال — الصق الرسالة يدوياً');
+  }
+}
+
+// نسخ الرسالة مرة أخرى
+function reCopyTechMessage() {
+  if(!pendingTechnicianMessage) return;
+  if(navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(pendingTechnicianMessage).then(function(){
+      showToast('📋 تم نسخ الرسالة');
+    }).catch(function(){ fallbackCopy(pendingTechnicianMessage); });
+  } else {
+    fallbackCopy(pendingTechnicianMessage);
+  }
+}
+
+// تأكيد الإرسال — يحدّث Firebase فقط عند الضغط
+function confirmTechSent() {
+  if(!pendingTechApptId) { closeTechSendModal(); return; }
+  var a = findAppt(pendingTechApptId);
+  if(db && a && a._fbKey) {
+    var ref = a._source === 'bookings'
+      ? 'bookings/'      + a._fbKey
+      : 'appointments/'  + a._fbKey;
+    db.ref(ref).update({
+      sentToTechnician:     true,
+      sentToTechnicianAt:   firebase.database.ServerValue.TIMESTAMP,
+      sentToTechnicianName: pendingTechnicianName
+    }).then(function(){
       showToast('✅ تم تسجيل إرسال المهمة للفني');
-    }
-  }, 1500);
+    }).catch(function(e){
+      console.error('sentToTechnician update:', e);
+      showToast('⚠️ تعذّر التحديث في Firebase');
+    });
+  } else {
+    showToast('✅ تم تسجيل إرسال المهمة للفني');
+  }
+  closeTechSendModal();
+}
+
+// إغلاق النافذة وتنظيف البيانات
+function closeTechSendModal() {
+  document.getElementById('technicianSendModal').classList.remove('open');
+  document.getElementById('techCopiedBadge').classList.remove('show');
+  pendingTechnicianMessage = '';
+  pendingTechnicianPhone   = '';
+  pendingTechnicianName    = '';
+  pendingTechApptId        = '';
 }
 
 // ============================================================
@@ -1346,6 +1457,51 @@ document.addEventListener('DOMContentLoaded', applySharedLang);
 </script>
 
 <!-- نافذة الإشعارات -->
+<!-- Modal إرسال المهمة للفني -->
+<div class="modal-overlay" id="technicianSendModal">
+  <div class="modal" style="max-width:460px;width:calc(100% - 24px);">
+    <div class="modal-hdr">
+      <span style="font-size:15px;font-weight:800;color:var(--deep);">📤 تجهيز المهمة للفني</span>
+      <button class="modal-close" id="closeTechnicianSendModalBtn" onclick="closeTechSendModal()">×</button>
+    </div>
+    <div class="modal-body" style="padding:18px 20px;">
+      <!-- معلومات الفني -->
+      <div class="tech-modal-tech-info">
+        <div>👷 الفني: <strong id="techModalName">—</strong></div>
+        <div style="margin-top:4px;">📱 الرقم: <span id="techModalPhone" style="direction:ltr;display:inline-block;">—</span></div>
+      </div>
+      <!-- شارة النسخ التلقائي -->
+      <div class="tech-modal-copied-badge" id="techCopiedBadge">✅ تم نسخ تفاصيل المهمة إلى الحافظة تلقائيًا</div>
+      <!-- معاينة مختصرة للرسالة -->
+      <div class="tech-modal-preview" id="techMsgPreview"></div>
+      <!-- ملاحظة واتساب -->
+      <div class="tech-modal-note" id="techModalNote">
+        سيتم فتح تطبيق واتساب الافتراضي على جهازك.<br>
+        إذا فتح واتساب الشخصي، أغلقه وافتح واتساب الأعمال ثم الصق الرسالة المنسوخة.
+      </div>
+      <!-- الأزرار -->
+      <div class="tech-modal-btns">
+        <a class="btn-wa-open" id="openWhatsappBtn" href="#" target="_blank" rel="noopener" onclick="onOpenWhatsapp()">
+          💬 فتح واتساب
+        </a>
+        <!-- زر واتساب أعمال Android — يظهر فقط على Android -->
+        <button class="btn-wa-biz" id="openWhatsappBusinessBtn" style="display:none;" onclick="openWhatsappBusiness()">
+          🏢 فتح واتساب الأعمال (Android)
+        </button>
+        <button class="btn-copy-again" id="copyTechnicianMessageBtn" onclick="reCopyTechMessage()">
+          📋 نسخ الرسالة مرة أخرى
+        </button>
+        <button class="btn-confirm-sent" onclick="confirmTechSent()">
+          ✅ تم الإرسال للفني
+        </button>
+        <button class="btn-close-tech" id="closeTechnicianSendModalFooterBtn" onclick="closeTechSendModal()">
+          إغلاق
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="notifModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:2000;align-items:flex-start;justify-content:flex-end;">
   <div style="background:#fff;width:360px;max-width:100%;height:100%;overflow-y:auto;padding:20px;box-shadow:-4px 0 20px rgba(0,0,0,.15);">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
