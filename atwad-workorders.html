@@ -576,27 +576,23 @@ function openNewWO(){
 function openWODetail(id){
   const w = workOrders.find(x=>x.id===id);
   if(!w) return;
-  // Pre-fill and open in view mode
   editingWO = id;
   document.getElementById('woModalTitle').textContent = '📋 ' + w.id;
-  document.getElementById('w_client').value = w.client||'';
-  document.getElementById('w_phone').value = w.phone||'';
+  document.getElementById('w_client').value  = getInvoiceCustomerName(w) !== '—' ? getInvoiceCustomerName(w) : (w.client||'');
+  document.getElementById('w_phone').value   = w.phone||'';
   document.getElementById('w_address').value = w.address||'';
-  document.getElementById('w_service').value = w.service||'';
-  document.getElementById('w_actype').value = w.actype||'';
-  document.getElementById('w_tech').value = w.tech||'';
-  document.getElementById('w_units').value = w.units||1;
-  document.getElementById('w_date').value = w.date||today();
-  document.getElementById('w_time').value = w.time||'09:00';
+  document.getElementById('w_service').value = getInvoiceServiceName(w) !== '—' ? getInvoiceServiceName(w) : (w.service||'');
+  document.getElementById('w_actype').value  = w.actype||'';
+  document.getElementById('w_tech').value    = w.tech||'';
+  document.getElementById('w_units').value   = w.units||1;
+  document.getElementById('w_date').value    = w.date||today();
+  document.getElementById('w_time').value    = w.time||'09:00';
   document.getElementById('w_problem').value = w.problem||'';
-  document.getElementById('w_parts').value = w.parts||'';
-  document.getElementById('w_price').value = w.price||'';
-  document.getElementById('w_parts_cost').value = w.partsCost||0;
-  document.getElementById('w_discount').value = w.discount||0;
+  document.getElementById('w_parts').value   = w.parts||'';
   document.getElementById('w_payment').value = w.payment||'كاش';
   currentWOId = id;
   populateClients();
-  updateInvoice();
+  loadInvoiceData(w);  // يضبط الأسعار ورقم WO ويستدعي updateInvoice
   showStep(3);
   document.getElementById('woModal').classList.add('open');
 }
@@ -691,20 +687,147 @@ function finalizeWO(){
 }
 
 // ===== INVOICE =====
+// ============================================================
+// دوال مساعدة لبيانات الفاتورة
+// مصدر: الكود المُرسل — مُكيَّف مع IDs الموجودة في الصفحة
+// ============================================================
+
+/** قراءة أول قيمة موجودة وغير فارغة من object */
+function getFirstValue(obj, keys, fallback) {
+  if(fallback === undefined) fallback = '';
+  if(!obj || typeof obj !== 'object') return fallback;
+  for(var i = 0; i < keys.length; i++) {
+    var v = obj[keys[i]];
+    if(v !== undefined && v !== null && String(v).trim() !== '') return v;
+  }
+  return fallback;
+}
+
+/** تحويل قيمة إلى رقم آمن */
+function safeInvoiceNumber(value) {
+  var n = Number(String(value || '').replace(/[^\d.-]/g,'').trim());
+  return Number.isFinite(n) ? n : 0;
+}
+
+/** تنسيق مبلغ بالأرقام العربية */
+function formatInvoiceMoney(value) {
+  var n = safeInvoiceNumber(value);
+  return new Intl.NumberFormat('ar-SA', {maximumFractionDigits:2}).format(n);
+}
+
+/** تطبيع رقم أمر العمل */
+function normalizeWorkOrderNumber(value, fallbackId) {
+  var s = String(value || '').trim();
+  if(s && s !== 'WO-00000') {
+    if(/^\d+$/.test(s)) return 'WO-' + s.padStart(5,'0');
+    return s;
+  }
+  var src = String(fallbackId || '');
+  var digits = src.match(/\d+/g);
+  if(digits && digits.length) {
+    return 'WO-' + digits.join('').slice(-5).padStart(5,'0');
+  }
+  return 'WO-00000';
+}
+
+/** استخراج اسم العميل من سجل */
+function getInvoiceCustomerName(appt) {
+  return getFirstValue(appt, ['customerName','clientName','customer','client','name'], '—');
+}
+
+/** استخراج اسم الخدمة من سجل */
+function getInvoiceServiceName(appt) {
+  var s = getFirstValue(appt,
+    ['serviceName','service','serviceType','serviceTitle','jobType','workType','maintenanceType'], '');
+  if(s) return s;
+  if(Array.isArray(appt && appt.services)) {
+    var arr = appt.services.map(function(item){
+      if(typeof item === 'string') return item;
+      return getFirstValue(item, ['name','title','serviceName','service'], '');
+    }).filter(Boolean);
+    if(arr.length) return arr.join('، ');
+  }
+  return appt && (appt.serviceDetails || appt.workDetails) ? String(appt.serviceDetails || appt.workDetails) : '—';
+}
+
+/** استخراج اسم الفني من سجل */
+function getInvoiceTechName(appt) {
+  var techKey = getFirstValue(appt, ['tech','technician','technicianName','الفني'], '');
+  return TECHS[techKey] || techKey || '—';
+}
+
+/** تنسيق تاريخ من أي صيغة */
+function getInvoiceDate(appt) {
+  var raw = getFirstValue(appt, ['appointmentDate','date','scheduledDate','serviceDate','createdAt'], '');
+  if(!raw) return '—';
+  try {
+    var d = new Date(raw);
+    if(isNaN(d.getTime())) return String(raw);
+    return new Intl.DateTimeFormat('ar-SA', {day:'numeric',month:'long',year:'numeric'}).format(d);
+  } catch(e) { return String(raw); }
+}
+
+// ============================================================
+// updateInvoice — يحدّث معاينة الفاتورة من حقول النموذج
+// يستخدم الدوال المساعدة أعلاه مع IDs الحالية في الصفحة
+// ============================================================
 function updateInvoice(){
-  const price = parseFloat(document.getElementById('w_price').value)||0;
-  const parts = parseFloat(document.getElementById('w_parts_cost').value)||0;
-  const disc = parseFloat(document.getElementById('w_discount').value)||0;
-  const total = Math.max(0, price + parts - disc);
-  document.getElementById('inv_client').textContent = document.getElementById('w_client').value||'—';
-  document.getElementById('inv_service').textContent = document.getElementById('w_service').value||'—';
-  document.getElementById('inv_units').textContent = (document.getElementById('w_units').value||1) + ' وحدة';
-  document.getElementById('inv_date').textContent = fmtDate(document.getElementById('w_date').value);
-  document.getElementById('inv_tech').textContent = TECHS[document.getElementById('w_tech').value]||'—';
-  document.getElementById('inv_price').textContent = price + ' ريال';
-  document.getElementById('inv_parts').textContent = parts + ' ريال';
-  document.getElementById('inv_discount').textContent = '- ' + disc + ' ريال';
-  document.getElementById('inv_total').textContent = total + ' ريال';
+  var price = safeInvoiceNumber(document.getElementById('w_price').value);
+  var parts = safeInvoiceNumber(document.getElementById('w_parts_cost').value);
+  var disc  = safeInvoiceNumber(document.getElementById('w_discount').value);
+  var total = Math.max(0, price + parts - disc);
+
+  // بيانات الموعد من حقول النموذج
+  var client  = document.getElementById('w_client').value.trim()  || '—';
+  var service = document.getElementById('w_service').value.trim() || '—';
+  var units   = (safeInvoiceNumber(document.getElementById('w_units').value) || 1) + ' وحدة';
+  var date    = fmtDate(document.getElementById('w_date').value);
+  var techKey = document.getElementById('w_tech').value;
+  var tech    = TECHS[techKey] || techKey || '—';
+
+  // تحديث الحقول النصية في معاينة الفاتورة
+  document.getElementById('inv_client').textContent   = client;
+  document.getElementById('inv_service').textContent  = service;
+  document.getElementById('inv_units').textContent    = units;
+  document.getElementById('inv_date').textContent     = date;
+  document.getElementById('inv_tech').textContent     = tech;
+
+  // الأسعار بصيغة منسّقة
+  document.getElementById('inv_price').textContent    = formatInvoiceMoney(price) + ' ريال';
+  document.getElementById('inv_parts').textContent    = formatInvoiceMoney(parts) + ' ريال';
+  document.getElementById('inv_discount').textContent = '- ' + formatInvoiceMoney(disc) + ' ريال';
+  document.getElementById('inv_total').textContent    = formatInvoiceMoney(total) + ' ريال';
+
+  return {price: price, parts: parts, discount: disc, total: total};
+}
+
+/**
+ * loadInvoiceData — تحميل بيانات موعد/أمر عمل في الفاتورة
+ * يُستدعى عند فتح أمر عمل موجود (openWODetail)
+ * أو عند الانتقال للخطوة 3 (updateInvoice يُحدّث القيم تلقائياً من الحقول)
+ */
+function loadInvoiceData(wo) {
+  if(!wo) return;
+
+  // رقم أمر العمل
+  var woNum = normalizeWorkOrderNumber(
+    getFirstValue(wo, ['id','workOrderNumber','workOrder','woNumber'], ''),
+    wo._fbKey || wo.id || ''
+  );
+  document.getElementById('invNum').textContent = woNum;
+
+  // تحميل الأسعار من بيانات محفوظة
+  var invoiceData = wo.invoice || wo.invoiceData || {};
+  var price = safeInvoiceNumber(getFirstValue(invoiceData, ['servicePrice','price'], wo.price || 0));
+  var parts = safeInvoiceNumber(getFirstValue(invoiceData, ['spareParts','partsCost'], wo.partsCost || 0));
+  var disc  = safeInvoiceNumber(getFirstValue(invoiceData, ['discount'], wo.discount || 0));
+
+  document.getElementById('w_price').value      = price || '';
+  document.getElementById('w_parts_cost').value = parts;
+  document.getElementById('w_discount').value   = disc;
+
+  // تحديث المعاينة
+  updateInvoice();
 }
 
 // ===== SIGNATURE =====
