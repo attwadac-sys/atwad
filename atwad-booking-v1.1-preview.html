@@ -121,13 +121,37 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
 /* قسم وصف المشكلة */
 .problem-section{margin-top:18px;padding:14px;background:#F7FCFF;border:1.5px solid #B7DFF5;border-radius:14px;}
 .problem-section-title{font-size:13px;font-weight:800;color:var(--deep);margin-bottom:3px;}
-.problem-section-hint{font-size:11px;color:var(--mist);margin-bottom:12px;}
+.problem-section-hint{font-size:11px;color:var(--mist);margin-bottom:10px;}
+/* Progress bar */
+.prob-progress-wrap{margin-bottom:12px;}
+.prob-progress-label{display:flex;justify-content:space-between;font-size:11px;color:var(--slate);margin-bottom:5px;font-weight:600;}
+.prob-progress-bar{height:7px;background:#E2E8F0;border-radius:99px;overflow:hidden;}
+.prob-progress-fill{height:100%;background:linear-gradient(90deg,var(--sky),var(--success));border-radius:99px;transition:width .4s ease;}
+/* الأعطال الشائعة */
+.common-faults{margin-bottom:10px;}
+.common-faults-label{font-size:12px;font-weight:800;color:var(--deep);margin-bottom:7px;display:flex;align-items:center;gap:6px;}
+.show-more-btn{width:100%;margin-top:8px;padding:8px;border:1.5px dashed #CBD5E1;border-radius:10px;background:transparent;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;color:var(--sky);cursor:pointer;transition:all .2s;}
+.show-more-btn:hover{background:var(--ice);border-color:var(--sky);}
+/* All problems (collapsible) */
+.all-problems-wrap{overflow:hidden;max-height:0;transition:max-height .35s ease;opacity:0;transition:max-height .35s ease,opacity .25s ease;}
+.all-problems-wrap.open{max-height:2000px;opacity:1;}
 .problem-category{margin-bottom:12px;}
-.problem-cat-label{font-size:11px;font-weight:700;color:var(--slate);margin-bottom:6px;display:block;}
+.problem-cat-label{font-size:11px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:5px;padding:3px 0;}
+/* ألوان التصنيفات */
+.problem-cat-label.cat-cooling{color:#0369A1;}
+.problem-cat-label.cat-water{color:#0891B2;}
+.problem-cat-label.cat-freon{color:#059669;}
+.problem-cat-label.cat-noise{color:#7C3AED;}
+.problem-cat-label.cat-electric{color:#D97706;}
+.problem-cat-label.cat-fan{color:#0284C7;}
+.problem-cat-label.cat-maintenance{color:#7C3AED;}
+.problem-cat-label.cat-install{color:#64748B;}
+.problem-cat-label.cat-other{color:#334155;}
 .problem-chips{display:flex;flex-wrap:wrap;gap:7px;}
-.problem-chip{border:1.5px solid #CBD5E1;border-radius:999px;padding:7px 13px;background:#fff;cursor:pointer;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:600;color:var(--slate);transition:all .15s;user-select:none;}
+.problem-chip{border:1.5px solid #CBD5E1;border-radius:20px;padding:0 14px;height:40px;display:inline-flex;align-items:center;gap:5px;background:#fff;cursor:pointer;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:600;color:var(--slate);transition:all .15s;user-select:none;white-space:nowrap;}
 .problem-chip:hover{border-color:var(--sky);color:var(--sky);}
 .problem-chip.selected{background:var(--sky);color:#fff;border-color:var(--sky);}
+.problem-chip.selected::before{content:'✔ ';font-size:11px;}
 .prob-textarea-wrap{margin-top:12px;}
 .prob-textarea-wrap label{display:block;font-size:12px;font-weight:700;color:var(--slate);margin-bottom:5px;}
 .prob-textarea-wrap textarea{width:100%;padding:9px 12px;border:1.5px solid #E2E8F0;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;color:var(--slate);background:#fff;outline:none;resize:vertical;min-height:70px;transition:all .2s;}
@@ -142,6 +166,7 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
 .prev-repair-detail{display:none;margin-top:8px;}
 .prev-repair-detail textarea{width:100%;padding:9px 12px;border:1.5px solid #E2E8F0;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;color:var(--slate);background:#fff;outline:none;resize:vertical;min-height:55px;transition:all .2s;}
 .prev-repair-detail textarea:focus{border-color:var(--sky);}
+.prev-tech-note{margin-top:7px;padding:8px 11px;background:#FEF9C3;border:1.5px solid #FDE68A;border-radius:8px;font-size:11px;color:#92400E;display:none;}
 /* --- زر الموقع الحالي --- */
 .geo-btn{width:100%;margin-top:8px;padding:10px 14px;background:var(--frost);border:1.5px solid #86EFAC;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;color:#065F46;cursor:pointer;display:flex;align-items:center;gap:7px;transition:all .2s;}
 .geo-btn:hover{background:#F0FFF4;border-color:var(--success);}
@@ -323,14 +348,36 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
     <div class="problem-section" id="problemSection">
       <div class="problem-section-title">📝 وصف مختصر للمشكلة أو الطلب</div>
       <div class="problem-section-hint">اختر ما ينطبق على حالتك، ويمكنك اختيار أكثر من خيار.</div>
-      <div id="problemChipsContainer"></div>
 
-      <!-- تفاصيل إضافية -->
+      <!-- Progress Bar -->
+      <div class="prob-progress-wrap">
+        <div class="prob-progress-label">
+          <span>درجة اكتمال البلاغ</span>
+          <span id="probProgressPct">0%</span>
+        </div>
+        <div class="prob-progress-bar"><div class="prob-progress-fill" id="probProgressFill" style="width:0%"></div></div>
+      </div>
+
+      <!-- الأعطال الشائعة -->
+      <div class="common-faults">
+        <div class="common-faults-label">⭐ الأعطال الأكثر شيوعًا</div>
+        <div class="problem-chips" id="commonChipsContainer"></div>
+      </div>
+
+      <!-- زر عرض المزيد -->
+      <button type="button" class="show-more-btn" id="showMoreBtn" onclick="toggleAllProblems()">عرض جميع الأعطال ▼</button>
+
+      <!-- جميع الأعطال — مخفية افتراضياً -->
+      <div class="all-problems-wrap" id="allProblemsWrap">
+        <div id="problemChipsContainer" style="margin-top:10px;"></div>
+      </div>
+
+      <!-- تفاصيل إضافية — مرة واحدة فقط -->
       <div class="prob-textarea-wrap">
         <label>تفاصيل إضافية <span style="font-size:10px;color:var(--mist);">(اختياري)</span></label>
         <textarea id="problemDescription" maxlength="300"
           placeholder="مثال: المكيف لا يبرد ويوجد صوت مرتفع عند التشغيل، أو يوجد تسريب ماء من الوحدة الداخلية."
-          oninput="updateCharCount(this,'descCount',300)"></textarea>
+          oninput="updateCharCount(this,'descCount',300);updateProgress()"></textarea>
         <div class="char-counter"><span id="descCount">0</span> / 300</div>
       </div>
 
@@ -359,6 +406,23 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
             placeholder="مثال: تمت تعبئة فريون، تغيير مكثف، تنظيف المكيف، إصلاح تسريب."
             oninput="updateCharCount(this,'prevDetailCount',200)"></textarea>
           <div class="char-counter"><span id="prevDetailCount">0</span> / 200</div>
+        </div>
+      </div>
+
+      <!-- هل سبق أن زارك فني آخر؟ -->
+      <div class="prob-question">
+        <label>هل سبق أن زارك فني آخر؟ <span style="font-size:10px;color:var(--mist);">(اختياري)</span></label>
+        <div class="prob-radio-row" id="visitedBeforeRow">
+          <button type="button" class="prob-radio-btn" data-val="yes" onclick="selRadio('visitedBefore',this)">نعم</button>
+          <button type="button" class="prob-radio-btn" data-val="no" onclick="selRadio('visitedBefore',this)">لا</button>
+        </div>
+        <div id="prevTechSolvedWrap" style="display:none;margin-top:8px;">
+          <label style="font-size:11px;font-weight:700;color:var(--slate);display:block;margin-bottom:6px;">هل تم حل المشكلة؟</label>
+          <div class="prob-radio-row" id="prevTechSolvedRow">
+            <button type="button" class="prob-radio-btn" data-val="yes" onclick="selRadio('prevTechSolved',this)">نعم</button>
+            <button type="button" class="prob-radio-btn" data-val="no" onclick="selRadio('prevTechSolved',this)">لا</button>
+          </div>
+          <div class="prev-tech-note" id="prevTechNote">⚠️ هذه الحالة تعتبر ذات أولوية أعلى.</div>
         </div>
       </div>
     </div>
@@ -563,106 +627,184 @@ try { firebase.initializeApp({databaseURL:"https://atwad-booking-default-rtdb.fi
 var S = {service:'',serviceAr:'',price:0,units:1,isClean:false,clientType:'',name:'',phone:'',city:'',addr:'',notes:'',date:'',time:'',duration:0};
 
 // ============================================================
-// بيانات أوصاف المشاكل — مصفوفة واحدة للمصدر الوحيد
+// بيانات أوصاف المشاكل — مصفوفة واحدة
+// catColor: صف بصري لكل تصنيف
+// services: قائمة الخدمات التي تظهر فيها ('all' = الكل)
 // ============================================================
 var problemOptions = [
   // التبريد
-  {value:'no_cooling',    label:'لا يبرد',              cat:'cooling',    catLabel:'❄️ التبريد'},
-  {value:'weak_cooling',  label:'تبريد ضعيف',           cat:'cooling',    catLabel:'❄️ التبريد'},
-  {value:'needs_freon',   label:'يحتاج تعبئة فريون',    cat:'cooling',    catLabel:'❄️ التبريد'},
-  {value:'freon_leak',    label:'تسريب غاز فريون',      cat:'cooling',    catLabel:'❄️ التبريد'},
-  {value:'frozen_pipes',  label:'تجمد المواسير',        cat:'cooling',    catLabel:'❄️ التبريد'},
+  {value:'no_cooling',    label:'لا يبرد',                   cat:'cooling',     catLabel:'❄️ التبريد',           catColor:'cat-cooling',    services:['repair','all']},
+  {value:'weak_cooling',  label:'تبريد ضعيف',                cat:'cooling',     catLabel:'❄️ التبريد',           catColor:'cat-cooling',    services:['repair','freon','all']},
+  {value:'needs_freon',   label:'يحتاج تعبئة فريون',         cat:'cooling',     catLabel:'❄️ التبريد',           catColor:'cat-cooling',    services:['repair','freon','all']},
+  {value:'freon_leak',    label:'تسريب غاز فريون',           cat:'cooling',     catLabel:'❄️ التبريد',           catColor:'cat-cooling',    services:['repair','freon','all']},
+  {value:'frozen_pipes',  label:'تجمد المواسير',             cat:'cooling',     catLabel:'❄️ التبريد',           catColor:'cat-cooling',    services:['repair','freon','all']},
   // المياه والتصريف
-  {value:'water_leak',    label:'تسريب ماء',             cat:'water',      catLabel:'💧 المياه والتصريف'},
-  {value:'drain_blocked', label:'انسداد التصريف',        cat:'water',      catLabel:'💧 المياه والتصريف'},
+  {value:'water_leak',    label:'تسريب ماء',                 cat:'water',       catLabel:'💧 المياه والتصريف',   catColor:'cat-water',      services:['repair','all']},
+  {value:'drain_blocked', label:'انسداد التصريف',             cat:'water',       catLabel:'💧 المياه والتصريف',   catColor:'cat-water',      services:['repair','all']},
   // الصوت والرائحة
-  {value:'loud_noise',    label:'صوت مرتفع',             cat:'noise',      catLabel:'🔊 الصوت والرائحة'},
-  {value:'vibration',     label:'اهتزاز',               cat:'noise',      catLabel:'🔊 الصوت والرائحة'},
-  {value:'bad_smell',     label:'رائحة كريهة',           cat:'noise',      catLabel:'🔊 الصوت والرائحة'},
+  {value:'loud_noise',    label:'صوت مرتفع',                 cat:'noise',       catLabel:'🔊 الصوت والرائحة',   catColor:'cat-noise',      services:['repair','all']},
+  {value:'vibration',     label:'اهتزاز',                    cat:'noise',       catLabel:'🔊 الصوت والرائحة',   catColor:'cat-noise',      services:['repair','all']},
+  {value:'bad_smell',     label:'رائحة كريهة',               cat:'noise',       catLabel:'🔊 الصوت والرائحة',   catColor:'cat-noise',      services:['cleaning','repair','all']},
   // الكهرباء والتشغيل
-  {value:'not_working',   label:'المكيف لا يعمل',       cat:'electric',   catLabel:'⚡ الكهرباء والتشغيل'},
-  {value:'keeps_off',     label:'يفصل باستمرار',        cat:'electric',   catLabel:'⚡ الكهرباء والتشغيل'},
-  {value:'breaker_trips', label:'القاطع يفصل عند التشغيل',cat:'electric', catLabel:'⚡ الكهرباء والتشغيل'},
+  {value:'not_working',   label:'المكيف لا يعمل',            cat:'electric',    catLabel:'⚡ الكهرباء والتشغيل',catColor:'cat-electric',   services:['repair','all']},
+  {value:'keeps_off',     label:'يفصل باستمرار',             cat:'electric',    catLabel:'⚡ الكهرباء والتشغيل',catColor:'cat-electric',   services:['repair','all']},
+  {value:'breaker_trips', label:'القاطع يفصل عند التشغيل',  cat:'electric',    catLabel:'⚡ الكهرباء والتشغيل',catColor:'cat-electric',   services:['repair','all']},
   // الهواء والمروحة
-  {value:'weak_airflow',  label:'ضعف تدفق الهواء',      cat:'fan',        catLabel:'💨 الهواء والمروحة'},
-  {value:'fan_broken',    label:'المروحة لا تعمل',       cat:'fan',        catLabel:'💨 الهواء والمروحة'},
+  {value:'weak_airflow',  label:'ضعف تدفق الهواء',          cat:'fan',         catLabel:'💨 الهواء والمروحة',  catColor:'cat-fan',        services:['repair','all']},
+  {value:'fan_broken',    label:'المروحة لا تعمل',           cat:'fan',         catLabel:'💨 الهواء والمروحة',  catColor:'cat-fan',        services:['repair','all']},
   // التنظيف والصيانة
-  {value:'cleaning_only', label:'تنظيف فقط',            cat:'maintenance',catLabel:'🧹 التنظيف والصيانة'},
-  {value:'periodic_maint',label:'صيانة دورية',          cat:'maintenance',catLabel:'🧹 التنظيف والصيانة'},
-  {value:'inspection',    label:'فحص فقط',              cat:'maintenance',catLabel:'🧹 التنظيف والصيانة'},
+  {value:'cleaning_only', label:'تنظيف فقط',                cat:'maintenance', catLabel:'🧹 التنظيف والصيانة',catColor:'cat-maintenance', services:['cleaning','repair','all']},
+  {value:'cleaning_summer',label:'تنظيف قبل الصيف',         cat:'maintenance', catLabel:'🧹 التنظيف والصيانة',catColor:'cat-maintenance', services:['cleaning','all']},
+  {value:'cleaning_finish',label:'تنظيف بعد التشطيب',       cat:'maintenance', catLabel:'🧹 التنظيف والصيانة',catColor:'cat-maintenance', services:['cleaning','all']},
+  {value:'periodic_maint',label:'صيانة دورية',              cat:'maintenance', catLabel:'🧹 التنظيف والصيانة',catColor:'cat-maintenance', services:['repair','all']},
+  {value:'inspection',    label:'فحص فقط',                   cat:'maintenance', catLabel:'🧹 التنظيف والصيانة',catColor:'cat-maintenance', services:['repair','all']},
   // التركيب والنقل
-  {value:'new_install',   label:'تركيب جديد',           cat:'install',    catLabel:'🔧 التركيب والنقل'},
-  {value:'move_install',  label:'فك ونقل وتركيب',        cat:'install',    catLabel:'🔧 التركيب والنقل'},
-  {value:'remove_only',   label:'فك فقط',               cat:'install',    catLabel:'🔧 التركيب والنقل'},
-  {value:'install_only',  label:'تركيب فقط',            cat:'install',    catLabel:'🔧 التركيب والنقل'},
+  {value:'new_install',   label:'تركيب جديد',               cat:'install',     catLabel:'🔧 التركيب والنقل',  catColor:'cat-install',    services:['install','all']},
+  {value:'move_install',  label:'فك ونقل وتركيب',           cat:'install',     catLabel:'🔧 التركيب والنقل',  catColor:'cat-install',    services:['install','all']},
+  {value:'remove_only',   label:'فك فقط',                    cat:'install',     catLabel:'🔧 التركيب والنقل',  catColor:'cat-install',    services:['install','all']},
+  {value:'install_only',  label:'تركيب فقط',                cat:'install',     catLabel:'🔧 التركيب والنقل',  catColor:'cat-install',    services:['install','all']},
   // أخرى
-  {value:'other',         label:'أخرى',                 cat:'other',      catLabel:'➕ أخرى'}
+  {value:'other',         label:'أخرى',                      cat:'other',       catLabel:'➕ أخرى',             catColor:'cat-other',      services:['all']}
 ];
 
-// الحالة الحالية للاختيارات
-var selectedProblemCodes = [];
-var selectedProblemLabels = [];
-var selectedAcStatus = '';
-var selectedPrevRepair = '';
+// الأعطال الشائعة (قيم ثابتة)
+var COMMON_FAULT_VALUES = ['no_cooling','weak_cooling','water_leak','freon_leak','not_working','cleaning_only'];
 
-// بناء chips الأوصاف من المصفوفة
+// تعيين نوع الخدمة للفلترة: 'all' | 'cleaning' | 'repair' | 'install' | 'freon'
+var currentServiceFilter = 'all';
+
+// حالة إظهار/إخفاء المزيد
+var allProblemsOpen = false;
+
+// الحالة الحالية للاختيارات
+var selectedProblemCodes  = [];
+var selectedProblemLabels = [];
+var selectedAcStatus      = '';
+var selectedPrevRepair    = '';
+var selectedVisitedBefore = '';
+var selectedPrevTechSolved = '';
+
+// ============================================================
+// mapServiceToFilter — ربط اسم الخدمة بفلتر الأعطال
+// ============================================================
+function mapServiceToFilter(serviceAr) {
+  if(serviceAr.indexOf('تنظيف') !== -1 || serviceAr.indexOf('غسيل') !== -1) return 'cleaning';
+  if(serviceAr.indexOf('تركيب') !== -1 || serviceAr.indexOf('فك') !== -1) return 'install';
+  if(serviceAr.indexOf('تعبئة غاز') !== -1 || serviceAr.indexOf('فريون') !== -1) return 'freon';
+  return 'repair'; // كشف وإصلاح + صيانة + باقة = repair = جميع الأعطال
+}
+
+// ============================================================
+// buildProblemChips — بناء chips حسب الفلتر الحالي
+// ============================================================
 function buildProblemChips() {
+  buildCommonChips();
+  buildAllChips();
+}
+
+function buildCommonChips() {
+  var container = document.getElementById('commonChipsContainer');
+  if(!container) return;
+  var filtered = problemOptions.filter(function(o){
+    return COMMON_FAULT_VALUES.indexOf(o.value) !== -1 &&
+           (o.services.indexOf('all') !== -1 || o.services.indexOf(currentServiceFilter) !== -1);
+  });
+  container.innerHTML = filtered.map(function(o){
+    var sel = selectedProblemCodes.indexOf(o.value) !== -1 ? ' selected' : '';
+    return '<button type="button" class="problem-chip'+sel+'" data-value="'+o.value+'" data-label="'+o.label+'" onclick="toggleChip(this)">'+o.label+'</button>';
+  }).join('');
+}
+
+function buildAllChips() {
   var container = document.getElementById('problemChipsContainer');
   if(!container) return;
+  // فلترة حسب الخدمة المختارة
+  var visible = problemOptions.filter(function(o){
+    if(COMMON_FAULT_VALUES.indexOf(o.value) !== -1) return false; // موجودة في الشائعة
+    return o.services.indexOf('all') !== -1 || o.services.indexOf(currentServiceFilter) !== -1;
+  });
   // تجميع حسب التصنيف
   var cats = {};
-  problemOptions.forEach(function(opt) {
-    if(!cats[opt.cat]) cats[opt.cat] = {label: opt.catLabel, items: []};
+  visible.forEach(function(opt){
+    if(!cats[opt.cat]) cats[opt.cat] = {label:opt.catLabel, color:opt.catColor, items:[]};
     cats[opt.cat].items.push(opt);
   });
   var html = '';
-  Object.keys(cats).forEach(function(catKey) {
+  Object.keys(cats).forEach(function(catKey){
     var cat = cats[catKey];
-    html += '<div class="problem-category">' +
-      '<span class="problem-cat-label">' + cat.label + '</span>' +
-      '<div class="problem-chips">';
-    cat.items.forEach(function(opt) {
-      html += '<button type="button" class="problem-chip" data-value="' + opt.value +
-        '" data-label="' + opt.label + '" onclick="toggleChip(this)">' + opt.label + '</button>';
+    html += '<div class="problem-category"><span class="problem-cat-label '+cat.color+'">'+cat.label+'</span><div class="problem-chips">';
+    cat.items.forEach(function(opt){
+      var sel = selectedProblemCodes.indexOf(opt.value) !== -1 ? ' selected' : '';
+      html += '<button type="button" class="problem-chip'+sel+'" data-value="'+opt.value+'" data-label="'+opt.label+'" onclick="toggleChip(this)">'+opt.label+'</button>';
     });
     html += '</div></div>';
   });
-  container.innerHTML = html;
+  container.innerHTML = html || '<div style="font-size:12px;color:var(--mist);padding:8px 0;">لا توجد أعطال إضافية لهذه الخدمة</div>';
 }
 
-// تبديل اختيار chip
+// عرض/إخفاء جميع الأعطال مع Animation
+function toggleAllProblems() {
+  var wrap = document.getElementById('allProblemsWrap');
+  var btn  = document.getElementById('showMoreBtn');
+  allProblemsOpen = !allProblemsOpen;
+  wrap.classList.toggle('open', allProblemsOpen);
+  btn.textContent = allProblemsOpen ? 'إخفاء الأعطال ▲' : 'عرض جميع الأعطال ▼';
+}
+
+// تبديل اختيار chip (شائع أو عام)
 function toggleChip(btn) {
   var val = btn.getAttribute('data-value');
   var lbl = btn.getAttribute('data-label');
-  if(btn.classList.contains('selected')) {
-    btn.classList.remove('selected');
-    selectedProblemCodes = selectedProblemCodes.filter(function(v){ return v !== val; });
+  var isSelected = btn.classList.contains('selected');
+
+  // تحديث الزر المضغوط
+  btn.classList.toggle('selected', !isSelected);
+
+  // تحديث الزر المقابل في المجموعة الأخرى إذا وجد
+  var allBtns = document.querySelectorAll('.problem-chip[data-value="'+val+'"]');
+  allBtns.forEach(function(b){ b.classList.toggle('selected', !isSelected); });
+
+  if(isSelected) {
+    selectedProblemCodes  = selectedProblemCodes.filter(function(v){ return v !== val; });
     selectedProblemLabels = selectedProblemLabels.filter(function(v){ return v !== lbl; });
   } else {
-    btn.classList.add('selected');
-    selectedProblemCodes.push(val);
-    selectedProblemLabels.push(lbl);
+    if(selectedProblemCodes.indexOf(val) === -1) {
+      selectedProblemCodes.push(val);
+      selectedProblemLabels.push(lbl);
+    }
   }
+  updateProgress();
 }
 
-// اختيار راديو (حالة التشغيل / الإصلاح السابق)
+// اختيار راديو
 function selRadio(group, btn) {
   var row = btn.parentElement;
   row.querySelectorAll('.prob-radio-btn').forEach(function(b){ b.classList.remove('selected'); });
   btn.classList.add('selected');
+  var val = btn.getAttribute('data-val');
+
   if(group === 'acStatus') {
-    selectedAcStatus = btn.getAttribute('data-val');
+    selectedAcStatus = val;
   } else if(group === 'prevRepair') {
-    selectedPrevRepair = btn.getAttribute('data-val');
-    var detailWrap = document.getElementById('prevRepairDetailWrap');
-    if(selectedPrevRepair === 'yes') {
-      detailWrap.style.display = 'block';
-    } else {
-      detailWrap.style.display = 'none';
+    selectedPrevRepair = val;
+    document.getElementById('prevRepairDetailWrap').style.display = val === 'yes' ? 'block' : 'none';
+    if(val !== 'yes') {
       document.getElementById('previousRepairDetails').value = '';
       document.getElementById('prevDetailCount').textContent = '0';
     }
+  } else if(group === 'visitedBefore') {
+    selectedVisitedBefore = val;
+    document.getElementById('prevTechSolvedWrap').style.display = val === 'yes' ? 'block' : 'none';
+    if(val !== 'yes') {
+      selectedPrevTechSolved = '';
+      document.getElementById('prevTechSolvedRow').querySelectorAll('.prob-radio-btn').forEach(function(b){ b.classList.remove('selected'); });
+      document.getElementById('prevTechNote').style.display = 'none';
+    }
+  } else if(group === 'prevTechSolved') {
+    selectedPrevTechSolved = val;
+    document.getElementById('prevTechNote').style.display = val === 'no' ? 'block' : 'none';
   }
+  updateProgress();
 }
 
 // عداد الأحرف
@@ -672,21 +814,117 @@ function updateCharCount(el, counterId, max) {
   document.getElementById(counterId).textContent = len;
 }
 
+// ============================================================
+// updateProgress — حساب نسبة اكتمال البلاغ
+// وصف: 20% | ملاحظة: 20% | حالة التشغيل: 20% | موقع: 40%
+// ============================================================
+function updateProgress() {
+  var pct = 0;
+  if(selectedProblemCodes.length > 0) pct += 20;
+  if(document.getElementById('problemDescription') && document.getElementById('problemDescription').value.trim()) pct += 20;
+  if(selectedAcStatus) pct += 20;
+  // الموقع: رابط خرائط أو إحداثيات
+  var hasLoc = (document.getElementById('f_maps_link') && document.getElementById('f_maps_link').value.trim()) ||
+               (document.getElementById('f_lat') && document.getElementById('f_lat').value);
+  if(hasLoc) pct += 40;
+  document.getElementById('probProgressFill').style.width = pct + '%';
+  document.getElementById('probProgressPct').textContent = pct + '%';
+}
+
+// ============================================================
+// calcPriority — حساب أولوية البلاغ تلقائياً
+// ============================================================
+function calcPriority() {
+  var HIGH  = ['not_working','breaker_trips','freon_leak','keeps_off'];
+  var MEDIUM= ['weak_cooling','loud_noise','vibration','no_cooling','water_leak','drain_blocked'];
+  for(var i=0; i<selectedProblemCodes.length; i++){
+    if(HIGH.indexOf(selectedProblemCodes[i]) !== -1) {
+      if(selectedPrevTechSolved === 'no') return 'critical';
+      return 'high';
+    }
+  }
+  for(var j=0; j<selectedProblemCodes.length; j++){
+    if(MEDIUM.indexOf(selectedProblemCodes[j]) !== -1) return 'medium';
+  }
+  // فني زار ولم يُحل → ترفع الأولوية
+  if(selectedPrevTechSolved === 'no') return 'high';
+  return 'low';
+}
+
+// ============================================================
+// calcRecommendations — اقتراح الأدوات تلقائياً (داخلي فقط)
+// ============================================================
+function calcRecommendations() {
+  var tools = [];
+  var inspection = '';
+
+  var toolMap = {
+    'freon_leak':    ['Leak Detector','Nitrogen','Vacuum Pump','Scale'],
+    'needs_freon':   ['Scale','Vacuum Pump','Manifold'],
+    'frozen_pipes':  ['Manifold','Thermometer','Scale'],
+    'weak_cooling':  ['Clamp Meter','Manifold','Thermometer'],
+    'no_cooling':    ['Clamp Meter','Manifold','Thermometer'],
+    'water_leak':    ['Drain Cleaner','Air Blower'],
+    'drain_blocked': ['Drain Cleaner','Air Blower'],
+    'not_working':   ['Clamp Meter','Multimeter'],
+    'breaker_trips': ['Clamp Meter','Multimeter'],
+    'keeps_off':     ['Clamp Meter','Multimeter'],
+    'loud_noise':    ['Screwdriver Set','Lubricant'],
+    'vibration':     ['Screwdriver Set','Level'],
+    'cleaning_only': ['Pressure Washer','Fin Comb','Coil Cleaner'],
+    'cleaning_summer':['Pressure Washer','Fin Comb','Coil Cleaner'],
+    'cleaning_finish':['Pressure Washer','Coil Cleaner','Blower'],
+    'new_install':   ['Drill','Copper Pipes','Insulation','Disconnect Box'],
+    'move_install':  ['Drill','Recovery Machine','Vacuum Pump'],
+    'fan_broken':    ['Fan Motor','Capacitor','Screwdriver Set'],
+    'weak_airflow':  ['Fin Comb','Filter','Blower']
+  };
+
+  selectedProblemCodes.forEach(function(code){
+    if(toolMap[code]) {
+      toolMap[code].forEach(function(t){ if(tools.indexOf(t) === -1) tools.push(t); });
+    }
+  });
+
+  // وقت الفحص التقديري
+  var priority = calcPriority();
+  if(priority === 'critical' || priority === 'high') inspection = '30-60 دقيقة';
+  else if(priority === 'medium') inspection = '45-90 دقيقة';
+  else inspection = '30-45 دقيقة';
+
+  return {
+    priority: priority,
+    requiredTools: tools,
+    estimatedInspection: inspection
+  };
+}
+
 // إعادة تعيين قسم الأوصاف
 function resetProblemSection() {
-  selectedProblemCodes = [];
-  selectedProblemLabels = [];
-  selectedAcStatus = '';
-  selectedPrevRepair = '';
-  var container = document.getElementById('problemChipsContainer');
-  if(container) container.querySelectorAll('.problem-chip').forEach(function(b){ b.classList.remove('selected'); });
-  document.getElementById('acStatusRow').querySelectorAll('.prob-radio-btn').forEach(function(b){ b.classList.remove('selected'); });
-  document.getElementById('prevRepairRow').querySelectorAll('.prob-radio-btn').forEach(function(b){ b.classList.remove('selected'); });
-  document.getElementById('problemDescription').value = '';
-  document.getElementById('descCount').textContent = '0';
-  document.getElementById('previousRepairDetails').value = '';
-  document.getElementById('prevDetailCount').textContent = '0';
-  document.getElementById('prevRepairDetailWrap').style.display = 'none';
+  selectedProblemCodes   = [];
+  selectedProblemLabels  = [];
+  selectedAcStatus       = '';
+  selectedPrevRepair     = '';
+  selectedVisitedBefore  = '';
+  selectedPrevTechSolved = '';
+  allProblemsOpen = false;
+  var wrap = document.getElementById('allProblemsWrap');
+  if(wrap) wrap.classList.remove('open');
+  var showBtn = document.getElementById('showMoreBtn');
+  if(showBtn) showBtn.textContent = 'عرض جميع الأعطال ▼';
+  buildProblemChips();
+  ['acStatusRow','prevRepairRow','visitedBeforeRow','prevTechSolvedRow'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el) el.querySelectorAll('.prob-radio-btn').forEach(function(b){ b.classList.remove('selected'); });
+  });
+  var pd = document.getElementById('problemDescription'); if(pd) pd.value='';
+  var dc = document.getElementById('descCount'); if(dc) dc.textContent='0';
+  var prd = document.getElementById('previousRepairDetails'); if(prd) prd.value='';
+  var pdc = document.getElementById('prevDetailCount'); if(pdc) pdc.textContent='0';
+  var prw = document.getElementById('prevRepairDetailWrap'); if(prw) prw.style.display='none';
+  var ptw = document.getElementById('prevTechSolvedWrap'); if(ptw) ptw.style.display='none';
+  var ptn = document.getElementById('prevTechNote'); if(ptn) ptn.style.display='none';
+  updateProgress();
 }
 
 // متغيرات الإحداثيات الاختيارية — تُملأ من زر الموقع أو من استخراج الرابط
@@ -962,6 +1200,8 @@ function selClean(u,p){
   S.units=u; S.price=p; S.isClean=true;
   document.getElementById('units-box').className='units-box';
   document.getElementById('e_svc').className='err-msg';
+  currentServiceFilter = 'cleaning';
+  buildProblemChips();
 }
 
 function selSvc(nameAr,nameEn,price,id){
@@ -974,6 +1214,8 @@ function selSvc(nameAr,nameEn,price,id){
   S.units=parseInt(document.getElementById('units-display').textContent)||1;
   document.getElementById('units-box').className='units-box show';
   document.getElementById('e_svc').className='err-msg';
+  currentServiceFilter = mapServiceToFilter(nameAr);
+  buildProblemChips();
 }
 
 function selType(type,id){
@@ -1208,6 +1450,8 @@ function buildSum(){
     var prevDet = document.getElementById('previousRepairDetails').value.trim();
     if(prevDet) probRows.push(['📋 تفاصيل الإصلاح السابق', prevDet]);
   }
+  if(selectedVisitedBefore) probRows.push(['🔧 سبق زيارة فني', selectedVisitedBefore === 'yes' ? 'نعم' : 'لا']);
+  if(selectedVisitedBefore === 'yes' && selectedPrevTechSolved) probRows.push(['✅ هل حُلّت', selectedPrevTechSolved === 'yes' ? 'نعم' : 'لا']);
   var probHtml = '';
   if(probRows.length) {
     probHtml = '<div style="margin-top:12px;padding:12px;background:#F0F9FF;border:1.5px solid #BAE6FD;border-radius:12px;">' +
@@ -1261,6 +1505,19 @@ function submitBooking(){
         if(prevDet) bookingData.previousRepairDetails = prevDet;
       }
     }
+    if(selectedVisitedBefore) bookingData.visitedBefore = selectedVisitedBefore;
+    if(selectedPrevTechSolved) bookingData.previousTechnicianSolved = selectedPrevTechSolved;
+
+    // التحليل الذكي الداخلي — لا يظهر للعميل
+    var recData = calcRecommendations();
+    bookingData.priority            = recData.priority;
+    bookingData.requiredTools       = recData.requiredTools;
+    bookingData.estimatedInspection = recData.estimatedInspection;
+    bookingData.recommendations     = {
+      priority: recData.priority,
+      requiredTools: recData.requiredTools,
+      estimatedInspection: recData.estimatedInspection
+    };
 
     // إضافة lat/lng اختياريًا فقط إذا كانت صالحة
     var latValue      = document.getElementById('f_lat').value.trim();
