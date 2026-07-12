@@ -449,8 +449,12 @@ function importWOFromFirebase() {
         time: (b.time||'').split(' - ')[0]||b.time,
         problem: 'من نموذج الحجز الإلكتروني',
         parts: '',
-        price: 0, partsCost: 0, discount: 0, total: 0,
+        price: safeInvoiceNumber(b.servicePrice || b.price || 0),
+        servicePrice: safeInvoiceNumber(b.servicePrice || b.price || 0),
+        partsCost: 0, discount: 0,
+        total: safeInvoiceNumber(b.servicePrice || b.price || 0),
         payment: 'كاش', rating: 0,
+        booking: {servicePrice: safeInvoiceNumber(b.servicePrice||0)},
         createdAt: b.createdAt||new Date().toISOString()
       });
       existRefs.add(key); added++;
@@ -983,12 +987,14 @@ function loadInvoiceData(wo) {
   if(serviceEl) serviceEl.textContent = getInvoiceServiceName(wo);
   if(dateEl)    dateEl.textContent    = getInvoiceDate(wo);
 
-  // الأسعار — بحث بالأولوية في invoice ثم في wo مباشرة
-  // مهم: setNumericInputValue يضع رقماً خالصاً في input type="number"
+  // الأسعار — بحث بالأولوية: invoice → servicePrice → booking → appointment → price
   var price = safeInvoiceNumber(
-    invoice.servicePrice !== undefined ? invoice.servicePrice :
-    invoice.price        !== undefined ? invoice.price        :
-    wo.price             !== undefined ? wo.price             : 0
+    (invoice.servicePrice !== undefined) ? invoice.servicePrice :
+    (wo.servicePrice      !== undefined) ? wo.servicePrice      :
+    (wo.booking && wo.booking.servicePrice !== undefined) ? wo.booking.servicePrice :
+    (wo.appointment && wo.appointment.servicePrice !== undefined) ? wo.appointment.servicePrice :
+    (invoice.price !== undefined) ? invoice.price :
+    (wo.price      !== undefined) ? wo.price      : 0
   );
   var parts = safeInvoiceNumber(
     invoice.partsCost      !== undefined ? invoice.partsCost      :

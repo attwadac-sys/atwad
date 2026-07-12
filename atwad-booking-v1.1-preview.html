@@ -55,6 +55,11 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
 .units-ctrl{display:flex;align-items:center;gap:16px;justify-content:center;}
 .units-btn{width:42px;height:42px;border-radius:50%;font-size:22px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;border:2px solid var(--sky);}
 .units-btn.minus{background:var(--ice);color:var(--sky);}
+.field-hint{font-size:11px;color:var(--mist);margin-top:4px;display:block;}
+.service-price-box{margin-top:10px;margin-bottom:6px;background:var(--frost);border:1.5px solid rgba(14,165,233,.2);border-radius:12px;padding:14px 16px;}
+.service-price-box label{display:block;font-size:13px;font-weight:700;color:var(--slate);margin-bottom:8px;}
+.service-price-box input{width:100%;padding:10px 14px;border:1.5px solid #E2E8F0;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:16px;font-weight:700;color:var(--deep);background:#fff;outline:none;transition:border-color .2s;}
+.service-price-box input:focus{border-color:var(--sky);}
 .units-btn.plus{background:var(--sky);color:#fff;}
 .units-num{min-width:70px;text-align:center;}
 .units-num .n{font-size:36px;font-weight:900;color:var(--deep);line-height:1;}
@@ -334,6 +339,13 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
         <div class="units-num"><div class="n" id="units-display">1</div><div class="sub">مكيف</div></div>
         <button class="units-btn minus" onclick="changeUnits(-1)">−</button>
       </div>
+    </div>
+    <!-- السعر التقديري للخدمة -->
+    <div class="service-price-box" id="servicePriceBox">
+      <label for="servicePrice">💰 السعر التقديري للخدمة (ريال)</label>
+      <input type="number" id="servicePrice" name="servicePrice"
+        min="0" step="1" inputmode="decimal" placeholder="مثال: 300">
+      <small class="field-hint">السعر تقديري ويمكن تعديله عند إصدار الفاتورة.</small>
     </div>
     <div class="section-lbl">👥 نوع العميل <span class="req">*</span></div>
     <div class="type-row">
@@ -947,6 +959,12 @@ function isValidCoordinates(lat, lng) {
 // الاسم القديم محفوظ لتوافق الكود الداخلي
 function isValidCoord(lat, lng) { return isValidCoordinates(lat, lng); }
 
+/** safeNumber — تحويل قيمة إلى رقم غير سالب */
+function safeNumber(value) {
+  var n = Number(value);
+  return Number.isFinite(n) && n >= 0 ? n : 0;
+}
+
 // ============================================================
 // extractCoordinatesFromMapUrl — استخراج إحداثيات من رابط Google Maps
 //
@@ -1489,6 +1507,11 @@ function submitBooking(){
   if(db){try{
     var bookingData = {ref:ref,date:S.date,time:S.time,duration:calcDur(),client:S.name,phone:S.phone,service:S.serviceAr,units:S.units,city:S.city,mapsLink:S.addr,locationImage:bookImageBase64||'',createdAt:new Date().toISOString()};
 
+    // السعر التقديري — اختياري، يُحفظ فقط إذا أُدخل
+    var servicePriceRaw = document.getElementById('servicePrice') ? document.getElementById('servicePrice').value : '';
+    var servicePrice = safeNumber(servicePriceRaw);
+    if(servicePrice > 0) bookingData.servicePrice = servicePrice;
+
     // حقول الوصف — اختيارية، تُضاف فقط عند توفرها
     if(selectedProblemCodes.length) {
       bookingData.problemCodes  = selectedProblemCodes;
@@ -1568,6 +1591,8 @@ function submitBooking(){
   }catch(e){}}
   goStep('OK');
   resetProblemSection();
+  var spEl = document.getElementById('servicePrice');
+  if(spEl) spEl.value = '';
   setTimeout(function(){window.open(waUrl,'_blank');},800);
 }
 
