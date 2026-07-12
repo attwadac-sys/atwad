@@ -566,28 +566,34 @@ try {
 // ========== DATA ==========
 let clients = JSON.parse(localStorage.getItem('atwad_clients') || '[]');
 
-// مزامنة Firebase
+// مزامنة Firebase — استخدام on('value') لمراقبة التغييرات مباشرة
+// هذا يضمن تحديث العدادات فور أي إضافة/حذف/تعديل في Firebase
+var _fbSyncing = false; // منع الاستدعاء المتداخل
+
 function syncFromFirebase() {
   if(!db) return;
-  // تحميل العملاء من customers و bookings معاً
-  db.ref('customers').once('value', function(snapC) {
+
+  // on('value') على customers — يُطلق عند كل تغيير في الوقت الفعلي
+  db.ref('customers').on('value', function(snapC) {
     var fbData = [];
     var phones = {};
     snapC.forEach(function(child) {
-      var c = {...child.val(), _fbKey: child.key, _src: 'customers'};
+      var c = Object.assign({}, child.val(), {_fbKey: child.key, _src: 'customers'});
+      // إضافة id محلي إذا لم يوجد
+      if(!c.id) c.id = c._fbKey;
       fbData.push(c);
       if(c.phone) phones[c.phone] = true;
     });
 
-    // إضافة العملاء من الحجوزات الإلكترونية
+    // إضافة العملاء من الحجوزات الإلكترونية (مرة واحدة فقط)
     db.ref('bookings').once('value', function(snapB) {
       snapB.forEach(function(child) {
         var b = child.val();
         var phone = b.phone || '';
-        // تجنب التكرار
         if(phone && !phones[phone] && (b.client||b.name)) {
           phones[phone] = true;
           fbData.push({
+            id: 'B_'+child.key,
             _fbKey: 'B_'+child.key,
             _src: 'booking',
             name: b.client || b.name || '',
@@ -607,14 +613,10 @@ function syncFromFirebase() {
         clients = fbData;
         localStorage.setItem('atwad_clients', JSON.stringify(clients));
       }
+      // تحديث فوري للعدادات والجدول
       updateStats();
       renderTable();
     });
-  });
-
-  // مراقبة التغييرات في customers
-  db.ref('customers').on('child_added', function() {
-    syncFromFirebase();
   });
 }
 let editingId = null;
@@ -658,11 +660,20 @@ function getInitials(name) {
 
 // ========== RENDER ==========
 function updateStats() {
-  document.getElementById('statTotal').textContent = clients.length;
-  document.getElementById('statNew').textContent  = clients.filter(c=>c.type==='جديد').length;
-  document.getElementById('statReg').textContent  = clients.filter(c=>c.type==='دائم').length;
-  document.getElementById('statCorp').textContent = clients.filter(c=>c.type==='شركات').length;
-  document.getElementById('navBadge').textContent = clients.length;
+  // إجمالي العملاء = عدد جميع سجلات مصفوفة clients بدون استثناء
+  // مستقل تماماً عن التصنيف — لا يُجمع من البطاقات الأخرى
+  var total = clients.length;
+
+  // البطاقات الأخرى مستقلة، تعتمد على نفس المصدر (clients array)
+  var newCount  = clients.filter(function(c){ return c.type === 'جديد'; }).length;
+  var regCount  = clients.filter(function(c){ return c.type === 'دائم'; }).length;
+  var corpCount = clients.filter(function(c){ return c.type === 'شركات'; }).length;
+
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statNew').textContent   = newCount;
+  document.getElementById('statReg').textContent   = regCount;
+  document.getElementById('statCorp').textContent  = corpCount;
+  document.getElementById('navBadge').textContent  = total;
 }
 
 function badgeHTML(type) {
@@ -781,13 +792,15 @@ function saveClient() {
 
   if (editingId) {
     const idx = clients.findIndex(c => c.id === editingId);
-    clients[idx] = { ...clients[idx], ...data };
+    clients[idx] = Object.assign({}, clients[idx], data);
     showToast('✅ تم تحديث بيانات العميل');
   } else {
-    clients.unshift({ id: genId(), ...data, visits:0, lastVisit:'', createdAt: new Date().toLocaleDateString('ar-SA') });
+    clients.unshift(Object.assign({ id: genId(), visits:0, lastVisit:'', createdAt: new Date().toLocaleDateString('ar-SA') }, data));
     showToast('✅ تم إضافة العميل بنجاح');
   }
 
+  // تحديث فوري للعدادات قبل حفظ البيانات
+  updateStats();
   saveData();
   closeModal('addModal');
   renderTable();
@@ -849,8 +862,20 @@ function openDetail(id) {
 // ========== DELETE ==========
 function deleteClient(id) {
   if (!confirm('هل أنت متأكد من حذف هذا العميل؟')) return;
-  clients = clients.filter(c => c.id !== id);
-  saveData();
+
+  // حذف من Firebase أولاً إذا كان له مفتاح
+  var c = clients.find(function(x){ return x.id === id; });
+  if(c && c._fbKey && db && !c._fbKey.startsWith('B_')) {
+    db.ref('customers/' + c._fbKey).remove().catch(function(e){
+      console.error('Firebase delete error:', e);
+    });
+  }
+
+  clients = clients.filter(function(c){ return c.id !== id; });
+  localStorage.setItem('atwad_clients', JSON.stringify(clients));
+
+  // تحديث فوري للعدادات
+  updateStats();
   renderTable();
   showToast('🗑️ تم حذف العميل');
 }
