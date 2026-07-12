@@ -38,7 +38,18 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 .stat-card.open{border-color:var(--sky);}
 .stat-card.inprog{border-color:var(--warning);}
 .stat-card.done{border-color:var(--success);}
-.stat-card.invoiced{border-color:var(--purple);}
+.stat-card.incomplete{border-color:#F59E0B;}
+.incomplete-badge{position:absolute;top:7px;left:7px;background:#F59E0B;color:#fff;border-radius:20px;font-size:10px;font-weight:800;padding:2px 7px;}
+.wo-card{position:relative;}
+.wo-incomplete-warn{background:#FEF9C3;border:1.5px solid #FDE68A;border-radius:10px;padding:9px 13px;font-size:12px;color:#92400E;margin-bottom:14px;display:none;}
+.wo-incomplete-warn.show{display:block;}
+/* تقرير الأوامر الناقصة */
+.incomplete-report{background:#fff;border-radius:14px;padding:16px 20px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:16px;display:none;}
+.incomplete-report.show{display:block;}
+.incomplete-report h4{font-size:13px;font-weight:800;color:#92400E;margin-bottom:10px;}
+.incomplete-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px dashed #FDE68A;font-size:12px;}
+.incomplete-row:last-child{border-bottom:none;}
+.incomplete-row .fix-btn{padding:4px 10px;background:#FEF3C7;color:#92400E;border:none;border-radius:7px;font-family:'Tajawal',sans-serif;font-size:11px;font-weight:700;cursor:pointer;}
 .stat-card.all-s{border-color:var(--slate);}
 .stat-icon{font-size:20px;margin-bottom:5px;}
 .stat-num{font-size:22px;font-weight:800;color:var(--deep);}
@@ -200,6 +211,13 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
     <div class="stat-card inprog" onclick="setFilter('inprogress')"><div class="stat-icon">⚡</div><div class="stat-num" id="sInprog">0</div><div class="stat-lbl">قيد التنفيذ</div></div>
     <div class="stat-card done" onclick="setFilter('done')"><div class="stat-icon">✅</div><div class="stat-num" id="sDone">0</div><div class="stat-lbl">مكتمل</div></div>
     <div class="stat-card invoiced" onclick="setFilter('invoiced')"><div class="stat-icon">🧾</div><div class="stat-num" id="sInvoiced">0</div><div class="stat-lbl">فاتورة صادرة</div></div>
+    <div class="stat-card incomplete" onclick="toggleIncompleteReport()" style="cursor:pointer;"><div class="stat-icon">⚠️</div><div class="stat-num" id="sIncomplete">0</div><div class="stat-lbl">بيانات ناقصة</div></div>
+  </div>
+
+  <!-- تقرير الأوامر الناقصة -->
+  <div class="incomplete-report" id="incompleteReport">
+    <h4>⚠️ أوامر عمل تحتاج إكمال البيانات</h4>
+    <div id="incompleteList"></div>
   </div>
 
   <div class="toolbar">
@@ -300,6 +318,9 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
       <!-- STEP 3: INVOICE -->
       <div id="step3" style="display:none">
         <div class="section-title">🧾 إصدار الفاتورة</div>
+        <div class="wo-incomplete-warn" id="woIncompleteWarn">
+          ⚠️ هذا الأمر يحتاج إكمال بيانات — يرجى إدخال السعر قبل إصدار الفاتورة.
+        </div>
         <div class="form-row">
           <div class="form-group"><label>سعر الخدمة (ريال) <span class="req">*</span></label><input type="number" id="w_price" placeholder="0" min="0" oninput="updateInvoice()"></div>
           <div class="form-group"><label>تكلفة قطع الغيار (ريال)</label><input type="number" id="w_parts_cost" placeholder="0" min="0" value="0" oninput="updateInvoice()"></div>
@@ -494,12 +515,49 @@ function today(){ return new Date().toISOString().split('T')[0]; }
 function fmtDate(d){ try{ return new Date(d+'T00:00:00').toLocaleDateString('ar-SA',{year:'numeric',month:'short',day:'numeric'}); } catch{ return d||'—'; } }
 
 // ===== STATS =====
+/** هل أمر العمل ناقص البيانات؟ */
+function isIncomplete(w) {
+  return !w.price || w.price === 0 || !w.service || !w.client || !w.phone;
+}
+
 function updateStats(){
-  document.getElementById('sAll').textContent = workOrders.length;
-  document.getElementById('sOpen').textContent = workOrders.filter(w=>w.status==='open').length;
-  document.getElementById('sInprog').textContent = workOrders.filter(w=>w.status==='inprogress').length;
-  document.getElementById('sDone').textContent = workOrders.filter(w=>w.status==='done').length;
-  document.getElementById('sInvoiced').textContent = workOrders.filter(w=>w.status==='invoiced').length;
+  var incomplete = workOrders.filter(isIncomplete);
+  document.getElementById('sAll').textContent       = workOrders.length;
+  document.getElementById('sOpen').textContent      = workOrders.filter(w=>w.status==='open').length;
+  document.getElementById('sInprog').textContent    = workOrders.filter(w=>w.status==='inprogress').length;
+  document.getElementById('sDone').textContent      = workOrders.filter(w=>w.status==='done').length;
+  document.getElementById('sInvoiced').textContent  = workOrders.filter(w=>w.status==='invoiced').length;
+  document.getElementById('sIncomplete').textContent = incomplete.length;
+  // تلوين بطاقة الناقصة
+  document.querySelector('.stat-card.incomplete').style.borderColor = incomplete.length ? '#F59E0B' : '#E2E8F0';
+}
+
+/** عرض/إخفاء تقرير الأوامر الناقصة */
+function toggleIncompleteReport() {
+  var report = document.getElementById('incompleteReport');
+  var list   = document.getElementById('incompleteList');
+  var isOpen = report.classList.contains('show');
+  if(isOpen) { report.classList.remove('show'); return; }
+
+  var incomplete = workOrders.filter(isIncomplete);
+  if(!incomplete.length) {
+    showToast('✅ لا توجد أوامر بيانات ناقصة');
+    return;
+  }
+
+  list.innerHTML = incomplete.map(function(w) {
+    var missing = [];
+    if(!w.client || !w.phone) missing.push('بيانات العميل');
+    if(!w.service) missing.push('نوع الخدمة');
+    if(!w.price || w.price === 0) missing.push('سعر الخدمة');
+    return '<div class="incomplete-row">' +
+      '<div><strong>' + w.id + '</strong> — ' + (w.client||'بدون اسم') + '<br>' +
+      '<span style="color:var(--mist);font-size:11px;">ناقص: ' + missing.join('، ') + '</span></div>' +
+      '<button class="fix-btn" onclick="openWODetail(\'' + w.id + '\');toggleIncompleteReport()">📝 إكمال</button>' +
+      '</div>';
+  }).join('');
+
+  report.classList.add('show');
 }
 
 // ===== FILTER =====
@@ -525,8 +583,11 @@ function renderWOs(search=''){
     return;
   }
 
-  document.getElementById('woGrid').innerHTML = list.map(w=>`
+  document.getElementById('woGrid').innerHTML = list.map(w=>{
+    var incomplete = isIncomplete(w);
+    return `
     <div class="wo-card s-${w.status||'open'}" onclick="openWODetail('${w.id}')">
+      ${incomplete ? '<span class="incomplete-badge">⚠️ ناقص</span>' : ''}
       <div class="wo-header">
         <span class="wo-id">${w.id}</span>
         <span class="wo-status ${sMap[w.status||'open']}">${sLabel[w.status||'open']}</span>
@@ -547,7 +608,8 @@ function renderWOs(search=''){
           <button class="wa-btn wa-open" onclick="openWODetail('${w.id}')">عرض</button>
         </div>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 function quickStatus(id, status){
@@ -621,6 +683,11 @@ function openWODetail(id){
 
   showStep(3);
   updateInvoice();
+
+  // تنبيه البيانات الناقصة
+  var warnEl = document.getElementById('woIncompleteWarn');
+  if(warnEl) warnEl.classList.toggle('show', isIncomplete(w));
+
   document.getElementById('woModal').classList.add('open');
 }
 
