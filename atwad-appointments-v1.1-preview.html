@@ -103,6 +103,9 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 .act-edit{background:var(--ice);color:var(--sky);}
 .act-done{background:#D1FAE5;color:var(--success);}
 .act-delete{background:#FEE2E2;color:#EF4444;}
+.act-send-tech{background:#7C3AED;color:#fff;}
+.act-send-tech:disabled{background:#E9D5FF;color:#A78BFA;cursor:not-allowed;}
+.act-copy-task{background:#F3F4F6;color:#374151;border:1px solid #D1D5DB;}
 .source-badge{display:inline-block;padding:2px 7px;border-radius:5px;font-size:10px;font-weight:700;margin-top:3px;}
 .source-firebase{background:#FFF3E0;color:#E65100;}
 .source-local{background:#E8F5E9;color:#2E7D32;}
@@ -644,6 +647,10 @@ function renderList(){
           <button class="act-btn act-whatsapp" onclick="sendWhatsapp('${aId}')">📲</button>
           <button class="act-btn act-edit" onclick="editAppt('${aId}')">✏️</button>
           ${a.status!=='done'?`<button class="act-btn act-done" onclick="markDone('${aId}')">✓</button>`:''}
+          ${a.tech
+            ? `<button class="act-btn act-send-tech" onclick="sendToTechnician('${aId}')" title="إرسال المهمة للفني عبر واتساب">📤 إرسال للفني</button>
+               <button class="act-btn act-copy-task" onclick="copyTaskMessage('${aId}')" title="نسخ تفاصيل المهمة">📋</button>`
+            : `<button class="act-btn act-send-tech" disabled title="عيّن فنيًا أولًا">📤 إرسال للفني</button>`}
           <button class="act-btn act-delete" onclick="deleteAppt('${aId}',event)">🗑️</button>
         </div>
       </div>`;
@@ -1105,6 +1112,10 @@ function openDetail(id){
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
       <a href="https://wa.me/966${(a.phone||'').replace(/^0/,'')}?text=${encodeURIComponent('مرحباً '+a.client+'،\nتذكير بموعدكم مع مؤسسة أطواد\nالخدمة: '+a.service+'\nالتاريخ: '+formatDateShort(a.date)+'\nالوقت: '+a.time)}" target="_blank" style="flex:1;text-align:center;padding:10px;background:#25D366;color:#fff;border-radius:9px;font-weight:700;text-decoration:none;font-size:13px;min-width:100px;">📲 تذكير</a>
       <button onclick="sendWhatsAppConfirmation(findAppt('${aId}'))" style="flex:1;padding:10px;background:#DBEAFE;color:#1E40AF;border:none;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;min-width:100px;">✅ تأكيد للعميل</button>
+      ${a.tech
+        ? `<button onclick="sendToTechnician('${aId}')" style="flex:1;padding:10px;background:#7C3AED;color:#fff;border:none;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;min-width:100px;">📤 إرسال للفني</button>
+           <button onclick="copyTaskMessage('${aId}')" style="flex:1;padding:10px;background:#F3F4F6;color:#374151;border:1px solid #D1D5DB;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;min-width:100px;">📋 نسخ المهمة</button>`
+        : `<button disabled style="flex:1;padding:10px;background:#E9D5FF;color:#A78BFA;border:none;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:not-allowed;min-width:100px;" title="عيّن فنيًا أولًا">📤 إرسال للفني</button>`}
       <a href="https://maps.google.com?q=${encodeURIComponent(a.address||'')}" target="_blank" style="flex:1;text-align:center;padding:10px;background:var(--ice);color:var(--sky);border-radius:9px;font-weight:700;text-decoration:none;font-size:13px;min-width:100px;">🗺️ خرائط</a>
       ${a.status!=='done'?`<button onclick="markDone('${aId}');document.getElementById('detailModal').classList.remove('open')" style="flex:1;padding:10px;background:#D1FAE5;color:var(--success);border:none;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;min-width:80px;">✓ إتمام</button>`:''}
       <button onclick="deleteAppt('${aId}',null);document.getElementById('detailModal').classList.remove('open')" style="flex:1;padding:10px;background:#FEE2E2;color:#EF4444;border:none;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;min-width:80px;">🗑️ حذف</button>
@@ -1137,6 +1148,169 @@ function sendWhatsapp(id){
   if(!a) return;
   const msg=encodeURIComponent(`مرحباً ${a.client}،\nتذكير بموعدكم مع مؤسسة أطواد\nالخدمة: ${a.service}\nالتاريخ: ${formatDateShort(a.date)}\nالوقت: ${a.time}`);
   window.open(`https://wa.me/966${(a.phone||'').replace(/^0/,'')}?text=${msg}`,'_blank');
+}
+
+// ============================================================
+// كائن أرقام الفنيين — مصدر واحد مركزي
+// المفتاح = نفس القيمة المحفوظة في حقل tech داخل appointments
+// الرقم بصيغة دولية 9665XXXXXXXX
+// ============================================================
+var TECHNICIAN_PHONES = {
+  'Abrar': '966539791802', // أبرار
+  'Shoib': '966551853763'  // شعيب
+};
+
+// ============================================================
+// normalizeSaudiPhone — توحيد أي صيغة لرقم سعودي
+// يُعيد 9665XXXXXXXX أو '' عند الفشل
+// ============================================================
+function normalizeSaudiPhone(phone) {
+  if(!phone) return '';
+  var s = String(phone).replace(/[\s\-().+]/g, '');
+  if(s.startsWith('00966')) s = s.slice(2);       // 009665... → 9665...
+  if(s.startsWith('966'))   return s;              // 9665XXXXXXXX ✅
+  if(s.startsWith('05') && s.length === 10)
+    return '966' + s.slice(1);                    // 05XXXXXXXX → 9665XXXXXXXX
+  if(s.startsWith('5') && s.length === 9)
+    return '966' + s;                             // 5XXXXXXXX → 9665XXXXXXXX
+  return '';
+}
+
+// ============================================================
+// buildTechnicianMessage — رسالة المهمة للفني
+// يعرض فقط الحقول المتوفرة — لا يُضيف سطراً لقيمة فارغة
+// ============================================================
+function buildTechnicianMessage(a) {
+  var lines = [];
+  lines.push('🔧 مهمة جديدة — مؤسسة أطواد لصيانة المكيفات');
+  lines.push('');
+
+  if(a.client)   lines.push('👤 العميل: '   + a.client);
+  if(a.phone)    lines.push('📞 الجوال: '   + a.phone);
+  if(a.date)     lines.push('📅 التاريخ: '  + (formatDateShort ? formatDateShort(a.date) : a.date));
+
+  // الوقت: يدعم time و endTime
+  var timeStr = a.time || '';
+  if(a.endTime) timeStr += ' - ' + a.endTime;
+  if(timeStr)    lines.push('🕘 الوقت: '    + timeStr);
+
+  if(a.service)  lines.push('🛠 الخدمة: '   + a.service);
+  if(a.units && a.units > 1) lines.push('❄️ العدد: ' + a.units + ' مكيف');
+
+  // الموقع النصي
+  var locText = a.address || a.city || '';
+  if(locText)    lines.push('📍 العنوان: '  + locText);
+
+  // رابط الموقع — بالأولوية
+  var mapsUrl = a.mapsLink || a.mapUrl || a.locationUrl || a.googleMapsUrl || a.locationLink || '';
+  if(!mapsUrl && a.lat && a.lng) {
+    var lat = Number(a.lat), lng = Number(a.lng);
+    if(Number.isFinite(lat) && Number.isFinite(lng) && !(lat===0&&lng===0))
+      mapsUrl = 'https://www.google.com/maps?q=' + lat + ',' + lng;
+  }
+  if(mapsUrl)    lines.push('🗺 الموقع: '   + mapsUrl);
+
+  // وصف الطلب — يبحث في الحقول بالترتيب
+  var probDesc = '';
+  if(Array.isArray(a.problemLabels) && a.problemLabels.length)
+    probDesc = a.problemLabels.join('، ');
+  else if(a.problemDescriptionSummary)
+    probDesc = a.problemDescriptionSummary;
+  else if(a.problemDescription)
+    probDesc = a.problemDescription;
+  else if(a.description)
+    probDesc = a.description;
+  else if(a.notes)
+    probDesc = a.notes;
+  else if(a.customerNotes)
+    probDesc = a.customerNotes;
+  if(probDesc)   lines.push('📝 وصف الطلب: ' + probDesc);
+
+  // إذا يوجد تفاصيل إضافية بجانب الأوصاف المختارة
+  if(Array.isArray(a.problemLabels) && a.problemLabels.length && a.problemDescription)
+    lines.push('   التفاصيل: ' + a.problemDescription);
+
+  // أولوية الطلب
+  var priorityMap = {high:'🔴 عالية', critical:'🚨 حرجة', medium:'🟡 متوسطة', low:'🟢 منخفضة'};
+  if(a.priority && priorityMap[a.priority])
+    lines.push('⚠️ الأولوية: ' + priorityMap[a.priority]);
+
+  lines.push('');
+  lines.push('👷 الفني المسؤول: ' + (TECHS[a.tech] || a.tech || ''));
+  lines.push('');
+  lines.push('يرجى تأكيد استلام المهمة.');
+
+  return lines.join('\n');
+}
+
+// ============================================================
+// sendToTechnician — إرسال المهمة للفني عبر wa.me
+// ============================================================
+function sendToTechnician(id) {
+  var a = findAppt(id);
+  if(!a) return;
+
+  if(!a.tech) { showToast('⚠️ لم يُعيَّن فني لهذا الموعد'); return; }
+
+  // جلب رقم الفني من الكائن المركزي
+  var rawPhone = TECHNICIAN_PHONES[a.tech] || '';
+  var phone    = normalizeSaudiPhone(rawPhone);
+
+  if(!phone) {
+    showToast('⚠️ لا يوجد رقم واتساب محفوظ لهذا الفني');
+    return;
+  }
+
+  var msg = buildTechnicianMessage(a);
+  var url = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msg);
+  window.open(url, '_blank', 'noopener');
+
+  // سؤال اختياري: هل تم الإرسال؟
+  setTimeout(function() {
+    if(confirm('هل تم إرسال المهمة للفني بنجاح؟')) {
+      if(db && a._fbKey) {
+        var ref = a._source === 'bookings'
+          ? 'bookings/' + a._fbKey
+          : 'appointments/' + a._fbKey;
+        db.ref(ref).update({
+          sentToTechnician: true,
+          sentToTechnicianAt: firebase.database.ServerValue.TIMESTAMP,
+          sentToTechnicianName: TECHS[a.tech] || a.tech
+        }).catch(function(e){ console.error('sentToTechnician update:', e); });
+      }
+      showToast('✅ تم تسجيل إرسال المهمة للفني');
+    }
+  }, 1500);
+}
+
+// ============================================================
+// copyTaskMessage — نسخ رسالة المهمة إلى الحافظة
+// ============================================================
+function copyTaskMessage(id) {
+  var a = findAppt(id);
+  if(!a) return;
+  var msg = buildTechnicianMessage(a);
+  if(navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(msg).then(function(){
+      showToast('📋 تم نسخ تفاصيل المهمة');
+    }).catch(function(){
+      fallbackCopy(msg);
+    });
+  } else {
+    fallbackCopy(msg);
+  }
+}
+
+function fallbackCopy(text) {
+  var ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity  = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); showToast('📋 تم نسخ تفاصيل المهمة'); }
+  catch(e) { showToast('⚠️ تعذّر النسخ، جرب يدوياً'); }
+  document.body.removeChild(ta);
 }
 
 function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2800); }
