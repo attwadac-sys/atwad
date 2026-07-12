@@ -501,37 +501,65 @@ var selectedAccuracy       = null; // دقة الموقع بالمتر
 var selectedLocationSource = '';   // 'gps' | 'maps_link' | 'manual_link'
 
 // ============================================================
-// extractCoordinatesFromMapUrl — استخراج إحداثيات من رابط كامل فقط
-// تدعم: ?q=lat,lng | @lat,lng,Xz
-// لا تحاول فك روابط maps.app.goo.gl بسبب قيود CORS
+// isValidCoordinates — دالة تحقق موحدة من صحة الإحداثيات
+// ============================================================
+function isValidCoordinates(lat, lng) {
+  return Number.isFinite(lat) &&
+         Number.isFinite(lng) &&
+         lat >= -90 && lat <= 90 &&
+         lng >= -180 && lng <= 180 &&
+         !(lat === 0 && lng === 0);
+}
+
+// الاسم القديم محفوظ لتوافق الكود الداخلي
+function isValidCoord(lat, lng) { return isValidCoordinates(lat, lng); }
+
+// ============================================================
+// extractCoordinatesFromMapUrl — استخراج إحداثيات من رابط Google Maps
+//
+// ترتيب الأولوية:
+//  1. !3dLAT!4dLNG  → الموقع الفعلي للمكان (place coordinates)
+//  2. ?q=LAT,LNG أو ?query=LAT,LNG → إحداثيات صريحة في الرابط
+//  3. @LAT,LNG      → مركز عرض الخريطة فقط (viewport) — أقل دقة
+//
+// مثال يوضّح أهمية الأولوية:
+//   الرابط:   .../@21.7530391,39.1520907,...!3d21.7595645!4d39.1215061...
+//   @ يُعطي: lat=21.7530391 lng=39.1520907  ← مركز العرض فقط
+//   !3d!4d:  lat=21.7595645 lng=39.1215061  ← الموقع الفعلي ✅
+//
+// روابط maps.app.goo.gl / goo.gl/maps مختصرة:
+//   لا يمكن استخراج إحداثياتها بدون fetch (CORS) — تُعاد null
 // ============================================================
 function extractCoordinatesFromMapUrl(url) {
   if(!url || typeof url !== 'string') return null;
   var s = url.trim();
-  // روابط مختصرة — لا يمكن استخراج إحداثياتها بدون fetch (CORS)
-  if(s.indexOf('maps.app.goo.gl') !== -1 || s.indexOf('goo.gl/maps') !== -1) return null;
-  // صيغة ?q=LAT,LNG
-  var qm = s.match(/[?&]q=([-\d.]+),([-\d.]+)/);
-  if(qm) {
-    var lat = Number(qm[1]), lng = Number(qm[2]);
-    if(isValidCoord(lat, lng)) return {lat:lat, lng:lng};
-  }
-  // صيغة @LAT,LNG,Xz
-  var am = s.match(/@([-\d.]+),([-\d.]+)/);
-  if(am) {
-    var lat2 = Number(am[1]), lng2 = Number(am[2]);
-    if(isValidCoord(lat2, lng2)) return {lat:lat2, lng:lng2};
-  }
-  return null;
-}
 
-// التحقق من صحة الإحداثيات
-function isValidCoord(lat, lng) {
-  if(!Number.isFinite(lat) || !Number.isFinite(lng)) return false;
-  if(lat === 0 && lng === 0) return false;
-  if(lat < -90 || lat > 90) return false;
-  if(lng < -180 || lng > 180) return false;
-  return true;
+  // روابط مختصرة — CORS يمنع فكّها
+  if(s.indexOf('maps.app.goo.gl') !== -1 || s.indexOf('goo.gl/maps') !== -1) return null;
+
+  // ──── الأولوية الأولى: !3dLAT!4dLNG (الموقع الفعلي للمكان) ────
+  var placeMatch = s.match(/!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/);
+  if(placeMatch) {
+    var lat = Number(placeMatch[1]), lng = Number(placeMatch[2]);
+    if(isValidCoordinates(lat, lng)) return {lat:lat, lng:lng, source:'place_coordinates'};
+  }
+
+  // ──── الأولوية الثانية: ?q=LAT,LNG أو ?query=LAT,LNG ────
+  var qMatch = s.match(/[?&](?:q|query)=([-\d.]+),([-\d.]+)/);
+  if(qMatch) {
+    var lat2 = Number(qMatch[1]), lng2 = Number(qMatch[2]);
+    if(isValidCoordinates(lat2, lng2)) return {lat:lat2, lng:lng2, source:'query_coordinates'};
+  }
+
+  // ──── الأولوية الثالثة: @LAT,LNG (مركز عرض الخريطة — أقل دقة) ────
+  // تُستخدم فقط إذا لم توجد !3d!4d ولا q/query
+  var atMatch = s.match(/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/);
+  if(atMatch) {
+    var lat3 = Number(atMatch[1]), lng3 = Number(atMatch[2]);
+    if(isValidCoordinates(lat3, lng3)) return {lat:lat3, lng:lng3, source:'viewport_coordinates'};
+  }
+
+  return null;
 }
 
 // ============================================================
@@ -800,6 +828,14 @@ function validateMapsLink(val){
       document.getElementById('f_lat').value = selectedLat;
       document.getElementById('f_lng').value = selectedLng;
       ok.style.display='none';
+      // رسالة النجاح تعكس مصدر الإحداثيات
+      if(extracted.source === 'place_coordinates') {
+        okCoords.textContent = '✅ تم استخراج الموقع الفعلي من رابط Google Maps';
+      } else if(extracted.source === 'query_coordinates') {
+        okCoords.textContent = '✅ تم استخراج الإحداثيات من الرابط';
+      } else {
+        okCoords.textContent = '⚠️ تم استخراج مركز عرض الخريطة (قد لا يكون الموقع الدقيق)';
+      }
       okCoords.style.display='block';
       // عرض معاينة الخريطة
       showLocationPreview(selectedLat, selectedLng);
