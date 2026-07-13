@@ -405,6 +405,7 @@ let currentView = 'list';
 let techFilter = 'all';
 let editingId = null;
 let editingFirebaseKey = null;
+let editingOriginalDate = ''; // التاريخ الأصلي للموعد قبل التعديل
 
 const TECHS = { Abrar:'أبرار', Shoib:'شعيب', Suhail:'سهيل' };
 const STATUS_LABELS = { confirmed:'مؤكد', pending:'في الانتظار', done:'مكتمل', cancelled:'ملغي' };
@@ -732,6 +733,7 @@ function editAppt(id){
   if(!a) return;
   editingId = id;
   editingFirebaseKey = a._fbKey;
+  editingOriginalDate = a.date || ''; // حفظ التاريخ الأصلي للمقارنة لاحقاً
   document.getElementById('modalTitle').textContent='✏️ تعديل الموعد';
   document.getElementById('f_client').value=a.client||'';
   document.getElementById('f_phone').value=a.phone||'';
@@ -1065,13 +1067,49 @@ function saveAppt(){
   if(!db) { showToast('❌ Firebase غير متاح'); return; }
 
   if(editingFirebaseKey) {
-    db.ref('appointments/' + editingFirebaseKey).update(data)
-      .then(() => {
-        // حفظ الموقع في ملف العميل إذا طُلب
+    // هل تغيّر التاريخ؟ إذا نعم اسأل الموظف عن إلغاء الموعد القديم
+    var dateChanged = editingOriginalDate && editingOriginalDate !== date;
+    var cancelPrevious = false;
+    if(dateChanged) {
+      cancelPrevious = confirm(
+        'تم تغيير تاريخ الموعد من ' + editingOriginalDate + ' إلى ' + date + '.\n\n' +
+        'هل تريد تغيير حالة الموعد القديم إلى «ملغي»؟'
+      );
+      if(cancelPrevious) {
+        data.previousDate   = editingOriginalDate;
+        data.cancelledAt    = new Date().toISOString();
+        data.cancelReason   = 'تم إعادة الجدولة إلى ' + date;
+      }
+    }
+
+    db.ref('appointments/' + editingFirebaseKey).update(
+      cancelPrevious ? Object.assign({}, data, {status: 'cancelled'}) : data
+    ).then(() => {
         if(document.getElementById('chk_save_to_customer').checked && _foundCustomerKey && mapsLink) {
           saveLocationToCustomer(_foundCustomerKey, {mapsLink, lat, lng, locSrc, locVerified});
         }
-        showToast('✅ تم تحديث الموعد'); closeModal();
+        if(cancelPrevious) {
+          // إنشاء موعد جديد بالتاريخ الجديد
+          var newData = Object.assign({}, data, {
+            status: 'pending',
+            createdAt: new Date().toISOString(),
+            rescheduledFrom: editingOriginalDate
+          });
+          delete newData.cancelledAt;
+          delete newData.cancelReason;
+          delete newData.previousDate;
+          db.ref('appointments').push(newData)
+            .then(function() {
+              showToast('✅ تم إلغاء الموعد القديم وإنشاء موعد جديد بتاريخ ' + date);
+              editingOriginalDate = '';
+              closeModal();
+            })
+            .catch(function(e){ showToast('❌ خطأ عند إنشاء الموعد الجديد: ' + e.message); });
+        } else {
+          showToast('✅ تم تحديث الموعد');
+          editingOriginalDate = '';
+          closeModal();
+        }
       })
       .catch(e => showToast('❌ خطأ: ' + e.message));
   } else {
