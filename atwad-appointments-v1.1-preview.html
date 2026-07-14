@@ -103,7 +103,32 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 .act-edit{background:var(--ice);color:var(--sky);}
 .act-done{background:#D1FAE5;color:var(--success);}
 .act-delete{background:#FEE2E2;color:#EF4444;}
-.act-send-tech{background:#7C3AED;color:#fff;}
+.act-remind{background:#FEF9C3;color:#92400E;}
+.act-cancel{background:#FEE2E2;color:#EF4444;}
+/* Modal سبب الإلغاء */
+.cancel-modal{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:3000;display:flex;align-items:center;justify-content:center;display:none;}
+.cancel-modal.open{display:flex;}
+.cancel-box{background:#fff;border-radius:16px;padding:24px;width:calc(100% - 40px);max-width:420px;box-shadow:0 8px 32px rgba(0,0,0,.18);}
+.cancel-box h3{font-size:16px;font-weight:800;color:var(--deep);margin-bottom:14px;}
+.cancel-reason-btns{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
+.cancel-reason-btn{padding:10px 14px;border:1.5px solid #E2E8F0;border-radius:10px;background:#fff;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:600;color:var(--slate);cursor:pointer;text-align:right;transition:all .15s;}
+.cancel-reason-btn:hover,.cancel-reason-btn.sel{background:#FEE2E2;border-color:#EF4444;color:#991B1B;}
+.cancel-reason-other{width:100%;padding:9px 12px;border:1.5px solid #E2E8F0;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;color:var(--slate);margin-bottom:14px;outline:none;display:none;}
+.cancel-reason-other.show{display:block;}
+.cancel-modal-btns{display:flex;gap:8px;}
+.btn-confirm-cancel{flex:1;padding:10px;background:#EF4444;color:#fff;border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
+.btn-abort-cancel{flex:1;padding:10px;background:#F1F5F9;color:var(--slate);border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
+/* قائمة الانتظار */
+.waiting-section{background:#fff;border-radius:14px;padding:16px 20px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin:12px 0;}
+.waiting-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.waiting-header h3{font-size:14px;font-weight:800;color:var(--deep);}
+.waiting-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--ice);font-size:12px;}
+.waiting-row:last-child{border-bottom:none;}
+.waiting-row .wname{font-weight:700;color:var(--deep);}
+.waiting-row .wservice{color:var(--mist);}
+.btn-book-waiting{padding:5px 12px;background:#DBEAFE;color:#1E40AF;border:none;border-radius:8px;font-family:'Tajawal',sans-serif;font-size:11px;font-weight:700;cursor:pointer;}
+.free-slot-notice{background:#F0FFF4;border:1.5px solid #86EFAC;border-radius:12px;padding:12px 16px;margin-bottom:12px;font-size:12px;color:#065F46;display:none;}
+.free-slot-notice.show{display:block;}
 .act-send-tech:disabled{background:#E9D5FF;color:#A78BFA;cursor:not-allowed;}
 .act-copy-task{background:#F3F4F6;color:#374151;border:1px solid #D1D5DB;}
 /* Modal إرسال للفني */
@@ -229,6 +254,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
         <span id="notifBadge" style="display:none;position:absolute;top:-6px;right:-6px;background:#EF4444;color:#fff;border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:'Tajawal',sans-serif;">0</span>
       </div>
       <button class="btn-primary" onclick="openNewAppt()">＋ موعد جديد</button>
+      <button onclick="openWaitingList(null)" style="padding:9px 14px;background:#FEF9C3;color:#92400E;border:1.5px solid #FDE68A;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;">👥 قائمة الانتظار</button>
     </div>
   </div>
 
@@ -389,6 +415,41 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- Modal قائمة الانتظار -->
+<div class="cancel-modal" id="waitingListModal">
+  <div class="cancel-box" style="max-width:480px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <h3 style="margin:0;">👥 قائمة الانتظار</h3>
+      <button onclick="document.getElementById('waitingListModal').classList.remove('open')" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--mist);">×</button>
+    </div>
+    <div id="waitingListBody"></div>
+    <div style="margin-top:12px;display:flex;gap:8px;">
+      <button onclick="addToWaitingList()" style="flex:1;padding:10px;background:var(--sky);color:#fff;border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">➕ إضافة عميل</button>
+      <button onclick="document.getElementById('waitingListModal').classList.remove('open')" style="flex:1;padding:10px;background:#F1F5F9;color:var(--slate);border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal سبب الإلغاء -->
+<div class="cancel-modal" id="cancelReasonModal">
+  <div class="cancel-box">
+    <h3>❌ إلغاء الموعد</h3>
+    <p style="font-size:12px;color:var(--mist);margin-bottom:12px;">ما سبب الإلغاء؟ (يساعدنا في تحسين الخدمة)</p>
+    <div class="cancel-reason-btns">
+      <button class="cancel-reason-btn" onclick="selCancelReason(this,'العميل طلب الإلغاء')">👤 العميل طلب الإلغاء</button>
+      <button class="cancel-reason-btn" onclick="selCancelReason(this,'العميل غير متاح')">📵 العميل غير متاح</button>
+      <button class="cancel-reason-btn" onclick="selCancelReason(this,'إعادة الجدولة')">📅 إعادة الجدولة</button>
+      <button class="cancel-reason-btn" onclick="selCancelReason(this,'الفني غير متاح')">👷 الفني غير متاح</button>
+      <button class="cancel-reason-btn" onclick="selCancelReason(this,'other')">✏️ سبب آخر</button>
+    </div>
+    <input type="text" class="cancel-reason-other" id="cancelReasonOther" placeholder="اكتب السبب...">
+    <div class="cancel-modal-btns">
+      <button class="btn-confirm-cancel" onclick="confirmCancel()">تأكيد الإلغاء</button>
+      <button class="btn-abort-cancel" onclick="closeCancelModal()">رجوع</button>
+    </div>
+  </div>
+</div>
 
 <script>
 // ===== FIREBASE =====
@@ -662,9 +723,11 @@ function renderList(){
           <span class="tech-pill" style="border-right:3px solid ${tc}">👷 ${TECHS[a.tech]||a.tech||'—'}</span>
         </div>
         <div class="appt-actions" onclick="event.stopPropagation()">
+          <button class="act-btn act-remind" onclick="sendReminder('${aId}')" title="إرسال تذكير للعميل">🔔 تذكير</button>
           <button class="act-btn act-whatsapp" onclick="sendWhatsapp('${aId}')">📲</button>
           <button class="act-btn act-edit" onclick="editAppt('${aId}')">✏️</button>
-          ${a.status!=='done'?`<button class="act-btn act-done" onclick="markDone('${aId}')">✓</button>`:''}
+          ${a.status!=='done'&&a.status!=='cancelled'?`<button class="act-btn act-done" onclick="markDone('${aId}')">✓</button>`:''}
+          ${a.status!=='cancelled'?`<button class="act-btn act-cancel" onclick="openCancelModal('${aId}')" title="إلغاء الموعد">✕ إلغاء</button>`:''}
           ${a.tech
             ? `<button class="act-btn act-send-tech" onclick="sendToTechnician('${aId}')" title="إرسال المهمة للفني عبر واتساب">📤 إرسال للفني</button>
                <button class="act-btn act-copy-task" onclick="copyTaskMessage('${aId}')" title="نسخ تفاصيل المهمة">📋</button>`
@@ -1462,7 +1525,171 @@ function fallbackCopy(text) {
   document.body.removeChild(ta);
 }
 
-function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2800); }
+// ============================================================
+// ١. زر التذكير — يفتح واتساب برسالة ودية تطلب تأكيد الموعد
+// ============================================================
+function sendReminder(id) {
+  var a = findAppt(id);
+  if(!a) return;
+  var phone = (a.phone||'').replace(/\D/g,'').replace(/^966/,'0');
+  if(!phone) { showToast('⚠️ لا يوجد رقم جوال لهذا العميل'); return; }
+  var waPhone = '966' + phone.replace(/^0/,'');
+  var msg = 'مرحباً ' + a.client + ' 😊\n\n' +
+    'نود تذكيركم بموعدكم مع مؤسسة أطواد لصيانة المكيفات:\n\n' +
+    '📅 التاريخ: ' + formatDateShort(a.date) + '\n' +
+    '⏰ الوقت: ' + (a.time||'—') + '\n' +
+    '🛠️ الخدمة: ' + (a.service||'—') + '\n\n' +
+    'يرجى التأكيد بالرد على هذه الرسالة، أو إعلامنا إذا كنتم تودّون إعادة الجدولة.\n' +
+    'شكراً لثقتكم 🙏';
+  window.open('https://wa.me/' + waPhone + '?text=' + encodeURIComponent(msg), '_blank', 'noopener');
+}
+
+// ============================================================
+// ٢. إلغاء الموعد مع سبب
+// ============================================================
+var _cancellingId = '';
+var _cancelReason = '';
+
+function openCancelModal(id) {
+  _cancellingId = id;
+  _cancelReason = '';
+  document.querySelectorAll('.cancel-reason-btn').forEach(function(b){ b.classList.remove('sel'); });
+  document.getElementById('cancelReasonOther').value = '';
+  document.getElementById('cancelReasonOther').classList.remove('show');
+  document.getElementById('cancelReasonModal').classList.add('open');
+}
+
+function closeCancelModal() {
+  document.getElementById('cancelReasonModal').classList.remove('open');
+  _cancellingId = '';
+  _cancelReason = '';
+}
+
+function selCancelReason(btn, val) {
+  document.querySelectorAll('.cancel-reason-btn').forEach(function(b){ b.classList.remove('sel'); });
+  btn.classList.add('sel');
+  if(val === 'other') {
+    _cancelReason = '';
+    document.getElementById('cancelReasonOther').classList.add('show');
+    document.getElementById('cancelReasonOther').focus();
+  } else {
+    _cancelReason = val;
+    document.getElementById('cancelReasonOther').classList.remove('show');
+  }
+}
+
+function confirmCancel() {
+  if(!_cancellingId) return;
+  // قراءة سبب "أخرى" إذا كان مُدخلاً
+  var otherVal = document.getElementById('cancelReasonOther').value.trim();
+  if(otherVal) _cancelReason = otherVal;
+  if(!_cancelReason) { showToast('⚠️ اختر سبب الإلغاء'); return; }
+
+  var a = findAppt(_cancellingId);
+  if(!a) { closeCancelModal(); return; }
+
+  var updateData = {
+    status: 'cancelled',
+    cancelReason: _cancelReason,
+    cancelledAt: new Date().toISOString(),
+    cancelledBy: 'admin'
+  };
+
+  if(db && a._fbKey) {
+    var ref = a._source === 'bookings' ? 'bookings/' + a._fbKey : 'appointments/' + a._fbKey;
+    db.ref(ref).update(updateData).then(function() {
+      showToast('✅ تم إلغاء الموعد — السبب: ' + _cancelReason);
+      // عرض الوقت الحر وإمكانية تعبئته
+      showFreeSlot(a);
+      closeCancelModal();
+      loadData();
+    }).catch(function(e){ showToast('❌ خطأ: ' + e.message); });
+  } else {
+    showToast('✅ تم إلغاء الموعد محلياً');
+    closeCancelModal();
+  }
+}
+
+// ============================================================
+// ٣. قائمة الانتظار — عرض الوقت الحر عند الإلغاء
+// ============================================================
+var waitingList = JSON.parse(localStorage.getItem('atwad_waiting') || '[]');
+
+function showFreeSlot(cancelledAppt) {
+  // بحث في قائمة الانتظار عن طلبات تناسب نفس الخدمة أو الوقت
+  var matches = waitingList.filter(function(w){
+    return !w.booked && (!w.service || w.service === cancelledAppt.service);
+  });
+
+  var notice = '🕐 تحرّر وقت: ' + formatDateShort(cancelledAppt.date) + ' — ' + (cancelledAppt.time||'') +
+    ' (' + (cancelledAppt.service||'') + ')';
+
+  if(matches.length) {
+    notice += '\n\n👥 عملاء في قائمة الانتظار يناسبهم هذا الوقت:\n';
+    notice += matches.slice(0,3).map(function(w){ return '• ' + w.name + ' — ' + w.phone; }).join('\n');
+  }
+
+  showToast('📢 وقت حر متاح — راجع قائمة الانتظار');
+
+  // فتح modal الانتظار إذا وجدت مطابقات
+  if(matches.length) {
+    setTimeout(function(){ openWaitingList(cancelledAppt); }, 1000);
+  }
+}
+
+function openWaitingList(freeAppt) {
+  var wl = document.getElementById('waitingListModal');
+  if(!wl) return;
+  var matches = waitingList.filter(function(w){ return !w.booked; });
+  var html = '';
+  if(!matches.length) {
+    html = '<div style="text-align:center;padding:20px;color:var(--mist);">قائمة الانتظار فارغة</div>';
+  } else {
+    html = matches.map(function(w, i) {
+      return '<div class="waiting-row">' +
+        '<div><div class="wname">' + w.name + '</div>' +
+        '<div class="wservice">🛠️ ' + (w.service||'أي خدمة') + ' · 📱 ' + w.phone + '</div>' +
+        (w.notes ? '<div style="font-size:11px;color:var(--mist);">' + w.notes + '</div>' : '') +
+        '</div>' +
+        '<button class="btn-book-waiting" onclick="bookFromWaiting(' + i + ',\'' + (freeAppt ? JSON.stringify(freeAppt).replace(/'/g,'') : '') + '\')">📅 احجز له</button>' +
+        '</div>';
+    }).join('');
+  }
+  document.getElementById('waitingListBody').innerHTML = html;
+  wl.classList.add('open');
+}
+
+function addToWaitingList() {
+  var name  = prompt('اسم العميل:');
+  if(!name) return;
+  var phone = prompt('رقم الجوال:');
+  if(!phone) return;
+  var service = prompt('نوع الخدمة (اتركه فارغاً لأي خدمة):') || '';
+  var notes   = prompt('ملاحظات (اختياري):') || '';
+  waitingList.push({name:name.trim(), phone:phone.trim(), service:service.trim(), notes:notes.trim(), addedAt:new Date().toISOString(), booked:false});
+  localStorage.setItem('atwad_waiting', JSON.stringify(waitingList));
+  showToast('✅ تم إضافة ' + name + ' إلى قائمة الانتظار');
+}
+
+function bookFromWaiting(idx, freeAppt) {
+  var w = waitingList[idx];
+  if(!w) return;
+  // فتح نموذج موعد جديد مملوء ببيانات العميل من قائمة الانتظار
+  openNewAppt();
+  setTimeout(function(){
+    document.getElementById('f_client').value = w.name;
+    document.getElementById('f_phone').value  = w.phone;
+    if(w.service) document.getElementById('f_service').value = w.service;
+    if(freeAppt && freeAppt.date) document.getElementById('f_date').value = freeAppt.date;
+    if(freeAppt && freeAppt.time) document.getElementById('f_time').value = freeAppt.time;
+    if(freeAppt && freeAppt.tech) document.getElementById('f_tech').value = freeAppt.tech;
+  }, 300);
+  // تعليم العميل كـ محجوز في قائمة الانتظار
+  waitingList[idx].booked = true;
+  localStorage.setItem('atwad_waiting', JSON.stringify(waitingList));
+  document.getElementById('waitingListModal').classList.remove('open');
+  showToast('✅ تم فتح نموذج الموعد لـ ' + w.name);
+}
 
 document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
 
