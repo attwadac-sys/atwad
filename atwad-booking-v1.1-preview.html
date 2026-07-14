@@ -1,1617 +1,1606 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl" id="html-root">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>مؤسسة أطواد - حجز خدمة</title>
+<title>مؤسسة أطواد - إدارة المواعيد</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
-:root{--deep:#0C3B5E;--sky:#0EA5E9;--ice:#E8F4FD;--frost:#F0F9FF;--slate:#334155;--mist:#94A3B8;--success:#10B981;--danger:#EF4444;--warning:#F59E0B;}
-*{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(135deg,#0C3B5E,#0EA5E9 60%,#E8F4FD);min-height:100vh;}
-.header{background:linear-gradient(90deg,#0C3B5E,#0EA5E9);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;}
-.header h1{color:#fff;font-size:22px;font-weight:800;}
-.header p{color:rgba(255,255,255,.7);font-size:12px;}
-.lang-btn{padding:8px 16px;background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.4);border-radius:8px;color:#fff;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
-.steps-bar{display:flex;justify-content:center;background:#fff;padding:4px;border-bottom:2px solid var(--ice);position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.05);}
-.step-item{display:flex;flex-direction:column;align-items:center;padding:10px 18px;border-bottom:3px solid transparent;flex:1;max-width:160px;}
-.step-item.active{border-bottom-color:var(--sky);}
-.step-item.done{border-bottom-color:var(--success);}
-.step-num{width:26px;height:26px;border-radius:50%;background:var(--ice);color:var(--mist);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;margin-bottom:3px;}
-.step-item.active .step-num{background:var(--sky);color:#fff;}
-.step-item.done .step-num{background:var(--success);color:#fff;}
-.step-label{font-size:10px;color:var(--mist);}
-.step-item.active .step-label{color:var(--sky);}
-.step-item.done .step-label{color:var(--success);}
-.container{max-width:640px;margin:24px auto 60px;padding:0 14px;}
-.card{background:#fff;border-radius:20px;box-shadow:0 4px 24px rgba(12,59,94,.1);overflow:hidden;}
-.card-header{background:linear-gradient(90deg,var(--frost),var(--ice));padding:18px 22px;border-bottom:1.5px solid rgba(14,165,233,.12);display:flex;align-items:center;gap:12px;}
-.card-icon{width:44px;height:44px;background:#fff;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 2px 8px rgba(14,165,233,.15);}
-.card-header h2{font-size:22px;font-weight:900;color:var(--deep);}
-.card-header p{font-size:12px;color:var(--mist);}
-.card-body{padding:22px;}
-.section-lbl{font-size:16px;font-weight:900;color:var(--slate);margin-bottom:12px;}
-.req{color:var(--danger);}
-.clean-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
-.clean-tile{border:2px solid #E2E8F0;border-radius:14px;padding:22px 14px;text-align:center;cursor:pointer;background:var(--frost);transition:all .2s;}
-.clean-tile:hover,.clean-tile.sel{border-color:var(--sky);background:var(--ice);box-shadow:0 0 0 3px rgba(14,165,233,.15);}
-.clean-tile .t-num{font-size:42px;margin-bottom:8px;}
-.clean-tile .t-name{font-size:17px;font-weight:900;color:var(--deep);}
-.clean-tile .t-price{font-size:18px;font-weight:900;color:var(--sky);}
-.offer-tile{background:linear-gradient(90deg,#EF4444,#F59E0B);border-radius:12px;padding:14px;text-align:center;cursor:pointer;margin-bottom:12px;border:2px solid transparent;transition:all .2s;}
-.offer-tile.sel{box-shadow:0 0 0 3px rgba(239,68,68,.3);}
-.offer-badge{display:inline-block;background:rgba(0,0,0,.2);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;margin-bottom:4px;}
-.offer-tile .o-title{color:#fff;font-size:20px;font-weight:900;}
-.offer-tile .o-price{color:#FEF08A;font-size:30px;font-weight:900;}
-.service-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
-.svc-card{border:2px solid #E2E8F0;border-radius:14px;padding:22px 13px;text-align:center;cursor:pointer;background:var(--frost);transition:all .2s;}
-.svc-card:hover,.svc-card.sel{border-color:var(--sky);background:var(--ice);box-shadow:0 0 0 3px rgba(14,165,233,.15);}
-.svc-card .s-icon{font-size:46px;margin-bottom:10px;}
-.svc-card .s-name{font-size:16px;font-weight:900;color:var(--deep);}
-.svc-card .s-price{font-size:13px;font-weight:700;color:var(--sky);margin-top:4px;}
-.units-box{display:none;margin-bottom:16px;background:linear-gradient(135deg,var(--frost),var(--ice));border:2px solid rgba(14,165,233,.2);border-radius:14px;padding:16px;}
-.units-box.show{display:block;}
-.units-lbl{font-size:13px;font-weight:700;color:var(--slate);margin-bottom:12px;}
-.units-ctrl{display:flex;align-items:center;gap:16px;justify-content:center;}
-.units-btn{width:42px;height:42px;border-radius:50%;font-size:22px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;border:2px solid var(--sky);}
-.units-btn.minus{background:var(--ice);color:var(--sky);}
-.field-hint{font-size:11px;color:var(--mist);margin-top:4px;display:block;}
-.service-price-box{margin-top:10px;margin-bottom:6px;background:var(--frost);border:1.5px solid rgba(14,165,233,.2);border-radius:12px;padding:14px 16px;}
-.service-price-box label{display:block;font-size:13px;font-weight:700;color:var(--slate);margin-bottom:8px;}
-.service-price-box input{width:100%;padding:10px 14px;border:1.5px solid #E2E8F0;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:16px;font-weight:700;color:var(--deep);background:#fff;outline:none;transition:border-color .2s;}
-.service-price-box input:focus{border-color:var(--sky);}
-.units-btn.plus{background:var(--sky);color:#fff;}
-.units-num{min-width:70px;text-align:center;}
-.units-num .n{font-size:36px;font-weight:900;color:var(--deep);line-height:1;}
-.units-num .sub{font-size:12px;color:var(--mist);margin-top:2px;}
-.type-row{display:flex;gap:8px;margin-bottom:14px;}
-.type-btn{flex:1;padding:10px;border:2px solid #E2E8F0;border-radius:10px;background:var(--frost);font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;color:var(--slate);cursor:pointer;transition:all .2s;text-align:center;}
-.type-btn:hover,.type-btn.sel{border-color:var(--sky);background:var(--sky);color:#fff;}
-.field{margin-bottom:14px;}
-.field label{display:block;font-size:13px;font-weight:700;color:var(--slate);margin-bottom:5px;}
-.field input,.field select,.field textarea{width:100%;padding:10px 13px;border:1.5px solid #E2E8F0;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:14px;color:var(--slate);background:var(--frost);outline:none;transition:all .2s;}
-.field input:focus,.field select:focus{border-color:var(--sky);background:#fff;}
-.field input.err{border-color:var(--danger);}
-.err-msg{color:var(--danger);font-size:12px;margin-top:4px;display:none;}
-.err-msg.show{display:block;}
-.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.maps-guide{background:var(--ice);border-radius:10px;padding:10px 12px;margin-bottom:8px;font-size:12px;color:var(--deep);line-height:1.7;}
-.maps-guide strong{color:var(--deep);}
-.maps-ok{display:none;margin-top:8px;background:#F0FFF4;border:1.5px solid #86EFAC;border-radius:9px;padding:10px 12px;font-size:13px;color:#065F46;}
-.dur-note{background:var(--ice);border:1.5px solid var(--sky);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--deep);margin-bottom:10px;display:none;}
-.slots-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
-.slot{border:1.5px solid #E2E8F0;border-radius:10px;padding:10px;text-align:center;cursor:pointer;font-size:12px;font-weight:700;color:var(--slate);background:var(--frost);transition:all .2s;}
-.slot:hover{border-color:var(--sky);color:var(--sky);}
-.slot.sel{border-color:var(--sky);background:var(--sky);color:#fff;}
-.slot.booked{opacity:.4;cursor:not-allowed;background:#F1F5F9;}
-.sum-box{background:linear-gradient(135deg,var(--frost),var(--ice));border:1.5px solid rgba(14,165,233,.15);border-radius:14px;padding:16px;margin-bottom:14px;}
-.sum-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px dashed rgba(14,165,233,.15);font-size:13px;}
-.sum-row:last-child{border-bottom:none;}
-.sum-row .lbl{color:var(--mist);}
-.sum-row .val{font-weight:700;color:var(--deep);}
-.total-box{background:var(--deep);color:#fff;border-radius:12px;padding:13px 17px;display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
-.total-box .t-lbl{font-size:14px;font-weight:600;}
-.total-box .t-price{font-size:22px;font-weight:800;color:var(--sky);}
-.img-upload{border:2px dashed #E2E8F0;border-radius:10px;padding:16px;text-align:center;cursor:pointer;background:var(--frost);transition:all .2s;margin-bottom:8px;}
-.img-upload:hover{border-color:var(--sky);}
-.img-preview{display:none;}
-.img-preview img{max-width:100%;max-height:160px;border-radius:8px;object-fit:cover;}
-.img-placeholder{color:var(--mist);font-size:13px;}
-.img-placeholder .icon{font-size:28px;margin-bottom:6px;}
-.chk-box{border-radius:10px;padding:12px 14px;margin-bottom:12px;}
-.chk-box.green{background:#F0FFF4;border:1.5px solid #86EFAC;}
-.chk-box.blue{background:#EFF6FF;border:1.5px solid #BFDBFE;display:none;}
-.chk-label{display:flex;align-items:flex-start;gap:10px;cursor:pointer;}
-.chk-label input[type=checkbox]{width:18px;height:18px;margin-top:2px;flex-shrink:0;accent-color:var(--success);}
-.chk-text{font-size:12px;color:#065F46;line-height:1.6;}
-.chk-text.blue-text{color:#1E40AF;}
-.chk-sub{font-size:11px;color:#059669;margin-top:2px;}
-.chk-sub.blue-sub{color:#3B82F6;}
-.inspection-info{display:none;background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:10px;padding:12px 14px;font-size:12px;color:#1E40AF;margin-bottom:12px;}
-.btn-row{display:flex;gap:10px;margin-top:20px;}
-.btn-next{flex:2;padding:13px;background:linear-gradient(90deg,var(--deep),var(--sky));color:#fff;border:none;border-radius:12px;font-family:'Tajawal',sans-serif;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 4px 14px rgba(14,165,233,.3);}
-.btn-back{flex:1;padding:13px;background:var(--frost);color:var(--slate);border:1.5px solid #E2E8F0;border-radius:12px;font-family:'Tajawal',sans-serif;font-size:14px;font-weight:600;cursor:pointer;}
-.success-wrap{text-align:center;padding:40px 20px;}
-.success-circle{width:78px;height:78px;background:linear-gradient(135deg,var(--success),#34D399);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:34px;margin:0 auto 16px;box-shadow:0 0 0 12px rgba(16,185,129,.12);animation:pop .5s cubic-bezier(.34,1.56,.64,1);}
-@keyframes pop{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
-.ref-box{background:var(--frost);border:2px dashed var(--sky);border-radius:12px;padding:13px;margin:14px auto;display:inline-block;}
-.ref-num{font-size:24px;font-weight:800;color:var(--deep);direction:ltr;}
-.wa-btn{display:inline-flex;align-items:center;gap:8px;background:#25D366;color:#fff;border:none;border-radius:12px;padding:12px 26px;font-family:'Tajawal',sans-serif;font-size:14px;font-weight:700;cursor:pointer;text-decoration:none;margin-top:14px;}
-.new-btn{margin-top:10px;padding:10px 20px;background:var(--frost);border:1.5px solid #E2E8F0;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:600;cursor:pointer;color:var(--slate);}
-.step-section{display:none;}
-.step-section.active{display:block;}
-.friday-closed{background:#FEE2E2;border:1.5px solid #FECACA;border-radius:10px;padding:14px;text-align:center;margin-bottom:12px;display:none;}
-.friday-closed .icon{font-size:28px;margin-bottom:6px;}
-.friday-closed p{font-size:13px;color:#991B1B;font-weight:700;}
-/* قسم وصف المشكلة */
-.problem-section{margin-top:18px;padding:14px;background:#F7FCFF;border:1.5px solid #B7DFF5;border-radius:14px;}
-.problem-section-title{font-size:13px;font-weight:800;color:var(--deep);margin-bottom:3px;}
-.problem-section-hint{font-size:11px;color:var(--mist);margin-bottom:10px;}
-/* Progress bar */
-.prob-progress-wrap{margin-bottom:12px;}
-.prob-progress-label{display:flex;justify-content:space-between;font-size:11px;color:var(--slate);margin-bottom:5px;font-weight:600;}
-.prob-progress-bar{height:7px;background:#E2E8F0;border-radius:99px;overflow:hidden;}
-.prob-progress-fill{height:100%;background:linear-gradient(90deg,var(--sky),var(--success));border-radius:99px;transition:width .4s ease;}
-/* الأعطال الشائعة */
-.common-faults{margin-bottom:10px;}
-.common-faults-label{font-size:12px;font-weight:800;color:var(--deep);margin-bottom:7px;display:flex;align-items:center;gap:6px;}
-.show-more-btn{width:100%;margin-top:8px;padding:8px;border:1.5px dashed #CBD5E1;border-radius:10px;background:transparent;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;color:var(--sky);cursor:pointer;transition:all .2s;}
-.show-more-btn:hover{background:var(--ice);border-color:var(--sky);}
-/* All problems (collapsible) */
-.all-problems-wrap{overflow:hidden;max-height:0;transition:max-height .35s ease;opacity:0;transition:max-height .35s ease,opacity .25s ease;}
-.all-problems-wrap.open{max-height:2000px;opacity:1;}
-.problem-category{margin-bottom:12px;}
-.problem-cat-label{font-size:11px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:5px;padding:3px 0;}
-/* ألوان التصنيفات */
-.problem-cat-label.cat-cooling{color:#0369A1;}
-.problem-cat-label.cat-water{color:#0891B2;}
-.problem-cat-label.cat-freon{color:#059669;}
-.problem-cat-label.cat-noise{color:#7C3AED;}
-.problem-cat-label.cat-electric{color:#D97706;}
-.problem-cat-label.cat-fan{color:#0284C7;}
-.problem-cat-label.cat-maintenance{color:#7C3AED;}
-.problem-cat-label.cat-install{color:#64748B;}
-.problem-cat-label.cat-other{color:#334155;}
-.problem-chips{display:flex;flex-wrap:wrap;gap:7px;}
-.problem-chip{border:1.5px solid #CBD5E1;border-radius:20px;padding:0 14px;height:40px;display:inline-flex;align-items:center;gap:5px;background:#fff;cursor:pointer;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:600;color:var(--slate);transition:all .15s;user-select:none;white-space:nowrap;}
-.problem-chip:hover{border-color:var(--sky);color:var(--sky);}
-.problem-chip.selected{background:var(--sky);color:#fff;border-color:var(--sky);}
-.problem-chip.selected::before{content:'✔ ';font-size:11px;}
-.prob-textarea-wrap{margin-top:12px;}
-.prob-textarea-wrap label{display:block;font-size:12px;font-weight:700;color:var(--slate);margin-bottom:5px;}
-.prob-textarea-wrap textarea{width:100%;padding:9px 12px;border:1.5px solid #E2E8F0;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;color:var(--slate);background:#fff;outline:none;resize:vertical;min-height:70px;transition:all .2s;}
-.prob-textarea-wrap textarea:focus{border-color:var(--sky);}
-.char-counter{text-align:left;font-size:11px;color:var(--mist);margin-top:3px;}
-.prob-question{margin-top:12px;}
-.prob-question label{display:block;font-size:12px;font-weight:700;color:var(--slate);margin-bottom:6px;}
-.prob-radio-row{display:flex;flex-wrap:wrap;gap:7px;}
-.prob-radio-btn{border:1.5px solid #CBD5E1;border-radius:9px;padding:7px 13px;background:#fff;cursor:pointer;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:600;color:var(--slate);transition:all .15s;}
-.prob-radio-btn:hover{border-color:var(--sky);color:var(--sky);}
-.prob-radio-btn.selected{background:var(--deep);color:#fff;border-color:var(--deep);}
-.prev-repair-detail{display:none;margin-top:8px;}
-.prev-repair-detail textarea{width:100%;padding:9px 12px;border:1.5px solid #E2E8F0;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;color:var(--slate);background:#fff;outline:none;resize:vertical;min-height:55px;transition:all .2s;}
-.prev-repair-detail textarea:focus{border-color:var(--sky);}
-.prev-tech-note{margin-top:7px;padding:8px 11px;background:#FEF9C3;border:1.5px solid #FDE68A;border-radius:8px;font-size:11px;color:#92400E;display:none;}
-/* --- زر الموقع الحالي --- */
-.geo-btn{width:100%;margin-top:8px;padding:10px 14px;background:var(--frost);border:1.5px solid #86EFAC;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;color:#065F46;cursor:pointer;display:flex;align-items:center;gap:7px;transition:all .2s;}
-.geo-btn:hover{background:#F0FFF4;border-color:var(--success);}
-.geo-btn:disabled{opacity:.5;cursor:not-allowed;}
-.geo-msg{margin-top:7px;padding:9px 12px;border-radius:9px;font-size:12px;display:none;}
-.geo-msg.ok{background:#F0FFF4;border:1.5px solid #86EFAC;color:#065F46;}
-.geo-msg.warn{background:#FFFBEB;border:1.5px solid #FDE68A;color:#92400E;}
-.geo-msg.err{background:#FEF2F2;border:1.5px solid #FECACA;color:#991B1B;}
-.geo-privacy{font-size:10px;color:var(--mist);margin-top:5px;padding-right:2px;}
-.maps-ok-coords{display:none;margin-top:6px;background:#F0FFF4;border:1.5px solid #86EFAC;border-radius:9px;padding:9px 12px;font-size:12px;color:#065F46;}
-.maps-shortlink{display:none;margin-top:6px;background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:9px;padding:9px 12px;font-size:12px;color:#92400E;}
-/* عناصر تأكيد الدقة */
-.geo-verify-wrap{display:none;margin-top:8px;background:var(--frost);border:1.5px solid #E2E8F0;border-radius:10px;padding:10px 12px;}
-.geo-open-map-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:8px;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;color:#1E40AF;cursor:pointer;text-decoration:none;margin-bottom:8px;}
-.geo-chk-label{display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:12px;color:var(--slate);}
-.geo-chk-label input{width:16px;height:16px;margin-top:1px;flex-shrink:0;accent-color:var(--success);}
-/* قسم معاينة الخريطة */
-.location-preview-section{margin-top:14px;padding:12px;border:1px solid #b7dff5;border-radius:14px;background:#f7fcff;}
-.location-preview-title{font-size:13px;font-weight:700;color:var(--deep);margin-bottom:8px;}
-.location-preview-map{width:100%;height:300px;border:0;border-radius:12px;display:block;}
-.location-preview-note{font-size:11px;color:var(--mist);margin-top:8px;margin-bottom:8px;line-height:1.5;}
-.location-preview-actions{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;}
-.loc-confirm-btn{flex:1;padding:10px;background:linear-gradient(90deg,var(--success),#34D399);color:#fff;border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
-.loc-retry-btn{flex:1;padding:10px;background:var(--frost);color:var(--slate);border:1.5px solid #E2E8F0;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:600;cursor:pointer;}
-.location-preview-section.confirmed{border-color:#86EFAC;background:#F0FFF4;}
-.location-confirmed-msg{display:none;margin-top:8px;padding:9px 12px;background:#F0FFF4;border:1.5px solid #86EFAC;border-radius:9px;font-size:12px;color:#065F46;font-weight:700;}
-.location-preview-section.confirmed .location-confirmed-msg{display:block;}
-@media(max-width:600px){
-  .location-preview-map{height:260px;}
-  .location-preview-actions button{flex:1 1 100%;}
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap');
+:root{
+  --deep:#0C3B5E; --steel:#1E5F8A; --sky:#0EA5E9; --ice:#E8F4FD; --frost:#F0F9FF;
+  --slate:#334155; --mist:#94A3B8; --white:#FFFFFF;
+  --success:#10B981; --warning:#F59E0B; --danger:#EF4444; --purple:#8B5CF6;
 }
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
+.sidebar{position:fixed;right:0;top:0;bottom:0;width:230px;background:linear-gradient(180deg,var(--deep),var(--steel));z-index:200;display:flex;flex-direction:column;box-shadow:4px 0 24px rgba(12,59,94,.18);}
+.sidebar-logo{padding:22px 18px 18px;border-bottom:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:12px;}
+.sidebar-logo .icon{width:42px;height:42px;background:linear-gradient(135deg,var(--sky),#38BDF8);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;}
+.sidebar-logo h1{color:#fff;font-size:16px;font-weight:800;}
+.sidebar-logo p{color:rgba(255,255,255,.5);font-size:11px;}
+.nav-section{padding:14px 10px 6px;}
+.nav-label{color:rgba(255,255,255,.3);font-size:10px;font-weight:700;padding:0 8px 5px;letter-spacing:1px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:rgba(255,255,255,.7);font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;margin-bottom:2px;}
+.nav-item:hover{background:rgba(255,255,255,.08);color:#fff;}
+.nav-item.active{background:rgba(14,165,233,.22);color:var(--sky);font-weight:700;}
+.nav-icon{font-size:16px;width:20px;text-align:center;}
+.main{margin-right:230px;}
+.topbar{background:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1.5px solid #E2E8F0;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.04);}
+.topbar-title{font-size:18px;font-weight:800;color:var(--deep);}
+.topbar-sub{font-size:12px;color:var(--mist);margin-top:1px;}
+.topbar-actions{display:flex;gap:10px;align-items:center;}
+.btn-primary{background:linear-gradient(90deg,var(--deep),var(--sky));color:#fff;border:none;border-radius:10px;padding:9px 18px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(14,165,233,.3);transition:all .2s;display:flex;align-items:center;gap:6px;}
+.btn-primary:hover{transform:translateY(-1px);}
+.view-toggle{display:flex;background:#F1F5F9;border-radius:10px;padding:3px;}
+.view-btn{padding:7px 14px;border-radius:8px;border:none;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:600;cursor:pointer;background:transparent;color:var(--mist);transition:all .2s;}
+.view-btn.active{background:#fff;color:var(--deep);box-shadow:0 2px 6px rgba(0,0,0,.08);}
+.fb-status{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:6px 12px;border-radius:8px;background:var(--frost);border:1.5px solid var(--ice);}
+.fb-dot{width:8px;height:8px;border-radius:50%;background:var(--mist);}
+.fb-dot.connected{background:var(--success);box-shadow:0 0 6px rgba(16,185,129,.5);}
+.fb-dot.loading{background:var(--warning);animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:18px 22px;}
+.stat-card{background:#fff;border-radius:14px;padding:16px 18px;box-shadow:0 2px 10px rgba(0,0,0,.04);border-right:3px solid transparent;}
+.stat-card.today{border-color:var(--sky);}
+.stat-card.pending{border-color:var(--warning);}
+.stat-card.done{border-color:var(--success);}
+.stat-card.tech{border-color:var(--purple);}
+.stat-icon{font-size:22px;margin-bottom:6px;}
+.stat-num{font-size:26px;font-weight:800;color:var(--deep);}
+.stat-lbl{font-size:11px;color:var(--mist);margin-top:1px;}
+.cal-header{display:flex;align-items:center;justify-content:space-between;padding:0 22px 14px;}
+.cal-nav{display:flex;align-items:center;gap:12px;}
+.cal-nav-btn{width:32px;height:32px;border-radius:8px;border:1.5px solid #E2E8F0;background:#fff;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.cal-nav-btn:hover{border-color:var(--sky);color:var(--sky);}
+.cal-month{font-size:17px;font-weight:800;color:var(--deep);}
+.cal-today-btn{padding:6px 14px;background:var(--ice);border:none;border-radius:8px;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;color:var(--sky);cursor:pointer;}
+.week-grid{display:grid;grid-template-columns:60px repeat(7,1fr);border-top:1px solid #E2E8F0;overflow:hidden;}
+.week-day-header{padding:10px 6px;text-align:center;background:var(--frost);border-bottom:2px solid var(--ice);border-left:1px solid #E2E8F0;}
+.week-day-name{font-size:11px;font-weight:700;color:var(--mist);}
+.week-day-num{font-size:18px;font-weight:800;color:var(--deep);margin-top:2px;}
+.week-day-header.today .week-day-num{background:var(--sky);color:#fff;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:2px auto 0;}
+.time-col{background:var(--frost);border-left:1px solid #E2E8F0;}
+.time-slot{height:60px;display:flex;align-items:flex-start;justify-content:flex-end;padding:4px 8px 0;font-size:10px;color:var(--mist);border-bottom:1px solid #F1F5F9;}
+.day-col{border-left:1px solid #E2E8F0;position:relative;}
+.day-hour{height:60px;border-bottom:1px solid #F8FAFC;}
+.appt-block{position:absolute;right:3px;left:3px;border-radius:8px;padding:4px 8px;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;overflow:hidden;z-index:10;}
+.appt-block:hover{transform:scale(1.02);box-shadow:0 4px 12px rgba(0,0,0,.15);}
+.appt-block .appt-time{font-size:10px;opacity:.8;}
+.appt-block .appt-name{font-size:12px;font-weight:700;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.appt-block .appt-tech{font-size:10px;opacity:.75;margin-top:2px;}
+.status-confirmed{background:linear-gradient(135deg,#DBEAFE,#EFF6FF);border-right:3px solid var(--sky);color:var(--deep);}
+.status-pending{background:linear-gradient(135deg,#FEF3C7,#FFFBEB);border-right:3px solid var(--warning);color:#92400E;}
+.status-done{background:linear-gradient(135deg,#D1FAE5,#ECFDF5);border-right:3px solid var(--success);color:#065F46;}
+.status-cancelled{background:linear-gradient(135deg,#FEE2E2,#FFF5F5);border-right:3px solid var(--danger);color:#991B1B;}
+.list-view{padding:0 22px 30px;}
+.day-section{margin-bottom:20px;}
+.day-section-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.day-section-date{font-size:14px;font-weight:700;color:var(--deep);}
+.day-section-badge{background:var(--ice);color:var(--sky);font-size:11px;font-weight:700;padding:2px 10px;border-radius:20px;}
+.appt-card{background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:8px;box-shadow:0 2px 8px rgba(0,0,0,.04);display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .2s;border-right:4px solid transparent;}
+.appt-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.08);transform:translateY(-1px);}
+.appt-card.c-confirmed{border-color:var(--sky);}
+.appt-card.c-pending{border-color:var(--warning);}
+.appt-card.c-done{border-color:var(--success);}
+.appt-card.c-cancelled{border-color:var(--danger);}
+.appt-time-block{text-align:center;min-width:54px;}
+.appt-time-block .t-start{font-size:15px;font-weight:800;color:var(--deep);}
+.appt-time-block .t-dur{font-size:10px;color:var(--mist);}
+.appt-divider{width:1px;height:40px;background:#E2E8F0;}
+.appt-info{flex:1;}
+.appt-client{font-size:14px;font-weight:700;color:var(--deep);}
+.appt-service{font-size:12px;color:var(--mist);margin-top:2px;}
+.appt-address{font-size:12px;color:var(--sky);margin-top:2px;}
+.tech-pill{padding:3px 10px;border-radius:20px;background:var(--frost);color:var(--steel);font-size:11px;font-weight:600;}
+.status-pill{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+.sp-confirmed{background:#DBEAFE;color:#1E40AF;}
+.sp-pending{background:#FEF3C7;color:#92400E;}
+.sp-done{background:#D1FAE5;color:#065F46;}
+.sp-cancelled{background:#FEE2E2;color:#991B1B;}
+.appt-actions{display:flex;gap:6px;}
+.act-btn{padding:5px 10px;border:none;border-radius:7px;font-family:'Tajawal',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;}
+.act-whatsapp{background:#25D366;color:#fff;}
+.act-edit{background:var(--ice);color:var(--sky);}
+.act-done{background:#D1FAE5;color:var(--success);}
+.act-delete{background:#FEE2E2;color:#EF4444;}
+.act-send-tech{background:#7C3AED;color:#fff;}
+.act-send-tech:disabled{background:#E9D5FF;color:#A78BFA;cursor:not-allowed;}
+.act-copy-task{background:#F3F4F6;color:#374151;border:1px solid #D1D5DB;}
+/* Modal إرسال للفني */
+#technicianSendModal .modal{max-width:460px;}
+.tech-modal-tech-info{background:var(--frost);border:1.5px solid #E2E8F0;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:13px;}
+.tech-modal-tech-info strong{color:var(--deep);}
+.tech-modal-copied-badge{display:none;background:#F0FFF4;border:1.5px solid #86EFAC;border-radius:9px;padding:9px 13px;font-size:12px;color:#065F46;font-weight:700;margin-bottom:12px;text-align:center;}
+.tech-modal-copied-badge.show{display:block;}
+.tech-modal-preview{background:#F8FAFC;border:1px solid #E2E8F0;border-radius:9px;padding:10px 12px;font-size:11px;color:var(--slate);direction:rtl;white-space:pre-wrap;max-height:130px;overflow-y:auto;margin-bottom:14px;line-height:1.7;}
+.tech-modal-note{font-size:11px;color:var(--mist);margin-bottom:14px;line-height:1.6;padding:8px 12px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;}
+.tech-modal-btns{display:flex;flex-direction:column;gap:9px;}
+.tech-modal-btns button, .tech-modal-btns a{display:block;width:100%;padding:11px;border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;text-align:center;text-decoration:none;transition:opacity .15s;}
+.tech-modal-btns button:hover, .tech-modal-btns a:hover{opacity:.88;}
+.btn-wa-open{background:#25D366;color:#fff;}
+.btn-wa-biz{background:#075E54;color:#fff;}
+.btn-copy-again{background:var(--ice);color:var(--sky);border:1.5px solid #BFDBFE !important;}
+.btn-confirm-sent{background:#D1FAE5;color:#065F46;border:1.5px solid #86EFAC !important;}
+.btn-close-tech{background:#F1F5F9;color:var(--slate);}
+@media(max-width:500px){#technicianSendModal .modal{margin:10px;}}
+.source-badge{display:inline-block;padding:2px 7px;border-radius:5px;font-size:10px;font-weight:700;margin-top:3px;}
+.source-firebase{background:#FFF3E0;color:#E65100;}
+.source-local{background:#E8F5E9;color:#2E7D32;}
+.modal-overlay{position:fixed;inset:0;background:rgba(12,59,94,.45);z-index:500;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px);}
+.modal-overlay.open{display:flex;}
+.modal{background:#fff;border-radius:20px;width:100%;max-width:520px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(12,59,94,.25);animation:slideUp .3s cubic-bezier(.34,1.56,.64,1);}
+@keyframes slideUp{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-hdr{padding:20px 24px 16px;background:linear-gradient(90deg,var(--frost),var(--ice));border-bottom:1.5px solid rgba(14,165,233,.12);display:flex;align-items:center;justify-content:space-between;}
+.modal-hdr h3{font-size:17px;font-weight:800;color:var(--deep);}
+.modal-close{width:30px;height:30px;border-radius:50%;border:none;background:#E2E8F0;color:var(--slate);font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.modal-close:hover{background:var(--danger);color:#fff;}
+.modal-body{padding:22px 24px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+.form-group{margin-bottom:14px;}
+.form-group label{display:block;font-size:12px;font-weight:700;color:var(--slate);margin-bottom:5px;}
+.req{color:var(--danger);}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:9px 12px;border:1.5px solid #E2E8F0;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:14px;color:var(--slate);background:var(--frost);outline:none;transition:all .2s;direction:rtl;}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--sky);background:#fff;box-shadow:0 0 0 3px rgba(14,165,233,.1);}
+.modal-footer{padding:14px 24px;border-top:1px solid #F1F5F9;display:flex;gap:10px;justify-content:flex-end;}
+.btn-cancel{padding:9px 18px;border:1.5px solid #E2E8F0;border-radius:9px;background:#fff;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:600;color:var(--slate);cursor:pointer;}
+.btn-save{padding:9px 24px;border:none;border-radius:9px;background:linear-gradient(90deg,var(--deep),var(--sky));color:#fff;font-family:'Tajawal',sans-serif;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(14,165,233,.3);}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--deep);color:#fff;padding:10px 22px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.2);transition:transform .3s;z-index:999;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+.tech-filter{display:flex;gap:8px;padding:0 22px 14px;flex-wrap:wrap;}
+.tech-chip{padding:6px 14px;border-radius:20px;border:1.5px solid #E2E8F0;background:#fff;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:600;color:var(--mist);cursor:pointer;transition:all .2s;}
+.tech-chip:hover,.tech-chip.active{border-color:var(--sky);color:var(--sky);background:var(--ice);}
+.loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.85);z-index:300;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
+.loading-spinner{width:48px;height:48px;border:4px solid var(--ice);border-top-color:var(--sky);border-radius:50%;animation:spin 0.8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:900px){.sidebar{display:none;}.main{margin-right:0;}.stats-row{grid-template-columns:1fr 1fr;}}
+.lang-btn{padding:7px 14px;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);border-radius:8px;color:#fff;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;}
+.lang-btn:hover{background:rgba(255,255,255,.25);}
+/* قسم موقع العميل */
+.loc-section{margin-top:6px;margin-bottom:14px;padding:14px;background:#F7FCFF;border:1.5px solid #B7DFF5;border-radius:12px;}
+.loc-section-title{font-size:12px;font-weight:800;color:var(--deep);margin-bottom:10px;}
+.loc-input-row{display:flex;gap:8px;align-items:flex-start;}
+.loc-input-row input{flex:1;padding:9px 12px;border:1.5px solid #E2E8F0;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;color:var(--slate);background:var(--frost);outline:none;direction:ltr;}
+.loc-input-row input:focus{border-color:var(--sky);}
+.loc-btn{padding:9px 12px;border:none;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .2s;flex-shrink:0;}
+.loc-btn-verify{background:var(--ice);color:var(--sky);border:1.5px solid #BFDBFE;}
+.loc-btn-open{background:#FEF9C3;color:#92400E;border:1.5px solid #FDE68A;display:none;}
+.loc-msg{margin-top:8px;padding:8px 11px;border-radius:8px;font-size:12px;display:none;}
+.loc-msg.ok{background:#F0FFF4;border:1.5px solid #86EFAC;color:#065F46;}
+.loc-msg.warn{background:#FFFBEB;border:1.5px solid #FDE68A;color:#92400E;}
+.loc-msg.err{background:#FEF2F2;border:1.5px solid #FECACA;color:#991B1B;}
+.loc-preview{margin-top:10px;display:none;}
+.loc-preview iframe{width:100%;height:220px;border:0;border-radius:10px;display:block;}
+.loc-preview-note{font-size:11px;color:var(--mist);margin-top:6px;}
+.loc-chk-row{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:12px;color:var(--slate);cursor:pointer;}
+.loc-chk-row input{width:15px;height:15px;accent-color:var(--success);}
+.loc-save-row{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:12px;color:var(--slate);cursor:pointer;padding:6px 10px;background:var(--frost);border-radius:8px;border:1px dashed #CBD5E1;}
+.loc-save-row input{width:15px;height:15px;accent-color:var(--purple);}
+.client-found-msg{padding:8px 12px;background:#F0FFF4;border:1.5px solid #86EFAC;border-radius:9px;font-size:12px;color:#065F46;margin-bottom:10px;display:none;}
+.loc-conflict-box{padding:10px 12px;background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:10px;font-size:12px;color:#92400E;display:none;margin-top:8px;}
+.loc-conflict-box .loc-conflict-btns{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;}
+.loc-conflict-btn{padding:6px 12px;border:none;border-radius:8px;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer;}
+.btn-use-old{background:#FEF3C7;color:#92400E;}
+.btn-use-new{background:#DBEAFE;color:#1E40AF;}
+.btn-save-new{background:#D1FAE5;color:#065F46;}
 </style>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
 </head>
 <body>
 
-<div class="header">
-  <div>
-    <h1>مؤسسة أطواد ❄️</h1>
-    <p>صيانة وتنظيف المكيفات الاحترافية</p>
+<!-- Loading -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-spinner"></div>
+  <div style="font-family:'Tajawal',sans-serif;font-size:15px;font-weight:700;color:var(--deep);">جاري تحميل المواعيد...</div>
+</div>
+
+<div class="sidebar">
+  <div class="sidebar-logo"><div class="icon">❄️</div><div><h1 id="nav-brand">أطواد</h1><p id="nav-brandsub">لصيانة المكيفات</p></div></div>
+  <div class="nav-section">
+    <div class="nav-label">القائمة</div>
+    <div class="nav-item" id="nav-clients" onclick="location.href='atwad-customers.html'"><span class="nav-icon">👥</span> العملاء</div>
+    <div class="nav-item active" id="nav-appts" onclick="location.href='atwad-appointments.html'"><span class="nav-icon">📅</span> المواعيد</div>
+    <div class="nav-item" id="nav-wo" onclick="location.href='atwad-workorders.html'"><span class="nav-icon">🔧</span> أوامر العمل</div>
+    <div class="nav-item" id="nav-finance" onclick="location.href='atwad-finance.html'"><span class="nav-icon">💰</span> الإدارة المالية</div>
+    <div class="nav-item" id="nav-reports" onclick="location.href='atwad-reports.html'"><span class="nav-icon">📊</span> التقارير</div>
   </div>
-  <button class="lang-btn" onclick="toggleLang()">🌐 EN</button>
+  <div class="nav-section" style="margin-top:auto;border-top:1px solid rgba(255,255,255,.08);padding-top:10px;">
+    <div class="nav-item" id="nav-settings" onclick="alert('قريباً ✨')"><span class="nav-icon">⚙️</span> الإعدادات</div>
+  </div>
 </div>
 
-<div class="steps-bar">
-  <div class="step-item active" id="sb1"><div class="step-num" id="sn1">1</div><div class="step-label">الخدمة</div></div>
-  <div class="step-item" id="sb2"><div class="step-num" id="sn2">2</div><div class="step-label">بياناتك</div></div>
-  <div class="step-item" id="sb3"><div class="step-num" id="sn3">3</div><div class="step-label">الموعد</div></div>
-  <div class="step-item" id="sb4"><div class="step-num" id="sn4">4</div><div class="step-label">التأكيد</div></div>
+<div class="main">
+  <div class="topbar">
+    <div><div class="topbar-title">📅 إدارة المواعيد</div><div class="topbar-sub">تزامن تلقائي مع Firebase</div></div>
+    <div class="topbar-actions">
+      <button class="lang-btn" id="langBtn" onclick="toggleLang()">🌐 EN</button>
+      <!-- مؤشر الاتصال -->
+      <div class="fb-status" id="fbStatus">
+        <div class="fb-dot loading" id="fbDot"></div>
+        <span id="fbStatusText">جاري الاتصال...</span>
+      </div>
+      <div class="view-toggle">
+        <button class="view-btn" id="vWeek" onclick="switchView('week')">📆 أسبوع</button>
+        <button class="view-btn active" id="vList" onclick="switchView('list')">📋 قائمة</button>
+      </div>
+      <button id="fridayBtn" onclick="toggleFriday()" style="padding:9px 16px;border-radius:10px;border:none;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;background:#FEF3C7;color:#92400E;">⛔ الجمعة مغلق</button>
+      <div style="position:relative;display:inline-block;">
+        <button onclick="openNotifications()" style="padding:9px 16px;border-radius:10px;border:1.5px solid #E2E8F0;background:#fff;font-family:'Tajawal',sans-serif;font-size:13px;cursor:pointer;color:var(--slate);">?? الإشعارات</button>
+        <span id="notifBadge" style="display:none;position:absolute;top:-6px;right:-6px;background:#EF4444;color:#fff;border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:'Tajawal',sans-serif;">0</span>
+      </div>
+      <button class="btn-primary" onclick="openNewAppt()">＋ موعد جديد</button>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card today"><div class="stat-icon">📅</div><div class="stat-num" id="statToday">0</div><div class="stat-lbl">مواعيد اليوم</div></div>
+    <div class="stat-card pending"><div class="stat-icon">⏳</div><div class="stat-num" id="statPending">0</div><div class="stat-lbl">في الانتظار</div></div>
+    <div class="stat-card done"><div class="stat-icon">✅</div><div class="stat-num" id="statDone">0</div><div class="stat-lbl">مكتملة الأسبوع</div></div>
+    <div class="stat-card tech"><div class="stat-icon">🌐</div><div class="stat-num" id="statTotal">0</div><div class="stat-lbl">إجمالي المواعيد</div></div>
+  </div>
+
+  <div class="cal-header">
+    <div class="cal-nav">
+      <button class="cal-nav-btn" onclick="changeWeek(-1)">›</button>
+      <span class="cal-month" id="calMonth"></span>
+      <button class="cal-nav-btn" onclick="changeWeek(1)">‹</button>
+    </div>
+    <button class="cal-today-btn" onclick="goToday()">اليوم</button>
+  </div>
+
+  <div class="tech-filter">
+    <button class="tech-chip active" onclick="filterTech('all',this)">الكل</button>
+    <button class="tech-chip" onclick="filterTech('Abrar',this)">👷 أبرار</button>
+    <button class="tech-chip" onclick="filterTech('Shoib',this)">👷 شعيب</button>
+    <button class="tech-chip" onclick="filterTech('Suhail',this)">👷 سهيل</button>
+  </div>
+
+  <div id="weekView" style="display:none;padding:0 22px 30px;">
+    <div class="week-grid" id="weekGrid"></div>
+  </div>
+  <div class="list-view" id="listView"></div>
 </div>
 
-<div class="container"><div class="card">
-
-<!-- STEP 1 -->
-<div class="step-section active" id="step1">
-  <div class="card-header"><div class="card-icon">🛠️</div><div><h2>اختر نوع الخدمة</h2><p>حدد الخدمة والعدد</p></div></div>
-  <div class="card-body">
-    <div class="section-lbl">💧 أسعار تنظيف وغسيل المكيفات</div>
-    <div style="background:linear-gradient(135deg,#0C3B5E,#1E5F8A);border-radius:14px;padding:14px;margin-bottom:10px;">
-      <div class="clean-grid">
-        <div class="clean-tile" id="ct1" onclick="selClean(1,110)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 100" style="width:80px;height:36px;margin-bottom:6px;">
-<defs><linearGradient id="ag" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0C3B5E"/><stop offset="100%" stop-color="#0EA5E9"/></linearGradient><linearGradient id="bg2" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#e8f4fd"/><stop offset="100%" stop-color="#cde8f7"/></linearGradient></defs>
-<rect x="0" y="0" width="220" height="52" rx="8" fill="url(#bg2)" stroke="#0EA5E9" stroke-width="2"/>
-<rect x="0" y="0" width="220" height="10" rx="8" fill="url(#ag)"/>
-<rect x="0" y="5" width="220" height="5" fill="url(#ag)"/>
-<rect x="75" y="14" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
-<rect x="75" y="20" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
-<rect x="75" y="26" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
-<rect x="75" y="32" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
-<rect x="75" y="38" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
-<path d="M18 52 Q110 64 202 52" fill="none" stroke="#0EA5E9" stroke-width="2" opacity="0.6"/>
-<line x1="95" y1="64" x2="95" y2="80" stroke="#94A3B8" stroke-width="2.5" stroke-dasharray="3,2"/>
-<line x1="103" y1="64" x2="103" y2="80" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="3,2"/>
-<rect x="65" y="78" width="70" height="20" rx="5" fill="#334155" stroke="#475569" stroke-width="1"/>
-<circle cx="90" cy="88" r="8" fill="none" stroke="#64748B" stroke-width="1"/>
-<circle cx="90" cy="88" r="2.5" fill="#64748B"/>
-<path d="M90 80 Q94 84 90 88 Q86 84 90 80" fill="#475569" opacity="0.8"/>
-<path d="M98 88 Q94 92 90 88 Q94 84 98 88" fill="#475569" opacity="0.8"/>
-<path d="M90 96 Q86 92 90 88 Q94 92 90 96" fill="#475569" opacity="0.8"/>
-<path d="M82 88 Q86 84 90 88 Q86 92 82 88" fill="#475569" opacity="0.8"/>
-</svg><div class="t-name">1 مكيف</div><div class="t-price">110 SAR</div></div>
-        <div class="clean-tile" id="ct2" onclick="selClean(2,180)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 100" style="width:80px;height:36px;margin-bottom:6px;">
-<defs><linearGradient id="ag" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0C3B5E"/><stop offset="100%" stop-color="#0EA5E9"/></linearGradient><linearGradient id="bg2" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#e8f4fd"/><stop offset="100%" stop-color="#cde8f7"/></linearGradient></defs>
-<rect x="0" y="0" width="220" height="52" rx="8" fill="url(#bg2)" stroke="#0EA5E9" stroke-width="2"/>
-<rect x="0" y="0" width="220" height="10" rx="8" fill="url(#ag)"/>
-<rect x="0" y="5" width="220" height="5" fill="url(#ag)"/>
-<rect x="75" y="14" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
-<rect x="75" y="20" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
-<rect x="75" y="26" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
-<rect x="75" y="32" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
-<rect x="75" y="38" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
-<path d="M18 52 Q110 64 202 52" fill="none" stroke="#0EA5E9" stroke-width="2" opacity="0.6"/>
-<line x1="95" y1="64" x2="95" y2="80" stroke="#94A3B8" stroke-width="2.5" stroke-dasharray="3,2"/>
-<line x1="103" y1="64" x2="103" y2="80" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="3,2"/>
-<rect x="65" y="78" width="70" height="20" rx="5" fill="#334155" stroke="#475569" stroke-width="1"/>
-<circle cx="90" cy="88" r="8" fill="none" stroke="#64748B" stroke-width="1"/>
-<circle cx="90" cy="88" r="2.5" fill="#64748B"/>
-<path d="M90 80 Q94 84 90 88 Q86 84 90 80" fill="#475569" opacity="0.8"/>
-<path d="M98 88 Q94 92 90 88 Q94 84 98 88" fill="#475569" opacity="0.8"/>
-<path d="M90 96 Q86 92 90 88 Q94 92 90 96" fill="#475569" opacity="0.8"/>
-<path d="M82 88 Q86 84 90 88 Q86 92 82 88" fill="#475569" opacity="0.8"/>
-</svg><div class="t-name">2 مكيف</div><div class="t-price">180 SAR</div></div>
-        <div class="clean-tile" id="ct3" onclick="selClean(3,240)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 100" style="width:80px;height:36px;margin-bottom:6px;">
-<defs><linearGradient id="ag" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0C3B5E"/><stop offset="100%" stop-color="#0EA5E9"/></linearGradient><linearGradient id="bg2" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#e8f4fd"/><stop offset="100%" stop-color="#cde8f7"/></linearGradient></defs>
-<rect x="0" y="0" width="220" height="52" rx="8" fill="url(#bg2)" stroke="#0EA5E9" stroke-width="2"/>
-<rect x="0" y="0" width="220" height="10" rx="8" fill="url(#ag)"/>
-<rect x="0" y="5" width="220" height="5" fill="url(#ag)"/>
-<rect x="75" y="14" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
-<rect x="75" y="20" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
-<rect x="75" y="26" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
-<rect x="75" y="32" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
-<rect x="75" y="38" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
-<path d="M18 52 Q110 64 202 52" fill="none" stroke="#0EA5E9" stroke-width="2" opacity="0.6"/>
-<line x1="95" y1="64" x2="95" y2="80" stroke="#94A3B8" stroke-width="2.5" stroke-dasharray="3,2"/>
-<line x1="103" y1="64" x2="103" y2="80" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="3,2"/>
-<rect x="65" y="78" width="70" height="20" rx="5" fill="#334155" stroke="#475569" stroke-width="1"/>
-<circle cx="90" cy="88" r="8" fill="none" stroke="#64748B" stroke-width="1"/>
-<circle cx="90" cy="88" r="2.5" fill="#64748B"/>
-<path d="M90 80 Q94 84 90 88 Q86 84 90 80" fill="#475569" opacity="0.8"/>
-<path d="M98 88 Q94 92 90 88 Q94 84 98 88" fill="#475569" opacity="0.8"/>
-<path d="M90 96 Q86 92 90 88 Q94 92 90 96" fill="#475569" opacity="0.8"/>
-<path d="M82 88 Q86 84 90 88 Q86 92 82 88" fill="#475569" opacity="0.8"/>
-</svg><div class="t-name">3 مكيفات</div><div class="t-price">240 SAR</div></div>
-        <div class="clean-tile" id="ct4" onclick="selClean(4,280)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 100" style="width:80px;height:36px;margin-bottom:6px;">
-<defs><linearGradient id="ag" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0C3B5E"/><stop offset="100%" stop-color="#0EA5E9"/></linearGradient><linearGradient id="bg2" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#e8f4fd"/><stop offset="100%" stop-color="#cde8f7"/></linearGradient></defs>
-<rect x="0" y="0" width="220" height="52" rx="8" fill="url(#bg2)" stroke="#0EA5E9" stroke-width="2"/>
-<rect x="0" y="0" width="220" height="10" rx="8" fill="url(#ag)"/>
-<rect x="0" y="5" width="220" height="5" fill="url(#ag)"/>
-<rect x="75" y="14" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
-<rect x="75" y="20" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
-<rect x="75" y="26" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
-<rect x="75" y="32" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
-<rect x="75" y="38" width="130" height="2.5" rx="1" fill="#0C3B5E" opacity="0.2"/>
-<path d="M18 52 Q110 64 202 52" fill="none" stroke="#0EA5E9" stroke-width="2" opacity="0.6"/>
-<line x1="95" y1="64" x2="95" y2="80" stroke="#94A3B8" stroke-width="2.5" stroke-dasharray="3,2"/>
-<line x1="103" y1="64" x2="103" y2="80" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="3,2"/>
-<rect x="65" y="78" width="70" height="20" rx="5" fill="#334155" stroke="#475569" stroke-width="1"/>
-<circle cx="90" cy="88" r="8" fill="none" stroke="#64748B" stroke-width="1"/>
-<circle cx="90" cy="88" r="2.5" fill="#64748B"/>
-<path d="M90 80 Q94 84 90 88 Q86 84 90 80" fill="#475569" opacity="0.8"/>
-<path d="M98 88 Q94 92 90 88 Q94 84 98 88" fill="#475569" opacity="0.8"/>
-<path d="M90 96 Q86 92 90 88 Q94 92 90 96" fill="#475569" opacity="0.8"/>
-<path d="M82 88 Q86 84 90 88 Q86 92 82 88" fill="#475569" opacity="0.8"/>
-</svg><div class="t-name">4 مكيفات</div><div class="t-price">280 SAR</div></div>
+<!-- APPOINTMENT MODAL -->
+<div class="modal-overlay" id="apptModal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h3 id="modalTitle">➕ موعد جديد</h3>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label>اسم العميل <span class="req">*</span></label><input type="text" id="f_client" placeholder="اسم العميل" list="clientsList"><datalist id="clientsList"></datalist></div>
+        <div class="form-group"><label>جوال العميل <span class="req">*</span></label><input type="tel" id="f_phone" placeholder="05xxxxxxxx" oninput="if(this.value.length>=10) lookupCustomerByPhone(this.value.trim())"></div>
       </div>
-      <div class="offer-tile" id="ct5" onclick="selClean(5,300)">
-        <div class="offer-badge">⚡ عرض مؤقت / Special Offer</div>
-        <div style="font-size:36px;margin-bottom:6px;">🏠❄️</div><div class="o-title">5 مكيفات أو أكثر / 5+ AC Units</div>
-        <div class="o-price">60 SAR <span style="font-size:12px;font-weight:500">للمكيف / per unit</span></div>
-      </div>
-    </div>
-    <div class="section-lbl">🔧 خدمات أخرى / Other Services</div>
-    <div class="service-grid">
-      <div class="svc-card" id="sv1" onclick="selSvc('تنظيف وغسيل المكيفات','AC Cleaning & Washing',120,'sv1')"><div class="s-icon">🚿</div><div class="s-name">تنظيف وغسيل</div><div class="s-price">From 120 SAR</div></div>
-      <div class="svc-card" id="sv2" onclick="selSvc('تعبئة غاز','Gas Refill',150,'sv2')"><div class="s-icon">🧪</div><div class="s-name">تعبئة غاز</div><div class="s-price">From 150 SAR</div></div>
-      <div class="svc-card" id="sv3" onclick="selSvc('كشف وإصلاح أعطال','Diagnosis & Repair',100,'sv3')"><div class="s-icon">🔍</div><div class="s-name">كشف وإصلاح</div><div class="s-price">From 100 SAR</div></div>
-      <div class="svc-card" id="sv4" onclick="selSvc('تركيب مكيف جديد','AC Installation',200,'sv4')"><div class="s-icon">⚙️</div><div class="s-name">تركيب مكيف</div><div class="s-price">From 200 SAR</div></div>
-      <div class="svc-card" id="sv5" onclick="selSvc('باقة صيانة سنوية','Annual Package',400,'sv5')"><div class="s-icon">👑</div><div class="s-name">باقة سنوية</div><div class="s-price">From 400 SAR</div></div>
-      <div class="svc-card" id="sv6" onclick="selSvc('صيانة دورية','Periodic Maintenance',120,'sv6')"><div class="s-icon">🛠️</div><div class="s-name">صيانة دورية</div><div class="s-price">From 120 SAR</div></div>
-    </div>
-    <!-- عدد المكيفات للخدمات الأخرى -->
-    <div class="units-box" id="units-box">
-      <div class="units-lbl">❄️ كم عدد المكيفات المطلوب خدمتها؟ <span class="req">*</span></div>
-      <div class="units-ctrl">
-        <button class="units-btn plus" onclick="changeUnits(1)">+</button>
-        <div class="units-num"><div class="n" id="units-display">1</div><div class="sub">مكيف</div></div>
-        <button class="units-btn minus" onclick="changeUnits(-1)">−</button>
-      </div>
-    </div>
-    <!-- السعر التقديري للخدمة -->
-    <div class="service-price-box" id="servicePriceBox">
-      <label for="servicePrice">💰 السعر التقديري للخدمة (ريال)</label>
-      <input type="number" id="servicePrice" name="servicePrice"
-        min="0" step="1" inputmode="decimal" placeholder="مثال: 300">
-      <small class="field-hint">السعر تقديري ويمكن تعديله عند إصدار الفاتورة.</small>
-    </div>
-    <div class="section-lbl">👥 نوع العميل <span class="req">*</span></div>
-    <div class="type-row">
-      <button class="type-btn" id="tb1" onclick="selType('أفراد','tb1')">🏠 أفراد</button>
-      <button class="type-btn" id="tb2" onclick="selType('شركات','tb2')">🏢 شركات</button>
-      <button class="type-btn" id="tb3" onclick="selType('دائم','tb3')">⭐ دائم</button>
-    </div>
-    <div class="err-msg" id="e_svc">الرجاء اختيار نوع الخدمة</div>
-    <div class="err-msg" id="e_type">الرجاء اختيار نوع العميل</div>
-
-    <!-- قسم وصف المشكلة — اختياري بالكامل -->
-    <div class="problem-section" id="problemSection">
-      <div class="problem-section-title">📝 وصف مختصر للمشكلة أو الطلب</div>
-      <div class="problem-section-hint">اختر ما ينطبق على حالتك، ويمكنك اختيار أكثر من خيار.</div>
-
-      <!-- Progress Bar -->
-      <div class="prob-progress-wrap">
-        <div class="prob-progress-label">
-          <span>درجة اكتمال البلاغ</span>
-          <span id="probProgressPct">0%</span>
+      <div class="form-group"><label>العنوان <span class="req">*</span></label><input type="text" id="f_address" placeholder="الحي، الشارع..."></div>
+      <div class="form-row">
+        <div class="form-group"><label>نوع الخدمة <span class="req">*</span></label>
+          <select id="f_service">
+            <option value="">-- اختر --</option>
+            <option>تنظيف مكيف</option><option>غسيل مكيفات</option>
+            <option>صيانة دورية</option><option>تعبئة غاز</option>
+            <option>كشف وإصلاح أعطال</option><option>تركيب مكيف جديد</option>
+            <option>باقة صيانة سنوية</option>
+          </select>
         </div>
-        <div class="prob-progress-bar"><div class="prob-progress-fill" id="probProgressFill" style="width:0%"></div></div>
+        <div class="form-group"><label>عدد المكيفات</label><input type="number" id="f_units" value="1" min="1" max="30"></div>
       </div>
-
-      <!-- الأعطال الشائعة -->
-      <div class="common-faults">
-        <div class="common-faults-label">⭐ الأعطال الأكثر شيوعًا</div>
-        <div class="problem-chips" id="commonChipsContainer"></div>
+      <div class="form-row">
+        <div class="form-group"><label>تاريخ الزيارة <span class="req">*</span></label><input type="date" id="f_date"></div>
+        <div class="form-group"><label>وقت البداية <span class="req">*</span></label><input type="time" id="f_time" value="09:00"></div>
       </div>
-
-      <!-- زر عرض المزيد -->
-      <button type="button" class="show-more-btn" id="showMoreBtn" onclick="toggleAllProblems()">عرض جميع الأعطال ▼</button>
-
-      <!-- جميع الأعطال — مخفية افتراضياً -->
-      <div class="all-problems-wrap" id="allProblemsWrap">
-        <div id="problemChipsContainer" style="margin-top:10px;"></div>
-      </div>
-
-      <!-- تفاصيل إضافية — مرة واحدة فقط -->
-      <div class="prob-textarea-wrap">
-        <label>تفاصيل إضافية <span style="font-size:10px;color:var(--mist);">(اختياري)</span></label>
-        <textarea id="problemDescription" maxlength="300"
-          placeholder="مثال: المكيف لا يبرد ويوجد صوت مرتفع عند التشغيل، أو يوجد تسريب ماء من الوحدة الداخلية."
-          oninput="updateCharCount(this,'descCount',300);updateProgress()"></textarea>
-        <div class="char-counter"><span id="descCount">0</span> / 300</div>
-      </div>
-
-      <!-- هل المكيف يعمل الآن؟ -->
-      <div class="prob-question">
-        <label>هل المكيف يعمل الآن؟ <span style="font-size:10px;color:var(--mist);">(اختياري)</span></label>
-        <div class="prob-radio-row" id="acStatusRow">
-          <button type="button" class="prob-radio-btn" data-val="working" onclick="selRadio('acStatus',this)">نعم، يعمل</button>
-          <button type="button" class="prob-radio-btn" data-val="weak" onclick="selRadio('acStatus',this)">يعمل بكفاءة ضعيفة</button>
-          <button type="button" class="prob-radio-btn" data-val="not_working" onclick="selRadio('acStatus',this)">لا يعمل إطلاقًا</button>
-          <button type="button" class="prob-radio-btn" data-val="unknown" onclick="selRadio('acStatus',this)">لا أعلم</button>
+      <div class="form-row">
+        <div class="form-group"><label>الفني المسؤول <span class="req">*</span></label>
+          <select id="f_tech">
+            <option value="">-- اختر الفني --</option>
+            <option value="Abrar">أبرار</option><option value="Shoib">شعيب</option><option value="Suhail">سهيل</option>
+          </select>
+        </div>
+        <div class="form-group"><label>الحالة</label>
+          <select id="f_status">
+            <option value="pending">⏳ في الانتظار</option>
+            <option value="confirmed">✅ مؤكد</option>
+            <option value="done">🎉 مكتمل</option>
+            <option value="cancelled">❌ ملغي</option>
+          </select>
         </div>
       </div>
+      <div class="form-group"><label>ملاحظات</label><textarea id="f_notes" rows="2" placeholder="أي تعليمات للفني..."></textarea></div>
 
-      <!-- هل سبق إصلاح المشكلة؟ -->
-      <div class="prob-question">
-        <label>هل سبق إصلاح نفس المشكلة من قبل؟ <span style="font-size:10px;color:var(--mist);">(اختياري)</span></label>
-        <div class="prob-radio-row" id="prevRepairRow">
-          <button type="button" class="prob-radio-btn" data-val="yes" onclick="selRadio('prevRepair',this)">نعم</button>
-          <button type="button" class="prob-radio-btn" data-val="no" onclick="selRadio('prevRepair',this)">لا</button>
-          <button type="button" class="prob-radio-btn" data-val="unknown" onclick="selRadio('prevRepair',this)">لا أعلم</button>
-        </div>
-        <div class="prev-repair-detail" id="prevRepairDetailWrap">
-          <label style="font-size:11px;font-weight:700;color:var(--slate);display:block;margin-bottom:4px;">ما الذي تم عمله سابقًا؟ <span style="font-size:10px;color:var(--mist);">(اختياري)</span></label>
-          <textarea id="previousRepairDetails" maxlength="200"
-            placeholder="مثال: تمت تعبئة فريون، تغيير مكثف، تنظيف المكيف، إصلاح تسريب."
-            oninput="updateCharCount(this,'prevDetailCount',200)"></textarea>
-          <div class="char-counter"><span id="prevDetailCount">0</span> / 200</div>
-        </div>
-      </div>
+      <!-- قسم بيانات العميل — يظهر عند البحث برقم الجوال -->
+      <div class="client-found-msg" id="clientFoundMsg"></div>
 
-      <!-- هل سبق أن زارك فني آخر؟ -->
-      <div class="prob-question">
-        <label>هل سبق أن زارك فني آخر؟ <span style="font-size:10px;color:var(--mist);">(اختياري)</span></label>
-        <div class="prob-radio-row" id="visitedBeforeRow">
-          <button type="button" class="prob-radio-btn" data-val="yes" onclick="selRadio('visitedBefore',this)">نعم</button>
-          <button type="button" class="prob-radio-btn" data-val="no" onclick="selRadio('visitedBefore',this)">لا</button>
+      <!-- قسم موقع العميل -->
+      <div class="loc-section">
+        <div class="loc-section-title">📍 موقع العميل</div>
+        <div class="loc-input-row">
+          <input type="url" id="appointment_maps_link" placeholder="https://maps.app.goo.gl/..." autocomplete="off">
+          <button type="button" class="loc-btn loc-btn-verify" onclick="verifyApptLocation()">🗺️ التحقق من الرابط</button>
+          <a class="loc-btn loc-btn-open" id="loc_open_btn" href="#" target="_blank">فتح الموقع</a>
         </div>
-        <div id="prevTechSolvedWrap" style="display:none;margin-top:8px;">
-          <label style="font-size:11px;font-weight:700;color:var(--slate);display:block;margin-bottom:6px;">هل تم حل المشكلة؟</label>
-          <div class="prob-radio-row" id="prevTechSolvedRow">
-            <button type="button" class="prob-radio-btn" data-val="yes" onclick="selRadio('prevTechSolved',this)">نعم</button>
-            <button type="button" class="prob-radio-btn" data-val="no" onclick="selRadio('prevTechSolved',this)">لا</button>
+        <div class="loc-msg" id="loc_msg"></div>
+        <!-- معاينة خريطة — تظهر فقط عند إحداثيات صالحة -->
+        <div class="loc-preview" id="loc_preview">
+          <iframe id="loc_preview_map" src="about:blank" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
+          <p class="loc-preview-note">يرجى التأكد أن العلامة على موقع العميل الصحيح.</p>
+          <label class="loc-chk-row">
+            <input type="checkbox" id="chk_loc_verified">
+            <span>تم التأكد من أن الموقع صحيح</span>
+          </label>
+        </div>
+        <!-- تعارض الموقع -->
+        <div class="loc-conflict-box" id="loc_conflict_box">
+          <div>⚠️ يوجد موقع محفوظ سابقًا لهذا العميل.</div>
+          <div style="margin-top:4px;">هل تريد:</div>
+          <div class="loc-conflict-btns">
+            <button class="loc-conflict-btn btn-use-old" onclick="useOldLocation()">استخدام الموقع السابق</button>
+            <button class="loc-conflict-btn btn-use-new" onclick="useNewLocation()">استخدام الموقع الجديد لهذا الموعد فقط</button>
+            <button class="loc-conflict-btn btn-save-new" onclick="useNewAndSave()">حفظ الموقع الجديد في ملف العميل</button>
           </div>
-          <div class="prev-tech-note" id="prevTechNote">⚠️ هذه الحالة تعتبر ذات أولوية أعلى.</div>
         </div>
-      </div>
-    </div>
-
-    <div class="btn-row"><button class="btn-next" onclick="next1()">التالي ←</button></div>
-  </div>
-</div>
-
-<!-- STEP 2 -->
-<div class="step-section" id="step2">
-  <div class="card-header"><div class="card-icon">👤</div><div><h2>بياناتك الشخصية</h2><p>حتى نتواصل معك لتأكيد الموعد</p></div></div>
-  <div class="card-body">
-    <div class="two-col">
-      <div class="field"><label>الاسم <span class="req">*</span></label><input type="text" id="f_name" placeholder="اسمك الكريم"><div class="err-msg" id="e_name">أدخل اسمك</div></div>
-      <div class="field"><label>الجوال <span class="req">*</span></label><input type="tel" id="f_phone" placeholder="05xxxxxxxx" maxlength="10"><div class="err-msg" id="e_phone">رقم غير صحيح</div></div>
-    </div>
-    <div class="field">
-      <label>المدينة <span class="req">*</span></label>
-      <select id="f_city">
-        <option value="">-- اختر --</option>
-        <option>جدة / Jeddah</option><option>الرياض / Riyadh</option>
-        <option>مكة المكرمة / Makkah</option><option>المدينة المنورة / Madinah</option>
-        <option>الدمام / Dammam</option><option>الطائف / Taif</option><option>أخرى / Other</option>
-      </select>
-      <div class="err-msg" id="e_city">اختر المدينة</div>
-    </div>
-    <!-- رابط الموقع من Google Maps -->
-    <div class="field">
-      <label>📍 رابط موقعك من Google Maps <span class="req">*</span></label>
-      <div class="maps-guide">
-        <strong>كيف تحصل على الرابط؟</strong><br>
-        ١. افتح تطبيق Google Maps<br>
-        ٢. حدد موقعك بدقة على الخريطة<br>
-        ٣. اضغط <strong>مشاركة</strong> ← انسخ الرابط<br>
-        ٤. الصقه في الخانة أدناه
-      </div>
-      <input type="url" id="f_maps_link" placeholder="https://maps.app.goo.gl/..." style="direction:ltr;" oninput="validateMapsLink(this.value)">
-      <div class="maps-ok" id="maps-ok">✅ تم تسجيل رابط الموقع بنجاح</div>
-      <!-- رسالة استخراج الإحداثيات من الرابط الكامل -->
-      <div class="maps-ok-coords" id="maps-ok-coords">✅ تم استخراج الإحداثيات من الرابط</div>
-      <!-- رسالة الرابط المختصر -->
-      <div class="maps-shortlink" id="maps-shortlink">ℹ️ سيتم حفظ رابط الموقع، لكن لن يدخل ضمن الجولة التلقائية إلا إذا استخدمت زر «موقعي الحالي».</div>
-      <!-- حقول الإحداثيات المخفية -->
-      <input type="hidden" id="f_lat">
-      <input type="hidden" id="f_lng">
-      <input type="hidden" id="f_accuracy">
-      <input type="hidden" id="f_addr">
-      <div class="err-msg" id="e_addr">أدخل رابط موقعك من Google Maps</div>
-    </div>
-    <!-- زر الموقع الحالي — اختياري، لا يُستدعى تلقائياً -->
-    <div style="margin-bottom:14px;">
-      <button type="button" class="geo-btn" id="geoBtn" onclick="useCurrentLocation()">
-        <span>📍</span> استخدام موقعي الحالي
-      </button>
-      <p class="geo-privacy">يُستخدم الموقع فقط لتنظيم الزيارة والوصول إليك.</p>
-      <div class="geo-msg" id="geoMsg"></div>
-      <!-- نتائج تحديد الموقع: زر التأكيد + مربع التحقق — تظهر بعد النجاح -->
-      <div class="geo-verify-wrap" id="geoVerifyWrap">
-        <a class="geo-open-map-btn" id="geoOpenMap" href="#" target="_blank">🗺️ فتح الموقع للتأكد</a>
-        <label class="geo-chk-label">
-          <input type="checkbox" id="chk-location-verified">
-          <span>تأكدت أن الموقع الظاهر صحيح</span>
+        <!-- خيار حفظ الموقع في ملف العميل -->
+        <label class="loc-save-row" id="loc_save_row" style="display:none;">
+          <input type="checkbox" id="chk_save_to_customer">
+          <span>💾 حفظ هذا الموقع في ملف العميل</span>
         </label>
       </div>
-      <!-- قسم معاينة الخريطة داخل الصفحة — يظهر عند توفر إحداثيات صالحة -->
-      <div class="location-preview-section" id="locationPreviewSection" style="display:none;">
-        <div class="location-preview-title">📍 معاينة موقعك</div>
-        <iframe
-          id="locationPreviewMap"
-          class="location-preview-map"
-          loading="lazy"
-          referrerpolicy="no-referrer-when-downgrade"
-          allowfullscreen
-          src="about:blank">
-        </iframe>
-        <p class="location-preview-note">يرجى التأكد أن العلامة تقع على موقع المنزل الصحيح قبل إرسال الطلب.</p>
-        <div class="location-preview-actions">
-          <button type="button" class="loc-confirm-btn" id="confirmLocationBtn" onclick="confirmLocation()">✅ الموقع صحيح</button>
-          <button type="button" class="loc-retry-btn" id="retryLocationBtn" onclick="retryLocation()">🔄 إعادة تحديد الموقع</button>
+
+      <!-- حقول مخفية للإحداثيات -->
+      <input type="hidden" id="appointment_lat">
+      <input type="hidden" id="appointment_lng">
+      <input type="hidden" id="appointment_location_source">
+      <input type="hidden" id="appointment_location_verified" value="false">
+
+      <div class="form-group">
+        <label>📸 صورة الموقع / المنزل</label>
+        <div id="imgUploadArea" style="border:2px dashed #E2E8F0;border-radius:10px;padding:16px;text-align:center;cursor:pointer;background:var(--frost);transition:all .2s;" onclick="document.getElementById('f_img').click()">
+          <div id="imgPreview" style="display:none;"><img id="imgPreviewSrc" style="max-width:100%;max-height:180px;border-radius:8px;object-fit:cover;" src=""></div>
+          <div id="imgPlaceholder" style="color:var(--mist);font-size:13px;">
+            <div style="font-size:28px;margin-bottom:6px;">📷</div>
+            <div>اضغط لرفع صورة الموقع</div>
+            <div style="font-size:11px;margin-top:4px;">JPG, PNG — حد أقصى 2MB</div>
+          </div>
         </div>
-        <div class="location-confirmed-msg" id="locationConfirmedMsg">✅ تم تأكيد الموقع بنجاح</div>
+        <input type="file" id="f_img" accept="image/*" style="display:none;" onchange="previewImage(this)">
+        <button type="button" id="removeImgBtn" onclick="removeImage()" style="display:none;margin-top:6px;padding:4px 12px;background:#FEE2E2;color:#EF4444;border:none;border-radius:6px;font-family:'Tajawal',sans-serif;font-size:12px;cursor:pointer;">🗑️ حذف الصورة</button>
       </div>
-      <!-- حقل مخفي لحالة تأكيد الموقع -->
-      <input type="hidden" id="f_location_verified" value="false">
     </div>
-    <!-- صورة المنزل -->
-    <div class="field">
-      <label>📸 صورة المنزل / الموقع <span style="font-size:11px;color:var(--mist);">(اختياري)</span></label>
-      <div class="img-upload" id="imgArea" onclick="document.getElementById('f_img').click()">
-        <div class="img-preview" id="imgPreview"><img id="imgSrc" src=""></div>
-        <div class="img-placeholder" id="imgPlaceholder"><div class="icon">📷</div><div>اضغط لإرفاق صورة الموقع</div><div style="font-size:11px;margin-top:3px;">تساعد الفني على إيجاد موقعك</div></div>
-      </div>
-      <input type="file" id="f_img" accept="image/*" style="display:none;" onchange="previewImage(this)">
-      <button type="button" id="removeImgBtn" onclick="removeImage()" style="display:none;margin-top:6px;padding:4px 12px;background:#FEE2E2;color:#EF4444;border:none;border-radius:6px;font-family:'Tajawal',sans-serif;font-size:12px;cursor:pointer;">🗑️ حذف الصورة</button>
-    </div>
-    <div class="field"><label>ملاحظات</label><textarea id="f_notes" rows="2" placeholder="أي تفاصيل للفني..."></textarea></div>
-    <div class="btn-row">
-      <button class="btn-back" onclick="goStep(1)">← رجوع</button>
-      <button class="btn-next" onclick="next2()">التالي ←</button>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">إلغاء</button>
+      <button class="btn-save" onclick="saveAppt()">💾 حفظ الموعد</button>
     </div>
   </div>
 </div>
 
-<!-- STEP 3 -->
-<div class="step-section" id="step3">
-  <div class="card-header"><div class="card-icon">📅</div><div><h2>اختر موعدك</h2><p>التاريخ والوقت المناسب</p></div></div>
-  <div class="card-body">
-    <div class="field">
-      <label>تاريخ الزيارة <span class="req">*</span></label>
-      <input type="date" id="f_date" onchange="checkDateAndSlots(this.value)">
-      <div class="friday-closed" id="fridayClosed">
-        <div class="icon">⛔</div>
-        <p>نعتذر — لا تتوفر مواعيد يوم الجمعة<br>يرجى اختيار يوم آخر</p>
-      </div>
-      <div class="err-msg" id="e_date">اختر التاريخ</div>
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h3 id="detailTitle">📋 تفاصيل الموعد</h3>
+      <button class="modal-close" onclick="document.getElementById('detailModal').classList.remove('open')">×</button>
     </div>
-    <div class="dur-note" id="durNote"></div>
-    <div class="section-lbl">الوقت المفضل <span class="req">*</span></div>
-    <div class="slots-grid" id="slotsGrid"></div>
-    <div class="err-msg" id="e_time">اختر الوقت</div>
-    <div class="btn-row">
-      <button class="btn-back" onclick="goStep(2)">← رجوع</button>
-      <button class="btn-next" onclick="next3()">مراجعة</button>
+    <div class="modal-body" id="detailBody"></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="document.getElementById('detailModal').classList.remove('open')">إغلاق</button>
+      <button class="btn-save" id="detailEditBtn">✏️ تعديل</button>
     </div>
   </div>
 </div>
 
-<!-- STEP 4 -->
-<div class="step-section" id="step4">
-  <div class="card-header"><div class="card-icon">📋</div><div><h2>مراجعة الحجز</h2><p>تأكد من صحة البيانات</p></div></div>
-  <div class="card-body">
-    <div class="sum-box" id="sumBox"></div>
-    <div class="total-box"><span class="t-lbl">السعر التقديري</span><span class="t-price" id="totalPr">--</span></div>
-    <div style="background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:10px;padding:10px 14px;font-size:12px;color:#92400E;margin-bottom:12px;">ℹ️ السعر تقديري، يُحدد النهائي بعد معاينة الفني. لا تشمل قطع الغيار.</div>
-    <!-- سياسة الكشف -->
-    <div class="inspection-info" id="inspection-info">
-      <strong>🔍 سياسة رسوم الكشف:</strong><br>
-      • رسوم الكشف: <strong>100 ريال</strong><br>
-      • تُخصم من تكلفة الإصلاح عند الاتفاق<br>
-      • تُدفع كاملة إذا لم يتم الإصلاح
-    </div>
-    <!-- موافقة العدد -->
-    <div class="chk-box green">
-      <label class="chk-label">
-        <input type="checkbox" id="chk-units">
-        <span class="chk-text">✅ أقر بأن عدد المكيفات المحدد هو العدد الفعلي، وأن السعر يُحسب على العدد الفعلي عند الزيارة. أي تخفيض في العدد يعني تغيير السعر تلقائياً.<br><span class="chk-sub">I confirm the AC units count is actual. Price calculated on actual units visited.</span></span>
-      </label>
-    </div>
-    <!-- موافقة الكشف -->
-    <div class="chk-box blue" id="chk-inspection-wrap">
-      <label class="chk-label">
-        <input type="checkbox" id="chk-inspection" style="accent-color:#3B82F6;">
-        <span class="chk-text blue-text">✅ أقر بسياسة رسوم الكشف: <strong>100 ريال</strong> تُخصم من تكلفة الإصلاح عند الاتفاق، وتُدفع كاملة إذا لم يتم الإصلاح.<br><span class="chk-sub blue-sub">I agree: 100 SAR inspection fee, deducted from repair if agreed.</span></span>
-      </label>
-    </div>
-    <div class="btn-row">
-      <button class="btn-back" onclick="goStep(3)">← تعديل</button>
-      <button class="btn-next" onclick="submitBooking()">✅ إرسال الحجز</button>
-    </div>
-  </div>
-</div>
+<div class="toast" id="toast"></div>
 
-<!-- SUCCESS -->
-<div class="step-section" id="stepOK">
-  <div class="success-wrap">
-    <div class="success-circle">✓</div>
-    <h2 style="font-size:20px;font-weight:800;color:var(--deep);margin-bottom:6px;">تم استلام طلبك! 🎉</h2>
-    <p style="font-size:13px;color:var(--mist);">سيتواصل معك فريقنا خلال ساعة لتأكيد الموعد</p>
-    <div class="ref-box"><div style="font-size:11px;color:var(--mist);">رقم الحجز</div><div class="ref-num" id="refNum">ATW-00000</div></div>
-    <br>
-    <a id="waLink" class="wa-btn" href="#" target="_blank">📲 متابعة عبر واتساب</a>
-    <br>
-    <button class="new-btn" onclick="location.reload()">+ حجز جديد</button>
-  </div>
-</div>
-
-</div></div>
-
-<div style="text-align:center;padding:20px 16px;background:linear-gradient(135deg,#0C3B5E,#0e5fa8);margin-top:20px;">
-  <p style="color:rgba(255,255,255,.6);font-size:12px;margin-bottom:12px;font-family:'Tajawal',sans-serif;">تابعنا على منصات التواصل</p>
-  <div style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;">
-    <a href="https://wa.me/message/3MKXWHOJKS5NM1" target="_blank" style="display:flex;align-items:center;gap:6px;background:#25D366;color:#fff;padding:9px 18px;border-radius:10px;text-decoration:none;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;">
-      💬 واتساب
-    </a>
-    <a href="https://x.com/Mainten_Ac" target="_blank" style="display:flex;align-items:center;gap:6px;background:#000;color:#fff;padding:9px 18px;border-radius:10px;text-decoration:none;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;">
-      𝕏 تويتر
-    </a>
-    <a href="https://www.snapchat.com/add/attwad23?share_id=U076WJwYfBo&locale=ar-AE" target="_blank" style="display:flex;align-items:center;gap:6px;background:#FFFC00;color:#000;padding:9px 18px;border-radius:10px;text-decoration:none;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;">
-      👻 سناب شات
-    </a>
-  </div>
-  <p style="color:rgba(255,255,255,.4);font-size:11px;margin-top:12px;font-family:'Tajawal',sans-serif;">مؤسسة أطواد لصيانة المكيفات © 2026</p>
-</div>
-
-<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
 <script>
-var LANG = 'ar';
+// ===== FIREBASE =====
 var db = null;
-try { firebase.initializeApp({databaseURL:"https://atwad-booking-default-rtdb.firebaseio.com"}); db=firebase.database(); } catch(e){}
+try {
+  firebase.initializeApp({databaseURL:"https://atwad-booking-default-rtdb.firebaseio.com"});
+  db = firebase.database();
+} catch(e){ console.log('Firebase:', e); }
 
-var S = {service:'',serviceAr:'',price:0,units:1,isClean:false,clientType:'',name:'',phone:'',city:'',addr:'',notes:'',date:'',time:'',duration:0};
+// ===== STATE =====
+let appointments = []; // كل البيانات من Firebase
+let currentWeekOffset = 0;
+let currentView = 'list';
+let techFilter = 'all';
+let editingId = null;
+let editingFirebaseKey = null;
+let editingOriginalDate = ''; // التاريخ الأصلي للموعد قبل التعديل
 
-// ============================================================
-// بيانات أوصاف المشاكل — مصفوفة واحدة
-// catColor: صف بصري لكل تصنيف
-// services: قائمة الخدمات التي تظهر فيها ('all' = الكل)
-// ============================================================
-var problemOptions = [
-  // التبريد
-  {value:'no_cooling',    label:'لا يبرد',                   cat:'cooling',     catLabel:'❄️ التبريد',           catColor:'cat-cooling',    services:['repair','all']},
-  {value:'weak_cooling',  label:'تبريد ضعيف',                cat:'cooling',     catLabel:'❄️ التبريد',           catColor:'cat-cooling',    services:['repair','freon','all']},
-  {value:'needs_freon',   label:'يحتاج تعبئة فريون',         cat:'cooling',     catLabel:'❄️ التبريد',           catColor:'cat-cooling',    services:['repair','freon','all']},
-  {value:'freon_leak',    label:'تسريب غاز فريون',           cat:'cooling',     catLabel:'❄️ التبريد',           catColor:'cat-cooling',    services:['repair','freon','all']},
-  {value:'frozen_pipes',  label:'تجمد المواسير',             cat:'cooling',     catLabel:'❄️ التبريد',           catColor:'cat-cooling',    services:['repair','freon','all']},
-  // المياه والتصريف
-  {value:'water_leak',    label:'تسريب ماء',                 cat:'water',       catLabel:'💧 المياه والتصريف',   catColor:'cat-water',      services:['repair','all']},
-  {value:'drain_blocked', label:'انسداد التصريف',             cat:'water',       catLabel:'💧 المياه والتصريف',   catColor:'cat-water',      services:['repair','all']},
-  // الصوت والرائحة
-  {value:'loud_noise',    label:'صوت مرتفع',                 cat:'noise',       catLabel:'🔊 الصوت والرائحة',   catColor:'cat-noise',      services:['repair','all']},
-  {value:'vibration',     label:'اهتزاز',                    cat:'noise',       catLabel:'🔊 الصوت والرائحة',   catColor:'cat-noise',      services:['repair','all']},
-  {value:'bad_smell',     label:'رائحة كريهة',               cat:'noise',       catLabel:'🔊 الصوت والرائحة',   catColor:'cat-noise',      services:['cleaning','repair','all']},
-  // الكهرباء والتشغيل
-  {value:'not_working',   label:'المكيف لا يعمل',            cat:'electric',    catLabel:'⚡ الكهرباء والتشغيل',catColor:'cat-electric',   services:['repair','all']},
-  {value:'keeps_off',     label:'يفصل باستمرار',             cat:'electric',    catLabel:'⚡ الكهرباء والتشغيل',catColor:'cat-electric',   services:['repair','all']},
-  {value:'breaker_trips', label:'القاطع يفصل عند التشغيل',  cat:'electric',    catLabel:'⚡ الكهرباء والتشغيل',catColor:'cat-electric',   services:['repair','all']},
-  // الهواء والمروحة
-  {value:'weak_airflow',  label:'ضعف تدفق الهواء',          cat:'fan',         catLabel:'💨 الهواء والمروحة',  catColor:'cat-fan',        services:['repair','all']},
-  {value:'fan_broken',    label:'المروحة لا تعمل',           cat:'fan',         catLabel:'💨 الهواء والمروحة',  catColor:'cat-fan',        services:['repair','all']},
-  // التنظيف والصيانة
-  {value:'cleaning_only', label:'تنظيف فقط',                cat:'maintenance', catLabel:'🧹 التنظيف والصيانة',catColor:'cat-maintenance', services:['cleaning','repair','all']},
-  {value:'cleaning_summer',label:'تنظيف قبل الصيف',         cat:'maintenance', catLabel:'🧹 التنظيف والصيانة',catColor:'cat-maintenance', services:['cleaning','all']},
-  {value:'cleaning_finish',label:'تنظيف بعد التشطيب',       cat:'maintenance', catLabel:'🧹 التنظيف والصيانة',catColor:'cat-maintenance', services:['cleaning','all']},
-  {value:'periodic_maint',label:'صيانة دورية',              cat:'maintenance', catLabel:'🧹 التنظيف والصيانة',catColor:'cat-maintenance', services:['repair','all']},
-  {value:'inspection',    label:'فحص فقط',                   cat:'maintenance', catLabel:'🧹 التنظيف والصيانة',catColor:'cat-maintenance', services:['repair','all']},
-  // التركيب والنقل
-  {value:'new_install',   label:'تركيب جديد',               cat:'install',     catLabel:'🔧 التركيب والنقل',  catColor:'cat-install',    services:['install','all']},
-  {value:'move_install',  label:'فك ونقل وتركيب',           cat:'install',     catLabel:'🔧 التركيب والنقل',  catColor:'cat-install',    services:['install','all']},
-  {value:'remove_only',   label:'فك فقط',                    cat:'install',     catLabel:'🔧 التركيب والنقل',  catColor:'cat-install',    services:['install','all']},
-  {value:'install_only',  label:'تركيب فقط',                cat:'install',     catLabel:'🔧 التركيب والنقل',  catColor:'cat-install',    services:['install','all']},
-  // أخرى
-  {value:'other',         label:'أخرى',                      cat:'other',       catLabel:'➕ أخرى',             catColor:'cat-other',      services:['all']}
-];
+const TECHS = { Abrar:'أبرار', Shoib:'شعيب', Suhail:'سهيل' };
+const STATUS_LABELS = { confirmed:'مؤكد', pending:'في الانتظار', done:'مكتمل', cancelled:'ملغي' };
+const STATUS_ICONS = { confirmed:'✅', pending:'⏳', done:'🎉', cancelled:'❌' };
+const TECH_COLORS = { Abrar:'#0EA5E9', Shoib:'#10B981', Suhail:'#8B5CF6' };
 
-// الأعطال الشائعة (قيم ثابتة)
-var COMMON_FAULT_VALUES = ['no_cooling','weak_cooling','water_leak','freon_leak','not_working','cleaning_only'];
-
-// تعيين نوع الخدمة للفلترة: 'all' | 'cleaning' | 'repair' | 'install' | 'freon'
-var currentServiceFilter = 'all';
-
-// حالة إظهار/إخفاء المزيد
-var allProblemsOpen = false;
-
-// الحالة الحالية للاختيارات
-var selectedProblemCodes  = [];
-var selectedProblemLabels = [];
-var selectedAcStatus      = '';
-var selectedPrevRepair    = '';
-var selectedVisitedBefore = '';
-var selectedPrevTechSolved = '';
-
-// ============================================================
-// mapServiceToFilter — ربط اسم الخدمة بفلتر الأعطال
-// ============================================================
-function mapServiceToFilter(serviceAr) {
-  if(serviceAr.indexOf('تنظيف') !== -1 || serviceAr.indexOf('غسيل') !== -1) return 'cleaning';
-  if(serviceAr.indexOf('تركيب') !== -1 || serviceAr.indexOf('فك') !== -1) return 'install';
-  if(serviceAr.indexOf('تعبئة غاز') !== -1 || serviceAr.indexOf('فريون') !== -1) return 'freon';
-  return 'repair'; // كشف وإصلاح + صيانة + باقة = repair = جميع الأعطال
+function today(){ return new Date().toISOString().split('T')[0]; }
+function formatDate(d){ try{ return new Date(d+'T00:00:00').toLocaleDateString('ar-SA',{weekday:'long',year:'numeric',month:'long',day:'numeric'}); } catch{ return d; } }
+function formatDateShort(d){ try{ return new Date(d+'T00:00:00').toLocaleDateString('ar-SA',{month:'short',day:'numeric'}); } catch{ return d; } }
+function getWeekDates(offset=0){
+  const d = new Date(); d.setDate(d.getDate() - d.getDay() + offset*7);
+  return Array.from({length:7},(_,i)=>{ const dd=new Date(d); dd.setDate(d.getDate()+i); return dd.toISOString().split('T')[0]; });
+}
+function autoAssignTech(date) {
+  const dayAppts = appointments.filter(a => a.date === date);
+  const techCount = {Abrar:0, Shoib:0, Suhail:0};
+  dayAppts.forEach(a => { if(techCount[a.tech]!==undefined) techCount[a.tech]++; });
+  return Object.keys(techCount).reduce((a,b) => techCount[a]<=techCount[b]?a:b);
 }
 
-// ============================================================
-// buildProblemChips — بناء chips حسب الفلتر الحالي
-// ============================================================
-function buildProblemChips() {
-  buildCommonChips();
-  buildAllChips();
-}
+// ===== وظائف الصورة =====
+var currentImageBase64 = '';
 
-function buildCommonChips() {
-  var container = document.getElementById('commonChipsContainer');
-  if(!container) return;
-  var filtered = problemOptions.filter(function(o){
-    return COMMON_FAULT_VALUES.indexOf(o.value) !== -1 &&
-           (o.services.indexOf('all') !== -1 || o.services.indexOf(currentServiceFilter) !== -1);
-  });
-  container.innerHTML = filtered.map(function(o){
-    var sel = selectedProblemCodes.indexOf(o.value) !== -1 ? ' selected' : '';
-    return '<button type="button" class="problem-chip'+sel+'" data-value="'+o.value+'" data-label="'+o.label+'" onclick="toggleChip(this)">'+o.label+'</button>';
-  }).join('');
-}
-
-function buildAllChips() {
-  var container = document.getElementById('problemChipsContainer');
-  if(!container) return;
-  // فلترة حسب الخدمة المختارة
-  var visible = problemOptions.filter(function(o){
-    if(COMMON_FAULT_VALUES.indexOf(o.value) !== -1) return false; // موجودة في الشائعة
-    return o.services.indexOf('all') !== -1 || o.services.indexOf(currentServiceFilter) !== -1;
-  });
-  // تجميع حسب التصنيف
-  var cats = {};
-  visible.forEach(function(opt){
-    if(!cats[opt.cat]) cats[opt.cat] = {label:opt.catLabel, color:opt.catColor, items:[]};
-    cats[opt.cat].items.push(opt);
-  });
-  var html = '';
-  Object.keys(cats).forEach(function(catKey){
-    var cat = cats[catKey];
-    html += '<div class="problem-category"><span class="problem-cat-label '+cat.color+'">'+cat.label+'</span><div class="problem-chips">';
-    cat.items.forEach(function(opt){
-      var sel = selectedProblemCodes.indexOf(opt.value) !== -1 ? ' selected' : '';
-      html += '<button type="button" class="problem-chip'+sel+'" data-value="'+opt.value+'" data-label="'+opt.label+'" onclick="toggleChip(this)">'+opt.label+'</button>';
-    });
-    html += '</div></div>';
-  });
-  container.innerHTML = html || '<div style="font-size:12px;color:var(--mist);padding:8px 0;">لا توجد أعطال إضافية لهذه الخدمة</div>';
-}
-
-// عرض/إخفاء جميع الأعطال مع Animation
-function toggleAllProblems() {
-  var wrap = document.getElementById('allProblemsWrap');
-  var btn  = document.getElementById('showMoreBtn');
-  allProblemsOpen = !allProblemsOpen;
-  wrap.classList.toggle('open', allProblemsOpen);
-  btn.textContent = allProblemsOpen ? 'إخفاء الأعطال ▲' : 'عرض جميع الأعطال ▼';
-}
-
-// تبديل اختيار chip (شائع أو عام)
-function toggleChip(btn) {
-  var val = btn.getAttribute('data-value');
-  var lbl = btn.getAttribute('data-label');
-  var isSelected = btn.classList.contains('selected');
-
-  // تحديث الزر المضغوط
-  btn.classList.toggle('selected', !isSelected);
-
-  // تحديث الزر المقابل في المجموعة الأخرى إذا وجد
-  var allBtns = document.querySelectorAll('.problem-chip[data-value="'+val+'"]');
-  allBtns.forEach(function(b){ b.classList.toggle('selected', !isSelected); });
-
-  if(isSelected) {
-    selectedProblemCodes  = selectedProblemCodes.filter(function(v){ return v !== val; });
-    selectedProblemLabels = selectedProblemLabels.filter(function(v){ return v !== lbl; });
-  } else {
-    if(selectedProblemCodes.indexOf(val) === -1) {
-      selectedProblemCodes.push(val);
-      selectedProblemLabels.push(lbl);
-    }
-  }
-  updateProgress();
-}
-
-// اختيار راديو
-function selRadio(group, btn) {
-  var row = btn.parentElement;
-  row.querySelectorAll('.prob-radio-btn').forEach(function(b){ b.classList.remove('selected'); });
-  btn.classList.add('selected');
-  var val = btn.getAttribute('data-val');
-
-  if(group === 'acStatus') {
-    selectedAcStatus = val;
-  } else if(group === 'prevRepair') {
-    selectedPrevRepair = val;
-    document.getElementById('prevRepairDetailWrap').style.display = val === 'yes' ? 'block' : 'none';
-    if(val !== 'yes') {
-      document.getElementById('previousRepairDetails').value = '';
-      document.getElementById('prevDetailCount').textContent = '0';
-    }
-  } else if(group === 'visitedBefore') {
-    selectedVisitedBefore = val;
-    document.getElementById('prevTechSolvedWrap').style.display = val === 'yes' ? 'block' : 'none';
-    if(val !== 'yes') {
-      selectedPrevTechSolved = '';
-      document.getElementById('prevTechSolvedRow').querySelectorAll('.prob-radio-btn').forEach(function(b){ b.classList.remove('selected'); });
-      document.getElementById('prevTechNote').style.display = 'none';
-    }
-  } else if(group === 'prevTechSolved') {
-    selectedPrevTechSolved = val;
-    document.getElementById('prevTechNote').style.display = val === 'no' ? 'block' : 'none';
-  }
-  updateProgress();
-}
-
-// عداد الأحرف
-function updateCharCount(el, counterId, max) {
-  var len = el.value.length;
-  if(len > max) { el.value = el.value.substring(0, max); len = max; }
-  document.getElementById(counterId).textContent = len;
-}
-
-// ============================================================
-// updateProgress — حساب نسبة اكتمال البلاغ
-// وصف: 20% | ملاحظة: 20% | حالة التشغيل: 20% | موقع: 40%
-// ============================================================
-function updateProgress() {
-  var pct = 0;
-  if(selectedProblemCodes.length > 0) pct += 20;
-  if(document.getElementById('problemDescription') && document.getElementById('problemDescription').value.trim()) pct += 20;
-  if(selectedAcStatus) pct += 20;
-  // الموقع: رابط خرائط أو إحداثيات
-  var hasLoc = (document.getElementById('f_maps_link') && document.getElementById('f_maps_link').value.trim()) ||
-               (document.getElementById('f_lat') && document.getElementById('f_lat').value);
-  if(hasLoc) pct += 40;
-  document.getElementById('probProgressFill').style.width = pct + '%';
-  document.getElementById('probProgressPct').textContent = pct + '%';
-}
-
-// ============================================================
-// calcPriority — حساب أولوية البلاغ تلقائياً
-// ============================================================
-function calcPriority() {
-  var HIGH  = ['not_working','breaker_trips','freon_leak','keeps_off'];
-  var MEDIUM= ['weak_cooling','loud_noise','vibration','no_cooling','water_leak','drain_blocked'];
-  for(var i=0; i<selectedProblemCodes.length; i++){
-    if(HIGH.indexOf(selectedProblemCodes[i]) !== -1) {
-      if(selectedPrevTechSolved === 'no') return 'critical';
-      return 'high';
-    }
-  }
-  for(var j=0; j<selectedProblemCodes.length; j++){
-    if(MEDIUM.indexOf(selectedProblemCodes[j]) !== -1) return 'medium';
-  }
-  // فني زار ولم يُحل → ترفع الأولوية
-  if(selectedPrevTechSolved === 'no') return 'high';
-  return 'low';
-}
-
-// ============================================================
-// calcRecommendations — اقتراح الأدوات تلقائياً (داخلي فقط)
-// ============================================================
-function calcRecommendations() {
-  var tools = [];
-  var inspection = '';
-
-  var toolMap = {
-    'freon_leak':    ['Leak Detector','Nitrogen','Vacuum Pump','Scale'],
-    'needs_freon':   ['Scale','Vacuum Pump','Manifold'],
-    'frozen_pipes':  ['Manifold','Thermometer','Scale'],
-    'weak_cooling':  ['Clamp Meter','Manifold','Thermometer'],
-    'no_cooling':    ['Clamp Meter','Manifold','Thermometer'],
-    'water_leak':    ['Drain Cleaner','Air Blower'],
-    'drain_blocked': ['Drain Cleaner','Air Blower'],
-    'not_working':   ['Clamp Meter','Multimeter'],
-    'breaker_trips': ['Clamp Meter','Multimeter'],
-    'keeps_off':     ['Clamp Meter','Multimeter'],
-    'loud_noise':    ['Screwdriver Set','Lubricant'],
-    'vibration':     ['Screwdriver Set','Level'],
-    'cleaning_only': ['Pressure Washer','Fin Comb','Coil Cleaner'],
-    'cleaning_summer':['Pressure Washer','Fin Comb','Coil Cleaner'],
-    'cleaning_finish':['Pressure Washer','Coil Cleaner','Blower'],
-    'new_install':   ['Drill','Copper Pipes','Insulation','Disconnect Box'],
-    'move_install':  ['Drill','Recovery Machine','Vacuum Pump'],
-    'fan_broken':    ['Fan Motor','Capacitor','Screwdriver Set'],
-    'weak_airflow':  ['Fin Comb','Filter','Blower']
-  };
-
-  selectedProblemCodes.forEach(function(code){
-    if(toolMap[code]) {
-      toolMap[code].forEach(function(t){ if(tools.indexOf(t) === -1) tools.push(t); });
-    }
-  });
-
-  // وقت الفحص التقديري
-  var priority = calcPriority();
-  if(priority === 'critical' || priority === 'high') inspection = '30-60 دقيقة';
-  else if(priority === 'medium') inspection = '45-90 دقيقة';
-  else inspection = '30-45 دقيقة';
-
-  return {
-    priority: priority,
-    requiredTools: tools,
-    estimatedInspection: inspection
-  };
-}
-
-// إعادة تعيين قسم الأوصاف
-function resetProblemSection() {
-  selectedProblemCodes   = [];
-  selectedProblemLabels  = [];
-  selectedAcStatus       = '';
-  selectedPrevRepair     = '';
-  selectedVisitedBefore  = '';
-  selectedPrevTechSolved = '';
-  allProblemsOpen = false;
-  var wrap = document.getElementById('allProblemsWrap');
-  if(wrap) wrap.classList.remove('open');
-  var showBtn = document.getElementById('showMoreBtn');
-  if(showBtn) showBtn.textContent = 'عرض جميع الأعطال ▼';
-  buildProblemChips();
-  ['acStatusRow','prevRepairRow','visitedBeforeRow','prevTechSolvedRow'].forEach(function(id){
-    var el = document.getElementById(id);
-    if(el) el.querySelectorAll('.prob-radio-btn').forEach(function(b){ b.classList.remove('selected'); });
-  });
-  var pd = document.getElementById('problemDescription'); if(pd) pd.value='';
-  var dc = document.getElementById('descCount'); if(dc) dc.textContent='0';
-  var prd = document.getElementById('previousRepairDetails'); if(prd) prd.value='';
-  var pdc = document.getElementById('prevDetailCount'); if(pdc) pdc.textContent='0';
-  var prw = document.getElementById('prevRepairDetailWrap'); if(prw) prw.style.display='none';
-  var ptw = document.getElementById('prevTechSolvedWrap'); if(ptw) ptw.style.display='none';
-  var ptn = document.getElementById('prevTechNote'); if(ptn) ptn.style.display='none';
-  updateProgress();
-}
-
-// متغيرات الإحداثيات الاختيارية — تُملأ من زر الموقع أو من استخراج الرابط
-var selectedLat            = null;
-var selectedLng            = null;
-var selectedAccuracy       = null; // دقة الموقع بالمتر
-var selectedLocationSource = '';   // 'gps' | 'maps_link' | 'manual_link'
-
-// ============================================================
-// isValidCoordinates — دالة تحقق موحدة من صحة الإحداثيات
-// ============================================================
-function isValidCoordinates(lat, lng) {
-  return Number.isFinite(lat) &&
-         Number.isFinite(lng) &&
-         lat >= -90 && lat <= 90 &&
-         lng >= -180 && lng <= 180 &&
-         !(lat === 0 && lng === 0);
-}
-
-// الاسم القديم محفوظ لتوافق الكود الداخلي
-function isValidCoord(lat, lng) { return isValidCoordinates(lat, lng); }
-
-/** safeNumber — تحويل قيمة إلى رقم غير سالب */
-function safeNumber(value) {
-  var n = Number(value);
-  return Number.isFinite(n) && n >= 0 ? n : 0;
-}
-
-// ============================================================
-// extractCoordinatesFromMapUrl — استخراج إحداثيات من رابط Google Maps
-//
-// ترتيب الأولوية:
-//  1. !3dLAT!4dLNG  → الموقع الفعلي للمكان (place coordinates)
-//  2. ?q=LAT,LNG أو ?query=LAT,LNG → إحداثيات صريحة في الرابط
-//  3. @LAT,LNG      → مركز عرض الخريطة فقط (viewport) — أقل دقة
-//
-// مثال يوضّح أهمية الأولوية:
-//   الرابط:   .../@21.7530391,39.1520907,...!3d21.7595645!4d39.1215061...
-//   @ يُعطي: lat=21.7530391 lng=39.1520907  ← مركز العرض فقط
-//   !3d!4d:  lat=21.7595645 lng=39.1215061  ← الموقع الفعلي ✅
-//
-// روابط maps.app.goo.gl / goo.gl/maps مختصرة:
-//   لا يمكن استخراج إحداثياتها بدون fetch (CORS) — تُعاد null
-// ============================================================
-function extractCoordinatesFromMapUrl(url) {
-  if(!url || typeof url !== 'string') return null;
-  var s = url.trim();
-
-  // روابط مختصرة — CORS يمنع فكّها
-  if(s.indexOf('maps.app.goo.gl') !== -1 || s.indexOf('goo.gl/maps') !== -1) return null;
-
-  // ──── الأولوية الأولى: !3dLAT!4dLNG (الموقع الفعلي للمكان) ────
-  var placeMatch = s.match(/!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/);
-  if(placeMatch) {
-    var lat = Number(placeMatch[1]), lng = Number(placeMatch[2]);
-    if(isValidCoordinates(lat, lng)) return {lat:lat, lng:lng, source:'place_coordinates'};
-  }
-
-  // ──── الأولوية الثانية: ?q=LAT,LNG أو ?query=LAT,LNG ────
-  var qMatch = s.match(/[?&](?:q|query)=([-\d.]+),([-\d.]+)/);
-  if(qMatch) {
-    var lat2 = Number(qMatch[1]), lng2 = Number(qMatch[2]);
-    if(isValidCoordinates(lat2, lng2)) return {lat:lat2, lng:lng2, source:'query_coordinates'};
-  }
-
-  // ──── الأولوية الثالثة: @LAT,LNG (مركز عرض الخريطة — أقل دقة) ────
-  // تُستخدم فقط إذا لم توجد !3d!4d ولا q/query
-  var atMatch = s.match(/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/);
-  if(atMatch) {
-    var lat3 = Number(atMatch[1]), lng3 = Number(atMatch[2]);
-    if(isValidCoordinates(lat3, lng3)) return {lat:lat3, lng:lng3, source:'viewport_coordinates'};
-  }
-
-  return null;
-}
-
-// ============================================================
-// useCurrentLocation — يُستدعى فقط بضغط المستخدم على الزر
-// enableHighAccuracy: true لطلب GPS الدقيق (الجوال)
-// maximumAge: 0 لمنع استخدام موقع مخزّن قديم
-// timeout: 15000 منح وقت أطول للحصول على دقة جيدة
-// ============================================================
-function useCurrentLocation() {
-  var btn = document.getElementById('geoBtn');
-
-  if(!navigator.geolocation) {
-    showGeoMsg('err', 'متصفحك لا يدعم تحديد الموقع تلقائيًا. استخدم رابط Google Maps.');
+function previewImage(input) {
+  if(!input.files || !input.files[0]) return;
+  var file = input.files[0];
+  if(file.size > 2 * 1024 * 1024) {
+    showToast('❌ حجم الصورة يجب أن يكون أقل من 2MB');
     return;
   }
-
-  btn.disabled = true;
-  btn.innerHTML = '<span>⏳</span> جاري تحديد موقعك...';
-  showGeoMsg('', '');
-  document.getElementById('geoVerifyWrap').style.display = 'none';
-  document.getElementById('locationPreviewSection').style.display = 'none';
-  resetLocationConfirmed();
-
-  navigator.geolocation.getCurrentPosition(
-    function(pos) {
-      var lat      = pos.coords.latitude;
-      var lng      = pos.coords.longitude;
-      var accuracy = Math.round(pos.coords.accuracy); // بالمتر
-
-      selectedLat            = lat;
-      selectedLng            = lng;
-      selectedAccuracy       = accuracy;
-      selectedLocationSource = 'gps';
-
-      document.getElementById('f_lat').value      = lat;
-      document.getElementById('f_lng').value      = lng;
-      document.getElementById('f_accuracy').value = accuracy;
-
-      var mapsUrl = 'https://www.google.com/maps?q='+lat+','+lng;
-
-      // ملء حقل الرابط:
-      // إذا كان فارغاً أو accuracy ≤ 200 → يُملأ دائماً
-      // إذا accuracy > 200 والحقل ممتلئ → يُبقى رابط العميل
-      var mapsInput  = document.getElementById('f_maps_link');
-      var addrInput  = document.getElementById('f_addr');
-      var fieldEmpty = !mapsInput.value.trim();
-
-      if(fieldEmpty || accuracy <= 200) {
-        mapsInput.value = mapsUrl;
-        addrInput.value = mapsUrl;
-        S.addr = mapsUrl;
-        document.getElementById('maps-ok').style.display = 'block';
-        document.getElementById('e_addr').className = 'err-msg';
-      }
-
-      // زر فتح الخريطة الخارجي
-      document.getElementById('geoOpenMap').href = mapsUrl;
-      document.getElementById('geoVerifyWrap').style.display = 'block';
-
-      // عرض معاينة الخريطة داخل الصفحة
-      showLocationPreview(lat, lng);
-
-      // رسائل محسّنة حسب الدقة
-      if(accuracy <= 50) {
-        showGeoMsg('ok',
-          '✅ تم تحديد موقعك بدقة جيدة (±'+accuracy+' متر).\n' +
-          'يرجى التأكد من العلامة في الخريطة أدناه.');
-        btn.innerHTML = '<span>✅</span> تم تحديد الموقع';
-      } else if(accuracy <= 200) {
-        showGeoMsg('warn',
-          '⚠️ تم تحديد موقع تقريبي بدقة ±'+accuracy+' متر.\n' +
-          'يرجى مراجعة العلامة في الخريطة قبل التأكيد.');
-        btn.innerHTML = '<span>⚠️</span> موقع تقريبي';
-      } else {
-        showGeoMsg('warn',
-          '⚠️ الموقع غير دقيق (±'+accuracy+' متر).\n' +
-          'يفضّل فتح الخريطة والتأكد أو مشاركة رابط موقع المنزل من تطبيق Google Maps.');
-        btn.innerHTML = '<span>⚠️</span> موقع غير دقيق';
-      }
-
-      btn.disabled = false;
-    },
-    function(err) {
-      btn.disabled = false;
-      btn.innerHTML = '<span>📍</span> استخدام موقعي الحالي';
-      document.getElementById('geoVerifyWrap').style.display = 'none';
-      document.getElementById('locationPreviewSection').style.display = 'none';
-      if(err.code === err.PERMISSION_DENIED) {
-        showGeoMsg('err', 'تعذر تحديد الموقع بدقة. يرجى مشاركة رابط موقع المنزل من خرائط Google.');
-      } else if(err.code === err.TIMEOUT) {
-        showGeoMsg('warn', 'تعذر الحصول على الموقع، حاول مرة أخرى أو استخدم رابط Google Maps.');
-      } else {
-        showGeoMsg('warn', 'تعذر الحصول على الموقع، حاول مرة أخرى أو استخدم رابط Google Maps.');
-      }
-    },
-    {enableHighAccuracy: true, timeout: 15000, maximumAge: 0}
-  );
-}
-
-// ============================================================
-// showLocationPreview — عرض الخريطة داخل الصفحة (بدون API Key)
-// ============================================================
-function showLocationPreview(lat, lng) {
-  var previewUrl = 'https://www.google.com/maps?q=' +
-    encodeURIComponent(lat + ',' + lng) + '&z=17&output=embed';
-  document.getElementById('locationPreviewMap').src = previewUrl;
-  document.getElementById('locationPreviewSection').style.display = 'block';
-}
-
-// ============================================================
-// confirmLocation — عند ضغط «✅ الموقع صحيح»
-// ============================================================
-function confirmLocation() {
-  document.getElementById('f_location_verified').value = 'true';
-  var chk = document.getElementById('chk-location-verified');
-  if(chk) chk.checked = true;
-  document.getElementById('locationPreviewSection').classList.add('confirmed');
-}
-
-// ============================================================
-// retryLocation — عند ضغط «🔄 إعادة تحديد الموقع»
-// ============================================================
-function retryLocation() {
-  var keepLink = false;
-  // إذا كان حقل الرابط ممتلئاً → اسأل المستخدم
-  var mapsInput = document.getElementById('f_maps_link');
-  if(mapsInput.value.trim()) {
-    keepLink = !confirm('هل تريد مسح رابط الخريطة الحالي وتحديد موقع جديد؟');
-    if(!keepLink) {
-      mapsInput.value = '';
-      document.getElementById('f_addr').value = '';
-      S.addr = '';
-      document.getElementById('maps-ok').style.display = 'none';
-      document.getElementById('maps-ok-coords').style.display = 'none';
-      document.getElementById('maps-shortlink').style.display = 'none';
-    }
-  }
-
-  // إعادة تعيين المتغيرات
-  selectedLat            = null;
-  selectedLng            = null;
-  selectedAccuracy       = null;
-  selectedLocationSource = '';
-
-  // مسح الحقول المخفية
-  document.getElementById('f_lat').value             = '';
-  document.getElementById('f_lng').value             = '';
-  document.getElementById('f_accuracy').value        = '';
-  document.getElementById('f_location_verified').value = 'false';
-
-  // إعادة تعيين الواجهة
-  resetLocationConfirmed();
-  document.getElementById('geoVerifyWrap').style.display = 'none';
-  document.getElementById('locationPreviewSection').style.display = 'none';
-  document.getElementById('locationPreviewMap').src = 'about:blank';
-  showGeoMsg('', '');
-
-  // إعادة تشغيل دالة تحديد الموقع
-  document.getElementById('geoBtn').innerHTML = '<span>📍</span> استخدام موقعي الحالي';
-  useCurrentLocation();
-}
-
-// مساعد: إعادة تعيين حالة التأكيد
-function resetLocationConfirmed() {
-  document.getElementById('f_location_verified').value = 'false';
-  var chk = document.getElementById('chk-location-verified');
-  if(chk) chk.checked = false;
-  var section = document.getElementById('locationPreviewSection');
-  if(section) section.classList.remove('confirmed');
-}
-
-function showGeoMsg(type, text) {
-  var el = document.getElementById('geoMsg');
-  el.className = 'geo-msg' + (type ? ' '+type : '');
-  el.textContent = text;
-  el.style.display = text ? 'block' : 'none';
-}
-var bookImageBase64 = '';
-var FRIDAY_CLOSED = true;
-
-// تحميل إعداد الجمعة
-if(db) db.ref('settings/fridayClosed').once('value',function(s){if(s.val()!==null)FRIDAY_CLOSED=s.val();});
-
-// بناء chips الأوصاف
-buildProblemChips();
-
-var tom=new Date(); tom.setDate(tom.getDate()+1);
-document.getElementById('f_date').min=tom.toISOString().split('T')[0];
-
-// ===== خانة العدد =====
-function changeUnits(dir){
-  var n=Math.max(1,Math.min(20,S.units+dir));
-  S.units=n;
-  document.getElementById('units-display').textContent=n;
-}
-
-// ===== الخدمة =====
-function selClean(u,p){
-  ['ct1','ct2','ct3','ct4'].forEach(function(id){document.getElementById(id).className='clean-tile';});
-  document.getElementById('ct5').className='offer-tile';
-  ['sv1','sv2','sv3','sv4','sv5','sv6'].forEach(function(id){document.getElementById(id).className='svc-card';});
-  var id=u<=4?'ct'+u:'ct5';
-  document.getElementById(id).className=(u<=4?'clean-tile sel':'offer-tile sel');
-  S.service='تنظيف وغسيل المكيفات'; S.serviceAr='تنظيف وغسيل المكيفات';
-  S.units=u; S.price=p; S.isClean=true;
-  document.getElementById('units-box').className='units-box';
-  document.getElementById('e_svc').className='err-msg';
-  currentServiceFilter = 'cleaning';
-  buildProblemChips();
-}
-
-function selSvc(nameAr,nameEn,price,id){
-  ['ct1','ct2','ct3','ct4'].forEach(function(i){document.getElementById(i).className='clean-tile';});
-  document.getElementById('ct5').className='offer-tile';
-  ['sv1','sv2','sv3','sv4','sv5','sv6'].forEach(function(i){document.getElementById(i).className='svc-card';});
-  document.getElementById(id).className='svc-card sel';
-  S.service=nameAr; S.serviceAr=nameAr;
-  S.price=price; S.isClean=false;
-  S.units=parseInt(document.getElementById('units-display').textContent)||1;
-  document.getElementById('units-box').className='units-box show';
-  document.getElementById('e_svc').className='err-msg';
-  currentServiceFilter = mapServiceToFilter(nameAr);
-  buildProblemChips();
-}
-
-function selType(type,id){
-  ['tb1','tb2','tb3'].forEach(function(i){document.getElementById(i).className='type-btn';});
-  document.getElementById(id).className='type-btn sel';
-  S.clientType=type;
-  document.getElementById('e_type').className='err-msg';
-}
-
-function next1(){
-  var ok=true;
-  if(!S.service){document.getElementById('e_svc').className='err-msg show';ok=false;}
-  if(!S.clientType){document.getElementById('e_type').className='err-msg show';ok=false;}
-  if(!S.isClean&&S.service) S.units=parseInt(document.getElementById('units-display').textContent)||1;
-  if(ok) goStep(2);
-}
-
-// ===== رابط الموقع =====
-function validateMapsLink(val){
-  var raw=val.trim();
-  var urlMatch = raw.match(/(https?:\/\/[^\s]+)/);
-  var link = urlMatch ? urlMatch[1] : raw;
-  link = link.split(' ')[0].split('\n')[0];
-  if(urlMatch && link !== raw) {
-    document.getElementById('f_maps_link').value = link;
-  }
-  var ok=document.getElementById('maps-ok');
-  var okCoords=document.getElementById('maps-ok-coords');
-  var shortMsg=document.getElementById('maps-shortlink');
-  var err=document.getElementById('e_addr');
-  var isValid=link.length>10&&(link.includes('maps.app.goo.gl')||link.includes('google.com/maps')||link.includes('goo.gl/maps')||link.includes('maps.google'));
-
-  okCoords.style.display='none';
-  shortMsg.style.display='none';
-  document.getElementById('locationPreviewSection').style.display='none';
-  document.getElementById('locationPreviewMap').src='about:blank';
-  resetLocationConfirmed();
-
-  if(isValid){
-    document.getElementById('f_addr').value=link; S.addr=link;
-    ok.style.display='block'; err.className='err-msg';
-    document.getElementById('f_maps_link').style.borderColor='var(--success)';
-
-    var extracted = extractCoordinatesFromMapUrl(link);
-    if(extracted) {
-      // رابط كامل بإحداثيات — maps_link
-      selectedLat            = extracted.lat;
-      selectedLng            = extracted.lng;
-      selectedLocationSource = 'maps_link';
-      document.getElementById('f_lat').value = selectedLat;
-      document.getElementById('f_lng').value = selectedLng;
-      ok.style.display='none';
-      // رسالة النجاح تعكس مصدر الإحداثيات
-      if(extracted.source === 'place_coordinates') {
-        okCoords.textContent = '✅ تم استخراج الموقع الفعلي من رابط Google Maps';
-      } else if(extracted.source === 'query_coordinates') {
-        okCoords.textContent = '✅ تم استخراج الإحداثيات من الرابط';
-      } else {
-        okCoords.textContent = '⚠️ تم استخراج مركز عرض الخريطة (قد لا يكون الموقع الدقيق)';
-      }
-      okCoords.style.display='block';
-      // عرض معاينة الخريطة
-      showLocationPreview(selectedLat, selectedLng);
-    } else if(link.includes('maps.app.goo.gl') || link.includes('goo.gl/maps')) {
-      // رابط مختصر — لا إحداثيات، لا معاينة iframe
-      selectedLocationSource = 'manual_link';
-      shortMsg.textContent = 'تعذر عرض المعاينة من الرابط المختصر. افتح الرابط وتأكد من الموقع يدويًا.';
-      shortMsg.style.display='block';
-    } else {
-      // رابط maps.google أو google.com/maps بدون إحداثيات قابلة للاستخراج
-      selectedLocationSource = 'manual_link';
-    }
-  } else {
-    document.getElementById('f_addr').value=''; S.addr='';
-    ok.style.display='none';
-    selectedLocationSource = '';
-    document.getElementById('f_maps_link').style.borderColor=link.length>0?'var(--danger)':'#E2E8F0';
-  }
-}
-
-// ===== صورة الموقع =====
-function previewImage(input){
-  if(!input.files||!input.files[0]) return;
-  var file=input.files[0];
-  if(file.size>2*1024*1024){alert('حجم الصورة يجب أن يكون أقل من 2MB');return;}
-  var reader=new FileReader();
-  reader.onload=function(e){
-    bookImageBase64=e.target.result;
-    document.getElementById('imgSrc').src=bookImageBase64;
-    document.getElementById('imgPreview').style.display='block';
-    document.getElementById('imgPlaceholder').style.display='none';
-    document.getElementById('removeImgBtn').style.display='inline-block';
-    document.getElementById('imgArea').style.borderColor='var(--sky)';
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    currentImageBase64 = e.target.result;
+    document.getElementById('imgPreviewSrc').src = currentImageBase64;
+    document.getElementById('imgPreview').style.display = 'block';
+    document.getElementById('imgPlaceholder').style.display = 'none';
+    document.getElementById('removeImgBtn').style.display = 'inline-block';
+    document.getElementById('imgUploadArea').style.borderColor = 'var(--sky)';
   };
   reader.readAsDataURL(file);
 }
 
-function removeImage(){
-  bookImageBase64='';
-  document.getElementById('f_img').value='';
-  document.getElementById('imgSrc').src='';
-  document.getElementById('imgPreview').style.display='none';
-  document.getElementById('imgPlaceholder').style.display='block';
-  document.getElementById('removeImgBtn').style.display='none';
-  document.getElementById('imgArea').style.borderColor='#E2E8F0';
+function removeImage() {
+  currentImageBase64 = '';
+  document.getElementById('f_img').value = '';
+  document.getElementById('imgPreviewSrc').src = '';
+  document.getElementById('imgPreview').style.display = 'none';
+  document.getElementById('imgPlaceholder').style.display = 'block';
+  document.getElementById('removeImgBtn').style.display = 'none';
+  document.getElementById('imgUploadArea').style.borderColor = '#E2E8F0';
 }
 
-function next2(){
-  var name=document.getElementById('f_name').value.trim();
-  var phone=document.getElementById('f_phone').value.trim();
-  var city=document.getElementById('f_city').value;
-  var mapsLink=document.getElementById('f_maps_link').value.trim();
-  var ok=true;
-  if(!name){document.getElementById('e_name').className='err-msg show';document.getElementById('f_name').className='err';ok=false;}else{document.getElementById('e_name').className='err-msg';document.getElementById('f_name').className='';}
-  if(!phone||!/^05\d{8}$/.test(phone)){document.getElementById('e_phone').className='err-msg show';document.getElementById('f_phone').className='err';ok=false;}else{document.getElementById('e_phone').className='err-msg';document.getElementById('f_phone').className='';}
-  if(!city){document.getElementById('e_city').className='err-msg show';ok=false;}else{document.getElementById('e_city').className='err-msg';}
-  if(!mapsLink){document.getElementById('e_addr').className='err-msg show';ok=false;}else{document.getElementById('e_addr').className='err-msg';}
-  if(ok){S.name=name;S.phone=phone;S.city=city;S.addr=mapsLink;S.notes=document.getElementById('f_notes').value.trim();goStep(3);}
+function resetImageField() {
+  currentImageBase64 = '';
+  document.getElementById('f_img').value = '';
+  document.getElementById('imgPreviewSrc').src = '';
+  document.getElementById('imgPreview').style.display = 'none';
+  document.getElementById('imgPlaceholder').style.display = 'block';
+  document.getElementById('removeImgBtn').style.display = 'none';
+  document.getElementById('imgUploadArea').style.borderColor = '#E2E8F0';
 }
 
-// ===== الموعد =====
-var FRIDAY_VAR=true;
-var DUR_MAP={'تنظيف وغسيل المكيفات':30,'صيانة دورية':45,'تعبئة غاز':40,'كشف وإصلاح أعطال':60,'تركيب مكيف جديد':90,'باقة صيانة سنوية':45};
-var SLOTS=[{t:'8:00 - 10:00',start:480,ar:'8-10 ص'},{t:'10:00 - 12:00',start:600,ar:'10-12 ص'},{t:'12:00 - 14:00',start:720,ar:'12-2 م'},{t:'14:00 - 16:00',start:840,ar:'2-4 م'},{t:'16:00 - 18:00',start:960,ar:'4-6 م'},{t:'18:00 - 20:00',start:1080,ar:'6-8 م'}];
-
-function calcDur(){return Math.min((DUR_MAP[S.serviceAr]||30)*S.units,240);}
-function fmtDur(m){return m<60?m+' دقيقة':Math.floor(m/60)+' ساعة'+(m%60>0?' و'+m%60+' دقيقة':'');}
-
-function checkDateAndSlots(date){
-  if(!date) return;
-  document.getElementById('fridayClosed').style.display='none';
-  document.getElementById('e_date').className='err-msg';
-  var d=new Date(date+'T00:00:00');
-  if(FRIDAY_CLOSED&&d.getDay()===5){
-    document.getElementById('fridayClosed').style.display='block';
-    document.getElementById('slotsGrid').innerHTML='';
-    document.getElementById('durNote').style.display='none';
-    S.time=''; return;
+function loadImageInModal(imageBase64) {
+  if(imageBase64) {
+    currentImageBase64 = imageBase64;
+    document.getElementById('imgPreviewSrc').src = imageBase64;
+    document.getElementById('imgPreview').style.display = 'block';
+    document.getElementById('imgPlaceholder').style.display = 'none';
+    document.getElementById('removeImgBtn').style.display = 'inline-block';
+    document.getElementById('imgUploadArea').style.borderColor = 'var(--sky)';
+  } else {
+    resetImageField();
   }
-  checkSlots(date);
 }
 
-function checkSlots(date){
-  var dur=calcDur(); S.duration=dur;
-  var dn=document.getElementById('durNote');
-  dn.style.display='block';
-  dn.textContent='المدة التقديرية: '+fmtDur(dur)+' ('+S.units+' × '+(dur/S.units)+' د)';
-  document.getElementById('slotsGrid').innerHTML='<div style="text-align:center;color:var(--mist);padding:10px;font-size:12px">⏳ جاري التحقق...</div>';
-  if(db){
-    db.ref('bookings').once('value',function(snap){
-      var booked=[];
-      snap.forEach(function(c){var b=c.val();if(b.date&&b.date===date&&b.time)booked.push({time:b.time,dur:b.duration||90});});
-      renderSlots(booked,dur);
-    });
-  } else { renderSlots([],dur); }
-}
+// ===== إعداد يوم الجمعة =====
+var fridayClosed = true;
 
-function renderSlots(booked,dur){
-  var grid=document.getElementById('slotsGrid'); grid.innerHTML='';
-  var icons=['🌅','☀️','🕛','🕑','🌤️','🌙'];
-  SLOTS.forEach(function(sl,idx){
-    var div=document.createElement('div');
-    var newEnd=sl.start+dur;
-    var conflict=booked.some(function(b){
-      var ex=SLOTS.find(function(s){return s.t===b.time;});
-      if(!ex) return false;
-      return sl.start<(ex.start+(b.dur||90))&&newEnd>ex.start;
-    });
-    if(conflict||newEnd>1200){
-      div.className='slot booked';
-      div.innerHTML=icons[idx]+'<br>'+sl.ar+'<br><span style="font-size:9px;color:#EF4444;font-weight:700">'+(conflict?'محجوز':'وقت غير كافٍ')+'</span>';
-    } else {
-      var endH=Math.floor(newEnd/60),endM=newEnd%60;
-      div.className='slot';
-      div.innerHTML=icons[idx]+'<br>'+sl.ar+'<br><span style="font-size:9px;color:var(--success);font-weight:600">ينتهي '+endH+':'+(endM===0?'00':endM)+'</span>';
-      div.onclick=(function(t){return function(){selSlot(div,t);};})(sl.t);
-    }
-    grid.appendChild(div);
+function loadFridaySetting() {
+  if(!db) return;
+  db.ref('settings/fridayClosed').once('value', function(snap) {
+    if(snap.val() !== null) fridayClosed = snap.val();
+    updateFridayBtn();
   });
 }
 
-function selSlot(el,t){
-  document.querySelectorAll('#slotsGrid .slot').forEach(function(s){if(!s.classList.contains('booked'))s.className='slot';});
-  el.className='slot sel'; S.time=t;
-  document.getElementById('e_time').className='err-msg';
-}
-
-function next3(){
-  var date=document.getElementById('f_date').value;
-  var ok=true;
-  if(!date){document.getElementById('e_date').className='err-msg show';ok=false;}else{S.date=date;}
-  if(!S.time){document.getElementById('e_time').className='err-msg show';ok=false;}
-  if(ok){buildSum();goStep(4);}
-}
-
-// ===== المراجعة =====
-function fmtDate(d){try{return new Date(d+'T00:00:00').toLocaleDateString('ar-SA',{weekday:'long',year:'numeric',month:'long',day:'numeric'});}catch(e){return d;}}
-
-function buildSum(){
-  if(!S.isClean) S.units=parseInt(document.getElementById('units-display').textContent)||S.units;
-  var isWashing=S.serviceAr==='تنظيف وغسيل المكيفات';
-  var total;
-  if(S.isClean){total=S.units>=5?S.units*60:S.price;}
-  else if(isWashing){if(S.units===1)total=110;else if(S.units===2)total=180;else if(S.units===3)total=240;else if(S.units===4)total=280;else total=S.units*60;}
-  else{total=S.price;}
-
-  var rows=[
-    ['🛠️ الخدمة',S.service],
-    ['❄️ عدد المكيفات',S.units+' مكيف'],
-    ['👤 الاسم',S.name],
-    ['📱 الجوال',S.phone],
-    ['📍 المدينة',S.city],
-    ['🗺️ رابط الموقع',S.addr.length>40?S.addr.substring(0,40)+'...':S.addr],
-    ['📅 التاريخ',fmtDate(S.date)],
-    ['🕐 الوقت',S.time],
-    ['👥 نوع العميل',S.clientType],
-    ['⏱️ المدة',fmtDur(calcDur())]
-  ];
-  if(S.notes) rows.push(['📝 ملاحظات',S.notes]);
-  document.getElementById('sumBox').innerHTML=rows.map(function(r){return '<div class="sum-row"><span class="lbl">'+r[0]+'</span><span class="val">'+r[1]+'</span></div>';}).join('');
-
-  // قسم وصف الطلب في الملخص
-  var probRows = [];
-  if(selectedProblemLabels.length) probRows.push(['🔧 أوصاف المشكلة', selectedProblemLabels.join('، ')]);
-  var probDesc = document.getElementById('problemDescription').value.trim();
-  if(probDesc) probRows.push(['📝 تفاصيل إضافية', probDesc]);
-  var acStatusLabels = {working:'نعم، يعمل', weak:'يعمل بكفاءة ضعيفة', not_working:'لا يعمل إطلاقًا', unknown:'لا أعلم'};
-  if(selectedAcStatus) probRows.push(['⚡ حالة التشغيل', acStatusLabels[selectedAcStatus]||selectedAcStatus]);
-  var prevLabels = {yes:'نعم', no:'لا', unknown:'لا أعلم'};
-  if(selectedPrevRepair) probRows.push(['🔄 سبق إصلاحه', prevLabels[selectedPrevRepair]||selectedPrevRepair]);
-  if(selectedPrevRepair === 'yes') {
-    var prevDet = document.getElementById('previousRepairDetails').value.trim();
-    if(prevDet) probRows.push(['📋 تفاصيل الإصلاح السابق', prevDet]);
+function updateFridayBtn() {
+  var btn = document.getElementById('fridayBtn');
+  if(!btn) return;
+  if(fridayClosed) {
+    btn.style.background = '#FEE2E2';
+    btn.style.color = '#991B1B';
+    btn.textContent = '⛔ الجمعة مغلق';
+  } else {
+    btn.style.background = '#D1FAE5';
+    btn.style.color = '#065F46';
+    btn.textContent = '✅ الجمعة مفتوح';
   }
-  if(selectedVisitedBefore) probRows.push(['🔧 سبق زيارة فني', selectedVisitedBefore === 'yes' ? 'نعم' : 'لا']);
-  if(selectedVisitedBefore === 'yes' && selectedPrevTechSolved) probRows.push(['✅ هل حُلّت', selectedPrevTechSolved === 'yes' ? 'نعم' : 'لا']);
-  var probHtml = '';
-  if(probRows.length) {
-    probHtml = '<div style="margin-top:12px;padding:12px;background:#F0F9FF;border:1.5px solid #BAE6FD;border-radius:12px;">' +
-      '<div style="font-size:12px;font-weight:800;color:var(--deep);margin-bottom:8px;">📋 وصف الطلب</div>' +
-      probRows.map(function(r){return '<div class="sum-row"><span class="lbl">'+r[0]+'</span><span class="val">'+r[1]+'</span></div>';}).join('') +
-      '</div>';
-  }
-  var sumBox = document.getElementById('sumBox');
-  sumBox.innerHTML += probHtml;
-
-  document.getElementById('totalPr').textContent=total+'+ SAR';
-
-  var isInspection=S.serviceAr==='كشف وإصلاح أعطال';
-  document.getElementById('inspection-info').style.display=isInspection?'block':'none';
-  document.getElementById('chk-inspection-wrap').style.display=isInspection?'block':'none';
-  document.getElementById('chk-units').checked=false;
-  var ci=document.getElementById('chk-inspection'); if(ci) ci.checked=false;
 }
 
-function submitBooking(){
-  if(!document.getElementById('chk-units').checked){
-    alert('يرجى الموافقة على شرط العدد الملزم');
+function toggleFriday() {
+  if(!db) { showToast('❌ Firebase غير متاح'); return; }
+  fridayClosed = !fridayClosed;
+  db.ref('settings/fridayClosed').set(fridayClosed)
+    .then(function() {
+      updateFridayBtn();
+      showToast(fridayClosed
+        ? '⛔ تم إغلاق الحجز يوم الجمعة'
+        : '✅ تم تفعيل الحجز يوم الجمعة');
+    })
+    .catch(function(e) { showToast('❌ خطأ: ' + e.message); });
+}
+
+// ===== FIREBASE REALTIME SYNC =====
+function initFirebaseSync() {
+  if(!db) {
+    document.getElementById('fbDot').className = 'fb-dot';
+    document.getElementById('fbStatusText').textContent = 'غير متصل';
+    document.getElementById('loadingOverlay').style.display = 'none';
     return;
   }
-  var isInspection=S.serviceAr==='كشف وإصلاح أعطال';
-  if(isInspection&&!document.getElementById('chk-inspection').checked){
-    alert('يرجى الموافقة على سياسة رسوم الكشف');
-    return;
-  }
-  var ref='ATW-'+Math.floor(10000+Math.random()*90000);
-  document.getElementById('refNum').textContent=ref;
-  var msg=encodeURIComponent('مرحباً مؤسسة أطواد 👋\nرقم الحجز: '+ref+'\nالخدمة: '+S.serviceAr+'\nعدد المكيفات: '+S.units+'\nالاسم: '+S.name+'\nالجوال: '+S.phone+'\nالتاريخ: '+fmtDate(S.date)+'\nالوقت: '+S.time+'\nالمدينة: '+S.city+'\nالموقع: '+S.addr);
-  var waUrl='https://wa.me/966509720382?text='+msg;
-  document.getElementById('waLink').href=waUrl;
-  if(db){try{
-    var bookingData = {ref:ref,date:S.date,time:S.time,duration:calcDur(),client:S.name,phone:S.phone,service:S.serviceAr,units:S.units,city:S.city,mapsLink:S.addr,locationImage:bookImageBase64||'',createdAt:new Date().toISOString()};
 
-    // السعر التقديري — اختياري، يُحفظ فقط إذا أُدخل
-    var servicePriceRaw = document.getElementById('servicePrice') ? document.getElementById('servicePrice').value : '';
-    var servicePrice = safeNumber(servicePriceRaw);
-    if(servicePrice > 0) bookingData.servicePrice = servicePrice;
+  document.getElementById('fbDot').className = 'fb-dot loading';
+  document.getElementById('fbStatusText').textContent = 'جاري الاتصال...';
 
-    // حقول الوصف — اختيارية، تُضاف فقط عند توفرها
-    if(selectedProblemCodes.length) {
-      bookingData.problemCodes  = selectedProblemCodes;
-      bookingData.problemLabels = selectedProblemLabels;
-      bookingData.problemDescriptionSummary = selectedProblemLabels.join('، ');
-    }
-    var probDesc = document.getElementById('problemDescription').value.trim();
-    if(probDesc) bookingData.problemDescription = probDesc;
-    if(selectedAcStatus) bookingData.acOperatingStatus = selectedAcStatus;
-    if(selectedPrevRepair) {
-      bookingData.previousRepairStatus = selectedPrevRepair;
-      if(selectedPrevRepair === 'yes') {
-        var prevDet = document.getElementById('previousRepairDetails').value.trim();
-        if(prevDet) bookingData.previousRepairDetails = prevDet;
-      }
-    }
-    if(selectedVisitedBefore) bookingData.visitedBefore = selectedVisitedBefore;
-    if(selectedPrevTechSolved) bookingData.previousTechnicianSolved = selectedPrevTechSolved;
-
-    // التحليل الذكي الداخلي — لا يظهر للعميل
-    var recData = calcRecommendations();
-    bookingData.priority            = recData.priority;
-    bookingData.requiredTools       = recData.requiredTools;
-    bookingData.estimatedInspection = recData.estimatedInspection;
-    bookingData.recommendations     = {
-      priority: recData.priority,
-      requiredTools: recData.requiredTools,
-      estimatedInspection: recData.estimatedInspection
-    };
-
-    // إضافة lat/lng اختياريًا فقط إذا كانت صالحة
-    var latValue      = document.getElementById('f_lat').value.trim();
-    var lngValue      = document.getElementById('f_lng').value.trim();
-    var accuracyValue = document.getElementById('f_accuracy').value.trim();
-    var parsedLat     = Number(latValue);
-    var parsedLng     = Number(lngValue);
-    var parsedAccuracy = Number(accuracyValue);
-
-    if(isValidCoord(parsedLat, parsedLng)) {
-      bookingData.lat = parsedLat;
-      bookingData.lng = parsedLng;
-
-      // إضافة دقة الموقع إذا كانت صالحة
-      if(Number.isFinite(parsedAccuracy) && parsedAccuracy > 0) {
-        bookingData.locationAccuracy = parsedAccuracy;
-      }
-
-      // locationVerified: من hidden field أو من checkbox
-      var verifiedField = document.getElementById('f_location_verified');
-      var locationConfirmed =
-        (verifiedField && verifiedField.value === 'true') ||
-        (document.getElementById('chk-location-verified') &&
-         document.getElementById('chk-location-verified').checked);
-
-      if(locationConfirmed) {
-        bookingData.locationVerified = true;
-      } else if(Number.isFinite(parsedAccuracy) && parsedAccuracy > 500) {
-        bookingData.locationVerified = false;
-      }
-    }
-
-    // مصدر الموقع — دائماً إذا كان متاحاً
-    if(selectedLocationSource) {
-      bookingData.locationSource = selectedLocationSource;
-    }
-
-    db.ref('bookings').push(bookingData);
-    // إشعار فوري للمشرف
-    db.ref('notifications').push({
-      title: '?? حجز جديد من الموقع',
-      body: 'عميل: '+S.name+' | '+S.serviceAr+' | '+S.date+' '+S.time,
-      ref: ref,
-      phone: S.phone,
-      createdAt: new Date().toISOString(),
-      read: false
+  // مزامنة مواعيد النظام الداخلي
+  db.ref('appointments').on('value', function(snap) {
+    const fbAppts = [];
+    snap.forEach(function(child) {
+      fbAppts.push({ ...child.val(), _fbKey: child.key, _source: 'appointments' });
     });
-  }catch(e){}}
-  goStep('OK');
-  resetProblemSection();
-  var spEl = document.getElementById('servicePrice');
-  if(spEl) spEl.value = '';
-  setTimeout(function(){window.open(waUrl,'_blank');},800);
+
+    // مزامنة حجوزات العملاء من صفحة الحجز
+    db.ref('bookings').once('value', function(bookSnap) {
+      const existingRefs = fbAppts.map(a => a._fbKey);
+      bookSnap.forEach(function(child) {
+        const b = child.val();
+        if(!b.date || !b.time) return;
+        // تحويل الحجز إلى موعد تلقائياً
+        fbAppts.push({
+          _fbKey: child.key,
+          _source: 'bookings',
+          id: 'B_' + child.key,
+          client: b.client || b.name || '—',
+          phone: b.phone || '',
+          address: b.city || 'جدة',
+          service: b.service || 'تنظيف مكيف',
+          units: b.units || 1,
+          date: b.date,
+          time: b.time.includes(' - ') ? b.time.split(' - ')[0] : b.time,
+          tech: autoAssignTech(b.date),
+          status: 'pending',
+          notes: 'حجز من النموذج الإلكتروني',
+          duration: b.duration || 60,
+          createdAt: b.createdAt || ''
+        });
+      });
+
+      appointments = fbAppts;
+      updateStats();
+      renderWeek();
+      renderList();
+
+      // تحديث مؤشر الاتصال
+      document.getElementById('fbDot').className = 'fb-dot connected';
+      document.getElementById('fbStatusText').textContent = 'متصل • ' + appointments.length + ' موعد';
+      document.getElementById('loadingOverlay').style.display = 'none';
+    });
+  }, function(err) {
+    document.getElementById('fbDot').className = 'fb-dot';
+    document.getElementById('fbStatusText').textContent = 'خطأ في الاتصال';
+    document.getElementById('loadingOverlay').style.display = 'none';
+    showToast('❌ خطأ في الاتصال: ' + err.message);
+  });
 }
 
-function goStep(n){
-  document.querySelectorAll('.step-section').forEach(function(s){s.className='step-section';});
-  document.getElementById('step'+n).className='step-section active';
-  for(var i=1;i<=4;i++){
-    var sb=document.getElementById('sb'+i),sn=document.getElementById('sn'+i);
-    sb.className='step-item'; sn.textContent=i;
-    if(n!=='OK'){if(i<parseInt(n)){sb.className='step-item done';sn.textContent='✓';}else if(i===parseInt(n)){sb.className='step-item active';}}
-    else{sb.className='step-item done';sn.textContent='✓';}
+// ===== STATS =====
+function updateStats(){
+  const tod = today();
+  document.getElementById('statToday').textContent = appointments.filter(a=>a.date===tod).length;
+  document.getElementById('statPending').textContent = appointments.filter(a=>a.status==='pending').length;
+  const weekDates = getWeekDates(0);
+  document.getElementById('statDone').textContent = appointments.filter(a=>weekDates.includes(a.date)&&a.status==='done').length;
+  document.getElementById('statTotal').textContent = appointments.length;
+}
+
+// ===== WEEK VIEW =====
+function renderWeek(){
+  const dates = getWeekDates(currentWeekOffset);
+  const tod = today();
+  const dayNames = ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+  const weekStart = new Date(dates[0]+'T00:00:00');
+  const weekEnd = new Date(dates[6]+'T00:00:00');
+  document.getElementById('calMonth').textContent =
+    weekStart.toLocaleDateString('ar-SA',{month:'long',year:'numeric'}) + ' — ' +
+    weekEnd.toLocaleDateString('ar-SA',{month:'long'});
+  const hours = Array.from({length:12},(_,i)=>i+7);
+  let html = `<div class="time-col"><div style="height:54px;border-bottom:2px solid var(--ice);"></div>`;
+  html += hours.map(h=>`<div class="time-slot">${h}:00</div>`).join('');
+  html += '</div>';
+  dates.forEach(date=>{
+    const isToday = date===tod;
+    const d = new Date(date+'T00:00:00');
+    html += `<div><div class="week-day-header${isToday?' today':''}"><div class="week-day-name">${dayNames[d.getDay()]}</div><div class="week-day-num">${d.getDate()}</div></div><div class="day-col">`;
+    hours.forEach(()=>{ html += `<div class="day-hour"></div>`; });
+    appointments.filter(a=>a.date===date&&(techFilter==='all'||a.tech===techFilter)).forEach(a=>{
+      const [hh,mm] = (a.time||'09:00').split(':').map(Number);
+      const top = (hh - 7) * 60 + mm;
+      const dur = (a.duration||60);
+      const tc = TECH_COLORS[a.tech]||'#0EA5E9';
+      html += `<div class="appt-block status-${a.status||'pending'}" style="top:${top}px;height:${Math.max(dur-4,20)}px;" onclick="openDetail('${a.id||a._fbKey}')">
+        <div class="appt-time">${a.time}</div>
+        <div class="appt-name">${a.client}</div>
+        <div class="appt-tech" style="color:${tc}">▪ ${TECHS[a.tech]||a.tech||'—'}</div>
+      </div>`;
+    });
+    html += `</div></div>`;
+  });
+  document.getElementById('weekGrid').innerHTML = html;
+}
+
+// ===== LIST VIEW =====
+function renderList(){
+  let appts = [...appointments];
+  if(techFilter!=='all') appts = appts.filter(a=>a.tech===techFilter);
+  appts.sort((a,b)=>((a.date||'')+(a.time||'')).localeCompare((b.date||'')+(b.time||'')));
+  const grouped = {};
+  appts.forEach(a=>{ if(!grouped[a.date]) grouped[a.date]=[]; grouped[a.date].push(a); });
+  const bm = { confirmed:'sp-confirmed', pending:'sp-pending', done:'sp-done', cancelled:'sp-cancelled' };
+  const cc = { confirmed:'c-confirmed', pending:'c-pending', done:'c-done', cancelled:'c-cancelled' };
+  if(Object.keys(grouped).length===0){
+    document.getElementById('listView').innerHTML = `<div style="text-align:center;padding:60px 20px;color:var(--mist);"><div style="font-size:48px;margin-bottom:12px;">📅</div><p style="font-size:15px;">لا توجد مواعيد بعد<br><small>المواعيد ستظهر هنا تلقائياً عند وصول حجوزات جديدة</small></p></div>`;
+    return;
   }
-  window.scrollTo({top:0,behavior:'smooth'});
+  let html = '';
+  Object.keys(grouped).sort().forEach(date=>{
+    const list = grouped[date];
+    html += `<div class="day-section"><div class="day-section-header"><span class="day-section-date">${formatDate(date)}</span><span class="day-section-badge">${list.length} موعد</span>${date===today()?'<span style="background:var(--sky);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;">اليوم</span>':''}</div>`;
+    list.forEach(a=>{
+      const aId = a.id || a._fbKey;
+      const tc = TECH_COLORS[a.tech]||'#0EA5E9';
+      const isBooking = a._source === 'bookings';
+      html += `<div class="appt-card ${cc[a.status||'pending']}" onclick="openDetail('${aId}')">
+        <div class="appt-time-block"><div class="t-start">${a.time||'--:--'}</div><div class="t-dur">${a.duration||60} دق</div></div>
+        <div class="appt-divider"></div>
+        <div class="appt-info">
+          <div class="appt-client">${a.client}</div>
+          <div class="appt-service">🛠️ ${a.service||'—'} ${a.units>1?'('+a.units+' وحدات)':''}</div>
+          <div class="appt-address">📍 ${a.address||'—'}</div>
+          ${isBooking?'<span class="source-badge source-firebase">📱 حجز إلكتروني</span>':'<span class="source-badge source-local">✏️ يدوي</span>'}
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+          <span class="status-pill ${bm[a.status||'pending']}">${STATUS_ICONS[a.status||'pending']} ${STATUS_LABELS[a.status||'pending']}</span>
+          <span class="tech-pill" style="border-right:3px solid ${tc}">👷 ${TECHS[a.tech]||a.tech||'—'}</span>
+        </div>
+        <div class="appt-actions" onclick="event.stopPropagation()">
+          <button class="act-btn act-whatsapp" onclick="sendWhatsapp('${aId}')">📲</button>
+          <button class="act-btn act-edit" onclick="editAppt('${aId}')">✏️</button>
+          ${a.status!=='done'?`<button class="act-btn act-done" onclick="markDone('${aId}')">✓</button>`:''}
+          ${a.tech
+            ? `<button class="act-btn act-send-tech" onclick="sendToTechnician('${aId}')" title="إرسال المهمة للفني عبر واتساب">📤 إرسال للفني</button>
+               <button class="act-btn act-copy-task" onclick="copyTaskMessage('${aId}')" title="نسخ تفاصيل المهمة">📋</button>`
+            : `<button class="act-btn act-send-tech" disabled title="عيّن فنيًا أولًا">📤 إرسال للفني</button>`}
+          <button class="act-btn act-delete" onclick="deleteAppt('${aId}',event)">🗑️</button>
+        </div>
+      </div>`;
+    });
+    html += '</div>';
+  });
+  document.getElementById('listView').innerHTML = html;
 }
 
-function toggleLang(){
-  LANG=LANG==='ar'?'en':'ar';
-  document.querySelector('.lang-btn').textContent=LANG==='ar'?'🌐 EN':'🌐 عر';
+function findAppt(id) {
+  return appointments.find(a => (a.id===id || a._fbKey===id || ('B_'+a._fbKey)===id));
 }
+
+// ===== SWITCH VIEW =====
+function switchView(v){
+  currentView = v;
+  document.getElementById('vWeek').classList.toggle('active', v==='week');
+  document.getElementById('vList').classList.toggle('active', v==='list');
+  document.getElementById('weekView').style.display = v==='week'?'block':'none';
+  document.getElementById('listView').style.display = v==='list'?'block':'none';
+  if(v==='week') renderWeek(); else renderList();
+}
+function changeWeek(dir){ currentWeekOffset+=dir; renderWeek(); }
+function goToday(){ currentWeekOffset=0; renderWeek(); }
+function filterTech(t,btn){
+  techFilter=t;
+  document.querySelectorAll('.tech-chip').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  renderWeek(); renderList();
+}
+
+// ===== MODAL =====
+function populateClients(){
+  const dl = document.getElementById('clientsList');
+  if(db) {
+    db.ref('customers').once('value', function(snap) {
+      const items = [];
+      snap.forEach(c => { const v=c.val(); if(v.name) items.push(`<option value="${v.name}" data-phone="${v.phone||''}">`); });
+      dl.innerHTML = items.join('');
+    });
+  }
+}
+
+function openNewAppt(){
+  editingId=null; editingFirebaseKey=null;
+  document.getElementById('modalTitle').textContent='➕ موعد جديد';
+  ['f_client','f_phone','f_address','f_notes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f_service').value='';
+  document.getElementById('f_tech').value='';
+  document.getElementById('f_status').value='pending';
+  document.getElementById('f_units').value='1';
+  document.getElementById('f_date').value=today();
+  document.getElementById('f_time').value='09:00';
+  resetImageField();
+  resetLocFields();
+  document.getElementById('apptModal').classList.add('open');
+  populateClients();
+}
+
+function editAppt(id){
+  const a = findAppt(id);
+  if(!a) return;
+  editingId = id;
+  editingFirebaseKey = a._fbKey;
+  editingOriginalDate = a.date || ''; // حفظ التاريخ الأصلي للمقارنة لاحقاً
+  document.getElementById('modalTitle').textContent='✏️ تعديل الموعد';
+  document.getElementById('f_client').value=a.client||'';
+  document.getElementById('f_phone').value=a.phone||'';
+  document.getElementById('f_address').value=a.address||'';
+  document.getElementById('f_service').value=a.service||'';
+  document.getElementById('f_tech').value=a.tech||'';
+  document.getElementById('f_status').value=a.status||'pending';
+  document.getElementById('f_units').value=a.units||1;
+  document.getElementById('f_date').value=a.date||today();
+  document.getElementById('f_time').value=a.time||'09:00';
+  document.getElementById('f_notes').value=a.notes||'';
+  loadImageInModal(a.locationImage||'');
+  // استعادة حقول الموقع
+  resetLocFields();
+  if(a.mapsLink) {
+    document.getElementById('appointment_maps_link').value = a.mapsLink;
+    document.getElementById('loc_open_btn').href = a.mapsLink;
+    document.getElementById('loc_open_btn').style.display = 'inline-flex';
+  }
+  if(isValidCoordinates(Number(a.lat), Number(a.lng))) {
+    _locLat = Number(a.lat); _locLng = Number(a.lng);
+    document.getElementById('appointment_lat').value = _locLat;
+    document.getElementById('appointment_lng').value = _locLng;
+    showLocPreview(_locLat, _locLng);
+  }
+  if(a.locationSource) document.getElementById('appointment_location_source').value = a.locationSource;
+  if(a.locationVerified) {
+    document.getElementById('appointment_location_verified').value = 'true';
+    document.getElementById('chk_loc_verified').checked = true;
+  }
+  document.getElementById('apptModal').classList.add('open');
+  document.getElementById('detailModal').classList.remove('open');
+  populateClients();
+}
+
+
+// ===== الإشعارات الفورية =====
+function sendAdminNotification(booking) {
+  if(!db) return;
+  db.ref('notifications').push({
+    title: 'حجز جديد',
+    body: 'عميل: '+(booking.client||'')+' | '+(booking.service||'')+' | '+(booking.date||''),
+    data: JSON.stringify(booking),
+    createdAt: new Date().toISOString(),
+    read: false
+  });
+}
+
+// ===== تأكيد واتساب للعميل =====
+function sendWhatsAppConfirmation(appt) {
+  if(!appt.phone) return;
+  var phone = appt.phone.replace(/^0/,'966');
+  var techNames = {Abrar:'أبرار',Shoib:'شعيب',Suhail:'سهيل'};
+  var msg = 'مرحباً ' + (appt.client||'') + '\n\n' +
+    '✅ تم تأكيد موعدكم مع مؤسسة أطواد\n\n' +
+    'الخدمة: '+(appt.service||'')+'\n' +
+    'عدد المكيفات: '+(appt.units||1)+'\n' +
+    'التاريخ: '+(appt.date||'')+'\n' +
+    'الوقت: '+(appt.time||'')+'\n' +
+    'الفني: '+(techNames[appt.tech]||appt.tech||'')+'\n\n' +
+    'شكراً لثقتكم';
+  window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank');
+}
+
+// ============================================================
+// إحداثيات موقع العميل — متغيرات مؤقتة للموعد الحالي
+// ============================================================
+var _locLat = null, _locLng = null, _locSource = '';
+var _foundCustomerKey = null; // مفتاح Firebase للعميل الموجود
+var _savedCustomerLat = null, _savedCustomerLng = null, _savedCustomerLink = '';
+
+// التحقق من صحة الإحداثيات
+function isValidCoordinates(lat, lng) {
+  return Number.isFinite(lat) && Number.isFinite(lng) &&
+         lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180 &&
+         !(lat === 0 && lng === 0);
+}
+
+// ============================================================
+// extractCoordinatesFromMapUrl
+// الأولوية: !3d!4d → ?q/?query= → @lat,lng
+// روابط goo.gl/maps.app.goo.gl: تُقبل لكن لا إحداثيات
+// ============================================================
+function extractCoordinatesFromMapUrl(url) {
+  if(!url || typeof url !== 'string') return null;
+  var s = url.trim();
+  if(s.indexOf('maps.app.goo.gl') !== -1 || s.indexOf('goo.gl/maps') !== -1) return null;
+
+  // 1. !3dLAT!4dLNG — الموقع الفعلي للمكان
+  var placeMatch = s.match(/!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/);
+  if(placeMatch) {
+    var lat = Number(placeMatch[1]), lng = Number(placeMatch[2]);
+    if(isValidCoordinates(lat,lng)) return {lat:lat,lng:lng,source:'place_coordinates'};
+  }
+  // 2. ?q= أو ?query=
+  var qm = s.match(/[?&](?:q|query)=([-\d.]+),([-\d.]+)/);
+  if(qm) {
+    var lat2 = Number(qm[1]), lng2 = Number(qm[2]);
+    if(isValidCoordinates(lat2,lng2)) return {lat:lat2,lng:lng2,source:'query_coordinates'};
+  }
+  // 3. @LAT,LNG — مركز العرض فقط
+  var am = s.match(/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/);
+  if(am) {
+    var lat3 = Number(am[1]), lng3 = Number(am[2]);
+    if(isValidCoordinates(lat3,lng3)) return {lat:lat3,lng:lng3,source:'viewport_coordinates'};
+  }
+  return null;
+}
+
+// عرض رسالة الموقع
+function showLocMsg(type, text) {
+  var el = document.getElementById('loc_msg');
+  el.className = 'loc-msg' + (type ? ' '+type : '');
+  el.textContent = text;
+  el.style.display = text ? 'block' : 'none';
+}
+
+// عرض معاينة الخريطة
+function showLocPreview(lat, lng) {
+  var url = 'https://www.google.com/maps?q=' + encodeURIComponent(lat+','+lng) + '&z=17&output=embed';
+  document.getElementById('loc_preview_map').src = url;
+  document.getElementById('loc_preview').style.display = 'block';
+}
+
+// ============================================================
+// verifyApptLocation — التحقق من رابط الموقع الذي يُدخله الموظف
+// ============================================================
+function verifyApptLocation() {
+  var link = document.getElementById('appointment_maps_link').value.trim();
+  if(!link) { showLocMsg('err','أدخل رابط الموقع أولاً'); return; }
+
+  document.getElementById('loc_preview').style.display = 'none';
+  document.getElementById('loc_preview_map').src = 'about:blank';
+  document.getElementById('loc_conflict_box').style.display = 'none';
+  document.getElementById('chk_loc_verified').checked = false;
+  document.getElementById('appointment_location_verified').value = 'false';
+
+  var isShort = link.indexOf('maps.app.goo.gl') !== -1 || link.indexOf('goo.gl/maps') !== -1;
+  var isMapLink = link.indexOf('google.com/maps') !== -1 || link.indexOf('maps.google') !== -1 || isShort;
+
+  if(!isMapLink || link.length < 10) {
+    showLocMsg('err','هذا الرابط لا يبدو رابط Google Maps صالحًا');
+    document.getElementById('loc_open_btn').style.display = 'none';
+    return;
+  }
+
+  // زر فتح الموقع
+  document.getElementById('loc_open_btn').href = link;
+  document.getElementById('loc_open_btn').style.display = 'inline-flex';
+
+  if(isShort) {
+    // رابط مختصر — لا إحداثيات
+    _locLat = null; _locLng = null;
+    _locSource = 'manual_link';
+    document.getElementById('appointment_lat').value = '';
+    document.getElementById('appointment_lng').value = '';
+    document.getElementById('appointment_location_source').value = 'manual_link';
+    showLocMsg('warn','تم حفظ رابط الموقع، لكن تعذر استخراج الإحداثيات من الرابط المختصر.');
+    document.getElementById('loc_save_row').style.display = _foundCustomerKey ? 'flex' : 'none';
+    return;
+  }
+
+  var extracted = extractCoordinatesFromMapUrl(link);
+  if(extracted) {
+    _locLat = extracted.lat;
+    _locLng = extracted.lng;
+    _locSource = extracted.source;
+    document.getElementById('appointment_lat').value = _locLat;
+    document.getElementById('appointment_lng').value = _locLng;
+    document.getElementById('appointment_location_source').value = _locSource;
+
+    var msgText = extracted.source === 'place_coordinates'
+      ? '✅ تم استخراج الموقع الفعلي من رابط Google Maps'
+      : extracted.source === 'query_coordinates'
+        ? '✅ تم استخراج الإحداثيات من الرابط'
+        : '⚠️ تم استخراج مركز عرض الخريطة (قد لا يكون الموقع الدقيق)';
+    showLocMsg(extracted.source === 'viewport_coordinates' ? 'warn' : 'ok', msgText);
+    showLocPreview(_locLat, _locLng);
+
+    // هل للعميل موقع محفوظ سابق يختلف؟
+    if(_savedCustomerLat && _savedCustomerLng &&
+       (Math.abs(_savedCustomerLat - _locLat) > 0.0001 || Math.abs(_savedCustomerLng - _locLng) > 0.0001)) {
+      document.getElementById('loc_conflict_box').style.display = 'block';
+    } else {
+      document.getElementById('loc_save_row').style.display = _foundCustomerKey ? 'flex' : 'none';
+    }
+  } else {
+    _locLat = null; _locLng = null;
+    _locSource = 'manual_link';
+    document.getElementById('appointment_lat').value = '';
+    document.getElementById('appointment_lng').value = '';
+    document.getElementById('appointment_location_source').value = 'manual_link';
+    showLocMsg('warn','تم حفظ رابط الموقع. تعذر استخراج الإحداثيات من هذا الرابط.');
+    document.getElementById('loc_save_row').style.display = _foundCustomerKey ? 'flex' : 'none';
+  }
+}
+
+// خيارات التعارض
+function useOldLocation() {
+  document.getElementById('appointment_maps_link').value = _savedCustomerLink;
+  document.getElementById('appointment_lat').value = _savedCustomerLat || '';
+  document.getElementById('appointment_lng').value = _savedCustomerLng || '';
+  document.getElementById('appointment_location_source').value = 'maps_link';
+  _locLat = _savedCustomerLat; _locLng = _savedCustomerLng; _locSource = 'maps_link';
+  if(_locLat && _locLng) showLocPreview(_locLat, _locLng);
+  document.getElementById('loc_conflict_box').style.display = 'none';
+  document.getElementById('loc_save_row').style.display = 'none';
+  showLocMsg('ok','تم استخدام الموقع السابق للعميل');
+}
+function useNewLocation() {
+  document.getElementById('loc_conflict_box').style.display = 'none';
+  document.getElementById('loc_save_row').style.display = _foundCustomerKey ? 'flex' : 'none';
+  showLocMsg('ok','سيُستخدم الموقع الجديد لهذا الموعد فقط');
+}
+function useNewAndSave() {
+  document.getElementById('loc_conflict_box').style.display = 'none';
+  document.getElementById('loc_save_row').style.display = _foundCustomerKey ? 'flex' : 'none';
+  document.getElementById('chk_save_to_customer').checked = true;
+  showLocMsg('ok','سيُحفظ الموقع الجديد في ملف العميل');
+}
+
+// ============================================================
+// البحث عن العميل برقم الجوال
+// ============================================================
+function lookupCustomerByPhone(phone) {
+  if(!db || !phone || phone.length < 9) return;
+  db.ref('customers').orderByChild('phone').equalTo(phone).once('value').then(function(snap) {
+    if(!snap.exists()) return;
+    var key = null, cust = null;
+    snap.forEach(function(c){ key = c.key; cust = c.val(); });
+    if(!cust) return;
+    _foundCustomerKey = key;
+
+    // ملء الحقول فقط إذا كانت فارغة (لا نكتب فوق ما كتبه الموظف)
+    if(!document.getElementById('f_client').value.trim() && (cust.name || cust.client)) {
+      document.getElementById('f_client').value = cust.name || cust.client;
+    }
+    if(!document.getElementById('f_address').value.trim() && cust.address) {
+      document.getElementById('f_address').value = cust.address;
+    }
+
+    // موقع محفوظ؟
+    var hasLocation = isValidCoordinates(Number(cust.lat), Number(cust.lng)) || cust.mapsLink;
+    if(hasLocation) {
+      _savedCustomerLat  = Number(cust.lat) || null;
+      _savedCustomerLng  = Number(cust.lng) || null;
+      _savedCustomerLink = cust.mapsLink || '';
+
+      // إذا لم يكن الموظف أدخل رابطًا بعد، نملأه تلقائياً
+      if(!document.getElementById('appointment_maps_link').value.trim() && _savedCustomerLink) {
+        document.getElementById('appointment_maps_link').value = _savedCustomerLink;
+        if(_savedCustomerLat && _savedCustomerLng) {
+          document.getElementById('appointment_lat').value = _savedCustomerLat;
+          document.getElementById('appointment_lng').value = _savedCustomerLng;
+          document.getElementById('appointment_location_source').value = 'maps_link';
+          _locLat = _savedCustomerLat; _locLng = _savedCustomerLng; _locSource = 'maps_link';
+          document.getElementById('loc_open_btn').href = _savedCustomerLink;
+          document.getElementById('loc_open_btn').style.display = 'inline-flex';
+          showLocPreview(_locLat, _locLng);
+        }
+      }
+    }
+
+    var foundMsg = document.getElementById('clientFoundMsg');
+    foundMsg.textContent = '✅ تم العثور على العميل وملء بياناته السابقة.' + (hasLocation ? ' (لديه موقع محفوظ)' : '');
+    foundMsg.style.display = 'block';
+    document.getElementById('loc_save_row').style.display = 'flex';
+  }).catch(function(e){ console.error('lookup customer:', e); });
+}
+
+// إعادة تعيين حقول الموقع عند فتح نافذة موعد جديد/تعديل
+function resetLocFields() {
+  _locLat = null; _locLng = null; _locSource = '';
+  _foundCustomerKey = null;
+  _savedCustomerLat = null; _savedCustomerLng = null; _savedCustomerLink = '';
+  document.getElementById('appointment_maps_link').value = '';
+  document.getElementById('appointment_lat').value = '';
+  document.getElementById('appointment_lng').value = '';
+  document.getElementById('appointment_location_source').value = '';
+  document.getElementById('appointment_location_verified').value = 'false';
+  document.getElementById('chk_loc_verified').checked = false;
+  document.getElementById('chk_save_to_customer').checked = false;
+  document.getElementById('loc_msg').style.display = 'none';
+  document.getElementById('loc_preview').style.display = 'none';
+  document.getElementById('loc_preview_map').src = 'about:blank';
+  document.getElementById('loc_open_btn').style.display = 'none';
+  document.getElementById('loc_conflict_box').style.display = 'none';
+  document.getElementById('loc_save_row').style.display = 'none';
+  document.getElementById('clientFoundMsg').style.display = 'none';
+}
+
+function saveAppt(){
+  const client=document.getElementById('f_client').value.trim();
+  const phone=document.getElementById('f_phone').value.trim();
+  const address=document.getElementById('f_address').value.trim();
+  const service=document.getElementById('f_service').value;
+  const tech=document.getElementById('f_tech').value;
+  const date=document.getElementById('f_date').value;
+  if(!client||!phone||!service||!tech||!date) return showToast('❌ أكمل الحقول المطلوبة');
+
+  const data = {
+    client, phone, address, service, tech,
+    status: document.getElementById('f_status').value,
+    units: parseInt(document.getElementById('f_units').value)||1,
+    date, time: document.getElementById('f_time').value,
+    notes: document.getElementById('f_notes').value.trim(),
+    locationImage: currentImageBase64 || '',
+    duration: 90,
+    updatedAt: new Date().toISOString()
+  };
+
+  // موقع العميل — حقول اختيارية
+  var mapsLink = document.getElementById('appointment_maps_link').value.trim();
+  if(mapsLink) data.mapsLink = mapsLink;
+
+  var lat = Number(document.getElementById('appointment_lat').value);
+  var lng = Number(document.getElementById('appointment_lng').value);
+  if(isValidCoordinates(lat, lng)) {
+    data.lat = lat;
+    data.lng = lng;
+  }
+  var locSrc = document.getElementById('appointment_location_source').value;
+  if(locSrc) data.locationSource = locSrc;
+
+  var locVerified = document.getElementById('appointment_location_verified').value === 'true' ||
+                    document.getElementById('chk_loc_verified').checked;
+  if(mapsLink || isValidCoordinates(lat, lng)) {
+    data.locationVerified = locVerified;
+  }
+
+  if(!db) { showToast('❌ Firebase غير متاح'); return; }
+
+  if(editingFirebaseKey) {
+    // هل تغيّر التاريخ؟ إذا نعم اسأل الموظف عن إلغاء الموعد القديم
+    var dateChanged = editingOriginalDate && editingOriginalDate !== date;
+    var cancelPrevious = false;
+    if(dateChanged) {
+      cancelPrevious = confirm(
+        'تم تغيير تاريخ الموعد من ' + editingOriginalDate + ' إلى ' + date + '.\n\n' +
+        'هل تريد تغيير حالة الموعد القديم إلى «ملغي»؟'
+      );
+      if(cancelPrevious) {
+        data.previousDate   = editingOriginalDate;
+        data.cancelledAt    = new Date().toISOString();
+        data.cancelReason   = 'تم إعادة الجدولة إلى ' + date;
+      }
+    }
+
+    db.ref('appointments/' + editingFirebaseKey).update(
+      cancelPrevious ? Object.assign({}, data, {status: 'cancelled'}) : data
+    ).then(() => {
+        if(document.getElementById('chk_save_to_customer').checked && _foundCustomerKey && mapsLink) {
+          saveLocationToCustomer(_foundCustomerKey, {mapsLink, lat, lng, locSrc, locVerified});
+        }
+        if(cancelPrevious) {
+          // إنشاء موعد جديد بالتاريخ الجديد
+          var newData = Object.assign({}, data, {
+            status: 'pending',
+            createdAt: new Date().toISOString(),
+            rescheduledFrom: editingOriginalDate
+          });
+          delete newData.cancelledAt;
+          delete newData.cancelReason;
+          delete newData.previousDate;
+          db.ref('appointments').push(newData)
+            .then(function() {
+              showToast('✅ تم إلغاء الموعد القديم وإنشاء موعد جديد بتاريخ ' + date);
+              editingOriginalDate = '';
+              closeModal();
+            })
+            .catch(function(e){ showToast('❌ خطأ عند إنشاء الموعد الجديد: ' + e.message); });
+        } else {
+          showToast('✅ تم تحديث الموعد');
+          editingOriginalDate = '';
+          closeModal();
+        }
+      })
+      .catch(e => showToast('❌ خطأ: ' + e.message));
+  } else {
+    data.createdAt = new Date().toISOString();
+    db.ref('appointments').push(data)
+      .then(() => {
+        if(document.getElementById('chk_save_to_customer').checked && _foundCustomerKey && mapsLink) {
+          saveLocationToCustomer(_foundCustomerKey, {mapsLink, lat, lng, locSrc, locVerified});
+        }
+        showToast('✅ تم إضافة الموعد'); sendAdminNotification(data); closeModal();
+      })
+      .catch(e => showToast('❌ خطأ: ' + e.message));
+  }
+}
+
+// حفظ الموقع في ملف العميل
+function saveLocationToCustomer(customerKey, loc) {
+  if(!db || !customerKey) return;
+  var update = {mapsLink: loc.mapsLink};
+  if(isValidCoordinates(Number(loc.lat), Number(loc.lng))) {
+    update.lat = Number(loc.lat);
+    update.lng = Number(loc.lng);
+  }
+  if(loc.locSrc) update.locationSource = loc.locSrc;
+  update.locationVerified = loc.locVerified || false;
+  db.ref('customers/' + customerKey).update(update)
+    .then(function(){ console.log('location saved to customer', customerKey); })
+    .catch(function(e){ console.error('save to customer error:', e); });
+}
+
+function closeModal(){ document.getElementById('apptModal').classList.remove('open'); editingId=null; editingFirebaseKey=null; }
+
+// ===== DETAIL =====
+function openDetail(id){
+  const a = findAppt(id);
+  if(!a) return;
+  const tc=TECH_COLORS[a.tech]||'#0EA5E9';
+  const bm={confirmed:'sp-confirmed',pending:'sp-pending',done:'sp-done',cancelled:'sp-cancelled'};
+  const aId = a.id || a._fbKey;
+  document.getElementById('detailTitle').textContent='📋 ' + a.client;
+  document.getElementById('detailEditBtn').onclick=()=>editAppt(aId);
+  document.getElementById('detailBody').innerHTML=`
+    <div style="background:var(--frost);border-radius:12px;padding:16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;">
+      <div><div style="font-size:18px;font-weight:800;color:var(--deep)">${a.client}</div><div style="font-size:13px;color:var(--mist);margin-top:3px;">📱 <a href="tel:${a.phone}" style="color:var(--sky)">${a.phone}</a></div></div>
+      <span class="status-pill ${bm[a.status||'pending']}">${STATUS_ICONS[a.status||'pending']} ${STATUS_LABELS[a.status||'pending']}</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+      <div style="background:#fff;border:1.5px solid var(--ice);border-radius:10px;padding:12px;"><div style="font-size:11px;color:var(--mist);margin-bottom:4px;">🛠️ الخدمة</div><div style="font-weight:700;color:var(--deep)">${a.service||'—'}</div><div style="font-size:12px;color:var(--mist)">${a.units||1} وحدة</div></div>
+      <div style="background:#fff;border:1.5px solid var(--ice);border-radius:10px;padding:12px;"><div style="font-size:11px;color:var(--mist);margin-bottom:4px;">📅 الموعد</div><div style="font-weight:700;color:var(--deep)">${formatDateShort(a.date)}</div><div style="font-size:12px;color:var(--mist)">⏰ ${a.time||'—'}</div></div>
+      <div style="background:#fff;border:1.5px solid var(--ice);border-radius:10px;padding:12px;"><div style="font-size:11px;color:var(--mist);margin-bottom:4px;">👷 الفني</div><div style="font-weight:700;color:${tc}">${TECHS[a.tech]||a.tech||'—'}</div></div>
+      <div style="background:#fff;border:1.5px solid var(--ice);border-radius:10px;padding:12px;"><div style="font-size:11px;color:var(--mist);margin-bottom:4px;">📍 الموقع</div><div style="font-weight:700;color:var(--deep);font-size:12px">${a.address||'—'}</div></div>
+    </div>
+    ${a.notes?`<div style="background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:10px;padding:12px;margin-bottom:14px;font-size:13px;color:#92400E;">📝 ${a.notes}</div>`:''}
+    ${a.locationImage?`<div style="margin-bottom:14px;"><div style="font-size:12px;color:var(--mist);margin-bottom:6px;">📸 صورة الموقع</div><img src="${a.locationImage}" style="width:100%;max-height:200px;object-fit:cover;border-radius:10px;border:1.5px solid var(--ice);" onclick="window.open('${a.locationImage}','_blank')"></div>`:''}
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <a href="https://wa.me/966${(a.phone||'').replace(/^0/,'')}?text=${encodeURIComponent('مرحباً '+a.client+'،\nتذكير بموعدكم مع مؤسسة أطواد\nالخدمة: '+a.service+'\nالتاريخ: '+formatDateShort(a.date)+'\nالوقت: '+a.time)}" target="_blank" style="flex:1;text-align:center;padding:10px;background:#25D366;color:#fff;border-radius:9px;font-weight:700;text-decoration:none;font-size:13px;min-width:100px;">📲 تذكير</a>
+      <button onclick="sendWhatsAppConfirmation(findAppt('${aId}'))" style="flex:1;padding:10px;background:#DBEAFE;color:#1E40AF;border:none;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;min-width:100px;">✅ تأكيد للعميل</button>
+      ${a.tech
+        ? `<button onclick="sendToTechnician('${aId}')" style="flex:1;padding:10px;background:#7C3AED;color:#fff;border:none;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;min-width:100px;">📤 إرسال للفني</button>
+           <button onclick="copyTaskMessage('${aId}')" style="flex:1;padding:10px;background:#F3F4F6;color:#374151;border:1px solid #D1D5DB;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;min-width:100px;">📋 نسخ المهمة</button>`
+        : `<button disabled style="flex:1;padding:10px;background:#E9D5FF;color:#A78BFA;border:none;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:not-allowed;min-width:100px;" title="عيّن فنيًا أولًا">📤 إرسال للفني</button>`}
+      <a href="https://maps.google.com?q=${encodeURIComponent(a.address||'')}" target="_blank" style="flex:1;text-align:center;padding:10px;background:var(--ice);color:var(--sky);border-radius:9px;font-weight:700;text-decoration:none;font-size:13px;min-width:100px;">🗺️ خرائط</a>
+      ${a.status!=='done'?`<button onclick="markDone('${aId}');document.getElementById('detailModal').classList.remove('open')" style="flex:1;padding:10px;background:#D1FAE5;color:var(--success);border:none;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;min-width:80px;">✓ إتمام</button>`:''}
+      <button onclick="deleteAppt('${aId}',null);document.getElementById('detailModal').classList.remove('open')" style="flex:1;padding:10px;background:#FEE2E2;color:#EF4444;border:none;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;min-width:80px;">🗑️ حذف</button>
+    </div>`;
+  document.getElementById('detailModal').classList.add('open');
+}
+
+function markDone(id){
+  const a = findAppt(id);
+  if(!a || !db) return;
+  const ref = a._source==='bookings' ? 'bookings/'+a._fbKey : 'appointments/'+a._fbKey;
+  db.ref(ref).update({status:'done'})
+    .then(() => showToast('🎉 تم إتمام الموعد'))
+    .catch(e => showToast('❌ خطأ: ' + e.message));
+}
+
+function deleteAppt(id, e){
+  if(e) e.stopPropagation();
+  if(!confirm('⚠️ هل تريدين حذف هذا الموعد نهائياً؟')) return;
+  const a = findAppt(id);
+  if(!a || !db) return;
+  const ref = a._source==='bookings' ? 'bookings/'+a._fbKey : 'appointments/'+a._fbKey;
+  db.ref(ref).remove()
+    .then(() => showToast('🗑️ تم حذف الموعد'))
+    .catch(e => showToast('❌ خطأ: ' + e.message));
+}
+
+function sendWhatsapp(id){
+  const a = findAppt(id);
+  if(!a) return;
+  const msg=encodeURIComponent(`مرحباً ${a.client}،\nتذكير بموعدكم مع مؤسسة أطواد\nالخدمة: ${a.service}\nالتاريخ: ${formatDateShort(a.date)}\nالوقت: ${a.time}`);
+  window.open(`https://wa.me/966${(a.phone||'').replace(/^0/,'')}?text=${msg}`,'_blank');
+}
+
+// ============================================================
+// كائن أرقام الفنيين — مصدر واحد مركزي
+// المفتاح = نفس القيمة المحفوظة في حقل tech داخل appointments
+// الرقم بصيغة دولية 9665XXXXXXXX
+// ============================================================
+var TECHNICIAN_PHONES = {
+  'Abrar': '966539791802', // أبرار
+  'Shoib': '966551853763'  // شعيب
+};
+
+// ============================================================
+// normalizeSaudiPhone — توحيد أي صيغة لرقم سعودي
+// يُعيد 9665XXXXXXXX أو '' عند الفشل
+// ============================================================
+function normalizeSaudiPhone(phone) {
+  if(!phone) return '';
+  var s = String(phone).replace(/[\s\-().+]/g, '');
+  if(s.startsWith('00966')) s = s.slice(2);       // 009665... → 9665...
+  if(s.startsWith('966'))   return s;              // 9665XXXXXXXX ✅
+  if(s.startsWith('05') && s.length === 10)
+    return '966' + s.slice(1);                    // 05XXXXXXXX → 9665XXXXXXXX
+  if(s.startsWith('5') && s.length === 9)
+    return '966' + s;                             // 5XXXXXXXX → 9665XXXXXXXX
+  return '';
+}
+
+// ============================================================
+// buildTechnicianMessage — رسالة المهمة للفني
+// يعرض فقط الحقول المتوفرة — لا يُضيف سطراً لقيمة فارغة
+// ============================================================
+function buildTechnicianMessage(a) {
+  var lines = [];
+  lines.push('🔧 مهمة جديدة — مؤسسة أطواد لصيانة المكيفات');
+  lines.push('');
+
+  if(a.client)   lines.push('👤 العميل: '   + a.client);
+  if(a.phone)    lines.push('📞 الجوال: '   + a.phone);
+  if(a.date)     lines.push('📅 التاريخ: '  + (formatDateShort ? formatDateShort(a.date) : a.date));
+
+  // الوقت: يدعم time و endTime
+  var timeStr = a.time || '';
+  if(a.endTime) timeStr += ' - ' + a.endTime;
+  if(timeStr)    lines.push('🕘 الوقت: '    + timeStr);
+
+  if(a.service)  lines.push('🛠 الخدمة: '   + a.service);
+  if(a.units && a.units > 1) lines.push('❄️ العدد: ' + a.units + ' مكيف');
+
+  // الموقع النصي
+  var locText = a.address || a.city || '';
+  if(locText)    lines.push('📍 العنوان: '  + locText);
+
+  // رابط الموقع — بالأولوية
+  var mapsUrl = a.mapsLink || a.mapUrl || a.locationUrl || a.googleMapsUrl || a.locationLink || '';
+  if(!mapsUrl && a.lat && a.lng) {
+    var lat = Number(a.lat), lng = Number(a.lng);
+    if(Number.isFinite(lat) && Number.isFinite(lng) && !(lat===0&&lng===0))
+      mapsUrl = 'https://www.google.com/maps?q=' + lat + ',' + lng;
+  }
+  if(mapsUrl)    lines.push('🗺 الموقع: '   + mapsUrl);
+
+  // وصف الطلب — يبحث في الحقول بالترتيب
+  var probDesc = '';
+  if(Array.isArray(a.problemLabels) && a.problemLabels.length)
+    probDesc = a.problemLabels.join('، ');
+  else if(a.problemDescriptionSummary)
+    probDesc = a.problemDescriptionSummary;
+  else if(a.problemDescription)
+    probDesc = a.problemDescription;
+  else if(a.description)
+    probDesc = a.description;
+  else if(a.notes)
+    probDesc = a.notes;
+  else if(a.customerNotes)
+    probDesc = a.customerNotes;
+  if(probDesc)   lines.push('📝 وصف الطلب: ' + probDesc);
+
+  // إذا يوجد تفاصيل إضافية بجانب الأوصاف المختارة
+  if(Array.isArray(a.problemLabels) && a.problemLabels.length && a.problemDescription)
+    lines.push('   التفاصيل: ' + a.problemDescription);
+
+  // أولوية الطلب
+  var priorityMap = {high:'🔴 عالية', critical:'🚨 حرجة', medium:'🟡 متوسطة', low:'🟢 منخفضة'};
+  if(a.priority && priorityMap[a.priority])
+    lines.push('⚠️ الأولوية: ' + priorityMap[a.priority]);
+
+  lines.push('');
+  lines.push('👷 الفني المسؤول: ' + (TECHS[a.tech] || a.tech || ''));
+  lines.push('');
+  lines.push('يرجى تأكيد استلام المهمة.');
+
+  return lines.join('\n');
+}
+
+// ============================================================
+// متغيرات مؤقتة لنافذة إرسال المهمة
+// ============================================================
+var pendingTechnicianMessage = '';
+var pendingTechnicianPhone   = '';
+var pendingTechnicianName    = '';
+var pendingTechApptId        = '';
+
+// ============================================================
+// sendToTechnician — ينسخ الرسالة تلقائياً ثم يفتح النافذة
+// ============================================================
+function sendToTechnician(id) {
+  var a = findAppt(id);
+  if(!a) return;
+
+  if(!a.tech) { showToast('⚠️ لم يُعيَّن فني لهذا الموعد'); return; }
+
+  var rawPhone = TECHNICIAN_PHONES[a.tech] || '';
+  var phone    = normalizeSaudiPhone(rawPhone);
+
+  if(!phone) {
+    showToast('⚠️ لا يوجد رقم واتساب محفوظ لهذا الفني');
+    return;
+  }
+
+  var msg      = buildTechnicianMessage(a);
+  var techName = TECHS[a.tech] || a.tech;
+
+  // خزّن البيانات المؤقتة
+  pendingTechnicianMessage = msg;
+  pendingTechnicianPhone   = phone;
+  pendingTechnicianName    = techName;
+  pendingTechApptId        = id;
+
+  // 1. انسخ الرسالة تلقائياً
+  var badge = document.getElementById('techCopiedBadge');
+  badge.classList.remove('show');
+
+  function openModal() {
+    // حدّث محتوى النافذة
+    document.getElementById('techModalName').textContent   = techName;
+    document.getElementById('techModalPhone').textContent  = rawPhone;
+    document.getElementById('techMsgPreview').textContent  = msg;
+
+    // رابط wa.me
+    var waUrl = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msg);
+    document.getElementById('openWhatsappBtn').href = waUrl;
+
+    // زر واتساب الأعمال على Android فقط
+    var bizBtn = document.getElementById('openWhatsappBusinessBtn');
+    bizBtn.style.display = /Android/i.test(navigator.userAgent) ? 'block' : 'none';
+
+    // افتح النافذة
+    document.getElementById('technicianSendModal').classList.add('open');
+  }
+
+  if(navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(msg).then(function() {
+      badge.classList.add('show');
+      openModal();
+    }).catch(function() {
+      fallbackCopy(msg);
+      openModal();
+    });
+  } else {
+    fallbackCopy(msg);
+    openModal();
+  }
+}
+
+// فتح واتساب — يُسجّل فقط أن المستخدم ضغط (لا تحديث Firebase هنا)
+function onOpenWhatsapp() {
+  // لا شيء إضافي — الرابط يعمل عبر href في العنصر <a>
+}
+
+// واتساب الأعمال على Android عبر Intent
+function openWhatsappBusiness() {
+  if(!/Android/i.test(navigator.userAgent)) return;
+  var intentUrl = 'intent://send?phone=' + pendingTechnicianPhone +
+    '&text=' + encodeURIComponent(pendingTechnicianMessage) +
+    '#Intent;scheme=whatsapp;package=com.whatsapp.w4b;end';
+  try {
+    window.location.href = intentUrl;
+  } catch(e) {
+    showToast('⚠️ تعذّر فتح واتساب الأعمال — الصق الرسالة يدوياً');
+  }
+}
+
+// نسخ الرسالة مرة أخرى
+function reCopyTechMessage() {
+  if(!pendingTechnicianMessage) return;
+  if(navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(pendingTechnicianMessage).then(function(){
+      showToast('📋 تم نسخ الرسالة');
+    }).catch(function(){ fallbackCopy(pendingTechnicianMessage); });
+  } else {
+    fallbackCopy(pendingTechnicianMessage);
+  }
+}
+
+// تأكيد الإرسال — يحدّث Firebase فقط عند الضغط
+function confirmTechSent() {
+  if(!pendingTechApptId) { closeTechSendModal(); return; }
+  var a = findAppt(pendingTechApptId);
+  if(db && a && a._fbKey) {
+    var ref = a._source === 'bookings'
+      ? 'bookings/'      + a._fbKey
+      : 'appointments/'  + a._fbKey;
+    db.ref(ref).update({
+      sentToTechnician:     true,
+      sentToTechnicianAt:   firebase.database.ServerValue.TIMESTAMP,
+      sentToTechnicianName: pendingTechnicianName
+    }).then(function(){
+      showToast('✅ تم تسجيل إرسال المهمة للفني');
+    }).catch(function(e){
+      console.error('sentToTechnician update:', e);
+      showToast('⚠️ تعذّر التحديث في Firebase');
+    });
+  } else {
+    showToast('✅ تم تسجيل إرسال المهمة للفني');
+  }
+  closeTechSendModal();
+}
+
+// إغلاق النافذة وتنظيف البيانات
+function closeTechSendModal() {
+  document.getElementById('technicianSendModal').classList.remove('open');
+  document.getElementById('techCopiedBadge').classList.remove('show');
+  pendingTechnicianMessage = '';
+  pendingTechnicianPhone   = '';
+  pendingTechnicianName    = '';
+  pendingTechApptId        = '';
+}
+
+// ============================================================
+// copyTaskMessage — نسخ رسالة المهمة إلى الحافظة
+// ============================================================
+function copyTaskMessage(id) {
+  var a = findAppt(id);
+  if(!a) return;
+  var msg = buildTechnicianMessage(a);
+  if(navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(msg).then(function(){
+      showToast('📋 تم نسخ تفاصيل المهمة');
+    }).catch(function(){
+      fallbackCopy(msg);
+    });
+  } else {
+    fallbackCopy(msg);
+  }
+}
+
+function fallbackCopy(text) {
+  var ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity  = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); showToast('📋 تم نسخ تفاصيل المهمة'); }
+  catch(e) { showToast('⚠️ تعذّر النسخ، جرب يدوياً'); }
+  document.body.removeChild(ta);
+}
+
+function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2800); }
+
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
+
+// ===== INIT =====
+const calDates = getWeekDates(0);
+const ms = new Date(calDates[0]+'T00:00:00');
+document.getElementById('calMonth').textContent = ms.toLocaleDateString('ar-SA',{month:'long',year:'numeric'});
+switchView('list');
+initFirebaseSync(); // تشغيل المزامنة التلقائية
+loadFridaySetting(); // تحميل إعداد الجمعة
 </script>
+
+<script>
+var LANG = localStorage.getItem('atwad_lang') || 'ar';
+var NAV_TEXT = {
+  ar: {brand:'أطواد', brandSub:'لصيانة المكيفات', clients:'العملاء', appts:'المواعيد', wo:'أوامر العمل', finance:'الإدارة المالية', reports:'التقارير', settings:'الإعدادات'},
+  en: {brand:'Atwad', brandSub:'AC Maintenance', clients:'Clients', appts:'Appointments', wo:'Work Orders', finance:'Finance', reports:'Reports', settings:'Settings'}
+};
+function applySharedLang() {
+  var l=LANG; document.documentElement.lang=l; document.documentElement.dir=l==='ar'?'rtl':'ltr';
+  var btn=document.getElementById('langBtn'); if(btn) btn.textContent=l==='ar'?'🌐 EN':'🌐 عر';
+  var t=NAV_TEXT[l];
+  ['nav-brand','nav-brandsub','nav-clients','nav-appts','nav-wo','nav-finance','nav-reports','nav-settings'].forEach(function(id,i){
+    var keys=['brand','brandSub','clients','appts','wo','finance','reports','settings'];
+    var el=document.getElementById(id); if(el) el.textContent=t[keys[i]];
+  });
+}
+function toggleLang(){ LANG=LANG==='ar'?'en':'ar'; localStorage.setItem('atwad_lang',LANG); applySharedLang(); }
+document.addEventListener('DOMContentLoaded', applySharedLang);
+</script>
+
+<!-- نافذة الإشعارات -->
+<!-- Modal إرسال المهمة للفني -->
+<div class="modal-overlay" id="technicianSendModal">
+  <div class="modal" style="max-width:460px;width:calc(100% - 24px);">
+    <div class="modal-hdr">
+      <span style="font-size:15px;font-weight:800;color:var(--deep);">📤 تجهيز المهمة للفني</span>
+      <button class="modal-close" id="closeTechnicianSendModalBtn" onclick="closeTechSendModal()">×</button>
+    </div>
+    <div class="modal-body" style="padding:18px 20px;">
+      <!-- معلومات الفني -->
+      <div class="tech-modal-tech-info">
+        <div>👷 الفني: <strong id="techModalName">—</strong></div>
+        <div style="margin-top:4px;">📱 الرقم: <span id="techModalPhone" style="direction:ltr;display:inline-block;">—</span></div>
+      </div>
+      <!-- شارة النسخ التلقائي -->
+      <div class="tech-modal-copied-badge" id="techCopiedBadge">✅ تم نسخ تفاصيل المهمة إلى الحافظة تلقائيًا</div>
+      <!-- معاينة مختصرة للرسالة -->
+      <div class="tech-modal-preview" id="techMsgPreview"></div>
+      <!-- ملاحظة واتساب -->
+      <div class="tech-modal-note" id="techModalNote">
+        سيتم فتح تطبيق واتساب الافتراضي على جهازك.<br>
+        إذا فتح واتساب الشخصي، أغلقه وافتح واتساب الأعمال ثم الصق الرسالة المنسوخة.
+      </div>
+      <!-- الأزرار -->
+      <div class="tech-modal-btns">
+        <a class="btn-wa-open" id="openWhatsappBtn" href="#" target="_blank" rel="noopener" onclick="onOpenWhatsapp()">
+          💬 فتح واتساب
+        </a>
+        <!-- زر واتساب أعمال Android — يظهر فقط على Android -->
+        <button class="btn-wa-biz" id="openWhatsappBusinessBtn" style="display:none;" onclick="openWhatsappBusiness()">
+          🏢 فتح واتساب الأعمال (Android)
+        </button>
+        <button class="btn-copy-again" id="copyTechnicianMessageBtn" onclick="reCopyTechMessage()">
+          📋 نسخ الرسالة مرة أخرى
+        </button>
+        <button class="btn-confirm-sent" onclick="confirmTechSent()">
+          ✅ تم الإرسال للفني
+        </button>
+        <button class="btn-close-tech" id="closeTechnicianSendModalFooterBtn" onclick="closeTechSendModal()">
+          إغلاق
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="notifModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:2000;align-items:flex-start;justify-content:flex-end;">
+  <div style="background:#fff;width:360px;max-width:100%;height:100%;overflow-y:auto;padding:20px;box-shadow:-4px 0 20px rgba(0,0,0,.15);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h3 style="font-size:16px;font-weight:800;color:var(--deep);">?? الإشعارات</h3>
+      <button onclick="closeNotifications()" style="border:none;background:none;font-size:18px;cursor:pointer;">&#x2715;</button>
+    </div>
+    <div id="notifList"><div style="text-align:center;color:var(--mist);padding:30px;">لا توجد إشعارات</div></div>
+  </div>
+</div>
+
+<script>
+// مراقبة الإشعارات من Firebase
+function watchNotifications() {
+  if(!db) return;
+  db.ref('notifications').orderByChild('read').equalTo(false).on('value', function(snap) {
+    var count = 0;
+    snap.forEach(function() { count++; });
+    var badge = document.getElementById('notifBadge');
+    if(badge) {
+      badge.textContent = count;
+      badge.style.display = count > 0 ? 'flex' : 'none';
+    }
+  });
+}
+
+function openNotifications() {
+  document.getElementById('notifModal').style.display = 'flex';
+  if(!db) return;
+  db.ref('notifications').orderByChild('createdAt').limitToLast(20).once('value', function(snap) {
+    var items = [];
+    snap.forEach(function(c) { items.unshift({key:c.key, ...c.val()}); });
+    var list = document.getElementById('notifList');
+    if(items.length === 0) {
+      list.innerHTML = '<div style="text-align:center;color:var(--mist);padding:30px;">لا توجد إشعارات</div>';
+      return;
+    }
+    list.innerHTML = items.map(function(n) {
+      return '<div style="background:'+(n.read?'#F8FAFC':'#EFF6FF')+';border-radius:10px;padding:12px;margin-bottom:8px;border-right:3px solid '+(n.read?'#E2E8F0':'#0EA5E9')+';">' +
+        '<div style="font-size:13px;font-weight:700;color:var(--deep);">' + (n.title||'') + '</div>' +
+        '<div style="font-size:12px;color:var(--mist);margin-top:4px;">' + (n.body||'') + '</div>' +
+        '<div style="font-size:11px;color:var(--mist);margin-top:4px;">' + (n.createdAt?new Date(n.createdAt).toLocaleString('ar-SA'):'') + '</div>' +
+        (!n.read ? '<button onclick="markNotifRead(\'' + n.key + '\')" style="margin-top:6px;padding:3px 10px;background:var(--sky);color:#fff;border:none;border-radius:6px;font-family:Tajawal,sans-serif;font-size:11px;cursor:pointer;">تم القراءة</button>' : '') +
+        '</div>';
+    }).join('');
+  });
+}
+
+function closeNotifications() {
+  document.getElementById('notifModal').style.display = 'none';
+}
+
+function markNotifRead(key) {
+  if(!db) return;
+  db.ref('notifications/'+key).update({read:true}).then(function() {
+    openNotifications();
+  });
+}
+
+// تشغيل مراقبة الإشعارات
+watchNotifications();
+</script>
+
 </body>
 </html>
