@@ -103,6 +103,51 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 .act-edit{background:var(--ice);color:var(--sky);}
 .act-done{background:#D1FAE5;color:var(--success);}
 .act-delete{background:#FEE2E2;color:#EF4444;}
+.act-remind{background:#FEF9C3;color:#92400E;}
+.act-cancel{background:#FEE2E2;color:#EF4444;}
+/* Modal سبب الإلغاء */
+.cancel-modal{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:3000;display:flex;align-items:center;justify-content:center;display:none;}
+.cancel-modal.open{display:flex;}
+.cancel-box{background:#fff;border-radius:16px;padding:24px;width:calc(100% - 40px);max-width:420px;box-shadow:0 8px 32px rgba(0,0,0,.18);}
+.cancel-box h3{font-size:16px;font-weight:800;color:var(--deep);margin-bottom:14px;}
+.cancel-reason-btns{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
+.cancel-reason-btn{padding:10px 14px;border:1.5px solid #E2E8F0;border-radius:10px;background:#fff;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:600;color:var(--slate);cursor:pointer;text-align:right;transition:all .15s;}
+.cancel-reason-btn:hover,.cancel-reason-btn.sel{background:#FEE2E2;border-color:#EF4444;color:#991B1B;}
+.cancel-reason-other{width:100%;padding:9px 12px;border:1.5px solid #E2E8F0;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;color:var(--slate);margin-bottom:14px;outline:none;display:none;}
+.cancel-reason-other.show{display:block;}
+.cancel-modal-btns{display:flex;gap:8px;}
+.btn-confirm-cancel{flex:1;padding:10px;background:#EF4444;color:#fff;border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
+.btn-abort-cancel{flex:1;padding:10px;background:#F1F5F9;color:var(--slate);border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
+/* قائمة الانتظار */
+.waiting-section{background:#fff;border-radius:14px;padding:16px 20px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin:12px 0;}
+.waiting-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.waiting-header h3{font-size:14px;font-weight:800;color:var(--deep);}
+.waiting-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--ice);font-size:12px;}
+.waiting-row:last-child{border-bottom:none;}
+.waiting-row .wname{font-weight:700;color:var(--deep);}
+.waiting-row .wservice{color:var(--mist);}
+.btn-book-waiting{padding:5px 12px;background:#DBEAFE;color:#1E40AF;border:none;border-radius:8px;font-family:'Tajawal',sans-serif;font-size:11px;font-weight:700;cursor:pointer;}
+.free-slot-notice{background:#F0FFF4;border:1.5px solid #86EFAC;border-radius:12px;padding:12px 16px;margin-bottom:12px;font-size:12px;color:#065F46;display:none;}
+.free-slot-notice.show{display:block;}
+.act-send-tech:disabled{background:#E9D5FF;color:#A78BFA;cursor:not-allowed;}
+.act-copy-task{background:#F3F4F6;color:#374151;border:1px solid #D1D5DB;}
+/* Modal إرسال للفني */
+#technicianSendModal .modal{max-width:460px;}
+.tech-modal-tech-info{background:var(--frost);border:1.5px solid #E2E8F0;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:13px;}
+.tech-modal-tech-info strong{color:var(--deep);}
+.tech-modal-copied-badge{display:none;background:#F0FFF4;border:1.5px solid #86EFAC;border-radius:9px;padding:9px 13px;font-size:12px;color:#065F46;font-weight:700;margin-bottom:12px;text-align:center;}
+.tech-modal-copied-badge.show{display:block;}
+.tech-modal-preview{background:#F8FAFC;border:1px solid #E2E8F0;border-radius:9px;padding:10px 12px;font-size:11px;color:var(--slate);direction:rtl;white-space:pre-wrap;max-height:130px;overflow-y:auto;margin-bottom:14px;line-height:1.7;}
+.tech-modal-note{font-size:11px;color:var(--mist);margin-bottom:14px;line-height:1.6;padding:8px 12px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;}
+.tech-modal-btns{display:flex;flex-direction:column;gap:9px;}
+.tech-modal-btns button, .tech-modal-btns a{display:block;width:100%;padding:11px;border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;text-align:center;text-decoration:none;transition:opacity .15s;}
+.tech-modal-btns button:hover, .tech-modal-btns a:hover{opacity:.88;}
+.btn-wa-open{background:#25D366;color:#fff;}
+.btn-wa-biz{background:#075E54;color:#fff;}
+.btn-copy-again{background:var(--ice);color:var(--sky);border:1.5px solid #BFDBFE !important;}
+.btn-confirm-sent{background:#D1FAE5;color:#065F46;border:1.5px solid #86EFAC !important;}
+.btn-close-tech{background:#F1F5F9;color:var(--slate);}
+@media(max-width:500px){#technicianSendModal .modal{margin:10px;}}
 .source-badge{display:inline-block;padding:2px 7px;border-radius:5px;font-size:10px;font-weight:700;margin-top:3px;}
 .source-firebase{background:#FFF3E0;color:#E65100;}
 .source-local{background:#E8F5E9;color:#2E7D32;}
@@ -135,6 +180,33 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 @media(max-width:900px){.sidebar{display:none;}.main{margin-right:0;}.stats-row{grid-template-columns:1fr 1fr;}}
 .lang-btn{padding:7px 14px;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);border-radius:8px;color:#fff;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;}
 .lang-btn:hover{background:rgba(255,255,255,.25);}
+/* قسم موقع العميل */
+.loc-section{margin-top:6px;margin-bottom:14px;padding:14px;background:#F7FCFF;border:1.5px solid #B7DFF5;border-radius:12px;}
+.loc-section-title{font-size:12px;font-weight:800;color:var(--deep);margin-bottom:10px;}
+.loc-input-row{display:flex;gap:8px;align-items:flex-start;}
+.loc-input-row input{flex:1;padding:9px 12px;border:1.5px solid #E2E8F0;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;color:var(--slate);background:var(--frost);outline:none;direction:ltr;}
+.loc-input-row input:focus{border-color:var(--sky);}
+.loc-btn{padding:9px 12px;border:none;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .2s;flex-shrink:0;}
+.loc-btn-verify{background:var(--ice);color:var(--sky);border:1.5px solid #BFDBFE;}
+.loc-btn-open{background:#FEF9C3;color:#92400E;border:1.5px solid #FDE68A;display:none;}
+.loc-msg{margin-top:8px;padding:8px 11px;border-radius:8px;font-size:12px;display:none;}
+.loc-msg.ok{background:#F0FFF4;border:1.5px solid #86EFAC;color:#065F46;}
+.loc-msg.warn{background:#FFFBEB;border:1.5px solid #FDE68A;color:#92400E;}
+.loc-msg.err{background:#FEF2F2;border:1.5px solid #FECACA;color:#991B1B;}
+.loc-preview{margin-top:10px;display:none;}
+.loc-preview iframe{width:100%;height:220px;border:0;border-radius:10px;display:block;}
+.loc-preview-note{font-size:11px;color:var(--mist);margin-top:6px;}
+.loc-chk-row{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:12px;color:var(--slate);cursor:pointer;}
+.loc-chk-row input{width:15px;height:15px;accent-color:var(--success);}
+.loc-save-row{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:12px;color:var(--slate);cursor:pointer;padding:6px 10px;background:var(--frost);border-radius:8px;border:1px dashed #CBD5E1;}
+.loc-save-row input{width:15px;height:15px;accent-color:var(--purple);}
+.client-found-msg{padding:8px 12px;background:#F0FFF4;border:1.5px solid #86EFAC;border-radius:9px;font-size:12px;color:#065F46;margin-bottom:10px;display:none;}
+.loc-conflict-box{padding:10px 12px;background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:10px;font-size:12px;color:#92400E;display:none;margin-top:8px;}
+.loc-conflict-box .loc-conflict-btns{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;}
+.loc-conflict-btn{padding:6px 12px;border:none;border-radius:8px;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer;}
+.btn-use-old{background:#FEF3C7;color:#92400E;}
+.btn-use-new{background:#DBEAFE;color:#1E40AF;}
+.btn-save-new{background:#D1FAE5;color:#065F46;}
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
@@ -182,6 +254,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
         <span id="notifBadge" style="display:none;position:absolute;top:-6px;right:-6px;background:#EF4444;color:#fff;border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:'Tajawal',sans-serif;">0</span>
       </div>
       <button class="btn-primary" onclick="openNewAppt()">＋ موعد جديد</button>
+      <button onclick="openWaitingList(null)" style="padding:9px 14px;background:#FEF9C3;color:#92400E;border:1.5px solid #FDE68A;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;">👥 قائمة الانتظار</button>
     </div>
   </div>
 
@@ -224,7 +297,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
     <div class="modal-body">
       <div class="form-row">
         <div class="form-group"><label>اسم العميل <span class="req">*</span></label><input type="text" id="f_client" placeholder="اسم العميل" list="clientsList"><datalist id="clientsList"></datalist></div>
-        <div class="form-group"><label>جوال العميل <span class="req">*</span></label><input type="tel" id="f_phone" placeholder="05xxxxxxxx"></div>
+        <div class="form-group"><label>جوال العميل <span class="req">*</span></label><input type="tel" id="f_phone" placeholder="05xxxxxxxx" oninput="if(this.value.length>=10) lookupCustomerByPhone(this.value.trim())"></div>
       </div>
       <div class="form-group"><label>العنوان <span class="req">*</span></label><input type="text" id="f_address" placeholder="الحي، الشارع..."></div>
       <div class="form-row">
@@ -260,6 +333,51 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
         </div>
       </div>
       <div class="form-group"><label>ملاحظات</label><textarea id="f_notes" rows="2" placeholder="أي تعليمات للفني..."></textarea></div>
+
+      <!-- قسم بيانات العميل — يظهر عند البحث برقم الجوال -->
+      <div class="client-found-msg" id="clientFoundMsg"></div>
+
+      <!-- قسم موقع العميل -->
+      <div class="loc-section">
+        <div class="loc-section-title">📍 موقع العميل</div>
+        <div class="loc-input-row">
+          <input type="url" id="appointment_maps_link" placeholder="https://maps.app.goo.gl/..." autocomplete="off">
+          <button type="button" class="loc-btn loc-btn-verify" onclick="verifyApptLocation()">🗺️ التحقق من الرابط</button>
+          <a class="loc-btn loc-btn-open" id="loc_open_btn" href="#" target="_blank">فتح الموقع</a>
+        </div>
+        <div class="loc-msg" id="loc_msg"></div>
+        <!-- معاينة خريطة — تظهر فقط عند إحداثيات صالحة -->
+        <div class="loc-preview" id="loc_preview">
+          <iframe id="loc_preview_map" src="about:blank" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
+          <p class="loc-preview-note">يرجى التأكد أن العلامة على موقع العميل الصحيح.</p>
+          <label class="loc-chk-row">
+            <input type="checkbox" id="chk_loc_verified">
+            <span>تم التأكد من أن الموقع صحيح</span>
+          </label>
+        </div>
+        <!-- تعارض الموقع -->
+        <div class="loc-conflict-box" id="loc_conflict_box">
+          <div>⚠️ يوجد موقع محفوظ سابقًا لهذا العميل.</div>
+          <div style="margin-top:4px;">هل تريد:</div>
+          <div class="loc-conflict-btns">
+            <button class="loc-conflict-btn btn-use-old" onclick="useOldLocation()">استخدام الموقع السابق</button>
+            <button class="loc-conflict-btn btn-use-new" onclick="useNewLocation()">استخدام الموقع الجديد لهذا الموعد فقط</button>
+            <button class="loc-conflict-btn btn-save-new" onclick="useNewAndSave()">حفظ الموقع الجديد في ملف العميل</button>
+          </div>
+        </div>
+        <!-- خيار حفظ الموقع في ملف العميل -->
+        <label class="loc-save-row" id="loc_save_row" style="display:none;">
+          <input type="checkbox" id="chk_save_to_customer">
+          <span>💾 حفظ هذا الموقع في ملف العميل</span>
+        </label>
+      </div>
+
+      <!-- حقول مخفية للإحداثيات -->
+      <input type="hidden" id="appointment_lat">
+      <input type="hidden" id="appointment_lng">
+      <input type="hidden" id="appointment_location_source">
+      <input type="hidden" id="appointment_location_verified" value="false">
+
       <div class="form-group">
         <label>📸 صورة الموقع / المنزل</label>
         <div id="imgUploadArea" style="border:2px dashed #E2E8F0;border-radius:10px;padding:16px;text-align:center;cursor:pointer;background:var(--frost);transition:all .2s;" onclick="document.getElementById('f_img').click()">
@@ -298,6 +416,41 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 
 <div class="toast" id="toast"></div>
 
+<!-- Modal قائمة الانتظار -->
+<div class="cancel-modal" id="waitingListModal">
+  <div class="cancel-box" style="max-width:480px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <h3 style="margin:0;">👥 قائمة الانتظار</h3>
+      <button onclick="document.getElementById('waitingListModal').classList.remove('open')" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--mist);">×</button>
+    </div>
+    <div id="waitingListBody"></div>
+    <div style="margin-top:12px;display:flex;gap:8px;">
+      <button onclick="addToWaitingList()" style="flex:1;padding:10px;background:var(--sky);color:#fff;border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">➕ إضافة عميل</button>
+      <button onclick="document.getElementById('waitingListModal').classList.remove('open')" style="flex:1;padding:10px;background:#F1F5F9;color:var(--slate);border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal سبب الإلغاء -->
+<div class="cancel-modal" id="cancelReasonModal">
+  <div class="cancel-box">
+    <h3>❌ إلغاء الموعد</h3>
+    <p style="font-size:12px;color:var(--mist);margin-bottom:12px;">ما سبب الإلغاء؟ (يساعدنا في تحسين الخدمة)</p>
+    <div class="cancel-reason-btns">
+      <button class="cancel-reason-btn" onclick="selCancelReason(this,'العميل طلب الإلغاء')">👤 العميل طلب الإلغاء</button>
+      <button class="cancel-reason-btn" onclick="selCancelReason(this,'العميل غير متاح')">📵 العميل غير متاح</button>
+      <button class="cancel-reason-btn" onclick="selCancelReason(this,'إعادة الجدولة')">📅 إعادة الجدولة</button>
+      <button class="cancel-reason-btn" onclick="selCancelReason(this,'الفني غير متاح')">👷 الفني غير متاح</button>
+      <button class="cancel-reason-btn" onclick="selCancelReason(this,'other')">✏️ سبب آخر</button>
+    </div>
+    <input type="text" class="cancel-reason-other" id="cancelReasonOther" placeholder="اكتب السبب...">
+    <div class="cancel-modal-btns">
+      <button class="btn-confirm-cancel" onclick="confirmCancel()">تأكيد الإلغاء</button>
+      <button class="btn-abort-cancel" onclick="closeCancelModal()">رجوع</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ===== FIREBASE =====
 var db = null;
@@ -313,6 +466,7 @@ let currentView = 'list';
 let techFilter = 'all';
 let editingId = null;
 let editingFirebaseKey = null;
+let editingOriginalDate = ''; // التاريخ الأصلي للموعد قبل التعديل
 
 const TECHS = { Abrar:'أبرار', Shoib:'شعيب', Suhail:'سهيل' };
 const STATUS_LABELS = { confirmed:'مؤكد', pending:'في الانتظار', done:'مكتمل', cancelled:'ملغي' };
@@ -569,9 +723,15 @@ function renderList(){
           <span class="tech-pill" style="border-right:3px solid ${tc}">👷 ${TECHS[a.tech]||a.tech||'—'}</span>
         </div>
         <div class="appt-actions" onclick="event.stopPropagation()">
+          <button class="act-btn act-remind" onclick="sendReminder('${aId}')" title="إرسال تذكير للعميل">🔔 تذكير</button>
           <button class="act-btn act-whatsapp" onclick="sendWhatsapp('${aId}')">📲</button>
           <button class="act-btn act-edit" onclick="editAppt('${aId}')">✏️</button>
-          ${a.status!=='done'?`<button class="act-btn act-done" onclick="markDone('${aId}')">✓</button>`:''}
+          ${a.status!=='done'&&a.status!=='cancelled'?`<button class="act-btn act-done" onclick="markDone('${aId}')">✓</button>`:''}
+          ${a.status!=='cancelled'?`<button class="act-btn act-cancel" onclick="openCancelModal('${aId}')" title="إلغاء الموعد">✕ إلغاء</button>`:''}
+          ${a.tech
+            ? `<button class="act-btn act-send-tech" onclick="sendToTechnician('${aId}')" title="إرسال المهمة للفني عبر واتساب">📤 إرسال للفني</button>
+               <button class="act-btn act-copy-task" onclick="copyTaskMessage('${aId}')" title="نسخ تفاصيل المهمة">📋</button>`
+            : `<button class="act-btn act-send-tech" disabled title="عيّن فنيًا أولًا">📤 إرسال للفني</button>`}
           <button class="act-btn act-delete" onclick="deleteAppt('${aId}',event)">🗑️</button>
         </div>
       </div>`;
@@ -626,6 +786,7 @@ function openNewAppt(){
   document.getElementById('f_date').value=today();
   document.getElementById('f_time').value='09:00';
   resetImageField();
+  resetLocFields();
   document.getElementById('apptModal').classList.add('open');
   populateClients();
 }
@@ -635,6 +796,7 @@ function editAppt(id){
   if(!a) return;
   editingId = id;
   editingFirebaseKey = a._fbKey;
+  editingOriginalDate = a.date || ''; // حفظ التاريخ الأصلي للمقارنة لاحقاً
   document.getElementById('modalTitle').textContent='✏️ تعديل الموعد';
   document.getElementById('f_client').value=a.client||'';
   document.getElementById('f_phone').value=a.phone||'';
@@ -647,6 +809,24 @@ function editAppt(id){
   document.getElementById('f_time').value=a.time||'09:00';
   document.getElementById('f_notes').value=a.notes||'';
   loadImageInModal(a.locationImage||'');
+  // استعادة حقول الموقع
+  resetLocFields();
+  if(a.mapsLink) {
+    document.getElementById('appointment_maps_link').value = a.mapsLink;
+    document.getElementById('loc_open_btn').href = a.mapsLink;
+    document.getElementById('loc_open_btn').style.display = 'inline-flex';
+  }
+  if(isValidCoordinates(Number(a.lat), Number(a.lng))) {
+    _locLat = Number(a.lat); _locLng = Number(a.lng);
+    document.getElementById('appointment_lat').value = _locLat;
+    document.getElementById('appointment_lng').value = _locLng;
+    showLocPreview(_locLat, _locLng);
+  }
+  if(a.locationSource) document.getElementById('appointment_location_source').value = a.locationSource;
+  if(a.locationVerified) {
+    document.getElementById('appointment_location_verified').value = 'true';
+    document.getElementById('chk_loc_verified').checked = true;
+  }
   document.getElementById('apptModal').classList.add('open');
   document.getElementById('detailModal').classList.remove('open');
   populateClients();
@@ -681,6 +861,233 @@ function sendWhatsAppConfirmation(appt) {
   window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank');
 }
 
+// ============================================================
+// إحداثيات موقع العميل — متغيرات مؤقتة للموعد الحالي
+// ============================================================
+var _locLat = null, _locLng = null, _locSource = '';
+var _foundCustomerKey = null; // مفتاح Firebase للعميل الموجود
+var _savedCustomerLat = null, _savedCustomerLng = null, _savedCustomerLink = '';
+
+// التحقق من صحة الإحداثيات
+function isValidCoordinates(lat, lng) {
+  return Number.isFinite(lat) && Number.isFinite(lng) &&
+         lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180 &&
+         !(lat === 0 && lng === 0);
+}
+
+// ============================================================
+// extractCoordinatesFromMapUrl
+// الأولوية: !3d!4d → ?q/?query= → @lat,lng
+// روابط goo.gl/maps.app.goo.gl: تُقبل لكن لا إحداثيات
+// ============================================================
+function extractCoordinatesFromMapUrl(url) {
+  if(!url || typeof url !== 'string') return null;
+  var s = url.trim();
+  if(s.indexOf('maps.app.goo.gl') !== -1 || s.indexOf('goo.gl/maps') !== -1) return null;
+
+  // 1. !3dLAT!4dLNG — الموقع الفعلي للمكان
+  var placeMatch = s.match(/!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/);
+  if(placeMatch) {
+    var lat = Number(placeMatch[1]), lng = Number(placeMatch[2]);
+    if(isValidCoordinates(lat,lng)) return {lat:lat,lng:lng,source:'place_coordinates'};
+  }
+  // 2. ?q= أو ?query=
+  var qm = s.match(/[?&](?:q|query)=([-\d.]+),([-\d.]+)/);
+  if(qm) {
+    var lat2 = Number(qm[1]), lng2 = Number(qm[2]);
+    if(isValidCoordinates(lat2,lng2)) return {lat:lat2,lng:lng2,source:'query_coordinates'};
+  }
+  // 3. @LAT,LNG — مركز العرض فقط
+  var am = s.match(/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/);
+  if(am) {
+    var lat3 = Number(am[1]), lng3 = Number(am[2]);
+    if(isValidCoordinates(lat3,lng3)) return {lat:lat3,lng:lng3,source:'viewport_coordinates'};
+  }
+  return null;
+}
+
+// عرض رسالة الموقع
+function showLocMsg(type, text) {
+  var el = document.getElementById('loc_msg');
+  el.className = 'loc-msg' + (type ? ' '+type : '');
+  el.textContent = text;
+  el.style.display = text ? 'block' : 'none';
+}
+
+// عرض معاينة الخريطة
+function showLocPreview(lat, lng) {
+  var url = 'https://www.google.com/maps?q=' + encodeURIComponent(lat+','+lng) + '&z=17&output=embed';
+  document.getElementById('loc_preview_map').src = url;
+  document.getElementById('loc_preview').style.display = 'block';
+}
+
+// ============================================================
+// verifyApptLocation — التحقق من رابط الموقع الذي يُدخله الموظف
+// ============================================================
+function verifyApptLocation() {
+  var link = document.getElementById('appointment_maps_link').value.trim();
+  if(!link) { showLocMsg('err','أدخل رابط الموقع أولاً'); return; }
+
+  document.getElementById('loc_preview').style.display = 'none';
+  document.getElementById('loc_preview_map').src = 'about:blank';
+  document.getElementById('loc_conflict_box').style.display = 'none';
+  document.getElementById('chk_loc_verified').checked = false;
+  document.getElementById('appointment_location_verified').value = 'false';
+
+  var isShort = link.indexOf('maps.app.goo.gl') !== -1 || link.indexOf('goo.gl/maps') !== -1;
+  var isMapLink = link.indexOf('google.com/maps') !== -1 || link.indexOf('maps.google') !== -1 || isShort;
+
+  if(!isMapLink || link.length < 10) {
+    showLocMsg('err','هذا الرابط لا يبدو رابط Google Maps صالحًا');
+    document.getElementById('loc_open_btn').style.display = 'none';
+    return;
+  }
+
+  // زر فتح الموقع
+  document.getElementById('loc_open_btn').href = link;
+  document.getElementById('loc_open_btn').style.display = 'inline-flex';
+
+  if(isShort) {
+    // رابط مختصر — لا إحداثيات
+    _locLat = null; _locLng = null;
+    _locSource = 'manual_link';
+    document.getElementById('appointment_lat').value = '';
+    document.getElementById('appointment_lng').value = '';
+    document.getElementById('appointment_location_source').value = 'manual_link';
+    showLocMsg('warn','تم حفظ رابط الموقع، لكن تعذر استخراج الإحداثيات من الرابط المختصر.');
+    document.getElementById('loc_save_row').style.display = _foundCustomerKey ? 'flex' : 'none';
+    return;
+  }
+
+  var extracted = extractCoordinatesFromMapUrl(link);
+  if(extracted) {
+    _locLat = extracted.lat;
+    _locLng = extracted.lng;
+    _locSource = extracted.source;
+    document.getElementById('appointment_lat').value = _locLat;
+    document.getElementById('appointment_lng').value = _locLng;
+    document.getElementById('appointment_location_source').value = _locSource;
+
+    var msgText = extracted.source === 'place_coordinates'
+      ? '✅ تم استخراج الموقع الفعلي من رابط Google Maps'
+      : extracted.source === 'query_coordinates'
+        ? '✅ تم استخراج الإحداثيات من الرابط'
+        : '⚠️ تم استخراج مركز عرض الخريطة (قد لا يكون الموقع الدقيق)';
+    showLocMsg(extracted.source === 'viewport_coordinates' ? 'warn' : 'ok', msgText);
+    showLocPreview(_locLat, _locLng);
+
+    // هل للعميل موقع محفوظ سابق يختلف؟
+    if(_savedCustomerLat && _savedCustomerLng &&
+       (Math.abs(_savedCustomerLat - _locLat) > 0.0001 || Math.abs(_savedCustomerLng - _locLng) > 0.0001)) {
+      document.getElementById('loc_conflict_box').style.display = 'block';
+    } else {
+      document.getElementById('loc_save_row').style.display = _foundCustomerKey ? 'flex' : 'none';
+    }
+  } else {
+    _locLat = null; _locLng = null;
+    _locSource = 'manual_link';
+    document.getElementById('appointment_lat').value = '';
+    document.getElementById('appointment_lng').value = '';
+    document.getElementById('appointment_location_source').value = 'manual_link';
+    showLocMsg('warn','تم حفظ رابط الموقع. تعذر استخراج الإحداثيات من هذا الرابط.');
+    document.getElementById('loc_save_row').style.display = _foundCustomerKey ? 'flex' : 'none';
+  }
+}
+
+// خيارات التعارض
+function useOldLocation() {
+  document.getElementById('appointment_maps_link').value = _savedCustomerLink;
+  document.getElementById('appointment_lat').value = _savedCustomerLat || '';
+  document.getElementById('appointment_lng').value = _savedCustomerLng || '';
+  document.getElementById('appointment_location_source').value = 'maps_link';
+  _locLat = _savedCustomerLat; _locLng = _savedCustomerLng; _locSource = 'maps_link';
+  if(_locLat && _locLng) showLocPreview(_locLat, _locLng);
+  document.getElementById('loc_conflict_box').style.display = 'none';
+  document.getElementById('loc_save_row').style.display = 'none';
+  showLocMsg('ok','تم استخدام الموقع السابق للعميل');
+}
+function useNewLocation() {
+  document.getElementById('loc_conflict_box').style.display = 'none';
+  document.getElementById('loc_save_row').style.display = _foundCustomerKey ? 'flex' : 'none';
+  showLocMsg('ok','سيُستخدم الموقع الجديد لهذا الموعد فقط');
+}
+function useNewAndSave() {
+  document.getElementById('loc_conflict_box').style.display = 'none';
+  document.getElementById('loc_save_row').style.display = _foundCustomerKey ? 'flex' : 'none';
+  document.getElementById('chk_save_to_customer').checked = true;
+  showLocMsg('ok','سيُحفظ الموقع الجديد في ملف العميل');
+}
+
+// ============================================================
+// البحث عن العميل برقم الجوال
+// ============================================================
+function lookupCustomerByPhone(phone) {
+  if(!db || !phone || phone.length < 9) return;
+  db.ref('customers').orderByChild('phone').equalTo(phone).once('value').then(function(snap) {
+    if(!snap.exists()) return;
+    var key = null, cust = null;
+    snap.forEach(function(c){ key = c.key; cust = c.val(); });
+    if(!cust) return;
+    _foundCustomerKey = key;
+
+    // ملء الحقول فقط إذا كانت فارغة (لا نكتب فوق ما كتبه الموظف)
+    if(!document.getElementById('f_client').value.trim() && (cust.name || cust.client)) {
+      document.getElementById('f_client').value = cust.name || cust.client;
+    }
+    if(!document.getElementById('f_address').value.trim() && cust.address) {
+      document.getElementById('f_address').value = cust.address;
+    }
+
+    // موقع محفوظ؟
+    var hasLocation = isValidCoordinates(Number(cust.lat), Number(cust.lng)) || cust.mapsLink;
+    if(hasLocation) {
+      _savedCustomerLat  = Number(cust.lat) || null;
+      _savedCustomerLng  = Number(cust.lng) || null;
+      _savedCustomerLink = cust.mapsLink || '';
+
+      // إذا لم يكن الموظف أدخل رابطًا بعد، نملأه تلقائياً
+      if(!document.getElementById('appointment_maps_link').value.trim() && _savedCustomerLink) {
+        document.getElementById('appointment_maps_link').value = _savedCustomerLink;
+        if(_savedCustomerLat && _savedCustomerLng) {
+          document.getElementById('appointment_lat').value = _savedCustomerLat;
+          document.getElementById('appointment_lng').value = _savedCustomerLng;
+          document.getElementById('appointment_location_source').value = 'maps_link';
+          _locLat = _savedCustomerLat; _locLng = _savedCustomerLng; _locSource = 'maps_link';
+          document.getElementById('loc_open_btn').href = _savedCustomerLink;
+          document.getElementById('loc_open_btn').style.display = 'inline-flex';
+          showLocPreview(_locLat, _locLng);
+        }
+      }
+    }
+
+    var foundMsg = document.getElementById('clientFoundMsg');
+    foundMsg.textContent = '✅ تم العثور على العميل وملء بياناته السابقة.' + (hasLocation ? ' (لديه موقع محفوظ)' : '');
+    foundMsg.style.display = 'block';
+    document.getElementById('loc_save_row').style.display = 'flex';
+  }).catch(function(e){ console.error('lookup customer:', e); });
+}
+
+// إعادة تعيين حقول الموقع عند فتح نافذة موعد جديد/تعديل
+function resetLocFields() {
+  _locLat = null; _locLng = null; _locSource = '';
+  _foundCustomerKey = null;
+  _savedCustomerLat = null; _savedCustomerLng = null; _savedCustomerLink = '';
+  document.getElementById('appointment_maps_link').value = '';
+  document.getElementById('appointment_lat').value = '';
+  document.getElementById('appointment_lng').value = '';
+  document.getElementById('appointment_location_source').value = '';
+  document.getElementById('appointment_location_verified').value = 'false';
+  document.getElementById('chk_loc_verified').checked = false;
+  document.getElementById('chk_save_to_customer').checked = false;
+  document.getElementById('loc_msg').style.display = 'none';
+  document.getElementById('loc_preview').style.display = 'none';
+  document.getElementById('loc_preview_map').src = 'about:blank';
+  document.getElementById('loc_open_btn').style.display = 'none';
+  document.getElementById('loc_conflict_box').style.display = 'none';
+  document.getElementById('loc_save_row').style.display = 'none';
+  document.getElementById('clientFoundMsg').style.display = 'none';
+}
+
 function saveAppt(){
   const client=document.getElementById('f_client').value.trim();
   const phone=document.getElementById('f_phone').value.trim();
@@ -701,20 +1108,99 @@ function saveAppt(){
     updatedAt: new Date().toISOString()
   };
 
+  // موقع العميل — حقول اختيارية
+  var mapsLink = document.getElementById('appointment_maps_link').value.trim();
+  if(mapsLink) data.mapsLink = mapsLink;
+
+  var lat = Number(document.getElementById('appointment_lat').value);
+  var lng = Number(document.getElementById('appointment_lng').value);
+  if(isValidCoordinates(lat, lng)) {
+    data.lat = lat;
+    data.lng = lng;
+  }
+  var locSrc = document.getElementById('appointment_location_source').value;
+  if(locSrc) data.locationSource = locSrc;
+
+  var locVerified = document.getElementById('appointment_location_verified').value === 'true' ||
+                    document.getElementById('chk_loc_verified').checked;
+  if(mapsLink || isValidCoordinates(lat, lng)) {
+    data.locationVerified = locVerified;
+  }
+
   if(!db) { showToast('❌ Firebase غير متاح'); return; }
 
   if(editingFirebaseKey) {
-    // تحديث موعد موجود في Firebase
-    db.ref('appointments/' + editingFirebaseKey).update(data)
-      .then(() => { showToast('✅ تم تحديث الموعد'); closeModal(); })
+    // هل تغيّر التاريخ؟ إذا نعم اسأل الموظف عن إلغاء الموعد القديم
+    var dateChanged = editingOriginalDate && editingOriginalDate !== date;
+    var cancelPrevious = false;
+    if(dateChanged) {
+      cancelPrevious = confirm(
+        'تم تغيير تاريخ الموعد من ' + editingOriginalDate + ' إلى ' + date + '.\n\n' +
+        'هل تريد تغيير حالة الموعد القديم إلى «ملغي»؟'
+      );
+      if(cancelPrevious) {
+        data.previousDate   = editingOriginalDate;
+        data.cancelledAt    = new Date().toISOString();
+        data.cancelReason   = 'تم إعادة الجدولة إلى ' + date;
+      }
+    }
+
+    db.ref('appointments/' + editingFirebaseKey).update(
+      cancelPrevious ? Object.assign({}, data, {status: 'cancelled'}) : data
+    ).then(() => {
+        if(document.getElementById('chk_save_to_customer').checked && _foundCustomerKey && mapsLink) {
+          saveLocationToCustomer(_foundCustomerKey, {mapsLink, lat, lng, locSrc, locVerified});
+        }
+        if(cancelPrevious) {
+          // إنشاء موعد جديد بالتاريخ الجديد
+          var newData = Object.assign({}, data, {
+            status: 'pending',
+            createdAt: new Date().toISOString(),
+            rescheduledFrom: editingOriginalDate
+          });
+          delete newData.cancelledAt;
+          delete newData.cancelReason;
+          delete newData.previousDate;
+          db.ref('appointments').push(newData)
+            .then(function() {
+              showToast('✅ تم إلغاء الموعد القديم وإنشاء موعد جديد بتاريخ ' + date);
+              editingOriginalDate = '';
+              closeModal();
+            })
+            .catch(function(e){ showToast('❌ خطأ عند إنشاء الموعد الجديد: ' + e.message); });
+        } else {
+          showToast('✅ تم تحديث الموعد');
+          editingOriginalDate = '';
+          closeModal();
+        }
+      })
       .catch(e => showToast('❌ خطأ: ' + e.message));
   } else {
-    // إضافة موعد جديد إلى Firebase
     data.createdAt = new Date().toISOString();
     db.ref('appointments').push(data)
-      .then(() => { showToast('✅ تم إضافة الموعد'); sendAdminNotification(data); closeModal(); })
+      .then(() => {
+        if(document.getElementById('chk_save_to_customer').checked && _foundCustomerKey && mapsLink) {
+          saveLocationToCustomer(_foundCustomerKey, {mapsLink, lat, lng, locSrc, locVerified});
+        }
+        showToast('✅ تم إضافة الموعد'); sendAdminNotification(data); closeModal();
+      })
       .catch(e => showToast('❌ خطأ: ' + e.message));
   }
+}
+
+// حفظ الموقع في ملف العميل
+function saveLocationToCustomer(customerKey, loc) {
+  if(!db || !customerKey) return;
+  var update = {mapsLink: loc.mapsLink};
+  if(isValidCoordinates(Number(loc.lat), Number(loc.lng))) {
+    update.lat = Number(loc.lat);
+    update.lng = Number(loc.lng);
+  }
+  if(loc.locSrc) update.locationSource = loc.locSrc;
+  update.locationVerified = loc.locVerified || false;
+  db.ref('customers/' + customerKey).update(update)
+    .then(function(){ console.log('location saved to customer', customerKey); })
+    .catch(function(e){ console.error('save to customer error:', e); });
 }
 
 function closeModal(){ document.getElementById('apptModal').classList.remove('open'); editingId=null; editingFirebaseKey=null; }
@@ -744,6 +1230,10 @@ function openDetail(id){
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
       <a href="https://wa.me/966${(a.phone||'').replace(/^0/,'')}?text=${encodeURIComponent('مرحباً '+a.client+'،\nتذكير بموعدكم مع مؤسسة أطواد\nالخدمة: '+a.service+'\nالتاريخ: '+formatDateShort(a.date)+'\nالوقت: '+a.time)}" target="_blank" style="flex:1;text-align:center;padding:10px;background:#25D366;color:#fff;border-radius:9px;font-weight:700;text-decoration:none;font-size:13px;min-width:100px;">📲 تذكير</a>
       <button onclick="sendWhatsAppConfirmation(findAppt('${aId}'))" style="flex:1;padding:10px;background:#DBEAFE;color:#1E40AF;border:none;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;min-width:100px;">✅ تأكيد للعميل</button>
+      ${a.tech
+        ? `<button onclick="sendToTechnician('${aId}')" style="flex:1;padding:10px;background:#7C3AED;color:#fff;border:none;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;min-width:100px;">📤 إرسال للفني</button>
+           <button onclick="copyTaskMessage('${aId}')" style="flex:1;padding:10px;background:#F3F4F6;color:#374151;border:1px solid #D1D5DB;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;min-width:100px;">📋 نسخ المهمة</button>`
+        : `<button disabled style="flex:1;padding:10px;background:#E9D5FF;color:#A78BFA;border:none;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:not-allowed;min-width:100px;" title="عيّن فنيًا أولًا">📤 إرسال للفني</button>`}
       <a href="https://maps.google.com?q=${encodeURIComponent(a.address||'')}" target="_blank" style="flex:1;text-align:center;padding:10px;background:var(--ice);color:var(--sky);border-radius:9px;font-weight:700;text-decoration:none;font-size:13px;min-width:100px;">🗺️ خرائط</a>
       ${a.status!=='done'?`<button onclick="markDone('${aId}');document.getElementById('detailModal').classList.remove('open')" style="flex:1;padding:10px;background:#D1FAE5;color:var(--success);border:none;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;min-width:80px;">✓ إتمام</button>`:''}
       <button onclick="deleteAppt('${aId}',null);document.getElementById('detailModal').classList.remove('open')" style="flex:1;padding:10px;background:#FEE2E2;color:#EF4444;border:none;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;min-width:80px;">🗑️ حذف</button>
@@ -778,7 +1268,428 @@ function sendWhatsapp(id){
   window.open(`https://wa.me/966${(a.phone||'').replace(/^0/,'')}?text=${msg}`,'_blank');
 }
 
-function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2800); }
+// ============================================================
+// كائن أرقام الفنيين — مصدر واحد مركزي
+// المفتاح = نفس القيمة المحفوظة في حقل tech داخل appointments
+// الرقم بصيغة دولية 9665XXXXXXXX
+// ============================================================
+var TECHNICIAN_PHONES = {
+  'Abrar': '966539791802', // أبرار
+  'Shoib': '966551853763'  // شعيب
+};
+
+// ============================================================
+// normalizeSaudiPhone — توحيد أي صيغة لرقم سعودي
+// يُعيد 9665XXXXXXXX أو '' عند الفشل
+// ============================================================
+function normalizeSaudiPhone(phone) {
+  if(!phone) return '';
+  var s = String(phone).replace(/[\s\-().+]/g, '');
+  if(s.startsWith('00966')) s = s.slice(2);       // 009665... → 9665...
+  if(s.startsWith('966'))   return s;              // 9665XXXXXXXX ✅
+  if(s.startsWith('05') && s.length === 10)
+    return '966' + s.slice(1);                    // 05XXXXXXXX → 9665XXXXXXXX
+  if(s.startsWith('5') && s.length === 9)
+    return '966' + s;                             // 5XXXXXXXX → 9665XXXXXXXX
+  return '';
+}
+
+// ============================================================
+// buildTechnicianMessage — رسالة المهمة للفني
+// يعرض فقط الحقول المتوفرة — لا يُضيف سطراً لقيمة فارغة
+// ============================================================
+function buildTechnicianMessage(a) {
+  var lines = [];
+  lines.push('🔧 مهمة جديدة — مؤسسة أطواد لصيانة المكيفات');
+  lines.push('');
+
+  if(a.client)   lines.push('👤 العميل: '   + a.client);
+  if(a.phone)    lines.push('📞 الجوال: '   + a.phone);
+  if(a.date)     lines.push('📅 التاريخ: '  + (formatDateShort ? formatDateShort(a.date) : a.date));
+
+  // الوقت: يدعم time و endTime
+  var timeStr = a.time || '';
+  if(a.endTime) timeStr += ' - ' + a.endTime;
+  if(timeStr)    lines.push('🕘 الوقت: '    + timeStr);
+
+  if(a.service)  lines.push('🛠 الخدمة: '   + a.service);
+  if(a.units && a.units > 1) lines.push('❄️ العدد: ' + a.units + ' مكيف');
+
+  // الموقع النصي
+  var locText = a.address || a.city || '';
+  if(locText)    lines.push('📍 العنوان: '  + locText);
+
+  // رابط الموقع — بالأولوية
+  var mapsUrl = a.mapsLink || a.mapUrl || a.locationUrl || a.googleMapsUrl || a.locationLink || '';
+  if(!mapsUrl && a.lat && a.lng) {
+    var lat = Number(a.lat), lng = Number(a.lng);
+    if(Number.isFinite(lat) && Number.isFinite(lng) && !(lat===0&&lng===0))
+      mapsUrl = 'https://www.google.com/maps?q=' + lat + ',' + lng;
+  }
+  if(mapsUrl)    lines.push('🗺 الموقع: '   + mapsUrl);
+
+  // وصف الطلب — يبحث في الحقول بالترتيب
+  var probDesc = '';
+  if(Array.isArray(a.problemLabels) && a.problemLabels.length)
+    probDesc = a.problemLabels.join('، ');
+  else if(a.problemDescriptionSummary)
+    probDesc = a.problemDescriptionSummary;
+  else if(a.problemDescription)
+    probDesc = a.problemDescription;
+  else if(a.description)
+    probDesc = a.description;
+  else if(a.notes)
+    probDesc = a.notes;
+  else if(a.customerNotes)
+    probDesc = a.customerNotes;
+  if(probDesc)   lines.push('📝 وصف الطلب: ' + probDesc);
+
+  // إذا يوجد تفاصيل إضافية بجانب الأوصاف المختارة
+  if(Array.isArray(a.problemLabels) && a.problemLabels.length && a.problemDescription)
+    lines.push('   التفاصيل: ' + a.problemDescription);
+
+  // أولوية الطلب
+  var priorityMap = {high:'🔴 عالية', critical:'🚨 حرجة', medium:'🟡 متوسطة', low:'🟢 منخفضة'};
+  if(a.priority && priorityMap[a.priority])
+    lines.push('⚠️ الأولوية: ' + priorityMap[a.priority]);
+
+  lines.push('');
+  lines.push('👷 الفني المسؤول: ' + (TECHS[a.tech] || a.tech || ''));
+  lines.push('');
+  lines.push('يرجى تأكيد استلام المهمة.');
+
+  return lines.join('\n');
+}
+
+// ============================================================
+// متغيرات مؤقتة لنافذة إرسال المهمة
+// ============================================================
+var pendingTechnicianMessage = '';
+var pendingTechnicianPhone   = '';
+var pendingTechnicianName    = '';
+var pendingTechApptId        = '';
+
+// ============================================================
+// sendToTechnician — ينسخ الرسالة تلقائياً ثم يفتح النافذة
+// ============================================================
+function sendToTechnician(id) {
+  var a = findAppt(id);
+  if(!a) return;
+
+  if(!a.tech) { showToast('⚠️ لم يُعيَّن فني لهذا الموعد'); return; }
+
+  var rawPhone = TECHNICIAN_PHONES[a.tech] || '';
+  var phone    = normalizeSaudiPhone(rawPhone);
+
+  if(!phone) {
+    showToast('⚠️ لا يوجد رقم واتساب محفوظ لهذا الفني');
+    return;
+  }
+
+  var msg      = buildTechnicianMessage(a);
+  var techName = TECHS[a.tech] || a.tech;
+
+  // خزّن البيانات المؤقتة
+  pendingTechnicianMessage = msg;
+  pendingTechnicianPhone   = phone;
+  pendingTechnicianName    = techName;
+  pendingTechApptId        = id;
+
+  // 1. انسخ الرسالة تلقائياً
+  var badge = document.getElementById('techCopiedBadge');
+  badge.classList.remove('show');
+
+  function openModal() {
+    // حدّث محتوى النافذة
+    document.getElementById('techModalName').textContent   = techName;
+    document.getElementById('techModalPhone').textContent  = rawPhone;
+    document.getElementById('techMsgPreview').textContent  = msg;
+
+    // رابط wa.me
+    var waUrl = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msg);
+    document.getElementById('openWhatsappBtn').href = waUrl;
+
+    // زر واتساب الأعمال على Android فقط
+    var bizBtn = document.getElementById('openWhatsappBusinessBtn');
+    bizBtn.style.display = /Android/i.test(navigator.userAgent) ? 'block' : 'none';
+
+    // افتح النافذة
+    document.getElementById('technicianSendModal').classList.add('open');
+  }
+
+  if(navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(msg).then(function() {
+      badge.classList.add('show');
+      openModal();
+    }).catch(function() {
+      fallbackCopy(msg);
+      openModal();
+    });
+  } else {
+    fallbackCopy(msg);
+    openModal();
+  }
+}
+
+// فتح واتساب — يُسجّل فقط أن المستخدم ضغط (لا تحديث Firebase هنا)
+function onOpenWhatsapp() {
+  // لا شيء إضافي — الرابط يعمل عبر href في العنصر <a>
+}
+
+// واتساب الأعمال على Android عبر Intent
+function openWhatsappBusiness() {
+  if(!/Android/i.test(navigator.userAgent)) return;
+  var intentUrl = 'intent://send?phone=' + pendingTechnicianPhone +
+    '&text=' + encodeURIComponent(pendingTechnicianMessage) +
+    '#Intent;scheme=whatsapp;package=com.whatsapp.w4b;end';
+  try {
+    window.location.href = intentUrl;
+  } catch(e) {
+    showToast('⚠️ تعذّر فتح واتساب الأعمال — الصق الرسالة يدوياً');
+  }
+}
+
+// نسخ الرسالة مرة أخرى
+function reCopyTechMessage() {
+  if(!pendingTechnicianMessage) return;
+  if(navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(pendingTechnicianMessage).then(function(){
+      showToast('📋 تم نسخ الرسالة');
+    }).catch(function(){ fallbackCopy(pendingTechnicianMessage); });
+  } else {
+    fallbackCopy(pendingTechnicianMessage);
+  }
+}
+
+// تأكيد الإرسال — يحدّث Firebase فقط عند الضغط
+function confirmTechSent() {
+  if(!pendingTechApptId) { closeTechSendModal(); return; }
+  var a = findAppt(pendingTechApptId);
+  if(db && a && a._fbKey) {
+    var ref = a._source === 'bookings'
+      ? 'bookings/'      + a._fbKey
+      : 'appointments/'  + a._fbKey;
+    db.ref(ref).update({
+      sentToTechnician:     true,
+      sentToTechnicianAt:   firebase.database.ServerValue.TIMESTAMP,
+      sentToTechnicianName: pendingTechnicianName
+    }).then(function(){
+      showToast('✅ تم تسجيل إرسال المهمة للفني');
+    }).catch(function(e){
+      console.error('sentToTechnician update:', e);
+      showToast('⚠️ تعذّر التحديث في Firebase');
+    });
+  } else {
+    showToast('✅ تم تسجيل إرسال المهمة للفني');
+  }
+  closeTechSendModal();
+}
+
+// إغلاق النافذة وتنظيف البيانات
+function closeTechSendModal() {
+  document.getElementById('technicianSendModal').classList.remove('open');
+  document.getElementById('techCopiedBadge').classList.remove('show');
+  pendingTechnicianMessage = '';
+  pendingTechnicianPhone   = '';
+  pendingTechnicianName    = '';
+  pendingTechApptId        = '';
+}
+
+// ============================================================
+// copyTaskMessage — نسخ رسالة المهمة إلى الحافظة
+// ============================================================
+function copyTaskMessage(id) {
+  var a = findAppt(id);
+  if(!a) return;
+  var msg = buildTechnicianMessage(a);
+  if(navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(msg).then(function(){
+      showToast('📋 تم نسخ تفاصيل المهمة');
+    }).catch(function(){
+      fallbackCopy(msg);
+    });
+  } else {
+    fallbackCopy(msg);
+  }
+}
+
+function fallbackCopy(text) {
+  var ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity  = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); showToast('📋 تم نسخ تفاصيل المهمة'); }
+  catch(e) { showToast('⚠️ تعذّر النسخ، جرب يدوياً'); }
+  document.body.removeChild(ta);
+}
+
+// ============================================================
+// ١. زر التذكير — يفتح واتساب برسالة ودية تطلب تأكيد الموعد
+// ============================================================
+function sendReminder(id) {
+  var a = findAppt(id);
+  if(!a) return;
+  var phone = (a.phone||'').replace(/\D/g,'').replace(/^966/,'0');
+  if(!phone) { showToast('⚠️ لا يوجد رقم جوال لهذا العميل'); return; }
+  var waPhone = '966' + phone.replace(/^0/,'');
+  var msg = 'مرحباً ' + a.client + ' 😊\n\n' +
+    'نود تذكيركم بموعدكم مع مؤسسة أطواد لصيانة المكيفات:\n\n' +
+    '📅 التاريخ: ' + formatDateShort(a.date) + '\n' +
+    '⏰ الوقت: ' + (a.time||'—') + '\n' +
+    '🛠️ الخدمة: ' + (a.service||'—') + '\n\n' +
+    'يرجى التأكيد بالرد على هذه الرسالة، أو إعلامنا إذا كنتم تودّون إعادة الجدولة.\n' +
+    'شكراً لثقتكم 🙏';
+  window.open('https://wa.me/' + waPhone + '?text=' + encodeURIComponent(msg), '_blank', 'noopener');
+}
+
+// ============================================================
+// ٢. إلغاء الموعد مع سبب
+// ============================================================
+var _cancellingId = '';
+var _cancelReason = '';
+
+function openCancelModal(id) {
+  _cancellingId = id;
+  _cancelReason = '';
+  document.querySelectorAll('.cancel-reason-btn').forEach(function(b){ b.classList.remove('sel'); });
+  document.getElementById('cancelReasonOther').value = '';
+  document.getElementById('cancelReasonOther').classList.remove('show');
+  document.getElementById('cancelReasonModal').classList.add('open');
+}
+
+function closeCancelModal() {
+  document.getElementById('cancelReasonModal').classList.remove('open');
+  _cancellingId = '';
+  _cancelReason = '';
+}
+
+function selCancelReason(btn, val) {
+  document.querySelectorAll('.cancel-reason-btn').forEach(function(b){ b.classList.remove('sel'); });
+  btn.classList.add('sel');
+  if(val === 'other') {
+    _cancelReason = '';
+    document.getElementById('cancelReasonOther').classList.add('show');
+    document.getElementById('cancelReasonOther').focus();
+  } else {
+    _cancelReason = val;
+    document.getElementById('cancelReasonOther').classList.remove('show');
+  }
+}
+
+function confirmCancel() {
+  if(!_cancellingId) return;
+  // قراءة سبب "أخرى" إذا كان مُدخلاً
+  var otherVal = document.getElementById('cancelReasonOther').value.trim();
+  if(otherVal) _cancelReason = otherVal;
+  if(!_cancelReason) { showToast('⚠️ اختر سبب الإلغاء'); return; }
+
+  var a = findAppt(_cancellingId);
+  if(!a) { closeCancelModal(); return; }
+
+  var updateData = {
+    status: 'cancelled',
+    cancelReason: _cancelReason,
+    cancelledAt: new Date().toISOString(),
+    cancelledBy: 'admin'
+  };
+
+  if(db && a._fbKey) {
+    var ref = a._source === 'bookings' ? 'bookings/' + a._fbKey : 'appointments/' + a._fbKey;
+    db.ref(ref).update(updateData).then(function() {
+      showToast('✅ تم إلغاء الموعد — السبب: ' + _cancelReason);
+      // عرض الوقت الحر وإمكانية تعبئته
+      showFreeSlot(a);
+      closeCancelModal();
+      loadData();
+    }).catch(function(e){ showToast('❌ خطأ: ' + e.message); });
+  } else {
+    showToast('✅ تم إلغاء الموعد محلياً');
+    closeCancelModal();
+  }
+}
+
+// ============================================================
+// ٣. قائمة الانتظار — عرض الوقت الحر عند الإلغاء
+// ============================================================
+var waitingList = JSON.parse(localStorage.getItem('atwad_waiting') || '[]');
+
+function showFreeSlot(cancelledAppt) {
+  // بحث في قائمة الانتظار عن طلبات تناسب نفس الخدمة أو الوقت
+  var matches = waitingList.filter(function(w){
+    return !w.booked && (!w.service || w.service === cancelledAppt.service);
+  });
+
+  var notice = '🕐 تحرّر وقت: ' + formatDateShort(cancelledAppt.date) + ' — ' + (cancelledAppt.time||'') +
+    ' (' + (cancelledAppt.service||'') + ')';
+
+  if(matches.length) {
+    notice += '\n\n👥 عملاء في قائمة الانتظار يناسبهم هذا الوقت:\n';
+    notice += matches.slice(0,3).map(function(w){ return '• ' + w.name + ' — ' + w.phone; }).join('\n');
+  }
+
+  showToast('📢 وقت حر متاح — راجع قائمة الانتظار');
+
+  // فتح modal الانتظار إذا وجدت مطابقات
+  if(matches.length) {
+    setTimeout(function(){ openWaitingList(cancelledAppt); }, 1000);
+  }
+}
+
+function openWaitingList(freeAppt) {
+  var wl = document.getElementById('waitingListModal');
+  if(!wl) return;
+  var matches = waitingList.filter(function(w){ return !w.booked; });
+  var html = '';
+  if(!matches.length) {
+    html = '<div style="text-align:center;padding:20px;color:var(--mist);">قائمة الانتظار فارغة</div>';
+  } else {
+    html = matches.map(function(w, i) {
+      return '<div class="waiting-row">' +
+        '<div><div class="wname">' + w.name + '</div>' +
+        '<div class="wservice">🛠️ ' + (w.service||'أي خدمة') + ' · 📱 ' + w.phone + '</div>' +
+        (w.notes ? '<div style="font-size:11px;color:var(--mist);">' + w.notes + '</div>' : '') +
+        '</div>' +
+        '<button class="btn-book-waiting" onclick="bookFromWaiting(' + i + ',\'' + (freeAppt ? JSON.stringify(freeAppt).replace(/'/g,'') : '') + '\')">📅 احجز له</button>' +
+        '</div>';
+    }).join('');
+  }
+  document.getElementById('waitingListBody').innerHTML = html;
+  wl.classList.add('open');
+}
+
+function addToWaitingList() {
+  var name  = prompt('اسم العميل:');
+  if(!name) return;
+  var phone = prompt('رقم الجوال:');
+  if(!phone) return;
+  var service = prompt('نوع الخدمة (اتركه فارغاً لأي خدمة):') || '';
+  var notes   = prompt('ملاحظات (اختياري):') || '';
+  waitingList.push({name:name.trim(), phone:phone.trim(), service:service.trim(), notes:notes.trim(), addedAt:new Date().toISOString(), booked:false});
+  localStorage.setItem('atwad_waiting', JSON.stringify(waitingList));
+  showToast('✅ تم إضافة ' + name + ' إلى قائمة الانتظار');
+}
+
+function bookFromWaiting(idx, freeAppt) {
+  var w = waitingList[idx];
+  if(!w) return;
+  // فتح نموذج موعد جديد مملوء ببيانات العميل من قائمة الانتظار
+  openNewAppt();
+  setTimeout(function(){
+    document.getElementById('f_client').value = w.name;
+    document.getElementById('f_phone').value  = w.phone;
+    if(w.service) document.getElementById('f_service').value = w.service;
+    if(freeAppt && freeAppt.date) document.getElementById('f_date').value = freeAppt.date;
+    if(freeAppt && freeAppt.time) document.getElementById('f_time').value = freeAppt.time;
+    if(freeAppt && freeAppt.tech) document.getElementById('f_tech').value = freeAppt.tech;
+  }, 300);
+  // تعليم العميل كـ محجوز في قائمة الانتظار
+  waitingList[idx].booked = true;
+  localStorage.setItem('atwad_waiting', JSON.stringify(waitingList));
+  document.getElementById('waitingListModal').classList.remove('open');
+  showToast('✅ تم فتح نموذج الموعد لـ ' + w.name);
+}
 
 document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
 
@@ -811,6 +1722,51 @@ document.addEventListener('DOMContentLoaded', applySharedLang);
 </script>
 
 <!-- نافذة الإشعارات -->
+<!-- Modal إرسال المهمة للفني -->
+<div class="modal-overlay" id="technicianSendModal">
+  <div class="modal" style="max-width:460px;width:calc(100% - 24px);">
+    <div class="modal-hdr">
+      <span style="font-size:15px;font-weight:800;color:var(--deep);">📤 تجهيز المهمة للفني</span>
+      <button class="modal-close" id="closeTechnicianSendModalBtn" onclick="closeTechSendModal()">×</button>
+    </div>
+    <div class="modal-body" style="padding:18px 20px;">
+      <!-- معلومات الفني -->
+      <div class="tech-modal-tech-info">
+        <div>👷 الفني: <strong id="techModalName">—</strong></div>
+        <div style="margin-top:4px;">📱 الرقم: <span id="techModalPhone" style="direction:ltr;display:inline-block;">—</span></div>
+      </div>
+      <!-- شارة النسخ التلقائي -->
+      <div class="tech-modal-copied-badge" id="techCopiedBadge">✅ تم نسخ تفاصيل المهمة إلى الحافظة تلقائيًا</div>
+      <!-- معاينة مختصرة للرسالة -->
+      <div class="tech-modal-preview" id="techMsgPreview"></div>
+      <!-- ملاحظة واتساب -->
+      <div class="tech-modal-note" id="techModalNote">
+        سيتم فتح تطبيق واتساب الافتراضي على جهازك.<br>
+        إذا فتح واتساب الشخصي، أغلقه وافتح واتساب الأعمال ثم الصق الرسالة المنسوخة.
+      </div>
+      <!-- الأزرار -->
+      <div class="tech-modal-btns">
+        <a class="btn-wa-open" id="openWhatsappBtn" href="#" target="_blank" rel="noopener" onclick="onOpenWhatsapp()">
+          💬 فتح واتساب
+        </a>
+        <!-- زر واتساب أعمال Android — يظهر فقط على Android -->
+        <button class="btn-wa-biz" id="openWhatsappBusinessBtn" style="display:none;" onclick="openWhatsappBusiness()">
+          🏢 فتح واتساب الأعمال (Android)
+        </button>
+        <button class="btn-copy-again" id="copyTechnicianMessageBtn" onclick="reCopyTechMessage()">
+          📋 نسخ الرسالة مرة أخرى
+        </button>
+        <button class="btn-confirm-sent" onclick="confirmTechSent()">
+          ✅ تم الإرسال للفني
+        </button>
+        <button class="btn-close-tech" id="closeTechnicianSendModalFooterBtn" onclick="closeTechSendModal()">
+          إغلاق
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="notifModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:2000;align-items:flex-start;justify-content:flex-end;">
   <div style="background:#fff;width:360px;max-width:100%;height:100%;overflow-y:auto;padding:20px;box-shadow:-4px 0 20px rgba(0,0,0,.15);">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
