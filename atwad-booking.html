@@ -55,6 +55,11 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
 .units-ctrl{display:flex;align-items:center;gap:16px;justify-content:center;}
 .units-btn{width:42px;height:42px;border-radius:50%;font-size:22px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;border:2px solid var(--sky);}
 .units-btn.minus{background:var(--ice);color:var(--sky);}
+.field-hint{font-size:11px;color:var(--mist);margin-top:4px;display:block;}
+.service-price-box{margin-top:10px;margin-bottom:6px;background:var(--frost);border:1.5px solid rgba(14,165,233,.2);border-radius:12px;padding:14px 16px;}
+.service-price-box label{display:block;font-size:13px;font-weight:700;color:var(--slate);margin-bottom:8px;}
+.service-price-box input{width:100%;padding:10px 14px;border:1.5px solid #E2E8F0;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:16px;font-weight:700;color:var(--deep);background:#fff;outline:none;transition:border-color .2s;}
+.service-price-box input:focus{border-color:var(--sky);}
 .units-btn.plus{background:var(--sky);color:#fff;}
 .units-num{min-width:70px;text-align:center;}
 .units-num .n{font-size:36px;font-weight:900;color:var(--deep);line-height:1;}
@@ -118,7 +123,86 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
 .friday-closed{background:#FEE2E2;border:1.5px solid #FECACA;border-radius:10px;padding:14px;text-align:center;margin-bottom:12px;display:none;}
 .friday-closed .icon{font-size:28px;margin-bottom:6px;}
 .friday-closed p{font-size:13px;color:#991B1B;font-weight:700;}
-@media(max-width:480px){.two-col{grid-template-columns:1fr;}.slots-grid{grid-template-columns:1fr 1fr;}}
+/* قسم وصف المشكلة */
+.problem-section{margin-top:18px;padding:14px;background:#F7FCFF;border:1.5px solid #B7DFF5;border-radius:14px;}
+.problem-section-title{font-size:13px;font-weight:800;color:var(--deep);margin-bottom:3px;}
+.problem-section-hint{font-size:11px;color:var(--mist);margin-bottom:10px;}
+/* Progress bar */
+.prob-progress-wrap{margin-bottom:12px;}
+.prob-progress-label{display:flex;justify-content:space-between;font-size:11px;color:var(--slate);margin-bottom:5px;font-weight:600;}
+.prob-progress-bar{height:7px;background:#E2E8F0;border-radius:99px;overflow:hidden;}
+.prob-progress-fill{height:100%;background:linear-gradient(90deg,var(--sky),var(--success));border-radius:99px;transition:width .4s ease;}
+/* الأعطال الشائعة */
+.common-faults{margin-bottom:10px;}
+.common-faults-label{font-size:12px;font-weight:800;color:var(--deep);margin-bottom:7px;display:flex;align-items:center;gap:6px;}
+.show-more-btn{width:100%;margin-top:8px;padding:8px;border:1.5px dashed #CBD5E1;border-radius:10px;background:transparent;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;color:var(--sky);cursor:pointer;transition:all .2s;}
+.show-more-btn:hover{background:var(--ice);border-color:var(--sky);}
+/* All problems (collapsible) */
+.all-problems-wrap{overflow:hidden;max-height:0;transition:max-height .35s ease;opacity:0;transition:max-height .35s ease,opacity .25s ease;}
+.all-problems-wrap.open{max-height:2000px;opacity:1;}
+.problem-category{margin-bottom:12px;}
+.problem-cat-label{font-size:11px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:5px;padding:3px 0;}
+/* ألوان التصنيفات */
+.problem-cat-label.cat-cooling{color:#0369A1;}
+.problem-cat-label.cat-water{color:#0891B2;}
+.problem-cat-label.cat-freon{color:#059669;}
+.problem-cat-label.cat-noise{color:#7C3AED;}
+.problem-cat-label.cat-electric{color:#D97706;}
+.problem-cat-label.cat-fan{color:#0284C7;}
+.problem-cat-label.cat-maintenance{color:#7C3AED;}
+.problem-cat-label.cat-install{color:#64748B;}
+.problem-cat-label.cat-other{color:#334155;}
+.problem-chips{display:flex;flex-wrap:wrap;gap:7px;}
+.problem-chip{border:1.5px solid #CBD5E1;border-radius:20px;padding:0 14px;height:40px;display:inline-flex;align-items:center;gap:5px;background:#fff;cursor:pointer;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:600;color:var(--slate);transition:all .15s;user-select:none;white-space:nowrap;}
+.problem-chip:hover{border-color:var(--sky);color:var(--sky);}
+.problem-chip.selected{background:var(--sky);color:#fff;border-color:var(--sky);}
+.problem-chip.selected::before{content:'✔ ';font-size:11px;}
+.prob-textarea-wrap{margin-top:12px;}
+.prob-textarea-wrap label{display:block;font-size:12px;font-weight:700;color:var(--slate);margin-bottom:5px;}
+.prob-textarea-wrap textarea{width:100%;padding:9px 12px;border:1.5px solid #E2E8F0;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;color:var(--slate);background:#fff;outline:none;resize:vertical;min-height:70px;transition:all .2s;}
+.prob-textarea-wrap textarea:focus{border-color:var(--sky);}
+.char-counter{text-align:left;font-size:11px;color:var(--mist);margin-top:3px;}
+.prob-question{margin-top:12px;}
+.prob-question label{display:block;font-size:12px;font-weight:700;color:var(--slate);margin-bottom:6px;}
+.prob-radio-row{display:flex;flex-wrap:wrap;gap:7px;}
+.prob-radio-btn{border:1.5px solid #CBD5E1;border-radius:9px;padding:7px 13px;background:#fff;cursor:pointer;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:600;color:var(--slate);transition:all .15s;}
+.prob-radio-btn:hover{border-color:var(--sky);color:var(--sky);}
+.prob-radio-btn.selected{background:var(--deep);color:#fff;border-color:var(--deep);}
+.prev-repair-detail{display:none;margin-top:8px;}
+.prev-repair-detail textarea{width:100%;padding:9px 12px;border:1.5px solid #E2E8F0;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;color:var(--slate);background:#fff;outline:none;resize:vertical;min-height:55px;transition:all .2s;}
+.prev-repair-detail textarea:focus{border-color:var(--sky);}
+.prev-tech-note{margin-top:7px;padding:8px 11px;background:#FEF9C3;border:1.5px solid #FDE68A;border-radius:8px;font-size:11px;color:#92400E;display:none;}
+/* --- زر الموقع الحالي --- */
+.geo-btn{width:100%;margin-top:8px;padding:10px 14px;background:var(--frost);border:1.5px solid #86EFAC;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;color:#065F46;cursor:pointer;display:flex;align-items:center;gap:7px;transition:all .2s;}
+.geo-btn:hover{background:#F0FFF4;border-color:var(--success);}
+.geo-btn:disabled{opacity:.5;cursor:not-allowed;}
+.geo-msg{margin-top:7px;padding:9px 12px;border-radius:9px;font-size:12px;display:none;}
+.geo-msg.ok{background:#F0FFF4;border:1.5px solid #86EFAC;color:#065F46;}
+.geo-msg.warn{background:#FFFBEB;border:1.5px solid #FDE68A;color:#92400E;}
+.geo-msg.err{background:#FEF2F2;border:1.5px solid #FECACA;color:#991B1B;}
+.geo-privacy{font-size:10px;color:var(--mist);margin-top:5px;padding-right:2px;}
+.maps-ok-coords{display:none;margin-top:6px;background:#F0FFF4;border:1.5px solid #86EFAC;border-radius:9px;padding:9px 12px;font-size:12px;color:#065F46;}
+.maps-shortlink{display:none;margin-top:6px;background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:9px;padding:9px 12px;font-size:12px;color:#92400E;}
+/* عناصر تأكيد الدقة */
+.geo-verify-wrap{display:none;margin-top:8px;background:var(--frost);border:1.5px solid #E2E8F0;border-radius:10px;padding:10px 12px;}
+.geo-open-map-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:8px;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;color:#1E40AF;cursor:pointer;text-decoration:none;margin-bottom:8px;}
+.geo-chk-label{display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:12px;color:var(--slate);}
+.geo-chk-label input{width:16px;height:16px;margin-top:1px;flex-shrink:0;accent-color:var(--success);}
+/* قسم معاينة الخريطة */
+.location-preview-section{margin-top:14px;padding:12px;border:1px solid #b7dff5;border-radius:14px;background:#f7fcff;}
+.location-preview-title{font-size:13px;font-weight:700;color:var(--deep);margin-bottom:8px;}
+.location-preview-map{width:100%;height:300px;border:0;border-radius:12px;display:block;}
+.location-preview-note{font-size:11px;color:var(--mist);margin-top:8px;margin-bottom:8px;line-height:1.5;}
+.location-preview-actions{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;}
+.loc-confirm-btn{flex:1;padding:10px;background:linear-gradient(90deg,var(--success),#34D399);color:#fff;border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
+.loc-retry-btn{flex:1;padding:10px;background:var(--frost);color:var(--slate);border:1.5px solid #E2E8F0;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:600;cursor:pointer;}
+.location-preview-section.confirmed{border-color:#86EFAC;background:#F0FFF4;}
+.location-confirmed-msg{display:none;margin-top:8px;padding:9px 12px;background:#F0FFF4;border:1.5px solid #86EFAC;border-radius:9px;font-size:12px;color:#065F46;font-weight:700;}
+.location-preview-section.confirmed .location-confirmed-msg{display:block;}
+@media(max-width:600px){
+  .location-preview-map{height:260px;}
+  .location-preview-actions button{flex:1 1 100%;}
+}
 </style>
 </head>
 <body>
@@ -231,11 +315,17 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
 <path d="M90 96 Q86 92 90 88 Q94 92 90 96" fill="#475569" opacity="0.8"/>
 <path d="M82 88 Q86 84 90 88 Q86 92 82 88" fill="#475569" opacity="0.8"/>
 </svg><div class="t-name">4 مكيفات</div><div class="t-price">280 SAR</div></div>
+        <div class="clean-tile" id="ct5u" onclick="selClean(5,300)"><div style="font-size:22px;margin-bottom:4px;">❄️×5</div><div class="t-name">5 مكيفات</div><div class="t-price">300 SAR</div></div>
+        <div class="clean-tile" id="ct6" onclick="selClean(6,360)"><div style="font-size:22px;margin-bottom:4px;">❄️×6</div><div class="t-name">6 مكيفات</div><div class="t-price">360 SAR</div></div>
+        <div class="clean-tile" id="ct7" onclick="selClean(7,420)"><div style="font-size:22px;margin-bottom:4px;">❄️×7</div><div class="t-name">7 مكيفات</div><div class="t-price">420 SAR</div></div>
+        <div class="clean-tile" id="ct8" onclick="selClean(8,480)"><div style="font-size:22px;margin-bottom:4px;">❄️×8</div><div class="t-name">8 مكيفات</div><div class="t-price">480 SAR</div></div>
       </div>
-      <div class="offer-tile" id="ct5" onclick="selClean(5,300)">
+      <div class="offer-tile" id="ct5" onclick="selClean(9,540)">
         <div class="offer-badge">⚡ عرض مؤقت / Special Offer</div>
-        <div style="font-size:36px;margin-bottom:6px;">🏠❄️</div><div class="o-title">5 مكيفات أو أكثر / 5+ AC Units</div>
+        <div style="font-size:36px;margin-bottom:6px;">🏠❄️</div>
+        <div class="o-title">9 مكيفات أو أكثر / 9+ AC Units</div>
         <div class="o-price">60 SAR <span style="font-size:12px;font-weight:500">للمكيف / per unit</span></div>
+        <div style="color:rgba(255,255,255,.8);font-size:12px;margin-top:6px;">10 مكيفات فأكثر: 55 ريال للمكيف</div>
       </div>
     </div>
     <div class="section-lbl">🔧 خدمات أخرى / Other Services</div>
@@ -256,6 +346,13 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
         <button class="units-btn minus" onclick="changeUnits(-1)">−</button>
       </div>
     </div>
+    <!-- السعر التقديري للخدمة -->
+    <div class="service-price-box" id="servicePriceBox">
+      <label for="servicePrice">💰 السعر التقديري للخدمة (ريال)</label>
+      <input type="number" id="servicePrice" name="servicePrice"
+        min="0" step="1" inputmode="decimal" placeholder="مثال: 300">
+      <small class="field-hint">السعر تقديري ويمكن تعديله عند إصدار الفاتورة.</small>
+    </div>
     <div class="section-lbl">👥 نوع العميل <span class="req">*</span></div>
     <div class="type-row">
       <button class="type-btn" id="tb1" onclick="selType('أفراد','tb1')">🏠 أفراد</button>
@@ -264,6 +361,90 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
     </div>
     <div class="err-msg" id="e_svc">الرجاء اختيار نوع الخدمة</div>
     <div class="err-msg" id="e_type">الرجاء اختيار نوع العميل</div>
+
+    <!-- قسم وصف المشكلة — اختياري بالكامل -->
+    <div class="problem-section" id="problemSection">
+      <div class="problem-section-title">📝 وصف مختصر للمشكلة أو الطلب</div>
+      <div class="problem-section-hint">اختر ما ينطبق على حالتك، ويمكنك اختيار أكثر من خيار.</div>
+
+      <!-- Progress Bar -->
+      <div class="prob-progress-wrap">
+        <div class="prob-progress-label">
+          <span>درجة اكتمال البلاغ</span>
+          <span id="probProgressPct">0%</span>
+        </div>
+        <div class="prob-progress-bar"><div class="prob-progress-fill" id="probProgressFill" style="width:0%"></div></div>
+      </div>
+
+      <!-- الأعطال الشائعة -->
+      <div class="common-faults">
+        <div class="common-faults-label">⭐ الأعطال الأكثر شيوعًا</div>
+        <div class="problem-chips" id="commonChipsContainer"></div>
+      </div>
+
+      <!-- زر عرض المزيد -->
+      <button type="button" class="show-more-btn" id="showMoreBtn" onclick="toggleAllProblems()">عرض جميع الأعطال ▼</button>
+
+      <!-- جميع الأعطال — مخفية افتراضياً -->
+      <div class="all-problems-wrap" id="allProblemsWrap">
+        <div id="problemChipsContainer" style="margin-top:10px;"></div>
+      </div>
+
+      <!-- تفاصيل إضافية — مرة واحدة فقط -->
+      <div class="prob-textarea-wrap">
+        <label>تفاصيل إضافية <span style="font-size:10px;color:var(--mist);">(اختياري)</span></label>
+        <textarea id="problemDescription" maxlength="300"
+          placeholder="مثال: المكيف لا يبرد ويوجد صوت مرتفع عند التشغيل، أو يوجد تسريب ماء من الوحدة الداخلية."
+          oninput="updateCharCount(this,'descCount',300);updateProgress()"></textarea>
+        <div class="char-counter"><span id="descCount">0</span> / 300</div>
+      </div>
+
+      <!-- هل المكيف يعمل الآن؟ -->
+      <div class="prob-question">
+        <label>هل المكيف يعمل الآن؟ <span style="font-size:10px;color:var(--mist);">(اختياري)</span></label>
+        <div class="prob-radio-row" id="acStatusRow">
+          <button type="button" class="prob-radio-btn" data-val="working" onclick="selRadio('acStatus',this)">نعم، يعمل</button>
+          <button type="button" class="prob-radio-btn" data-val="weak" onclick="selRadio('acStatus',this)">يعمل بكفاءة ضعيفة</button>
+          <button type="button" class="prob-radio-btn" data-val="not_working" onclick="selRadio('acStatus',this)">لا يعمل إطلاقًا</button>
+          <button type="button" class="prob-radio-btn" data-val="unknown" onclick="selRadio('acStatus',this)">لا أعلم</button>
+        </div>
+      </div>
+
+      <!-- هل سبق إصلاح المشكلة؟ -->
+      <div class="prob-question">
+        <label>هل سبق إصلاح نفس المشكلة من قبل؟ <span style="font-size:10px;color:var(--mist);">(اختياري)</span></label>
+        <div class="prob-radio-row" id="prevRepairRow">
+          <button type="button" class="prob-radio-btn" data-val="yes" onclick="selRadio('prevRepair',this)">نعم</button>
+          <button type="button" class="prob-radio-btn" data-val="no" onclick="selRadio('prevRepair',this)">لا</button>
+          <button type="button" class="prob-radio-btn" data-val="unknown" onclick="selRadio('prevRepair',this)">لا أعلم</button>
+        </div>
+        <div class="prev-repair-detail" id="prevRepairDetailWrap">
+          <label style="font-size:11px;font-weight:700;color:var(--slate);display:block;margin-bottom:4px;">ما الذي تم عمله سابقًا؟ <span style="font-size:10px;color:var(--mist);">(اختياري)</span></label>
+          <textarea id="previousRepairDetails" maxlength="200"
+            placeholder="مثال: تمت تعبئة فريون، تغيير مكثف، تنظيف المكيف، إصلاح تسريب."
+            oninput="updateCharCount(this,'prevDetailCount',200)"></textarea>
+          <div class="char-counter"><span id="prevDetailCount">0</span> / 200</div>
+        </div>
+      </div>
+
+      <!-- هل سبق أن زارك فني آخر؟ -->
+      <div class="prob-question">
+        <label>هل سبق أن زارك فني آخر؟ <span style="font-size:10px;color:var(--mist);">(اختياري)</span></label>
+        <div class="prob-radio-row" id="visitedBeforeRow">
+          <button type="button" class="prob-radio-btn" data-val="yes" onclick="selRadio('visitedBefore',this)">نعم</button>
+          <button type="button" class="prob-radio-btn" data-val="no" onclick="selRadio('visitedBefore',this)">لا</button>
+        </div>
+        <div id="prevTechSolvedWrap" style="display:none;margin-top:8px;">
+          <label style="font-size:11px;font-weight:700;color:var(--slate);display:block;margin-bottom:6px;">هل تم حل المشكلة؟</label>
+          <div class="prob-radio-row" id="prevTechSolvedRow">
+            <button type="button" class="prob-radio-btn" data-val="yes" onclick="selRadio('prevTechSolved',this)">نعم</button>
+            <button type="button" class="prob-radio-btn" data-val="no" onclick="selRadio('prevTechSolved',this)">لا</button>
+          </div>
+          <div class="prev-tech-note" id="prevTechNote">⚠️ هذه الحالة تعتبر ذات أولوية أعلى.</div>
+        </div>
+      </div>
+    </div>
+
     <div class="btn-row"><button class="btn-next" onclick="next1()">التالي ←</button></div>
   </div>
 </div>
@@ -298,8 +479,52 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
       </div>
       <input type="url" id="f_maps_link" placeholder="https://maps.app.goo.gl/..." style="direction:ltr;" oninput="validateMapsLink(this.value)">
       <div class="maps-ok" id="maps-ok">✅ تم تسجيل رابط الموقع بنجاح</div>
+      <!-- رسالة استخراج الإحداثيات من الرابط الكامل -->
+      <div class="maps-ok-coords" id="maps-ok-coords">✅ تم استخراج الإحداثيات من الرابط</div>
+      <!-- رسالة الرابط المختصر -->
+      <div class="maps-shortlink" id="maps-shortlink">ℹ️ سيتم حفظ رابط الموقع، لكن لن يدخل ضمن الجولة التلقائية إلا إذا استخدمت زر «موقعي الحالي».</div>
+      <!-- حقول الإحداثيات المخفية -->
+      <input type="hidden" id="f_lat">
+      <input type="hidden" id="f_lng">
+      <input type="hidden" id="f_accuracy">
       <input type="hidden" id="f_addr">
       <div class="err-msg" id="e_addr">أدخل رابط موقعك من Google Maps</div>
+    </div>
+    <!-- زر الموقع الحالي — اختياري، لا يُستدعى تلقائياً -->
+    <div style="margin-bottom:14px;">
+      <button type="button" class="geo-btn" id="geoBtn" onclick="useCurrentLocation()">
+        <span>📍</span> استخدام موقعي الحالي
+      </button>
+      <p class="geo-privacy">يُستخدم الموقع فقط لتنظيم الزيارة والوصول إليك.</p>
+      <div class="geo-msg" id="geoMsg"></div>
+      <!-- نتائج تحديد الموقع: زر التأكيد + مربع التحقق — تظهر بعد النجاح -->
+      <div class="geo-verify-wrap" id="geoVerifyWrap">
+        <a class="geo-open-map-btn" id="geoOpenMap" href="#" target="_blank">🗺️ فتح الموقع للتأكد</a>
+        <label class="geo-chk-label">
+          <input type="checkbox" id="chk-location-verified">
+          <span>تأكدت أن الموقع الظاهر صحيح</span>
+        </label>
+      </div>
+      <!-- قسم معاينة الخريطة داخل الصفحة — يظهر عند توفر إحداثيات صالحة -->
+      <div class="location-preview-section" id="locationPreviewSection" style="display:none;">
+        <div class="location-preview-title">📍 معاينة موقعك</div>
+        <iframe
+          id="locationPreviewMap"
+          class="location-preview-map"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          allowfullscreen
+          src="about:blank">
+        </iframe>
+        <p class="location-preview-note">يرجى التأكد أن العلامة تقع على موقع المنزل الصحيح قبل إرسال الطلب.</p>
+        <div class="location-preview-actions">
+          <button type="button" class="loc-confirm-btn" id="confirmLocationBtn" onclick="confirmLocation()">✅ الموقع صحيح</button>
+          <button type="button" class="loc-retry-btn" id="retryLocationBtn" onclick="retryLocation()">🔄 إعادة تحديد الموقع</button>
+        </div>
+        <div class="location-confirmed-msg" id="locationConfirmedMsg">✅ تم تأكيد الموقع بنجاح</div>
+      </div>
+      <!-- حقل مخفي لحالة تأكيد الموقع -->
+      <input type="hidden" id="f_location_verified" value="false">
     </div>
     <!-- صورة المنزل -->
     <div class="field">
@@ -418,11 +643,565 @@ var db = null;
 try { firebase.initializeApp({databaseURL:"https://atwad-booking-default-rtdb.firebaseio.com"}); db=firebase.database(); } catch(e){}
 
 var S = {service:'',serviceAr:'',price:0,units:1,isClean:false,clientType:'',name:'',phone:'',city:'',addr:'',notes:'',date:'',time:'',duration:0};
+
+// ============================================================
+// بيانات أوصاف المشاكل — مصفوفة واحدة
+// catColor: صف بصري لكل تصنيف
+// services: قائمة الخدمات التي تظهر فيها ('all' = الكل)
+// ============================================================
+var problemOptions = [
+  // التبريد
+  {value:'no_cooling',    label:'لا يبرد',                   cat:'cooling',     catLabel:'❄️ التبريد',           catColor:'cat-cooling',    services:['repair','all']},
+  {value:'weak_cooling',  label:'تبريد ضعيف',                cat:'cooling',     catLabel:'❄️ التبريد',           catColor:'cat-cooling',    services:['repair','freon','all']},
+  {value:'needs_freon',   label:'يحتاج تعبئة فريون',         cat:'cooling',     catLabel:'❄️ التبريد',           catColor:'cat-cooling',    services:['repair','freon','all']},
+  {value:'freon_leak',    label:'تسريب غاز فريون',           cat:'cooling',     catLabel:'❄️ التبريد',           catColor:'cat-cooling',    services:['repair','freon','all']},
+  {value:'frozen_pipes',  label:'تجمد المواسير',             cat:'cooling',     catLabel:'❄️ التبريد',           catColor:'cat-cooling',    services:['repair','freon','all']},
+  // المياه والتصريف
+  {value:'water_leak',    label:'تسريب ماء',                 cat:'water',       catLabel:'💧 المياه والتصريف',   catColor:'cat-water',      services:['repair','all']},
+  {value:'drain_blocked', label:'انسداد التصريف',             cat:'water',       catLabel:'💧 المياه والتصريف',   catColor:'cat-water',      services:['repair','all']},
+  // الصوت والرائحة
+  {value:'loud_noise',    label:'صوت مرتفع',                 cat:'noise',       catLabel:'🔊 الصوت والرائحة',   catColor:'cat-noise',      services:['repair','all']},
+  {value:'vibration',     label:'اهتزاز',                    cat:'noise',       catLabel:'🔊 الصوت والرائحة',   catColor:'cat-noise',      services:['repair','all']},
+  {value:'bad_smell',     label:'رائحة كريهة',               cat:'noise',       catLabel:'🔊 الصوت والرائحة',   catColor:'cat-noise',      services:['cleaning','repair','all']},
+  // الكهرباء والتشغيل
+  {value:'not_working',   label:'المكيف لا يعمل',            cat:'electric',    catLabel:'⚡ الكهرباء والتشغيل',catColor:'cat-electric',   services:['repair','all']},
+  {value:'keeps_off',     label:'يفصل باستمرار',             cat:'electric',    catLabel:'⚡ الكهرباء والتشغيل',catColor:'cat-electric',   services:['repair','all']},
+  {value:'breaker_trips', label:'القاطع يفصل عند التشغيل',  cat:'electric',    catLabel:'⚡ الكهرباء والتشغيل',catColor:'cat-electric',   services:['repair','all']},
+  // الهواء والمروحة
+  {value:'weak_airflow',  label:'ضعف تدفق الهواء',          cat:'fan',         catLabel:'💨 الهواء والمروحة',  catColor:'cat-fan',        services:['repair','all']},
+  {value:'fan_broken',    label:'المروحة لا تعمل',           cat:'fan',         catLabel:'💨 الهواء والمروحة',  catColor:'cat-fan',        services:['repair','all']},
+  // التنظيف والصيانة
+  {value:'cleaning_only', label:'تنظيف فقط',                cat:'maintenance', catLabel:'🧹 التنظيف والصيانة',catColor:'cat-maintenance', services:['cleaning','repair','all']},
+  {value:'cleaning_summer',label:'تنظيف قبل الصيف',         cat:'maintenance', catLabel:'🧹 التنظيف والصيانة',catColor:'cat-maintenance', services:['cleaning','all']},
+  {value:'cleaning_finish',label:'تنظيف بعد التشطيب',       cat:'maintenance', catLabel:'🧹 التنظيف والصيانة',catColor:'cat-maintenance', services:['cleaning','all']},
+  {value:'periodic_maint',label:'صيانة دورية',              cat:'maintenance', catLabel:'🧹 التنظيف والصيانة',catColor:'cat-maintenance', services:['repair','all']},
+  {value:'inspection',    label:'فحص فقط',                   cat:'maintenance', catLabel:'🧹 التنظيف والصيانة',catColor:'cat-maintenance', services:['repair','all']},
+  // التركيب والنقل
+  {value:'new_install',   label:'تركيب جديد',               cat:'install',     catLabel:'🔧 التركيب والنقل',  catColor:'cat-install',    services:['install','all']},
+  {value:'move_install',  label:'فك ونقل وتركيب',           cat:'install',     catLabel:'🔧 التركيب والنقل',  catColor:'cat-install',    services:['install','all']},
+  {value:'remove_only',   label:'فك فقط',                    cat:'install',     catLabel:'🔧 التركيب والنقل',  catColor:'cat-install',    services:['install','all']},
+  {value:'install_only',  label:'تركيب فقط',                cat:'install',     catLabel:'🔧 التركيب والنقل',  catColor:'cat-install',    services:['install','all']},
+  // أخرى
+  {value:'other',         label:'أخرى',                      cat:'other',       catLabel:'➕ أخرى',             catColor:'cat-other',      services:['all']}
+];
+
+// الأعطال الشائعة (قيم ثابتة)
+var COMMON_FAULT_VALUES = ['no_cooling','weak_cooling','water_leak','freon_leak','not_working','cleaning_only'];
+
+// تعيين نوع الخدمة للفلترة: 'all' | 'cleaning' | 'repair' | 'install' | 'freon'
+var currentServiceFilter = 'all';
+
+// حالة إظهار/إخفاء المزيد
+var allProblemsOpen = false;
+
+// الحالة الحالية للاختيارات
+var selectedProblemCodes  = [];
+var selectedProblemLabels = [];
+var selectedAcStatus      = '';
+var selectedPrevRepair    = '';
+var selectedVisitedBefore = '';
+var selectedPrevTechSolved = '';
+
+// ============================================================
+// mapServiceToFilter — ربط اسم الخدمة بفلتر الأعطال
+// ============================================================
+function mapServiceToFilter(serviceAr) {
+  if(serviceAr.indexOf('تنظيف') !== -1 || serviceAr.indexOf('غسيل') !== -1) return 'cleaning';
+  if(serviceAr.indexOf('تركيب') !== -1 || serviceAr.indexOf('فك') !== -1) return 'install';
+  if(serviceAr.indexOf('تعبئة غاز') !== -1 || serviceAr.indexOf('فريون') !== -1) return 'freon';
+  return 'repair'; // كشف وإصلاح + صيانة + باقة = repair = جميع الأعطال
+}
+
+// ============================================================
+// buildProblemChips — بناء chips حسب الفلتر الحالي
+// ============================================================
+function buildProblemChips() {
+  buildCommonChips();
+  buildAllChips();
+}
+
+function buildCommonChips() {
+  var container = document.getElementById('commonChipsContainer');
+  if(!container) return;
+  var filtered = problemOptions.filter(function(o){
+    return COMMON_FAULT_VALUES.indexOf(o.value) !== -1 &&
+           (o.services.indexOf('all') !== -1 || o.services.indexOf(currentServiceFilter) !== -1);
+  });
+  container.innerHTML = filtered.map(function(o){
+    var sel = selectedProblemCodes.indexOf(o.value) !== -1 ? ' selected' : '';
+    return '<button type="button" class="problem-chip'+sel+'" data-value="'+o.value+'" data-label="'+o.label+'" onclick="toggleChip(this)">'+o.label+'</button>';
+  }).join('');
+}
+
+function buildAllChips() {
+  var container = document.getElementById('problemChipsContainer');
+  if(!container) return;
+  // فلترة حسب الخدمة المختارة
+  var visible = problemOptions.filter(function(o){
+    if(COMMON_FAULT_VALUES.indexOf(o.value) !== -1) return false; // موجودة في الشائعة
+    return o.services.indexOf('all') !== -1 || o.services.indexOf(currentServiceFilter) !== -1;
+  });
+  // تجميع حسب التصنيف
+  var cats = {};
+  visible.forEach(function(opt){
+    if(!cats[opt.cat]) cats[opt.cat] = {label:opt.catLabel, color:opt.catColor, items:[]};
+    cats[opt.cat].items.push(opt);
+  });
+  var html = '';
+  Object.keys(cats).forEach(function(catKey){
+    var cat = cats[catKey];
+    html += '<div class="problem-category"><span class="problem-cat-label '+cat.color+'">'+cat.label+'</span><div class="problem-chips">';
+    cat.items.forEach(function(opt){
+      var sel = selectedProblemCodes.indexOf(opt.value) !== -1 ? ' selected' : '';
+      html += '<button type="button" class="problem-chip'+sel+'" data-value="'+opt.value+'" data-label="'+opt.label+'" onclick="toggleChip(this)">'+opt.label+'</button>';
+    });
+    html += '</div></div>';
+  });
+  container.innerHTML = html || '<div style="font-size:12px;color:var(--mist);padding:8px 0;">لا توجد أعطال إضافية لهذه الخدمة</div>';
+}
+
+// عرض/إخفاء جميع الأعطال مع Animation
+function toggleAllProblems() {
+  var wrap = document.getElementById('allProblemsWrap');
+  var btn  = document.getElementById('showMoreBtn');
+  allProblemsOpen = !allProblemsOpen;
+  wrap.classList.toggle('open', allProblemsOpen);
+  btn.textContent = allProblemsOpen ? 'إخفاء الأعطال ▲' : 'عرض جميع الأعطال ▼';
+}
+
+// تبديل اختيار chip (شائع أو عام)
+function toggleChip(btn) {
+  var val = btn.getAttribute('data-value');
+  var lbl = btn.getAttribute('data-label');
+  var isSelected = btn.classList.contains('selected');
+
+  // تحديث الزر المضغوط
+  btn.classList.toggle('selected', !isSelected);
+
+  // تحديث الزر المقابل في المجموعة الأخرى إذا وجد
+  var allBtns = document.querySelectorAll('.problem-chip[data-value="'+val+'"]');
+  allBtns.forEach(function(b){ b.classList.toggle('selected', !isSelected); });
+
+  if(isSelected) {
+    selectedProblemCodes  = selectedProblemCodes.filter(function(v){ return v !== val; });
+    selectedProblemLabels = selectedProblemLabels.filter(function(v){ return v !== lbl; });
+  } else {
+    if(selectedProblemCodes.indexOf(val) === -1) {
+      selectedProblemCodes.push(val);
+      selectedProblemLabels.push(lbl);
+    }
+  }
+  updateProgress();
+}
+
+// اختيار راديو
+function selRadio(group, btn) {
+  var row = btn.parentElement;
+  row.querySelectorAll('.prob-radio-btn').forEach(function(b){ b.classList.remove('selected'); });
+  btn.classList.add('selected');
+  var val = btn.getAttribute('data-val');
+
+  if(group === 'acStatus') {
+    selectedAcStatus = val;
+  } else if(group === 'prevRepair') {
+    selectedPrevRepair = val;
+    document.getElementById('prevRepairDetailWrap').style.display = val === 'yes' ? 'block' : 'none';
+    if(val !== 'yes') {
+      document.getElementById('previousRepairDetails').value = '';
+      document.getElementById('prevDetailCount').textContent = '0';
+    }
+  } else if(group === 'visitedBefore') {
+    selectedVisitedBefore = val;
+    document.getElementById('prevTechSolvedWrap').style.display = val === 'yes' ? 'block' : 'none';
+    if(val !== 'yes') {
+      selectedPrevTechSolved = '';
+      document.getElementById('prevTechSolvedRow').querySelectorAll('.prob-radio-btn').forEach(function(b){ b.classList.remove('selected'); });
+      document.getElementById('prevTechNote').style.display = 'none';
+    }
+  } else if(group === 'prevTechSolved') {
+    selectedPrevTechSolved = val;
+    document.getElementById('prevTechNote').style.display = val === 'no' ? 'block' : 'none';
+  }
+  updateProgress();
+}
+
+// عداد الأحرف
+function updateCharCount(el, counterId, max) {
+  var len = el.value.length;
+  if(len > max) { el.value = el.value.substring(0, max); len = max; }
+  document.getElementById(counterId).textContent = len;
+}
+
+// ============================================================
+// updateProgress — حساب نسبة اكتمال البلاغ
+// وصف: 20% | ملاحظة: 20% | حالة التشغيل: 20% | موقع: 40%
+// ============================================================
+function updateProgress() {
+  var pct = 0;
+  if(selectedProblemCodes.length > 0) pct += 20;
+  if(document.getElementById('problemDescription') && document.getElementById('problemDescription').value.trim()) pct += 20;
+  if(selectedAcStatus) pct += 20;
+  // الموقع: رابط خرائط أو إحداثيات
+  var hasLoc = (document.getElementById('f_maps_link') && document.getElementById('f_maps_link').value.trim()) ||
+               (document.getElementById('f_lat') && document.getElementById('f_lat').value);
+  if(hasLoc) pct += 40;
+  document.getElementById('probProgressFill').style.width = pct + '%';
+  document.getElementById('probProgressPct').textContent = pct + '%';
+}
+
+// ============================================================
+// calcPriority — حساب أولوية البلاغ تلقائياً
+// ============================================================
+function calcPriority() {
+  var HIGH  = ['not_working','breaker_trips','freon_leak','keeps_off'];
+  var MEDIUM= ['weak_cooling','loud_noise','vibration','no_cooling','water_leak','drain_blocked'];
+  for(var i=0; i<selectedProblemCodes.length; i++){
+    if(HIGH.indexOf(selectedProblemCodes[i]) !== -1) {
+      if(selectedPrevTechSolved === 'no') return 'critical';
+      return 'high';
+    }
+  }
+  for(var j=0; j<selectedProblemCodes.length; j++){
+    if(MEDIUM.indexOf(selectedProblemCodes[j]) !== -1) return 'medium';
+  }
+  // فني زار ولم يُحل → ترفع الأولوية
+  if(selectedPrevTechSolved === 'no') return 'high';
+  return 'low';
+}
+
+// ============================================================
+// calcRecommendations — اقتراح الأدوات تلقائياً (داخلي فقط)
+// ============================================================
+function calcRecommendations() {
+  var tools = [];
+  var inspection = '';
+
+  var toolMap = {
+    'freon_leak':    ['Leak Detector','Nitrogen','Vacuum Pump','Scale'],
+    'needs_freon':   ['Scale','Vacuum Pump','Manifold'],
+    'frozen_pipes':  ['Manifold','Thermometer','Scale'],
+    'weak_cooling':  ['Clamp Meter','Manifold','Thermometer'],
+    'no_cooling':    ['Clamp Meter','Manifold','Thermometer'],
+    'water_leak':    ['Drain Cleaner','Air Blower'],
+    'drain_blocked': ['Drain Cleaner','Air Blower'],
+    'not_working':   ['Clamp Meter','Multimeter'],
+    'breaker_trips': ['Clamp Meter','Multimeter'],
+    'keeps_off':     ['Clamp Meter','Multimeter'],
+    'loud_noise':    ['Screwdriver Set','Lubricant'],
+    'vibration':     ['Screwdriver Set','Level'],
+    'cleaning_only': ['Pressure Washer','Fin Comb','Coil Cleaner'],
+    'cleaning_summer':['Pressure Washer','Fin Comb','Coil Cleaner'],
+    'cleaning_finish':['Pressure Washer','Coil Cleaner','Blower'],
+    'new_install':   ['Drill','Copper Pipes','Insulation','Disconnect Box'],
+    'move_install':  ['Drill','Recovery Machine','Vacuum Pump'],
+    'fan_broken':    ['Fan Motor','Capacitor','Screwdriver Set'],
+    'weak_airflow':  ['Fin Comb','Filter','Blower']
+  };
+
+  selectedProblemCodes.forEach(function(code){
+    if(toolMap[code]) {
+      toolMap[code].forEach(function(t){ if(tools.indexOf(t) === -1) tools.push(t); });
+    }
+  });
+
+  // وقت الفحص التقديري
+  var priority = calcPriority();
+  if(priority === 'critical' || priority === 'high') inspection = '30-60 دقيقة';
+  else if(priority === 'medium') inspection = '45-90 دقيقة';
+  else inspection = '30-45 دقيقة';
+
+  return {
+    priority: priority,
+    requiredTools: tools,
+    estimatedInspection: inspection
+  };
+}
+
+// إعادة تعيين قسم الأوصاف
+function resetProblemSection() {
+  selectedProblemCodes   = [];
+  selectedProblemLabels  = [];
+  selectedAcStatus       = '';
+  selectedPrevRepair     = '';
+  selectedVisitedBefore  = '';
+  selectedPrevTechSolved = '';
+  allProblemsOpen = false;
+  var wrap = document.getElementById('allProblemsWrap');
+  if(wrap) wrap.classList.remove('open');
+  var showBtn = document.getElementById('showMoreBtn');
+  if(showBtn) showBtn.textContent = 'عرض جميع الأعطال ▼';
+  buildProblemChips();
+  ['acStatusRow','prevRepairRow','visitedBeforeRow','prevTechSolvedRow'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el) el.querySelectorAll('.prob-radio-btn').forEach(function(b){ b.classList.remove('selected'); });
+  });
+  var pd = document.getElementById('problemDescription'); if(pd) pd.value='';
+  var dc = document.getElementById('descCount'); if(dc) dc.textContent='0';
+  var prd = document.getElementById('previousRepairDetails'); if(prd) prd.value='';
+  var pdc = document.getElementById('prevDetailCount'); if(pdc) pdc.textContent='0';
+  var prw = document.getElementById('prevRepairDetailWrap'); if(prw) prw.style.display='none';
+  var ptw = document.getElementById('prevTechSolvedWrap'); if(ptw) ptw.style.display='none';
+  var ptn = document.getElementById('prevTechNote'); if(ptn) ptn.style.display='none';
+  updateProgress();
+}
+
+// متغيرات الإحداثيات الاختيارية — تُملأ من زر الموقع أو من استخراج الرابط
+var selectedLat            = null;
+var selectedLng            = null;
+var selectedAccuracy       = null; // دقة الموقع بالمتر
+var selectedLocationSource = '';   // 'gps' | 'maps_link' | 'manual_link'
+
+// ============================================================
+// isValidCoordinates — دالة تحقق موحدة من صحة الإحداثيات
+// ============================================================
+function isValidCoordinates(lat, lng) {
+  return Number.isFinite(lat) &&
+         Number.isFinite(lng) &&
+         lat >= -90 && lat <= 90 &&
+         lng >= -180 && lng <= 180 &&
+         !(lat === 0 && lng === 0);
+}
+
+// الاسم القديم محفوظ لتوافق الكود الداخلي
+function isValidCoord(lat, lng) { return isValidCoordinates(lat, lng); }
+
+/** safeNumber — تحويل قيمة إلى رقم غير سالب */
+function safeNumber(value) {
+  var n = Number(value);
+  return Number.isFinite(n) && n >= 0 ? n : 0;
+}
+
+// ============================================================
+// extractCoordinatesFromMapUrl — استخراج إحداثيات من رابط Google Maps
+//
+// ترتيب الأولوية:
+//  1. !3dLAT!4dLNG  → الموقع الفعلي للمكان (place coordinates)
+//  2. ?q=LAT,LNG أو ?query=LAT,LNG → إحداثيات صريحة في الرابط
+//  3. @LAT,LNG      → مركز عرض الخريطة فقط (viewport) — أقل دقة
+//
+// مثال يوضّح أهمية الأولوية:
+//   الرابط:   .../@21.7530391,39.1520907,...!3d21.7595645!4d39.1215061...
+//   @ يُعطي: lat=21.7530391 lng=39.1520907  ← مركز العرض فقط
+//   !3d!4d:  lat=21.7595645 lng=39.1215061  ← الموقع الفعلي ✅
+//
+// روابط maps.app.goo.gl / goo.gl/maps مختصرة:
+//   لا يمكن استخراج إحداثياتها بدون fetch (CORS) — تُعاد null
+// ============================================================
+function extractCoordinatesFromMapUrl(url) {
+  if(!url || typeof url !== 'string') return null;
+  var s = url.trim();
+
+  // روابط مختصرة — CORS يمنع فكّها
+  if(s.indexOf('maps.app.goo.gl') !== -1 || s.indexOf('goo.gl/maps') !== -1) return null;
+
+  // ──── الأولوية الأولى: !3dLAT!4dLNG (الموقع الفعلي للمكان) ────
+  var placeMatch = s.match(/!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/);
+  if(placeMatch) {
+    var lat = Number(placeMatch[1]), lng = Number(placeMatch[2]);
+    if(isValidCoordinates(lat, lng)) return {lat:lat, lng:lng, source:'place_coordinates'};
+  }
+
+  // ──── الأولوية الثانية: ?q=LAT,LNG أو ?query=LAT,LNG ────
+  var qMatch = s.match(/[?&](?:q|query)=([-\d.]+),([-\d.]+)/);
+  if(qMatch) {
+    var lat2 = Number(qMatch[1]), lng2 = Number(qMatch[2]);
+    if(isValidCoordinates(lat2, lng2)) return {lat:lat2, lng:lng2, source:'query_coordinates'};
+  }
+
+  // ──── الأولوية الثالثة: @LAT,LNG (مركز عرض الخريطة — أقل دقة) ────
+  // تُستخدم فقط إذا لم توجد !3d!4d ولا q/query
+  var atMatch = s.match(/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/);
+  if(atMatch) {
+    var lat3 = Number(atMatch[1]), lng3 = Number(atMatch[2]);
+    if(isValidCoordinates(lat3, lng3)) return {lat:lat3, lng:lng3, source:'viewport_coordinates'};
+  }
+
+  return null;
+}
+
+// ============================================================
+// useCurrentLocation — يُستدعى فقط بضغط المستخدم على الزر
+// enableHighAccuracy: true لطلب GPS الدقيق (الجوال)
+// maximumAge: 0 لمنع استخدام موقع مخزّن قديم
+// timeout: 15000 منح وقت أطول للحصول على دقة جيدة
+// ============================================================
+function useCurrentLocation() {
+  var btn = document.getElementById('geoBtn');
+
+  if(!navigator.geolocation) {
+    showGeoMsg('err', 'متصفحك لا يدعم تحديد الموقع تلقائيًا. استخدم رابط Google Maps.');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span>⏳</span> جاري تحديد موقعك...';
+  showGeoMsg('', '');
+  document.getElementById('geoVerifyWrap').style.display = 'none';
+  document.getElementById('locationPreviewSection').style.display = 'none';
+  resetLocationConfirmed();
+
+  navigator.geolocation.getCurrentPosition(
+    function(pos) {
+      var lat      = pos.coords.latitude;
+      var lng      = pos.coords.longitude;
+      var accuracy = Math.round(pos.coords.accuracy); // بالمتر
+
+      selectedLat            = lat;
+      selectedLng            = lng;
+      selectedAccuracy       = accuracy;
+      selectedLocationSource = 'gps';
+
+      document.getElementById('f_lat').value      = lat;
+      document.getElementById('f_lng').value      = lng;
+      document.getElementById('f_accuracy').value = accuracy;
+
+      var mapsUrl = 'https://www.google.com/maps?q='+lat+','+lng;
+
+      // ملء حقل الرابط:
+      // إذا كان فارغاً أو accuracy ≤ 200 → يُملأ دائماً
+      // إذا accuracy > 200 والحقل ممتلئ → يُبقى رابط العميل
+      var mapsInput  = document.getElementById('f_maps_link');
+      var addrInput  = document.getElementById('f_addr');
+      var fieldEmpty = !mapsInput.value.trim();
+
+      if(fieldEmpty || accuracy <= 200) {
+        mapsInput.value = mapsUrl;
+        addrInput.value = mapsUrl;
+        S.addr = mapsUrl;
+        document.getElementById('maps-ok').style.display = 'block';
+        document.getElementById('e_addr').className = 'err-msg';
+      }
+
+      // زر فتح الخريطة الخارجي
+      document.getElementById('geoOpenMap').href = mapsUrl;
+      document.getElementById('geoVerifyWrap').style.display = 'block';
+
+      // عرض معاينة الخريطة داخل الصفحة
+      showLocationPreview(lat, lng);
+
+      // رسائل محسّنة حسب الدقة
+      if(accuracy <= 50) {
+        showGeoMsg('ok',
+          '✅ تم تحديد موقعك بدقة جيدة (±'+accuracy+' متر).\n' +
+          'يرجى التأكد من العلامة في الخريطة أدناه.');
+        btn.innerHTML = '<span>✅</span> تم تحديد الموقع';
+      } else if(accuracy <= 200) {
+        showGeoMsg('warn',
+          '⚠️ تم تحديد موقع تقريبي بدقة ±'+accuracy+' متر.\n' +
+          'يرجى مراجعة العلامة في الخريطة قبل التأكيد.');
+        btn.innerHTML = '<span>⚠️</span> موقع تقريبي';
+      } else {
+        showGeoMsg('warn',
+          '⚠️ الموقع غير دقيق (±'+accuracy+' متر).\n' +
+          'يفضّل فتح الخريطة والتأكد أو مشاركة رابط موقع المنزل من تطبيق Google Maps.');
+        btn.innerHTML = '<span>⚠️</span> موقع غير دقيق';
+      }
+
+      btn.disabled = false;
+    },
+    function(err) {
+      btn.disabled = false;
+      btn.innerHTML = '<span>📍</span> استخدام موقعي الحالي';
+      document.getElementById('geoVerifyWrap').style.display = 'none';
+      document.getElementById('locationPreviewSection').style.display = 'none';
+      if(err.code === err.PERMISSION_DENIED) {
+        showGeoMsg('err', 'تعذر تحديد الموقع بدقة. يرجى مشاركة رابط موقع المنزل من خرائط Google.');
+      } else if(err.code === err.TIMEOUT) {
+        showGeoMsg('warn', 'تعذر الحصول على الموقع، حاول مرة أخرى أو استخدم رابط Google Maps.');
+      } else {
+        showGeoMsg('warn', 'تعذر الحصول على الموقع، حاول مرة أخرى أو استخدم رابط Google Maps.');
+      }
+    },
+    {enableHighAccuracy: true, timeout: 15000, maximumAge: 0}
+  );
+}
+
+// ============================================================
+// showLocationPreview — عرض الخريطة داخل الصفحة (بدون API Key)
+// ============================================================
+function showLocationPreview(lat, lng) {
+  var previewUrl = 'https://www.google.com/maps?q=' +
+    encodeURIComponent(lat + ',' + lng) + '&z=17&output=embed';
+  document.getElementById('locationPreviewMap').src = previewUrl;
+  document.getElementById('locationPreviewSection').style.display = 'block';
+}
+
+// ============================================================
+// confirmLocation — عند ضغط «✅ الموقع صحيح»
+// ============================================================
+function confirmLocation() {
+  document.getElementById('f_location_verified').value = 'true';
+  var chk = document.getElementById('chk-location-verified');
+  if(chk) chk.checked = true;
+  document.getElementById('locationPreviewSection').classList.add('confirmed');
+}
+
+// ============================================================
+// retryLocation — عند ضغط «🔄 إعادة تحديد الموقع»
+// ============================================================
+function retryLocation() {
+  var keepLink = false;
+  // إذا كان حقل الرابط ممتلئاً → اسأل المستخدم
+  var mapsInput = document.getElementById('f_maps_link');
+  if(mapsInput.value.trim()) {
+    keepLink = !confirm('هل تريد مسح رابط الخريطة الحالي وتحديد موقع جديد؟');
+    if(!keepLink) {
+      mapsInput.value = '';
+      document.getElementById('f_addr').value = '';
+      S.addr = '';
+      document.getElementById('maps-ok').style.display = 'none';
+      document.getElementById('maps-ok-coords').style.display = 'none';
+      document.getElementById('maps-shortlink').style.display = 'none';
+    }
+  }
+
+  // إعادة تعيين المتغيرات
+  selectedLat            = null;
+  selectedLng            = null;
+  selectedAccuracy       = null;
+  selectedLocationSource = '';
+
+  // مسح الحقول المخفية
+  document.getElementById('f_lat').value             = '';
+  document.getElementById('f_lng').value             = '';
+  document.getElementById('f_accuracy').value        = '';
+  document.getElementById('f_location_verified').value = 'false';
+
+  // إعادة تعيين الواجهة
+  resetLocationConfirmed();
+  document.getElementById('geoVerifyWrap').style.display = 'none';
+  document.getElementById('locationPreviewSection').style.display = 'none';
+  document.getElementById('locationPreviewMap').src = 'about:blank';
+  showGeoMsg('', '');
+
+  // إعادة تشغيل دالة تحديد الموقع
+  document.getElementById('geoBtn').innerHTML = '<span>📍</span> استخدام موقعي الحالي';
+  useCurrentLocation();
+}
+
+// مساعد: إعادة تعيين حالة التأكيد
+function resetLocationConfirmed() {
+  document.getElementById('f_location_verified').value = 'false';
+  var chk = document.getElementById('chk-location-verified');
+  if(chk) chk.checked = false;
+  var section = document.getElementById('locationPreviewSection');
+  if(section) section.classList.remove('confirmed');
+}
+
+function showGeoMsg(type, text) {
+  var el = document.getElementById('geoMsg');
+  el.className = 'geo-msg' + (type ? ' '+type : '');
+  el.textContent = text;
+  el.style.display = text ? 'block' : 'none';
+}
 var bookImageBase64 = '';
 var FRIDAY_CLOSED = true;
 
 // تحميل إعداد الجمعة
 if(db) db.ref('settings/fridayClosed').once('value',function(s){if(s.val()!==null)FRIDAY_CLOSED=s.val();});
+
+// بناء chips الأوصاف
+buildProblemChips();
 
 var tom=new Date(); tom.setDate(tom.getDate()+1);
 document.getElementById('f_date').min=tom.toISOString().split('T')[0];
@@ -436,19 +1215,34 @@ function changeUnits(dir){
 
 // ===== الخدمة =====
 function selClean(u,p){
-  ['ct1','ct2','ct3','ct4'].forEach(function(id){document.getElementById(id).className='clean-tile';});
+  ['ct1','ct2','ct3','ct4','ct5u','ct6','ct7','ct8'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.className='clean-tile';
+  });
   document.getElementById('ct5').className='offer-tile';
   ['sv1','sv2','sv3','sv4','sv5','sv6'].forEach(function(id){document.getElementById(id).className='svc-card';});
-  var id=u<=4?'ct'+u:'ct5';
-  document.getElementById(id).className=(u<=4?'clean-tile sel':'offer-tile sel');
+
+  if(u===5)     { var el=document.getElementById('ct5u'); if(el) el.className='clean-tile sel'; }
+  else if(u===6){ var el=document.getElementById('ct6');  if(el) el.className='clean-tile sel'; }
+  else if(u===7){ var el=document.getElementById('ct7');  if(el) el.className='clean-tile sel'; }
+  else if(u===8){ var el=document.getElementById('ct8');  if(el) el.className='clean-tile sel'; }
+  else if(u<=4) { document.getElementById('ct'+u).className='clean-tile sel'; }
+  else          { document.getElementById('ct5').className='offer-tile sel'; }
+
   S.service='تنظيف وغسيل المكيفات'; S.serviceAr='تنظيف وغسيل المكيفات';
-  S.units=u; S.price=p; S.isClean=true;
+  S.isClean=true;
+  if(u >= 10)    { S.units=u; S.price=u*55; }
+  else if(u >= 5){ S.units=u; S.price=u*60; }
+  else           { S.units=u; S.price=p; }
   document.getElementById('units-box').className='units-box';
   document.getElementById('e_svc').className='err-msg';
+  currentServiceFilter = 'cleaning';
+  buildProblemChips();
 }
 
 function selSvc(nameAr,nameEn,price,id){
-  ['ct1','ct2','ct3','ct4'].forEach(function(i){document.getElementById(i).className='clean-tile';});
+  ['ct1','ct2','ct3','ct4','ct5u','ct6','ct7','ct8'].forEach(function(i){
+    var el=document.getElementById(i); if(el) el.className='clean-tile';
+  });
   document.getElementById('ct5').className='offer-tile';
   ['sv1','sv2','sv3','sv4','sv5','sv6'].forEach(function(i){document.getElementById(i).className='svc-card';});
   document.getElementById(id).className='svc-card sel';
@@ -457,6 +1251,8 @@ function selSvc(nameAr,nameEn,price,id){
   S.units=parseInt(document.getElementById('units-display').textContent)||1;
   document.getElementById('units-box').className='units-box show';
   document.getElementById('e_svc').className='err-msg';
+  currentServiceFilter = mapServiceToFilter(nameAr);
+  buildProblemChips();
 }
 
 function selType(type,id){
@@ -477,25 +1273,62 @@ function next1(){
 // ===== رابط الموقع =====
 function validateMapsLink(val){
   var raw=val.trim();
-  // استخراج الرابط النظيف فقط — أول URL يبدأ بـ http
   var urlMatch = raw.match(/(https?:\/\/[^\s]+)/);
   var link = urlMatch ? urlMatch[1] : raw;
-  // تنظيف أي نص إضافي بعد الرابط
   link = link.split(' ')[0].split('\n')[0];
-  // تحديث خانة الإدخال بالرابط النظيف
   if(urlMatch && link !== raw) {
     document.getElementById('f_maps_link').value = link;
   }
   var ok=document.getElementById('maps-ok');
+  var okCoords=document.getElementById('maps-ok-coords');
+  var shortMsg=document.getElementById('maps-shortlink');
   var err=document.getElementById('e_addr');
   var isValid=link.length>10&&(link.includes('maps.app.goo.gl')||link.includes('google.com/maps')||link.includes('goo.gl/maps')||link.includes('maps.google'));
+
+  okCoords.style.display='none';
+  shortMsg.style.display='none';
+  document.getElementById('locationPreviewSection').style.display='none';
+  document.getElementById('locationPreviewMap').src='about:blank';
+  resetLocationConfirmed();
+
   if(isValid){
     document.getElementById('f_addr').value=link; S.addr=link;
     ok.style.display='block'; err.className='err-msg';
     document.getElementById('f_maps_link').style.borderColor='var(--success)';
+
+    var extracted = extractCoordinatesFromMapUrl(link);
+    if(extracted) {
+      // رابط كامل بإحداثيات — maps_link
+      selectedLat            = extracted.lat;
+      selectedLng            = extracted.lng;
+      selectedLocationSource = 'maps_link';
+      document.getElementById('f_lat').value = selectedLat;
+      document.getElementById('f_lng').value = selectedLng;
+      ok.style.display='none';
+      // رسالة النجاح تعكس مصدر الإحداثيات
+      if(extracted.source === 'place_coordinates') {
+        okCoords.textContent = '✅ تم استخراج الموقع الفعلي من رابط Google Maps';
+      } else if(extracted.source === 'query_coordinates') {
+        okCoords.textContent = '✅ تم استخراج الإحداثيات من الرابط';
+      } else {
+        okCoords.textContent = '⚠️ تم استخراج مركز عرض الخريطة (قد لا يكون الموقع الدقيق)';
+      }
+      okCoords.style.display='block';
+      // عرض معاينة الخريطة
+      showLocationPreview(selectedLat, selectedLng);
+    } else if(link.includes('maps.app.goo.gl') || link.includes('goo.gl/maps')) {
+      // رابط مختصر — لا إحداثيات، لا معاينة iframe
+      selectedLocationSource = 'manual_link';
+      shortMsg.textContent = 'تعذر عرض المعاينة من الرابط المختصر. افتح الرابط وتأكد من الموقع يدويًا.';
+      shortMsg.style.display='block';
+    } else {
+      // رابط maps.google أو google.com/maps بدون إحداثيات قابلة للاستخراج
+      selectedLocationSource = 'manual_link';
+    }
   } else {
     document.getElementById('f_addr').value=''; S.addr='';
     ok.style.display='none';
+    selectedLocationSource = '';
     document.getElementById('f_maps_link').style.borderColor=link.length>0?'var(--danger)':'#E2E8F0';
   }
 }
@@ -640,6 +1473,32 @@ function buildSum(){
   ];
   if(S.notes) rows.push(['📝 ملاحظات',S.notes]);
   document.getElementById('sumBox').innerHTML=rows.map(function(r){return '<div class="sum-row"><span class="lbl">'+r[0]+'</span><span class="val">'+r[1]+'</span></div>';}).join('');
+
+  // قسم وصف الطلب في الملخص
+  var probRows = [];
+  if(selectedProblemLabels.length) probRows.push(['🔧 أوصاف المشكلة', selectedProblemLabels.join('، ')]);
+  var probDesc = document.getElementById('problemDescription').value.trim();
+  if(probDesc) probRows.push(['📝 تفاصيل إضافية', probDesc]);
+  var acStatusLabels = {working:'نعم، يعمل', weak:'يعمل بكفاءة ضعيفة', not_working:'لا يعمل إطلاقًا', unknown:'لا أعلم'};
+  if(selectedAcStatus) probRows.push(['⚡ حالة التشغيل', acStatusLabels[selectedAcStatus]||selectedAcStatus]);
+  var prevLabels = {yes:'نعم', no:'لا', unknown:'لا أعلم'};
+  if(selectedPrevRepair) probRows.push(['🔄 سبق إصلاحه', prevLabels[selectedPrevRepair]||selectedPrevRepair]);
+  if(selectedPrevRepair === 'yes') {
+    var prevDet = document.getElementById('previousRepairDetails').value.trim();
+    if(prevDet) probRows.push(['📋 تفاصيل الإصلاح السابق', prevDet]);
+  }
+  if(selectedVisitedBefore) probRows.push(['🔧 سبق زيارة فني', selectedVisitedBefore === 'yes' ? 'نعم' : 'لا']);
+  if(selectedVisitedBefore === 'yes' && selectedPrevTechSolved) probRows.push(['✅ هل حُلّت', selectedPrevTechSolved === 'yes' ? 'نعم' : 'لا']);
+  var probHtml = '';
+  if(probRows.length) {
+    probHtml = '<div style="margin-top:12px;padding:12px;background:#F0F9FF;border:1.5px solid #BAE6FD;border-radius:12px;">' +
+      '<div style="font-size:12px;font-weight:800;color:var(--deep);margin-bottom:8px;">📋 وصف الطلب</div>' +
+      probRows.map(function(r){return '<div class="sum-row"><span class="lbl">'+r[0]+'</span><span class="val">'+r[1]+'</span></div>';}).join('') +
+      '</div>';
+  }
+  var sumBox = document.getElementById('sumBox');
+  sumBox.innerHTML += probHtml;
+
   document.getElementById('totalPr').textContent=total+'+ SAR';
 
   var isInspection=S.serviceAr==='كشف وإصلاح أعطال';
@@ -666,6 +1525,78 @@ function submitBooking(){
   document.getElementById('waLink').href=waUrl;
   if(db){try{
     var bookingData = {ref:ref,date:S.date,time:S.time,duration:calcDur(),client:S.name,phone:S.phone,service:S.serviceAr,units:S.units,city:S.city,mapsLink:S.addr,locationImage:bookImageBase64||'',createdAt:new Date().toISOString()};
+
+    // السعر التقديري — اختياري، يُحفظ فقط إذا أُدخل
+    var servicePriceRaw = document.getElementById('servicePrice') ? document.getElementById('servicePrice').value : '';
+    var servicePrice = safeNumber(servicePriceRaw);
+    if(servicePrice > 0) bookingData.servicePrice = servicePrice;
+
+    // حقول الوصف — اختيارية، تُضاف فقط عند توفرها
+    if(selectedProblemCodes.length) {
+      bookingData.problemCodes  = selectedProblemCodes;
+      bookingData.problemLabels = selectedProblemLabels;
+      bookingData.problemDescriptionSummary = selectedProblemLabels.join('، ');
+    }
+    var probDesc = document.getElementById('problemDescription').value.trim();
+    if(probDesc) bookingData.problemDescription = probDesc;
+    if(selectedAcStatus) bookingData.acOperatingStatus = selectedAcStatus;
+    if(selectedPrevRepair) {
+      bookingData.previousRepairStatus = selectedPrevRepair;
+      if(selectedPrevRepair === 'yes') {
+        var prevDet = document.getElementById('previousRepairDetails').value.trim();
+        if(prevDet) bookingData.previousRepairDetails = prevDet;
+      }
+    }
+    if(selectedVisitedBefore) bookingData.visitedBefore = selectedVisitedBefore;
+    if(selectedPrevTechSolved) bookingData.previousTechnicianSolved = selectedPrevTechSolved;
+
+    // التحليل الذكي الداخلي — لا يظهر للعميل
+    var recData = calcRecommendations();
+    bookingData.priority            = recData.priority;
+    bookingData.requiredTools       = recData.requiredTools;
+    bookingData.estimatedInspection = recData.estimatedInspection;
+    bookingData.recommendations     = {
+      priority: recData.priority,
+      requiredTools: recData.requiredTools,
+      estimatedInspection: recData.estimatedInspection
+    };
+
+    // إضافة lat/lng اختياريًا فقط إذا كانت صالحة
+    var latValue      = document.getElementById('f_lat').value.trim();
+    var lngValue      = document.getElementById('f_lng').value.trim();
+    var accuracyValue = document.getElementById('f_accuracy').value.trim();
+    var parsedLat     = Number(latValue);
+    var parsedLng     = Number(lngValue);
+    var parsedAccuracy = Number(accuracyValue);
+
+    if(isValidCoord(parsedLat, parsedLng)) {
+      bookingData.lat = parsedLat;
+      bookingData.lng = parsedLng;
+
+      // إضافة دقة الموقع إذا كانت صالحة
+      if(Number.isFinite(parsedAccuracy) && parsedAccuracy > 0) {
+        bookingData.locationAccuracy = parsedAccuracy;
+      }
+
+      // locationVerified: من hidden field أو من checkbox
+      var verifiedField = document.getElementById('f_location_verified');
+      var locationConfirmed =
+        (verifiedField && verifiedField.value === 'true') ||
+        (document.getElementById('chk-location-verified') &&
+         document.getElementById('chk-location-verified').checked);
+
+      if(locationConfirmed) {
+        bookingData.locationVerified = true;
+      } else if(Number.isFinite(parsedAccuracy) && parsedAccuracy > 500) {
+        bookingData.locationVerified = false;
+      }
+    }
+
+    // مصدر الموقع — دائماً إذا كان متاحاً
+    if(selectedLocationSource) {
+      bookingData.locationSource = selectedLocationSource;
+    }
+
     db.ref('bookings').push(bookingData);
     // إشعار فوري للمشرف
     db.ref('notifications').push({
@@ -678,6 +1609,9 @@ function submitBooking(){
     });
   }catch(e){}}
   goStep('OK');
+  resetProblemSection();
+  var spEl = document.getElementById('servicePrice');
+  if(spEl) spEl.value = '';
   setTimeout(function(){window.open(waUrl,'_blank');},800);
 }
 
