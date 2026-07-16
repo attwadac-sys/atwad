@@ -609,10 +609,7 @@ function syncFromFirebase() {
         }
       });
 
-      if(fbData.length > 0) {
-        clients = fbData;
-        localStorage.setItem('atwad_clients', JSON.stringify(clients));
-      }
+      clients = fbData;
       // تحديث فوري للعدادات والجدول
       updateStats();
       renderTable();
