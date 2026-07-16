@@ -206,36 +206,40 @@ try {
 
 // ===== DATA =====
 var period = 'month';
+// المصادر تُحمَّل من Firebase فقط — لا اعتماد على localStorage
 var entries = [], workOrders = [], clients = [], appointments = [];
-try { entries     = JSON.parse(localStorage.getItem('atwad_finance')      || '[]'); } catch(e){}
-try { workOrders  = JSON.parse(localStorage.getItem('atwad_workorders')   || '[]'); } catch(e){}
-try { clients     = JSON.parse(localStorage.getItem('atwad_clients')      || '[]'); } catch(e){}
-try { appointments= JSON.parse(localStorage.getItem('atwad_appointments') || '[]'); } catch(e){}
 
-// مزامنة Firebase للتقارير
+// مزامنة Firebase للتقارير — كل مصدر مستقل
 function syncReportsFromFirebase() {
-  if(!db) return;
-  var loaded = {t:false, w:false, c:false, a:false};
-  function tryRender() {
-    if(loaded.t && loaded.w && loaded.c && loaded.a) renderAll();
-  }
+  if(!db) { renderAll(); return; }
+
+  // transactions
   db.ref('transactions').once('value', function(snap) {
-    var d=[]; snap.forEach(function(c){d.push(c.val());}); if(d.length>0){entries=d;} loaded.t=true; tryRender();
-  });
+    var d=[]; snap.forEach(function(c){d.push(c.val());});
+    entries = d;
+    renderAll();
+  }, function(){ renderAll(); });
+
+  // workOrders
   db.ref('workOrders').once('value', function(snap) {
-    var d=[]; snap.forEach(function(c){d.push(c.val());}); if(d.length>0){workOrders=d;} loaded.w=true; tryRender();
-  });
+    var d=[]; snap.forEach(function(c){d.push(c.val());});
+    workOrders = d;
+    renderAll();
+  }, function(){ renderAll(); });
+
+  // clients — المسار الصحيح
   db.ref('clients').once('value', function(snap) {
-    console.log('Customer source: clients'); // preview diagnostic
-    var d=[]; snap.forEach(function(c){d.push(c.val());}); if(d.length>0){clients=d;} loaded.c=true; tryRender();
-  });
+    var d=[]; snap.forEach(function(c){d.push(c.val());});
+    clients = d;
+    renderAll();
+  }, function(){ renderAll(); });
+
+  // appointments فقط — بدون bookings
   db.ref('appointments').once('value', function(snap) {
-    var d=[]; snap.forEach(function(c){d.push(c.val());}); if(d.length>0){appointments=d;} loaded.a=true; tryRender();
-    // حجوزات العملاء أيضاً
-    db.ref('bookings').once('value', function(s2) {
-      s2.forEach(function(c){appointments.push(c.val());}); tryRender();
-    });
-  });
+    var d=[]; snap.forEach(function(c){d.push(c.val());});
+    appointments = d;
+    renderAll();
+  }, function(){ renderAll(); });
 }
 
 function today(){ return new Date().toISOString().split('T')[0]; }
@@ -423,7 +427,7 @@ function renderAll() { renderKPIs(); renderRevChart(); renderSvcChart(); renderT
 function printReport() { window.print(); }
 function showToast(msg){ var t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(function(){t.classList.remove('show');},2800); }
 
-renderAll();
+// تشغيل Firebase أولاً — renderAll تُستدعى من داخل كل callback
 syncReportsFromFirebase();
 </script>
 
