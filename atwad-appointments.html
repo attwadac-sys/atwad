@@ -1942,7 +1942,7 @@ document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click
 const calDates = getWeekDates(0);
 const ms = new Date(calDates[0]+'T00:00:00');
 document.getElementById('calMonth').textContent = ms.toLocaleDateString('ar-SA',{month:'long',year:'numeric'});
-switchView('list');
+switchView('week');
 initFirebaseSync(); // تشغيل المزامنة التلقائية
 loadFridaySetting(); // تحميل إعداد الجمعة
 </script>
