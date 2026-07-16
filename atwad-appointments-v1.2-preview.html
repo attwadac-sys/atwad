@@ -716,13 +716,25 @@ function initFirebaseSync() {
       fbAppts.push({ ...child.val(), _fbKey: child.key, _source: 'appointments' });
     });
 
-    // مزامنة حجوزات العملاء من صفحة الحجز
+    // عرض المواعيد فوراً بدون انتظار bookings
+    appointments = fbAppts;
+    updateStats();
+    renderWeek();
+    renderList();
+
+    // تحديث مؤشر الاتصال فوراً
+    document.getElementById('fbDot').className = 'fb-dot connected';
+    document.getElementById('fbStatusText').textContent = 'متصل • ' + appointments.length + ' موعد';
+    document.getElementById('loadingOverlay').style.display = 'none';
+
+    // دمج حجوزات العملاء في الخلفية — مستقل تماماً
     db.ref('bookings').once('value', function(bookSnap) {
-      const existingRefs = fbAppts.map(a => a._fbKey);
+      var added = false;
       bookSnap.forEach(function(child) {
         const b = child.val();
         if(!b.date || !b.time) return;
-        // تحويل الحجز إلى موعد تلقائياً
+        // تجنب التكرار
+        if(fbAppts.find(a => a._fbKey === child.key)) return;
         fbAppts.push({
           _fbKey: child.key,
           _source: 'bookings',
@@ -740,18 +752,22 @@ function initFirebaseSync() {
           duration: b.duration || 60,
           createdAt: b.createdAt || ''
         });
+        added = true;
       });
 
-      appointments = fbAppts;
-      updateStats();
-      renderWeek();
-      renderList();
-
-      // تحديث مؤشر الاتصال
-      document.getElementById('fbDot').className = 'fb-dot connected';
-      document.getElementById('fbStatusText').textContent = 'متصل • ' + appointments.length + ' موعد';
-      document.getElementById('loadingOverlay').style.display = 'none';
+      // تحديث العرض فقط إذا أُضيفت حجوزات جديدة
+      if(added) {
+        appointments = fbAppts;
+        updateStats();
+        renderWeek();
+        renderList();
+        document.getElementById('fbStatusText').textContent = 'متصل • ' + appointments.length + ' موعد';
+      }
+    }).catch(function(e) {
+      console.log('bookings not available or empty:', e.message);
+      // الصفحة تستمر طبيعياً بدون bookings
     });
+
   }, function(err) {
     document.getElementById('fbDot').className = 'fb-dot';
     document.getElementById('fbStatusText').textContent = 'خطأ في الاتصال';
