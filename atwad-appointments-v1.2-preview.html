@@ -590,6 +590,51 @@ const STATUS_LABELS = { confirmed:'مؤكد', pending:'في الانتظار', d
 const STATUS_ICONS = { confirmed:'✅', pending:'⏳', done:'🎉', cancelled:'❌' };
 const TECH_COLORS = { Abrar:'#0EA5E9', Shoib:'#10B981', Suhail:'#8B5CF6' };
 
+// ===== DUAL SOURCE STATE =====
+let firebaseAppointments = []; // من مسار appointments
+let firebaseBookings = [];     // من مسار bookings — يُحمَّل مرة واحدة
+
+function normalizePhone(p) {
+  return (p || '').replace(/\s+/g, '').replace(/^00966/, '0').replace(/^\+966/, '0');
+}
+
+function makeDedupeKey(phone, date, time, service) {
+  var t = (time || '').includes(' - ') ? time.split(' - ')[0] : (time || '');
+  return normalizePhone(phone) + '|' + (date||'') + '|' + t + '|' + (service||'');
+}
+
+function mergeAppointmentsAndBookings() {
+  // بناء مجموعة مفاتيح المواعيد الموجودة في appointments
+  var apptKeys = {};
+  firebaseAppointments.forEach(function(a) {
+    var key = makeDedupeKey(a.phone, a.date, a.time, a.service);
+    apptKeys[key] = true;
+  });
+
+  // دمج الحجوزات مع تجنب التكرار المنطقي
+  var merged = firebaseAppointments.slice();
+  var bookingsAdded = 0;
+  firebaseBookings.forEach(function(b) {
+    var key = makeDedupeKey(b.phone, b.date, b.time, b.service);
+    if(!apptKeys[key]) {
+      merged.push(b);
+      apptKeys[key] = true;
+      bookingsAdded++;
+    }
+  });
+
+  // Console log مؤقت للتشخيص
+  console.log('Appointments source count:', firebaseAppointments.length);
+  console.log('Bookings source count:', firebaseBookings.length);
+  console.log('Merged unique count:', merged.length);
+
+  appointments = merged;
+  updateStats();
+  renderWeek();
+  renderList();
+  document.getElementById('fbStatusText').textContent = 'متصل • ' + appointments.length + ' موعد';
+}
+
 function today(){ return new Date().toISOString().split('T')[0]; }
 function formatDate(d){ try{ return new Date(d+'T00:00:00').toLocaleDateString('ar-SA',{weekday:'long',year:'numeric',month:'long',day:'numeric'}); } catch{ return d; } }
 function formatDateShort(d){ try{ return new Date(d+'T00:00:00').toLocaleDateString('ar-SA',{month:'short',day:'numeric'}); } catch{ return d; } }
@@ -709,70 +754,61 @@ function initFirebaseSync() {
   document.getElementById('fbDot').className = 'fb-dot loading';
   document.getElementById('fbStatusText').textContent = 'جاري الاتصال...';
 
-  // مزامنة مواعيد النظام الداخلي
+  // ===== LISTENER 1: appointments — يُطلق عند كل تغيير =====
   db.ref('appointments').on('value', function(snap) {
     const fbAppts = [];
     snap.forEach(function(child) {
       fbAppts.push({ ...child.val(), _fbKey: child.key, _source: 'appointments' });
     });
+    firebaseAppointments = fbAppts;
 
-    // عرض المواعيد فوراً بدون انتظار bookings
-    appointments = fbAppts;
-    updateStats();
-    renderWeek();
-    renderList();
-
-    // تحديث مؤشر الاتصال فوراً
+    // إخفاء التحميل فوراً
     document.getElementById('fbDot').className = 'fb-dot connected';
-    document.getElementById('fbStatusText').textContent = 'متصل • ' + appointments.length + ' موعد';
     document.getElementById('loadingOverlay').style.display = 'none';
 
-    // دمج حجوزات العملاء في الخلفية — مستقل تماماً
-    db.ref('bookings').once('value', function(bookSnap) {
-      var added = false;
-      bookSnap.forEach(function(child) {
-        const b = child.val();
-        if(!b.date || !b.time) return;
-        // تجنب التكرار
-        if(fbAppts.find(a => a._fbKey === child.key)) return;
-        fbAppts.push({
-          _fbKey: child.key,
-          _source: 'bookings',
-          id: 'B_' + child.key,
-          client: b.client || b.name || '—',
-          phone: b.phone || '',
-          address: b.city || 'جدة',
-          service: b.service || 'تنظيف مكيف',
-          units: b.units || 1,
-          date: b.date,
-          time: b.time.includes(' - ') ? b.time.split(' - ')[0] : b.time,
-          tech: autoAssignTech(b.date),
-          status: 'pending',
-          notes: 'حجز من النموذج الإلكتروني',
-          duration: b.duration || 60,
-          createdAt: b.createdAt || ''
-        });
-        added = true;
-      });
-
-      // تحديث العرض فقط إذا أُضيفت حجوزات جديدة
-      if(added) {
-        appointments = fbAppts;
-        updateStats();
-        renderWeek();
-        renderList();
-        document.getElementById('fbStatusText').textContent = 'متصل • ' + appointments.length + ' موعد';
-      }
-    }).catch(function(e) {
-      console.log('bookings not available or empty:', e.message);
-      // الصفحة تستمر طبيعياً بدون bookings
-    });
+    // دمج وعرض
+    mergeAppointmentsAndBookings();
 
   }, function(err) {
     document.getElementById('fbDot').className = 'fb-dot';
     document.getElementById('fbStatusText').textContent = 'خطأ في الاتصال';
     document.getElementById('loadingOverlay').style.display = 'none';
     showToast('❌ خطأ في الاتصال: ' + err.message);
+  });
+
+  // ===== LISTENER 2: bookings — مستقل تماماً =====
+  db.ref('bookings').on('value', function(bookSnap) {
+    var fbBooks = [];
+    bookSnap.forEach(function(child) {
+      const b = child.val();
+      if(!b.date || !b.time) return;
+      var t = (b.time||'').includes(' - ') ? b.time.split(' - ')[0] : (b.time||'');
+      fbBooks.push({
+        _fbKey: child.key,
+        _source: 'bookings',
+        id: 'B_' + child.key,
+        client: b.client || b.name || '—',
+        phone: b.phone || '',
+        address: b.city || 'جدة',
+        service: b.service || 'تنظيف مكيف',
+        units: b.units || 1,
+        date: b.date,
+        time: t,
+        tech: autoAssignTech(b.date),
+        status: 'pending',
+        notes: 'حجز من النموذج الإلكتروني',
+        duration: b.duration || 60,
+        createdAt: b.createdAt || ''
+      });
+    });
+    firebaseBookings = fbBooks;
+
+    // إعادة الدمج بدون قراءة appointments من Firebase مجدداً
+    mergeAppointmentsAndBookings();
+
+  }, function(e) {
+    console.log('bookings listener error (non-critical):', e.message);
+    // الصفحة تستمر طبيعياً
   });
 }
 
