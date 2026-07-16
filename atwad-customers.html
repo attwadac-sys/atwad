@@ -574,7 +574,7 @@ function syncFromFirebase() {
   if(!db) return;
 
   // on('value') على customers — يُطلق عند كل تغيير في الوقت الفعلي
-  db.ref('customers').on('value', function(snapC) {
+  db.ref('clients').on('value', function(snapC) {
     var fbData = [];
     var phones = {};
     snapC.forEach(function(child) {
@@ -633,9 +633,9 @@ function saveData() {
     clients.forEach(function(c) {
       if(c._fbKey) {
         var copy = {...c}; delete copy._fbKey;
-        db.ref('customers/' + c._fbKey).set(copy);
+        db.ref('clients/' + c._fbKey).set(copy);
       } else {
-        var ref = db.ref('customers').push();
+        var ref = db.ref('clients').push();
         c._fbKey = ref.key;
         ref.set(c);
       }
@@ -866,7 +866,7 @@ function deleteClient(id) {
   // حذف من Firebase أولاً إذا كان له مفتاح
   var c = clients.find(function(x){ return x.id === id; });
   if(c && c._fbKey && db && !c._fbKey.startsWith('B_')) {
-    db.ref('customers/' + c._fbKey).remove().catch(function(e){
+    db.ref('clients/' + c._fbKey).remove().catch(function(e){
       console.error('Firebase delete error:', e);
     });
   }
