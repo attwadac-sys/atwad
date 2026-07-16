@@ -906,16 +906,7 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
 
 // ========== INIT ==========
 // بيانات تجريبية إذا كانت القاعدة فارغة
-if (clients.length === 0) {
-  clients = [
-    { id:'C100001', name:'محمد العتيبي',    phone:'0501234567', city:'الرياض',  type:'دائم',    address:'حي النرجس', company:'', notes:'يفضل الصباح', visits:5, lastVisit:'10/06/2025', createdAt:'01/01/2025' },
-    { id:'C100002', name:'سارة الشمري',     phone:'0551234567', city:'جدة',     type:'جديد',    address:'حي الزهراء', company:'', notes:'', visits:1, lastVisit:'20/06/2025', createdAt:'20/06/2025' },
-    { id:'C100003', name:'شركة الأفق للتطوير', phone:'0561234567', city:'الرياض', type:'شركات', address:'طريق الملك فهد', company:'الأفق للتطوير العقاري', notes:'مبنى إداري - 12 وحدة', visits:3, lastVisit:'01/06/2025', createdAt:'15/03/2025' },
-    { id:'C100004', name:'خالد الدوسري',    phone:'0571234567', city:'الدمام',  type:'دائم',    address:'حي الشاطئ', company:'', notes:'', visits:8, lastVisit:'05/06/2025', createdAt:'10/11/2024' },
-    { id:'C100005', name:'نورة القحطاني',   phone:'0581234567', city:'الرياض',  type:'جديد',    address:'حي الملقا', company:'', notes:'التواصل فقط واتساب', visits:0, lastVisit:'', createdAt:'25/06/2025' },
-  ];
-  saveData();
-}
+
 
 renderTable();
 updateStats();
