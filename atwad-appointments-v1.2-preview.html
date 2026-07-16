@@ -1358,7 +1358,9 @@ function saveAppt(){
           saveLocationToCustomer(_foundCustomerKey, {mapsLink, lat, lng, locSrc, locVerified});
         }
         resetSaveBtn();
-        showToast('✅ تم إضافة الموعد'); sendAdminNotification(data); closeModal();
+        closeModal();
+        showToast('✅ تم إضافة الموعد');
+        sendAdminNotification(data);
       })
       .catch(e => { resetSaveBtn(); showToast('❌ خطأ: ' + e.message); });
   }
