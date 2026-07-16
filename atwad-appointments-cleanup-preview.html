@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>أطواد — تشخيص المواعيد</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Tajawal', sans-serif; background: #F0F9FF; color: #0C3B5E; font-size: 14px; }
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
+
+.warning-banner {
+  background: #FEF3C7; border: 2px solid #F59E0B; color: #92400E;
+  padding: 14px 20px; text-align: center; font-weight: 700; font-size: 15px;
+  position: sticky; top: 0; z-index: 100;
+}
+
+.header {
+  background: #0C3B5E; color: #fff; padding: 16px 24px;
+  display: flex; align-items: center; gap: 12px;
+}
+.header h1 { font-size: 18px; font-weight: 700; }
+.header .badge { background: #0EA5E9; padding: 4px 12px; border-radius: 20px; font-size: 12px; }
+
+.stats-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px; padding: 20px 24px;
+}
+.stat-card {
+  background: #fff; border-radius: 12px; padding: 16px; text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,.06);
+}
+.stat-card .num { font-size: 28px; font-weight: 700; color: #0C3B5E; }
+.stat-card .lbl { font-size: 12px; color: #6B7280; margin-top: 4px; }
+.stat-card.danger .num { color: #EF4444; }
+.stat-card.warning .num { color: #F59E0B; }
+.stat-card.success .num { color: #10B981; }
+
+.controls {
+  padding: 0 24px 16px;
+  display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+}
+.filter-btn {
+  padding: 7px 16px; border: 1.5px solid #CBD5E1; border-radius: 20px;
+  background: #fff; cursor: pointer; font-family: 'Tajawal', sans-serif;
+  font-size: 13px; color: #374151; transition: all .2s;
+}
+.filter-btn.active { background: #0C3B5E; color: #fff; border-color: #0C3B5E; }
+.search-box {
+  padding: 8px 14px; border: 1.5px solid #CBD5E1; border-radius: 20px;
+  font-family: 'Tajawal', sans-serif; font-size: 13px; min-width: 200px;
+  outline: none;
+}
+.export-btn {
+  padding: 8px 18px; background: #10B981; color: #fff; border: none;
+  border-radius: 20px; cursor: pointer; font-family: 'Tajawal', sans-serif;
+  font-size: 13px; font-weight: 700; margin-right: auto;
+}
+
+.table-wrap { padding: 0 24px 40px; overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; background: #fff;
+  border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+thead { background: #0C3B5E; color: #fff; }
+th { padding: 12px 10px; font-size: 12px; font-weight: 600; text-align: right; white-space: nowrap; }
+td { padding: 10px 10px; border-bottom: 1px solid #F1F5F9; font-size: 12px; vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #F8FAFC; }
+
+.dup-group { background: #FEF9C3 !important; }
+.dup-group:hover td { background: #FEF3C7 !important; }
+
+.badge-type {
+  display: inline-block; padding: 3px 10px; border-radius: 12px;
+  font-size: 11px; font-weight: 700; white-space: nowrap;
+}
+.badge-real { background: #D1FAE5; color: #065F46; }
+.badge-dup  { background: #FEF3C7; color: #92400E; }
+.badge-test { background: #FCE7F3; color: #9D174D; }
+
+.copy-key {
+  background: #EFF6FF; border: 1px solid #BFDBFE; color: #1D4ED8;
+  border-radius: 6px; padding: 3px 8px; cursor: pointer;
+  font-family: monospace; font-size: 10px; white-space: nowrap;
+}
+.copy-key:hover { background: #DBEAFE; }
+
+.dup-marker {
+  display: inline-block; background: #FEF3C7; border: 1px solid #F59E0B;
+  border-radius: 10px; padding: 2px 8px; font-size: 10px; color: #92400E;
+  font-weight: 700;
+}
+
+.loading { text-align: center; padding: 60px; color: #6B7280; font-size: 16px; }
+.no-data { text-align: center; padding: 40px; color: #9CA3AF; }
+
+.group-header td {
+  background: #FFF7ED !important; color: #92400E; font-weight: 700;
+  font-size: 11px; padding: 6px 10px;
+}
+
+@media (max-width: 768px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); padding: 12px; }
+  .table-wrap { padding: 0 12px 40px; }
+  .controls { padding: 0 12px 12px; }
+  th, td { padding: 8px 6px; font-size: 11px; }
+}
+</style>
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+</head>
+<body>
+
+<div class="warning-banner">
+  ⚠️ وضع تشخيص فقط — لا يتم حذف أو تعديل أي بيانات في Firebase
+</div>
+
+<div class="header">
+  <div>
+    <h1>🔍 تشخيص سجلات المواعيد</h1>
+    <div style="font-size:12px;opacity:.7;margin-top:4px;">قراءة للعرض فقط — appointments</div>
+  </div>
+  <div class="badge" id="connBadge">⏳ جاري التحميل...</div>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="num" id="sTotal">—</div>
+    <div class="lbl">إجمالي السجلات</div>
+  </div>
+  <div class="stat-card success">
+    <div class="num" id="sUnique">—</div>
+    <div class="lbl">سجلات فريدة</div>
+  </div>
+  <div class="stat-card danger">
+    <div class="num" id="sDups">—</div>
+    <div class="lbl">مكررة محتملة</div>
+  </div>
+  <div class="stat-card warning">
+    <div class="num" id="sDupGroups">—</div>
+    <div class="lbl">مجموعات تكرار</div>
+  </div>
+  <div class="stat-card">
+    <div class="num" id="sPending">—</div>
+    <div class="lbl">في الانتظار</div>
+  </div>
+  <div class="stat-card success">
+    <div class="num" id="sDone">—</div>
+    <div class="lbl">منجزة</div>
+  </div>
+</div>
+
+<!-- Controls -->
+<div class="controls">
+  <button class="filter-btn active" onclick="setFilter('all',this)">الكل</button>
+  <button class="filter-btn" onclick="setFilter('pending',this)">في الانتظار</button>
+  <button class="filter-btn" onclick="setFilter('done',this)">منجزة</button>
+  <button class="filter-btn" onclick="setFilter('dup',this)">🔁 مكررة محتملة</button>
+  <input class="search-box" type="text" id="searchInput" placeholder="بحث بالاسم أو الجوال..." oninput="renderTable()">
+  <button class="export-btn" onclick="exportCSV()">📥 تصدير CSV</button>
+</div>
+
+<!-- Table -->
+<div class="table-wrap">
+  <div class="loading" id="loadingMsg">⏳ جاري تحميل البيانات من Firebase...</div>
+  <table id="mainTable" style="display:none">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Firebase Key</th>
+        <th>اسم العميل</th>
+        <th>الجوال</th>
+        <th>التاريخ</th>
+        <th>الوقت</th>
+        <th>الخدمة</th>
+        <th>الفني</th>
+        <th>الحالة</th>
+        <th>createdAt</th>
+        <th>updatedAt</th>
+        <th>نوع السجل</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+  <div class="no-data" id="noData" style="display:none">لا توجد سجلات مطابقة</div>
+</div>
+
+<script>
+// ===== FIREBASE INIT =====
+var db = null;
+try {
+  firebase.initializeApp({databaseURL:'https://atwad-booking-default-rtdb.firebaseio.com'});
+  db = firebase.database();
+} catch(e) { console.log('Firebase init:', e); }
+
+// ===== STATE =====
+var allRecords = [];    // جميع السجلات الخام
+var dupKeys = new Set(); // مفاتيح السجلات المكررة
+var dupGroupMap = {};   // مجموعات التكرار
+var currentFilter = 'all';
+
+// ===== NORMALIZE =====
+function normalizePhone(p) {
+  return (p||'').replace(/\s+/g,'').replace(/^00966/,'0').replace(/^\+966/,'0');
+}
+
+function makeDedupKey(rec) {
+  // الاعتماد على: phone + date + time (الخدمة كمعلومة مساعدة فقط)
+  return normalizePhone(rec.phone) + '|' + (rec.date||'') + '|' + (rec.time||'');
+}
+
+function fmtDate(d) {
+  if(!d) return '—';
+  try { return new Date(d).toLocaleDateString('ar-SA'); } catch { return d; }
+}
+
+function fmtDateTime(d) {
+  if(!d) return '—';
+  try {
+    var dt = new Date(d);
+    return dt.toLocaleDateString('ar-SA') + ' ' + dt.toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
+  } catch { return d; }
+}
+
+// ===== DETECT DUPLICATES =====
+function detectDuplicates(records) {
+  var groups = {};
+  records.forEach(function(r) {
+    var k = makeDedupKey(r);
+    if(!groups[k]) groups[k] = [];
+    groups[k].push(r._fbKey);
+  });
+
+  dupKeys = new Set();
+  dupGroupMap = {};
+  var groupCount = 0;
+
+  Object.keys(groups).forEach(function(k) {
+    if(groups[k].length > 1) {
+      groupCount++;
+      var gId = 'G' + groupCount;
+      groups[k].forEach(function(fbKey) {
+        dupKeys.add(fbKey);
+        dupGroupMap[fbKey] = gId;
+      });
+    }
+  });
+
+  return groupCount;
+}
+
+// ===== CLASSIFY RECORD =====
+function classifyRecord(rec) {
+  if(dupKeys.has(rec._fbKey)) return 'dup';
+  // تصنيف تجريبي محتمل: أسماء شائعة في بيانات الاختبار
+  var testNames = ['Abdul Aziz','Mr. adel','test','تجريبي','demo'];
+  var name = (rec.client||'').toLowerCase();
+  for(var i=0;i<testNames.length;i++) {
+    if(name.indexOf(testNames[i].toLowerCase()) !== -1) return 'test';
+  }
+  return 'real';
+}
+
+// ===== LOAD DATA =====
+function loadData() {
+  if(!db) {
+    document.getElementById('connBadge').textContent = '❌ خطأ في الاتصال';
+    document.getElementById('loadingMsg').textContent = '❌ تعذر الاتصال بـ Firebase';
+    return;
+  }
+
+  db.ref('appointments').once('value', function(snap) {
+    var records = [];
+    snap.forEach(function(child) {
+      var v = child.val();
+      records.push(Object.assign({}, v, {_fbKey: child.key}));
+    });
+
+    allRecords = records;
+    var dupGroups = detectDuplicates(records);
+    var uniqueCount = records.length - dupKeys.size + dupGroups;
+
+    // Console logs
+    console.log('Appointments raw count:', records.length);
+    console.log('Duplicate groups:', dupGroups);
+    console.log('Unique logical appointments:', uniqueCount);
+
+    // Update stats
+    document.getElementById('sTotal').textContent = records.length;
+    document.getElementById('sUnique').textContent = uniqueCount;
+    document.getElementById('sDups').textContent = dupKeys.size;
+    document.getElementById('sDupGroups').textContent = dupGroups;
+    document.getElementById('sPending').textContent = records.filter(r=>(r.status||'pending')==='pending').length;
+    document.getElementById('sDone').textContent = records.filter(r=>r.status==='done').length;
+
+    document.getElementById('connBadge').textContent = '✅ متصل • ' + records.length + ' سجل';
+    document.getElementById('loadingMsg').style.display = 'none';
+    document.getElementById('mainTable').style.display = '';
+
+    renderTable();
+
+  }, function(err) {
+    document.getElementById('connBadge').textContent = '❌ خطأ';
+    document.getElementById('loadingMsg').textContent = '❌ خطأ: ' + err.message;
+  });
+}
+
+// ===== FILTER =====
+var activeFilterBtn = null;
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTable();
+}
+
+// ===== RENDER TABLE =====
+function renderTable() {
+  var search = (document.getElementById('searchInput').value||'').trim().toLowerCase();
+
+  var filtered = allRecords.filter(function(r) {
+    // فلتر النوع
+    if(currentFilter === 'pending' && (r.status||'pending') !== 'pending') return false;
+    if(currentFilter === 'done' && r.status !== 'done') return false;
+    if(currentFilter === 'dup' && !dupKeys.has(r._fbKey)) return false;
+    // فلتر البحث
+    if(search) {
+      var hay = ((r.client||'') + (r.phone||'')).toLowerCase();
+      if(hay.indexOf(search) === -1) return false;
+    }
+    return true;
+  });
+
+  // ترتيب: المكررة أولاً مجمعة، ثم الباقي بالتاريخ
+  filtered.sort(function(a,b) {
+    var ga = dupGroupMap[a._fbKey]||'ZZZ';
+    var gb = dupGroupMap[b._fbKey]||'ZZZ';
+    if(ga !== gb) return ga.localeCompare(gb);
+    return ((a.date||'')+(a.time||'')).localeCompare((b.date||'')+(b.time||''));
+  });
+
+  var tbody = document.getElementById('tableBody');
+  if(filtered.length === 0) {
+    tbody.innerHTML = '';
+    document.getElementById('noData').style.display = '';
+    return;
+  }
+  document.getElementById('noData').style.display = 'none';
+
+  var html = '';
+  var lastGroup = null;
+  var rowNum = 0;
+
+  filtered.forEach(function(r) {
+    rowNum++;
+    var isDup = dupKeys.has(r._fbKey);
+    var gId = dupGroupMap[r._fbKey];
+    var type = classifyRecord(r);
+    var rowClass = isDup ? 'dup-group' : '';
+
+    // إضافة رأس المجموعة عند بداية كل مجموعة تكرار
+    if(isDup && gId !== lastGroup) {
+      lastGroup = gId;
+      html += '<tr class="group-header"><td colspan="12">🔁 مجموعة تكرار ' + gId + ' — نفس الجوال + التاريخ + الوقت</td></tr>';
+    }
+    if(!isDup) lastGroup = null;
+
+    var typeBadge = type === 'dup'
+      ? '<span class="badge-type badge-dup">🔁 مكرر محتمل</span>'
+      : type === 'test'
+      ? '<span class="badge-type badge-test">🧪 تجريبي محتمل</span>'
+      : '<span class="badge-type badge-real">✅ حقيقي محتمل</span>';
+
+    var statusLabel = {
+      pending:'⏳ انتظار', confirmed:'✅ مؤكد',
+      done:'🎉 منجز', cancelled:'❌ ملغي'
+    }[r.status||'pending'] || r.status || '—';
+
+    html += '<tr class="' + rowClass + '">'
+      + '<td>' + rowNum + (isDup ? ' <span class="dup-marker">' + gId + '</span>' : '') + '</td>'
+      + '<td><button class="copy-key" onclick="copyKey(\'' + r._fbKey + '\')" title="نسخ المفتاح">' + r._fbKey.substring(0,12) + '…</button></td>'
+      + '<td>' + (r.client||'—') + '</td>'
+      + '<td dir="ltr">' + (normalizePhone(r.phone)||'—') + '</td>'
+      + '<td>' + (r.date||'—') + '</td>'
+      + '<td>' + (r.time||'—') + '</td>'
+      + '<td>' + (r.service||'—') + '</td>'
+      + '<td>' + (r.tech||'—') + '</td>'
+      + '<td>' + statusLabel + '</td>'
+      + '<td style="font-size:10px;color:#6B7280;">' + fmtDateTime(r.createdAt) + '</td>'
+      + '<td style="font-size:10px;color:#6B7280;">' + fmtDateTime(r.updatedAt) + '</td>'
+      + '<td>' + typeBadge + '</td>'
+      + '</tr>';
+  });
+
+  tbody.innerHTML = html;
+}
+
+// ===== COPY KEY =====
+function copyKey(key) {
+  navigator.clipboard.writeText(key).then(function() {
+    showToast('✅ تم نسخ المفتاح: ' + key);
+  }).catch(function() {
+    // fallback
+    var el = document.createElement('textarea');
+    el.value = key;
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+    showToast('✅ تم نسخ المفتاح');
+  });
+}
+
+// ===== EXPORT CSV =====
+function exportCSV() {
+  var headers = ['Firebase Key','اسم العميل','الجوال','التاريخ','الوقت','الخدمة','الفني','الحالة','createdAt','updatedAt','نوع السجل','مجموعة التكرار'];
+  var rows = allRecords.map(function(r) {
+    var type = classifyRecord(r);
+    var typeLabel = type==='dup'?'مكرر محتمل':type==='test'?'تجريبي محتمل':'حقيقي محتمل';
+    return [
+      r._fbKey,
+      r.client||'',
+      normalizePhone(r.phone)||'',
+      r.date||'',
+      r.time||'',
+      r.service||'',
+      r.tech||'',
+      r.status||'',
+      r.createdAt||'',
+      r.updatedAt||'',
+      typeLabel,
+      dupGroupMap[r._fbKey]||''
+    ].map(function(v){ return '"'+(v+'').replace(/"/g,'""')+'"'; }).join(',');
+  });
+
+  var csv = '\uFEFF' + headers.join(',') + '\n' + rows.join('\n');
+  var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = 'appointments-diagnosis-' + new Date().toISOString().split('T')[0] + '.csv';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+// ===== TOAST =====
+function showToast(msg) {
+  var t = document.createElement('div');
+  t.textContent = msg;
+  t.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#0C3B5E;color:#fff;padding:10px 20px;border-radius:10px;font-family:Tajawal,sans-serif;font-size:14px;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.2);';
+  document.body.appendChild(t);
+  setTimeout(function(){ document.body.removeChild(t); }, 2500);
+}
+
+// ===== INIT =====
+loadData();
+</script>
+</body>
+</html>
