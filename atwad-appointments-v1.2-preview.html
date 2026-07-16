@@ -593,6 +593,7 @@ const TECH_COLORS = { Abrar:'#0EA5E9', Shoib:'#10B981', Suhail:'#8B5CF6' };
 // ===== DUAL SOURCE STATE =====
 let firebaseAppointments = []; // من مسار appointments
 let firebaseBookings = [];     // من مسار bookings — يُحمَّل مرة واحدة
+var isSavingAppointment = false; // حماية من النقر المزدوج
 
 function normalizePhone(p) {
   return (p || '').replace(/\s+/g, '').replace(/^00966/, '0').replace(/^\+966/, '0');
@@ -1240,7 +1241,17 @@ function resetLocFields() {
   document.getElementById('clientFoundMsg').style.display = 'none';
 }
 
+function setSaveBtn(loading) {
+  var btn = document.querySelector('#apptModal .btn-save');
+  if(!btn) return;
+  btn.disabled = loading;
+  btn.textContent = loading ? '⏳ جاري الحفظ...' : '💾 حفظ الموعد';
+}
+
 function saveAppt(){
+  // حماية من النقر المزدوج
+  if(isSavingAppointment) return;
+
   const client=document.getElementById('f_client').value.trim();
   const phone=document.getElementById('f_phone').value.trim();
   const address=document.getElementById('f_address').value.trim();
@@ -1248,6 +1259,10 @@ function saveAppt(){
   const tech=document.getElementById('f_tech').value;
   const date=document.getElementById('f_date').value;
   if(!client||!phone||!service||!tech||!date) return showToast('❌ أكمل الحقول المطلوبة');
+
+  // تفعيل الحماية وتعطيل الزر
+  isSavingAppointment = true;
+  setSaveBtn(true);
 
   const data = {
     client, phone, address, service, tech,
@@ -1259,6 +1274,12 @@ function saveAppt(){
     duration: 90,
     updatedAt: new Date().toISOString()
   };
+
+  // دالة إعادة التفعيل عند الانتهاء
+  function resetSaveBtn() {
+    isSavingAppointment = false;
+    setSaveBtn(false);
+  }
 
   // موقع العميل — حقول اختيارية
   var mapsLink = document.getElementById('appointment_maps_link').value.trim();
@@ -1279,7 +1300,7 @@ function saveAppt(){
     data.locationVerified = locVerified;
   }
 
-  if(!db) { showToast('❌ Firebase غير متاح'); return; }
+  if(!db) { showToast('❌ Firebase غير متاح'); resetSaveBtn(); return; }
 
   if(editingFirebaseKey) {
     // هل تغيّر التاريخ؟ إذا نعم اسأل الموظف عن إلغاء الموعد القديم
@@ -1315,18 +1336,20 @@ function saveAppt(){
           delete newData.previousDate;
           db.ref('appointments').push(newData)
             .then(function() {
+              resetSaveBtn();
               showToast('✅ تم إلغاء الموعد القديم وإنشاء موعد جديد بتاريخ ' + date);
               editingOriginalDate = '';
               closeModal();
             })
-            .catch(function(e){ showToast('❌ خطأ عند إنشاء الموعد الجديد: ' + e.message); });
+            .catch(function(e){ resetSaveBtn(); showToast('❌ خطأ عند إنشاء الموعد الجديد: ' + e.message); });
         } else {
+          resetSaveBtn();
           showToast('✅ تم تحديث الموعد');
           editingOriginalDate = '';
           closeModal();
         }
       })
-      .catch(e => showToast('❌ خطأ: ' + e.message));
+      .catch(e => { resetSaveBtn(); showToast('❌ خطأ: ' + e.message); });
   } else {
     data.createdAt = new Date().toISOString();
     db.ref('appointments').push(data)
@@ -1334,9 +1357,10 @@ function saveAppt(){
         if(document.getElementById('chk_save_to_customer').checked && _foundCustomerKey && mapsLink) {
           saveLocationToCustomer(_foundCustomerKey, {mapsLink, lat, lng, locSrc, locVerified});
         }
+        resetSaveBtn();
         showToast('✅ تم إضافة الموعد'); sendAdminNotification(data); closeModal();
       })
-      .catch(e => showToast('❌ خطأ: ' + e.message));
+      .catch(e => { resetSaveBtn(); showToast('❌ خطأ: ' + e.message); });
   }
 }
 
