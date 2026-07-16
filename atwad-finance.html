@@ -322,7 +322,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 
 <script>
 // ===== DATA =====
-let entries = JSON.parse(localStorage.getItem('atwad_finance') || '[]');
+let entries = []; // loaded from Firebase
 
 // مزامنة Firebase
 function syncFromFirebase() {
@@ -334,7 +334,7 @@ function syncFromFirebase() {
     });
     if(fbData.length > 0) {
       entries = fbData;
-      localStorage.setItem('atwad_finance', JSON.stringify(entries));
+      // data saved to Firebase
     }
     renderAll();
 syncFromFirebase();
@@ -344,7 +344,7 @@ let period = 'month';
 let entryType = 'income';
 
 function saveData(){
-  localStorage.setItem('atwad_finance', JSON.stringify(entries));
+  // data saved to Firebase
   if(db) {
     entries.forEach(function(e) {
       if(e._fbKey) {

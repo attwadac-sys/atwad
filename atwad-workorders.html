@@ -466,7 +466,7 @@ function importWOFromFirebase() {
   }, function(){ btn.textContent='📥 استيراد من الحجوزات'; btn.disabled=false; showToast('❌ خطأ في الاتصال'); });
 }
 // ===== STATE =====
-let workOrders = JSON.parse(localStorage.getItem('atwad_workorders') || '[]');
+let workOrders = []; // loaded from Firebase
 
 // مزامنة Firebase
 function syncFromFirebase() {
@@ -479,14 +479,14 @@ function syncFromFirebase() {
     });
     if(fbData.length > 0) {
       workOrders = fbData;
-      localStorage.setItem('atwad_workorders', JSON.stringify(workOrders));
+      // data saved to Firebase
     }
     updateStats();
     renderWOs();
     document.getElementById('fbDot') && (document.getElementById('fbDot').className='fb-dot connected');
   });
 }
-let clients = []; try { clients = JSON.parse(localStorage.getItem('atwad_clients') || '[]'); } catch {}
+let clients = []; // loaded from Firebase
 let currentFilter = 'all';
 let currentStep = 1;
 let editingWO = null;
@@ -500,7 +500,7 @@ const RATING_LABELS = ['','ضعيف','مقبول','جيد','جيد جداً','م
 
 function genId(){ return 'WO-' + String(workOrders.length + 1001).padStart(5,'0'); }
 function saveData(){
-  localStorage.setItem('atwad_workorders', JSON.stringify(workOrders));
+  // data saved to Firebase
   // حفظ في Firebase أيضاً
   if(db) {
     workOrders.forEach(function(wo) {
@@ -1079,16 +1079,7 @@ function shareWhatsapp(){
 // ===== TOAST =====
 function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2800); }
 
-// ===== DEMO DATA =====
-if(workOrders.length===0){
-  workOrders=[
-    {id:'WO-01001',status:'invoiced',client:'Dr. Hasan Al Shahri',phone:'0555519923',address:'Al Bsatin',service:'تنظيف مكيف',actype:'سبليت',units:3,tech:'Abrar',date:today(),time:'09:00',problem:'تنظيف دوري',parts:'',price:300,partsCost:0,discount:0,total:300,payment:'كاش',rating:5,createdAt:new Date().toISOString()},
-    {id:'WO-01002',status:'inprogress',client:'Farash Al Shareef',phone:'0543322162',address:'Obur North',service:'صيانة دورية',actype:'سبليت',units:1,tech:'Shoib',date:today(),time:'11:30',problem:'صوت غير طبيعي',parts:'كباستر 35 ميكروفاراد',price:150,partsCost:80,discount:0,total:230,payment:'تحويل',rating:0,createdAt:new Date().toISOString()},
-    {id:'WO-01003',status:'open',client:'أم سعود السلامة',phone:'0504332700',address:'Al Salamah',service:'تعبئة غاز',actype:'سبليت',units:2,tech:'Suhail',date:today(),time:'14:00',problem:'المكيف لا يبرد',parts:'فريون R22',price:200,partsCost:120,discount:20,total:300,payment:'كاش',rating:0,createdAt:new Date().toISOString()},
-    {id:'WO-01004',status:'done',client:'نوره زبونة',phone:'0596615884',address:'Al Rehab',service:'تنظيف مكيف',actype:'شباك',units:1,tech:'Abrar',date:today(),time:'10:00',problem:'تنظيف عادي',parts:'',price:110,partsCost:0,discount:0,total:110,payment:'كاش',rating:4,createdAt:new Date().toISOString()},
-  ];
-  saveData();
-}
+// data loads from Firebase automatically
 
 updateStats();
 renderWOs();

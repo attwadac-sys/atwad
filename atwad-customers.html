@@ -623,7 +623,7 @@ let selectedType = '';
 const avatarColors = ['#0EA5E9','#8B5CF6','#10B981','#F59E0B','#EF4444','#EC4899','#0C3B5E'];
 
 function saveData() {
-  localStorage.setItem('atwad_clients', JSON.stringify(clients));
+  // data saved to Firebase
 
   // حفظ في Firebase
   if(db) {
@@ -869,7 +869,7 @@ function deleteClient(id) {
   }
 
   clients = clients.filter(function(c){ return c.id !== id; });
-  localStorage.setItem('atwad_clients', JSON.stringify(clients));
+  // data saved to Firebase
 
   // تحديث فوري للعدادات
   updateStats();
