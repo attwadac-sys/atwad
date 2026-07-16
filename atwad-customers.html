@@ -564,7 +564,7 @@ try {
 } catch(e){ console.log('Firebase:', e); }
 
 // ========== DATA ==========
-let clients = JSON.parse(localStorage.getItem('atwad_clients') || '[]');
+let clients = []; // always load from Firebase
 
 // مزامنة Firebase — استخدام on('value') لمراقبة التغييرات مباشرة
 // هذا يضمن تحديث العدادات فور أي إضافة/حذف/تعديل في Firebase
