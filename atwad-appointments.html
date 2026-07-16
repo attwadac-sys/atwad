@@ -298,8 +298,8 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
         <span id="fbStatusText">جاري الاتصال...</span>
       </div>
       <div class="view-toggle">
-        <button class="view-btn" id="vWeek" onclick="switchView('week')">📆 أسبوع</button>
-        <button class="view-btn active" id="vList" onclick="switchView('list')">📋 قائمة</button>
+        <button class="view-btn active" id="vWeek" onclick="switchView('week')">📆 أسبوع</button>
+        <button class="view-btn" id="vList" onclick="switchView('list')">📋 قائمة</button>
       </div>
       <button id="fridayBtn" onclick="toggleFriday()" style="padding:7px 12px;border-radius:10px;border:none;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;background:#FEF3C7;color:#92400E;">&#9940; الجمعة</button>
       <div style="position:relative;display:inline-block;">
@@ -336,10 +336,10 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
     <button class="tech-chip" onclick="filterTech('Suhail',this)">👷 سهيل</button>
   </div>
 
-  <div id="weekView" style="display:none;padding:0 22px 30px;">
+  <div id="weekView" style="display:block;padding:0 22px 30px;">
     <div class="week-grid" id="weekGrid"></div>
   </div>
-  <div class="list-view" id="listView"></div>
+  <div class="list-view" id="listView" style="display:none;"></div>
 </div>
 
 <!-- APPOINTMENT MODAL -->
@@ -579,7 +579,7 @@ try {
 // ===== STATE =====
 let appointments = []; // كل البيانات من Firebase
 let currentWeekOffset = 0;
-let currentView = 'list';
+let currentView = 'week';
 let techFilter = 'all';
 let editingId = null;
 let editingFirebaseKey = null;
@@ -809,7 +809,7 @@ function renderWeek(){
 function renderList(){
   let appts = [...appointments];
   if(techFilter!=='all') appts = appts.filter(a=>a.tech===techFilter);
-  appts.sort((a,b)=>((a.date||'')+(a.time||'')).localeCompare((b.date||'')+(b.time||'')));
+  appts.sort((a,b)=>((b.date||'')+(b.time||'')).localeCompare((a.date||'')+(a.time||'')));
   const grouped = {};
   appts.forEach(a=>{ if(!grouped[a.date]) grouped[a.date]=[]; grouped[a.date].push(a); });
   const bm = { confirmed:'sp-confirmed', pending:'sp-pending', done:'sp-done', cancelled:'sp-cancelled' };
@@ -819,7 +819,7 @@ function renderList(){
     return;
   }
   let html = '';
-  Object.keys(grouped).sort().forEach(date=>{
+  Object.keys(grouped).sort().reverse().forEach(date=>{
     const list = grouped[date];
     html += `<div class="day-section"><div class="day-section-header"><span class="day-section-date">${formatDate(date)}</span><span class="day-section-badge">${list.length} موعد</span>${date===today()?'<span style="background:var(--sky);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;">اليوم</span>':''}</div>`;
     list.forEach(a=>{
