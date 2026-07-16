@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>أطواد — تنظيف المواعيد V2</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Tajawal', sans-serif; background: #F0F9FF; color: #0C3B5E; font-size: 14px; }
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
+
+.warning-banner {
+  background: #FEF3C7; border-bottom: 2px solid #F59E0B; color: #92400E;
+  padding: 14px 20px; text-align: center; font-weight: 700; font-size: 15px;
+  position: sticky; top: 0; z-index: 100;
+}
+.header {
+  background: #0C3B5E; color: #fff; padding: 16px 24px;
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.header h1 { font-size: 18px; font-weight: 700; }
+.badge { background: #0EA5E9; padding: 4px 12px; border-radius: 20px; font-size: 12px; }
+
+.stats-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px; padding: 20px 24px;
+}
+.stat-card {
+  background: #fff; border-radius: 12px; padding: 16px; text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,.06);
+}
+.stat-card .num { font-size: 28px; font-weight: 700; color: #0C3B5E; }
+.stat-card .lbl { font-size: 12px; color: #6B7280; margin-top: 4px; }
+.stat-card.keep .num { color: #10B981; }
+.stat-card.del .num { color: #EF4444; }
+.stat-card.unique .num { color: #0EA5E9; }
+
+.action-bar {
+  padding: 0 24px 20px;
+  display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+}
+.btn-review {
+  padding: 10px 24px; background: #F59E0B; color: #fff; border: none;
+  border-radius: 10px; cursor: pointer; font-family: 'Tajawal', sans-serif;
+  font-size: 14px; font-weight: 700;
+}
+.btn-review:hover { background: #D97706; }
+.btn-delete {
+  padding: 10px 24px; background: #EF4444; color: #fff; border: none;
+  border-radius: 10px; cursor: pointer; font-family: 'Tajawal', sans-serif;
+  font-size: 14px; font-weight: 700; display: none;
+}
+.btn-delete:hover { background: #DC2626; }
+.btn-delete:disabled { background: #9CA3AF; cursor: not-allowed; }
+
+.confirm-box {
+  background: #FEE2E2; border: 1.5px solid #FCA5A5; border-radius: 10px;
+  padding: 12px 18px; display: none; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.confirm-box label { font-size: 13px; color: #991B1B; font-weight: 600; cursor: pointer; }
+.confirm-box input[type=checkbox] { width: 18px; height: 18px; cursor: pointer; }
+
+.table-wrap { padding: 0 24px 40px; overflow-x: auto; }
+table {
+  width: 100%; border-collapse: collapse; background: #fff;
+  border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,.06);
+}
+thead { background: #0C3B5E; color: #fff; }
+th { padding: 12px 10px; font-size: 12px; font-weight: 600; text-align: right; white-space: nowrap; }
+td { padding: 10px; border-bottom: 1px solid #F1F5F9; font-size: 12px; vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+
+.row-keep { background: #F0FDF4; }
+.row-keep:hover td { background: #DCFCE7; }
+.row-delete { background: #FFF1F2; }
+.row-delete:hover td { background: #FFE4E6; }
+.row-unique { }
+.row-unique:hover td { background: #F8FAFC; }
+
+.group-header td {
+  background: #EFF6FF !important; color: #1E40AF;
+  font-weight: 700; font-size: 11px; padding: 8px 10px;
+  border-top: 2px solid #BFDBFE;
+}
+
+.badge-keep { display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;background:#D1FAE5;color:#065F46; }
+.badge-del  { display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;background:#FEE2E2;color:#991B1B; }
+.badge-uniq { display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;background:#F0F9FF;color:#0369A1; }
+
+.copy-key {
+  background: #EFF6FF; border: 1px solid #BFDBFE; color: #1D4ED8;
+  border-radius: 6px; padding: 3px 8px; cursor: pointer;
+  font-family: monospace; font-size: 10px; white-space: nowrap;
+}
+
+.loading { text-align: center; padding: 60px; color: #6B7280; font-size: 16px; }
+
+/* Modal */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.5);
+  display: none; align-items: center; justify-content: center; z-index: 200;
+  padding: 20px;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: #fff; border-radius: 16px; max-width: 700px; width: 100%;
+  max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.3);
+}
+.modal-header {
+  background: #EF4444; color: #fff; padding: 16px 20px;
+  border-radius: 16px 16px 0 0; position: sticky; top: 0;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.modal-header h3 { font-size: 16px; font-weight: 700; }
+.modal-close { background: none; border: none; color: #fff; font-size: 20px; cursor: pointer; }
+.modal-body { padding: 20px; }
+.modal-item {
+  border: 1.5px solid #FCA5A5; border-radius: 10px; padding: 14px;
+  margin-bottom: 12px; background: #FFF1F2;
+}
+.modal-item .mi-name { font-size: 15px; font-weight: 700; color: #991B1B; margin-bottom: 8px; }
+.modal-item .mi-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+.modal-item .mi-field { font-size: 12px; color: #374151; }
+.modal-item .mi-field span { font-weight: 600; color: #0C3B5E; }
+.modal-item .mi-key {
+  font-family: monospace; font-size: 11px; background: #FEE2E2;
+  padding: 4px 10px; border-radius: 6px; color: #991B1B; margin-top: 6px;
+  word-break: break-all;
+}
+.modal-footer { padding: 16px 20px; border-top: 1px solid #F1F5F9; }
+
+/* Done screen */
+.done-screen {
+  display: none; text-align: center; padding: 60px 24px;
+}
+.done-screen .icon { font-size: 64px; margin-bottom: 16px; }
+.done-screen h2 { font-size: 22px; font-weight: 700; color: #065F46; margin-bottom: 8px; }
+.done-screen p { color: #6B7280; font-size: 15px; }
+
+@media (max-width: 768px) {
+  .stats-grid { grid-template-columns: repeat(2,1fr); padding: 12px; }
+  .table-wrap { padding: 0 8px 40px; }
+  th, td { padding: 8px 6px; font-size: 11px; }
+  .action-bar { padding: 0 12px 16px; }
+}
+</style>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+</head>
+<body>
+
+<div class="warning-banner">
+  ⚠️ أداة تنظيف آمنة — يتم الاحتفاظ بسجل واحد على الأقل من كل مجموعة تكرار
+</div>
+
+<div class="header">
+  <div>
+    <h1>🧹 تنظيف المواعيد المكررة — V2</h1>
+    <div style="font-size:12px;opacity:.7;margin-top:4px;">يُحذف فقط ما تؤكدينه بعد المراجعة</div>
+  </div>
+  <div class="badge" id="connBadge">⏳ جاري التحميل...</div>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="num" id="sTotal">—</div>
+    <div class="lbl">إجمالي السجلات الحالية</div>
+  </div>
+  <div class="stat-card unique">
+    <div class="num" id="sUnique">—</div>
+    <div class="lbl">سجلات فريدة + سجلات الاحتفاظ</div>
+  </div>
+  <div class="stat-card keep">
+    <div class="num" id="sKeep">—</div>
+    <div class="lbl">✅ ستبقى بعد التنظيف</div>
+  </div>
+  <div class="stat-card del">
+    <div class="num" id="sDel">—</div>
+    <div class="lbl">🗑️ مرشحة للحذف</div>
+  </div>
+</div>
+
+<!-- Action bar -->
+<div class="action-bar">
+  <button class="btn-review" id="btnReview" onclick="openReviewModal()" disabled>
+    🔍 مراجعة السجلات المرشحة للحذف
+  </button>
+
+  <div class="confirm-box" id="confirmBox">
+    <input type="checkbox" id="confirmChk" onchange="toggleDeleteBtn()">
+    <label for="confirmChk">أؤكد أنني راجعت القائمة وأريد حذف النسخ المكررة فقط</label>
+  </div>
+
+  <button class="btn-delete" id="btnDelete" onclick="executeDelete()">
+    🗑️ حذف النسخ المكررة المحددة
+  </button>
+</div>
+
+<!-- Table -->
+<div class="table-wrap" id="tableWrap">
+  <div class="loading" id="loadingMsg">⏳ جاري تحميل البيانات...</div>
+  <table id="mainTable" style="display:none">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>القرار</th>
+        <th>المجموعة</th>
+        <th>Firebase Key</th>
+        <th>اسم العميل</th>
+        <th>الجوال</th>
+        <th>التاريخ</th>
+        <th>الوقت</th>
+        <th>الخدمة</th>
+        <th>الفني</th>
+        <th>الحالة</th>
+        <th>createdAt</th>
+        <th>سبب الاختيار</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+</div>
+
+<!-- Done screen -->
+<div class="done-screen" id="doneScreen">
+  <div class="icon">✅</div>
+  <h2 id="doneTitle">تم التنظيف بنجاح</h2>
+  <p id="doneMsg"></p>
+</div>
+
+<!-- Review Modal -->
+<div class="modal-overlay" id="reviewModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>🗑️ السجلات المرشحة للحذف</h3>
+      <button class="modal-close" onclick="closeReviewModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer">
+      <button onclick="confirmReview()" style="width:100%;padding:12px;background:#EF4444;color:#fff;border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">
+        ✅ راجعت القائمة — أكمل
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== FIREBASE =====
+var db = null;
+try {
+  firebase.initializeApp({databaseURL:'https://atwad-booking-default-rtdb.firebaseio.com'});
+  db = firebase.database();
+} catch(e) { console.log('Firebase:', e); }
+
+// ===== STATE =====
+var allRecords   = [];
+var keepKeys     = new Set(); // مفاتيح للاحتفاظ
+var deleteKeys   = new Set(); // مفاتيح للحذف
+var keepReasons  = {};        // سبب اختيار كل سجل للاحتفاظ
+var dupGroupMap  = {};        // fbKey → groupId
+var groupDecisions = {};      // groupId → { keepKey, deleteKeys[] }
+
+// ===== HELPERS =====
+function normalizePhone(p) {
+  return (p||'').replace(/\s+/g,'').replace(/^00966/,'0').replace(/^\+966/,'0');
+}
+function makeDedupKey(r) {
+  return normalizePhone(r.phone) + '|' + (r.date||'') + '|' + (r.time||'');
+}
+function scoreRecord(r) {
+  // درجة أعلى = أفضل للاحتفاظ
+  var score = 0;
+  if(r.createdAt) score += 100;                     // له createdAt
+  if(r.client)    score += 10;
+  if(r.phone)     score += 10;
+  if(r.service)   score += 5;
+  if(r.tech)      score += 5;
+  if(r.address)   score += 5;
+  if(r.notes)     score += 3;
+  if(r.status && r.status !== 'pending') score += 20; // حالة متقدمة أفضل
+  return score;
+}
+function fmtDateTime(d) {
+  if(!d) return '—';
+  try { return new Date(d).toLocaleString('ar-SA',{dateStyle:'short',timeStyle:'short'}); } catch { return d; }
+}
+function statusLabel(s) {
+  return {pending:'⏳ انتظار',confirmed:'✅ مؤكد',done:'🎉 منجز',cancelled:'❌ ملغي'}[s||'pending'] || s || '—';
+}
+
+// ===== DECIDE WHICH TO KEEP =====
+function decideGroups(records) {
+  // تجميع حسب مفتاح التكرار
+  var groups = {};
+  records.forEach(function(r) {
+    var k = makeDedupKey(r);
+    if(!groups[k]) groups[k] = [];
+    groups[k].push(r);
+  });
+
+  keepKeys   = new Set();
+  deleteKeys = new Set();
+  keepReasons = {};
+  dupGroupMap = {};
+  groupDecisions = {};
+  var groupNum = 0;
+
+  Object.keys(groups).forEach(function(k) {
+    var grp = groups[k];
+    if(grp.length === 1) {
+      // فريد — احتفظ دائماً
+      keepKeys.add(grp[0]._fbKey);
+      keepReasons[grp[0]._fbKey] = 'سجل فريد';
+      return;
+    }
+
+    // مجموعة تكرار
+    groupNum++;
+    var gId = 'G' + groupNum;
+
+    grp.forEach(function(r){ dupGroupMap[r._fbKey] = gId; });
+
+    // اختر الأفضل: الأقدم createdAt أولاً
+    var withDate = grp.filter(function(r){ return !!r.createdAt; });
+    var chosen = null;
+    var reason = '';
+
+    if(withDate.length > 0) {
+      // الأقدم createdAt
+      chosen = withDate.reduce(function(a,b){
+        return new Date(a.createdAt) <= new Date(b.createdAt) ? a : b;
+      });
+      reason = 'الأقدم createdAt';
+    } else {
+      // لا يوجد createdAt → الأكثر اكتمالاً
+      chosen = grp.reduce(function(a,b){
+        return scoreRecord(a) >= scoreRecord(b) ? a : b;
+      });
+      reason = 'الأكثر اكتمالاً (لا يوجد createdAt)';
+      // تعادل → أول مفتاح
+      var maxScore = scoreRecord(chosen);
+      var tied = grp.filter(function(r){ return scoreRecord(r) === maxScore; });
+      if(tied.length > 1) {
+        chosen = tied.sort(function(a,b){ return a._fbKey.localeCompare(b._fbKey); })[0];
+        reason = 'أول Firebase Key (تعادل في البيانات)';
+      }
+    }
+
+    keepKeys.add(chosen._fbKey);
+    keepReasons[chosen._fbKey] = reason;
+
+    var toDelete = grp.filter(function(r){ return r._fbKey !== chosen._fbKey; });
+    groupDecisions[gId] = { keepKey: chosen._fbKey, deleteList: toDelete };
+    toDelete.forEach(function(r){ deleteKeys.add(r._fbKey); });
+  });
+}
+
+// ===== LOAD =====
+function loadData() {
+  if(!db) {
+    document.getElementById('connBadge').textContent = '❌ خطأ في الاتصال';
+    document.getElementById('loadingMsg').textContent = '❌ تعذر الاتصال بـ Firebase';
+    return;
+  }
+
+  db.ref('appointments').once('value', function(snap) {
+    var records = [];
+    snap.forEach(function(child) {
+      records.push(Object.assign({}, child.val(), {_fbKey: child.key}));
+    });
+
+    allRecords = records;
+    decideGroups(records);
+
+    var uniqueCount = records.length - deleteKeys.size;
+
+    // Console logs
+    console.log('Appointments raw count:', records.length);
+    console.log('Will keep:', keepKeys.size);
+    console.log('Will delete:', deleteKeys.size);
+
+    // Stats
+    document.getElementById('sTotal').textContent   = records.length;
+    document.getElementById('sUnique').textContent  = uniqueCount;
+    document.getElementById('sKeep').textContent    = keepKeys.size;
+    document.getElementById('sDel').textContent     = deleteKeys.size;
+
+    document.getElementById('connBadge').textContent = '✅ متصل • ' + records.length + ' سجل';
+    document.getElementById('loadingMsg').style.display = 'none';
+    document.getElementById('mainTable').style.display = '';
+
+    if(deleteKeys.size > 0) {
+      document.getElementById('btnReview').disabled = false;
+    }
+
+    renderTable();
+  }, function(err) {
+    document.getElementById('connBadge').textContent = '❌ خطأ';
+    document.getElementById('loadingMsg').textContent = '❌ ' + err.message;
+  });
+}
+
+// ===== RENDER TABLE =====
+function renderTable() {
+  // ترتيب: المجموعات أولاً (keep قبل delete)، ثم الفريدة
+  var sorted = allRecords.slice().sort(function(a,b) {
+    var ga = dupGroupMap[a._fbKey] || 'ZZZ';
+    var gb = dupGroupMap[b._fbKey] || 'ZZZ';
+    if(ga !== gb) return ga.localeCompare(gb);
+    // داخل المجموعة: keep أولاً
+    var ka = keepKeys.has(a._fbKey) ? 0 : 1;
+    var kb = keepKeys.has(b._fbKey) ? 0 : 1;
+    if(ka !== kb) return ka - kb;
+    return (a.date||'').localeCompare(b.date||'');
+  });
+
+  var html = '';
+  var rowNum = 0;
+  var lastGroup = null;
+
+  sorted.forEach(function(r) {
+    rowNum++;
+    var isKeep   = keepKeys.has(r._fbKey);
+    var isDel    = deleteKeys.has(r._fbKey);
+    var gId      = dupGroupMap[r._fbKey] || '';
+    var rowClass = isKeep && gId ? 'row-keep' : isDel ? 'row-delete' : 'row-unique';
+
+    if(gId && gId !== lastGroup) {
+      lastGroup = gId;
+      var grpInfo = groupDecisions[gId];
+      var delCount = grpInfo ? grpInfo.deleteList.length : 0;
+      html += '<tr class="group-header"><td colspan="13">📦 مجموعة تكرار ' + gId
+        + ' — ' + (1 + delCount) + ' سجلات لنفس الجوال + التاريخ + الوقت'
+        + ' ← ✅ سيبقى 1 &nbsp;|&nbsp; 🗑️ سيُحذف ' + delCount + '</td></tr>';
+    }
+    if(!gId) lastGroup = null;
+
+    var decisionBadge = isDel
+      ? '<span class="badge-del">🗑️ مرشح للحذف</span>'
+      : gId
+      ? '<span class="badge-keep">✅ الاحتفاظ</span>'
+      : '<span class="badge-uniq">🔵 فريد</span>';
+
+    var reason = keepReasons[r._fbKey] || '';
+
+    html += '<tr class="' + rowClass + '">'
+      + '<td>' + rowNum + '</td>'
+      + '<td>' + decisionBadge + '</td>'
+      + '<td style="font-weight:700;color:#1E40AF;">' + (gId||'—') + '</td>'
+      + '<td><button class="copy-key" onclick="copyKey(\'' + r._fbKey + '\')">'
+      +   r._fbKey.substring(0,14) + '…</button></td>'
+      + '<td>' + (r.client||'—') + '</td>'
+      + '<td dir="ltr">' + (normalizePhone(r.phone)||'—') + '</td>'
+      + '<td>' + (r.date||'—') + '</td>'
+      + '<td>' + (r.time||'—') + '</td>'
+      + '<td>' + (r.service||'—') + '</td>'
+      + '<td>' + (r.tech||'—') + '</td>'
+      + '<td>' + statusLabel(r.status) + '</td>'
+      + '<td style="font-size:10px;color:#6B7280;">' + fmtDateTime(r.createdAt) + '</td>'
+      + '<td style="font-size:11px;color:#059669;">' + reason + '</td>'
+      + '</tr>';
+  });
+
+  document.getElementById('tableBody').innerHTML = html;
+}
+
+// ===== REVIEW MODAL =====
+function openReviewModal() {
+  var html = '';
+  var delList = Array.from(deleteKeys).map(function(k){
+    return allRecords.find(function(r){ return r._fbKey === k; });
+  }).filter(Boolean);
+
+  if(delList.length === 0) {
+    html = '<p style="text-align:center;color:#6B7280;padding:30px;">لا توجد سجلات مرشحة للحذف</p>';
+  } else {
+    delList.forEach(function(r) {
+      var gId = dupGroupMap[r._fbKey] || '—';
+      var keepKey = groupDecisions[gId] ? groupDecisions[gId].keepKey : '—';
+      html += '<div class="modal-item">'
+        + '<div class="mi-name">🗑️ ' + (r.client||'—') + '</div>'
+        + '<div class="mi-row">'
+        + '<div class="mi-field">الجوال: <span>' + (normalizePhone(r.phone)||'—') + '</span></div>'
+        + '<div class="mi-field">التاريخ: <span>' + (r.date||'—') + '</span></div>'
+        + '<div class="mi-field">الوقت: <span>' + (r.time||'—') + '</span></div>'
+        + '<div class="mi-field">المجموعة: <span>' + gId + '</span></div>'
+        + '</div>'
+        + '<div class="mi-row">'
+        + '<div class="mi-field">الخدمة: <span>' + (r.service||'—') + '</span></div>'
+        + '<div class="mi-field">الحالة: <span>' + statusLabel(r.status) + '</span></div>'
+        + '<div class="mi-field">createdAt: <span>' + fmtDateTime(r.createdAt) + '</span></div>'
+        + '</div>'
+        + '<div class="mi-key">Firebase Key المحذوف: ' + r._fbKey + '</div>'
+        + '<div class="mi-key" style="background:#D1FAE5;color:#065F46;margin-top:4px;">✅ سيبقى مكانه: ' + keepKey + '</div>'
+        + '</div>';
+    });
+  }
+
+  document.getElementById('modalBody').innerHTML = html;
+  document.getElementById('reviewModal').classList.add('open');
+}
+function closeReviewModal() {
+  document.getElementById('reviewModal').classList.remove('open');
+}
+function confirmReview() {
+  closeReviewModal();
+  document.getElementById('confirmBox').style.display = 'flex';
+  document.getElementById('confirmBox').scrollIntoView({behavior:'smooth'});
+}
+function toggleDeleteBtn() {
+  var chk = document.getElementById('confirmChk').checked;
+  var btn = document.getElementById('btnDelete');
+  btn.style.display = chk ? 'inline-block' : 'none';
+}
+
+// ===== EXECUTE DELETE =====
+function executeDelete() {
+  if(!db) { showToast('❌ Firebase غير متاح'); return; }
+  if(deleteKeys.size === 0) { showToast('لا توجد سجلات للحذف'); return; }
+
+  // Console log قبل الحذف
+  console.log('Will keep:', keepKeys.size, Array.from(keepKeys));
+  console.log('Will delete:', deleteKeys.size, Array.from(deleteKeys));
+
+  // تأكيد نهائي
+  var confirmMsg = 'سيتم حذف ' + deleteKeys.size + ' سجلاً مكرراً مع الاحتفاظ بـ '
+    + keepKeys.size + ' سجلاً.\n\nهل أنتِ متأكدة؟';
+  if(!confirm(confirmMsg)) return;
+
+  // تعطيل الزر أثناء الحذف
+  var btn = document.getElementById('btnDelete');
+  btn.disabled = true;
+  btn.textContent = '⏳ جاري الحذف...';
+
+  var delArr = Array.from(deleteKeys);
+  var deleted = 0;
+  var errors  = 0;
+  var total   = delArr.length;
+
+  function deleteNext(i) {
+    if(i >= total) {
+      // انتهى الحذف
+      console.log('Deleted:', deleted, '— Errors:', errors);
+      showDoneScreen(deleted, errors);
+      return;
+    }
+    var key = delArr[i];
+    // التحقق النهائي: لا تحذف إذا كان في قائمة الاحتفاظ (حماية مزدوجة)
+    if(keepKeys.has(key)) {
+      console.warn('SKIPPED keep key:', key);
+      deleteNext(i + 1);
+      return;
+    }
+    db.ref('appointments/' + key).remove()
+      .then(function() {
+        deleted++;
+        deleteNext(i + 1);
+      })
+      .catch(function(e) {
+        console.error('Delete error for key', key, ':', e.message);
+        errors++;
+        deleteNext(i + 1);
+      });
+  }
+
+  deleteNext(0);
+}
+
+// ===== DONE SCREEN =====
+function showDoneScreen(deleted, errors) {
+  document.getElementById('tableWrap').style.display = 'none';
+  document.getElementById('action-bar') && (document.querySelector('.action-bar').style.display = 'none');
+  document.querySelector('.action-bar').style.display = 'none';
+
+  var doneScreen = document.getElementById('doneScreen');
+  doneScreen.style.display = 'block';
+  document.getElementById('doneTitle').textContent = errors === 0
+    ? '✅ تم التنظيف بنجاح'
+    : '⚠️ تم التنظيف مع ' + errors + ' أخطاء';
+
+  document.getElementById('doneMsg').innerHTML =
+    'تم حذف <strong>' + deleted + '</strong> سجلاً مكرراً<br>'
+    + 'تم الاحتفاظ بـ <strong>' + keepKeys.size + '</strong> سجلاً<br>'
+    + (errors > 0 ? '<span style="color:#EF4444">أخطاء: ' + errors + ' — راجع Console</span>' : '');
+}
+
+// ===== UTILS =====
+function copyKey(key) {
+  navigator.clipboard.writeText(key).then(function(){
+    showToast('✅ تم نسخ: ' + key.substring(0,16) + '…');
+  }).catch(function(){
+    var el = document.createElement('textarea');
+    el.value = key; document.body.appendChild(el); el.select();
+    document.execCommand('copy'); document.body.removeChild(el);
+    showToast('✅ تم نسخ المفتاح');
+  });
+}
+function showToast(msg) {
+  var t = document.createElement('div');
+  t.textContent = msg;
+  t.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#0C3B5E;color:#fff;padding:10px 20px;border-radius:10px;font-family:Tajawal,sans-serif;font-size:14px;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.2);';
+  document.body.appendChild(t);
+  setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t); }, 3000);
+}
+
+// ===== INIT =====
+loadData();
+</script>
+</body>
+</html>
