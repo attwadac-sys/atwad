@@ -604,31 +604,13 @@ function makeDedupeKey(phone, date, time, service) {
 }
 
 function mergeAppointmentsAndBookings() {
-  // بناء مجموعة مفاتيح المواعيد الموجودة في appointments
-  var apptKeys = {};
-  firebaseAppointments.forEach(function(a) {
-    var key = makeDedupeKey(a.phone, a.date, a.time, a.service);
-    apptKeys[key] = true;
-  });
+  // عرض appointments فقط — bookings لا تُدمج في العرض
+  appointments = firebaseAppointments.slice();
 
-  // دمج الحجوزات مع تجنب التكرار المنطقي
-  var merged = firebaseAppointments.slice();
-  var bookingsAdded = 0;
-  firebaseBookings.forEach(function(b) {
-    var key = makeDedupeKey(b.phone, b.date, b.time, b.service);
-    if(!apptKeys[key]) {
-      merged.push(b);
-      apptKeys[key] = true;
-      bookingsAdded++;
-    }
-  });
-
-  // Console log مؤقت للتشخيص
+  // Console log تشخيصي مؤقت
   console.log('Appointments source count:', firebaseAppointments.length);
-  console.log('Bookings source count:', firebaseBookings.length);
-  console.log('Merged unique count:', merged.length);
+  console.log('Displayed appointments count:', appointments.length);
 
-  appointments = merged;
   updateStats();
   renderWeek();
   renderList();
