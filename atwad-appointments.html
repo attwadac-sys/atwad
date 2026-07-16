@@ -590,6 +590,34 @@ const STATUS_LABELS = { confirmed:'مؤكد', pending:'في الانتظار', d
 const STATUS_ICONS = { confirmed:'✅', pending:'⏳', done:'🎉', cancelled:'❌' };
 const TECH_COLORS = { Abrar:'#0EA5E9', Shoib:'#10B981', Suhail:'#8B5CF6' };
 
+// ===== DUAL SOURCE STATE =====
+let firebaseAppointments = []; // من مسار appointments
+let firebaseBookings = [];     // من مسار bookings — يُحمَّل مرة واحدة
+var isSavingAppointment = false; // حماية من النقر المزدوج
+
+function normalizePhone(p) {
+  return (p || '').replace(/\s+/g, '').replace(/^00966/, '0').replace(/^\+966/, '0');
+}
+
+function makeDedupeKey(phone, date, time, service) {
+  var t = (time || '').includes(' - ') ? time.split(' - ')[0] : (time || '');
+  return normalizePhone(phone) + '|' + (date||'') + '|' + t + '|' + (service||'');
+}
+
+function mergeAppointmentsAndBookings() {
+  // عرض appointments فقط — bookings لا تُدمج في العرض
+  appointments = firebaseAppointments.slice();
+
+  // Console log تشخيصي مؤقت
+  console.log('Appointments source count:', firebaseAppointments.length);
+  console.log('Displayed appointments count:', appointments.length);
+
+  updateStats();
+  renderWeek();
+  renderList();
+  document.getElementById('fbStatusText').textContent = 'متصل • ' + appointments.length + ' موعد';
+}
+
 function today(){ return new Date().toISOString().split('T')[0]; }
 function formatDate(d){ try{ return new Date(d+'T00:00:00').toLocaleDateString('ar-SA',{weekday:'long',year:'numeric',month:'long',day:'numeric'}); } catch{ return d; } }
 function formatDateShort(d){ try{ return new Date(d+'T00:00:00').toLocaleDateString('ar-SA',{month:'short',day:'numeric'}); } catch{ return d; } }
@@ -709,54 +737,61 @@ function initFirebaseSync() {
   document.getElementById('fbDot').className = 'fb-dot loading';
   document.getElementById('fbStatusText').textContent = 'جاري الاتصال...';
 
-  // مزامنة مواعيد النظام الداخلي
+  // ===== LISTENER 1: appointments — يُطلق عند كل تغيير =====
   db.ref('appointments').on('value', function(snap) {
     const fbAppts = [];
     snap.forEach(function(child) {
       fbAppts.push({ ...child.val(), _fbKey: child.key, _source: 'appointments' });
     });
+    firebaseAppointments = fbAppts;
 
-    // مزامنة حجوزات العملاء من صفحة الحجز
-    db.ref('bookings').once('value', function(bookSnap) {
-      const existingRefs = fbAppts.map(a => a._fbKey);
-      bookSnap.forEach(function(child) {
-        const b = child.val();
-        if(!b.date || !b.time) return;
-        // تحويل الحجز إلى موعد تلقائياً
-        fbAppts.push({
-          _fbKey: child.key,
-          _source: 'bookings',
-          id: 'B_' + child.key,
-          client: b.client || b.name || '—',
-          phone: b.phone || '',
-          address: b.city || 'جدة',
-          service: b.service || 'تنظيف مكيف',
-          units: b.units || 1,
-          date: b.date,
-          time: b.time.includes(' - ') ? b.time.split(' - ')[0] : b.time,
-          tech: autoAssignTech(b.date),
-          status: 'pending',
-          notes: 'حجز من النموذج الإلكتروني',
-          duration: b.duration || 60,
-          createdAt: b.createdAt || ''
-        });
-      });
+    // إخفاء التحميل فوراً
+    document.getElementById('fbDot').className = 'fb-dot connected';
+    document.getElementById('loadingOverlay').style.display = 'none';
 
-      appointments = fbAppts;
-      updateStats();
-      renderWeek();
-      renderList();
+    // دمج وعرض
+    mergeAppointmentsAndBookings();
 
-      // تحديث مؤشر الاتصال
-      document.getElementById('fbDot').className = 'fb-dot connected';
-      document.getElementById('fbStatusText').textContent = 'متصل • ' + appointments.length + ' موعد';
-      document.getElementById('loadingOverlay').style.display = 'none';
-    });
   }, function(err) {
     document.getElementById('fbDot').className = 'fb-dot';
     document.getElementById('fbStatusText').textContent = 'خطأ في الاتصال';
     document.getElementById('loadingOverlay').style.display = 'none';
     showToast('❌ خطأ في الاتصال: ' + err.message);
+  });
+
+  // ===== LISTENER 2: bookings — مستقل تماماً =====
+  db.ref('bookings').on('value', function(bookSnap) {
+    var fbBooks = [];
+    bookSnap.forEach(function(child) {
+      const b = child.val();
+      if(!b.date || !b.time) return;
+      var t = (b.time||'').includes(' - ') ? b.time.split(' - ')[0] : (b.time||'');
+      fbBooks.push({
+        _fbKey: child.key,
+        _source: 'bookings',
+        id: 'B_' + child.key,
+        client: b.client || b.name || '—',
+        phone: b.phone || '',
+        address: b.city || 'جدة',
+        service: b.service || 'تنظيف مكيف',
+        units: b.units || 1,
+        date: b.date,
+        time: t,
+        tech: autoAssignTech(b.date),
+        status: 'pending',
+        notes: 'حجز من النموذج الإلكتروني',
+        duration: b.duration || 60,
+        createdAt: b.createdAt || ''
+      });
+    });
+    firebaseBookings = fbBooks;
+
+    // إعادة الدمج بدون قراءة appointments من Firebase مجدداً
+    mergeAppointmentsAndBookings();
+
+  }, function(e) {
+    console.log('bookings listener error (non-critical):', e.message);
+    // الصفحة تستمر طبيعياً
   });
 }
 
@@ -884,7 +919,8 @@ function filterTech(t,btn){
 function populateClients(){
   const dl = document.getElementById('clientsList');
   if(db) {
-    db.ref('customers').once('value', function(snap) {
+    console.log('Customer source: clients'); // preview diagnostic
+    db.ref('clients').once('value', function(snap) {
       const items = [];
       snap.forEach(c => { const v=c.val(); if(v.name) items.push(`<option value="${v.name}" data-phone="${v.phone||''}">`); });
       dl.innerHTML = items.join('');
@@ -1140,7 +1176,7 @@ function useNewAndSave() {
 // ============================================================
 function lookupCustomerByPhone(phone) {
   if(!db || !phone || phone.length < 9) return;
-  db.ref('customers').orderByChild('phone').equalTo(phone).once('value').then(function(snap) {
+  db.ref('clients').orderByChild('phone').equalTo(phone).once('value').then(function(snap) {
     if(!snap.exists()) return;
     var key = null, cust = null;
     snap.forEach(function(c){ key = c.key; cust = c.val(); });
@@ -1205,7 +1241,17 @@ function resetLocFields() {
   document.getElementById('clientFoundMsg').style.display = 'none';
 }
 
+function setSaveBtn(loading) {
+  var btn = document.querySelector('#apptModal .btn-save');
+  if(!btn) return;
+  btn.disabled = loading;
+  btn.textContent = loading ? '⏳ جاري الحفظ...' : '💾 حفظ الموعد';
+}
+
 function saveAppt(){
+  // حماية من النقر المزدوج
+  if(isSavingAppointment) return;
+
   const client=document.getElementById('f_client').value.trim();
   const phone=document.getElementById('f_phone').value.trim();
   const address=document.getElementById('f_address').value.trim();
@@ -1213,6 +1259,10 @@ function saveAppt(){
   const tech=document.getElementById('f_tech').value;
   const date=document.getElementById('f_date').value;
   if(!client||!phone||!service||!tech||!date) return showToast('❌ أكمل الحقول المطلوبة');
+
+  // تفعيل الحماية وتعطيل الزر
+  isSavingAppointment = true;
+  setSaveBtn(true);
 
   const data = {
     client, phone, address, service, tech,
@@ -1224,6 +1274,12 @@ function saveAppt(){
     duration: 90,
     updatedAt: new Date().toISOString()
   };
+
+  // دالة إعادة التفعيل عند الانتهاء
+  function resetSaveBtn() {
+    isSavingAppointment = false;
+    setSaveBtn(false);
+  }
 
   // موقع العميل — حقول اختيارية
   var mapsLink = document.getElementById('appointment_maps_link').value.trim();
@@ -1244,7 +1300,7 @@ function saveAppt(){
     data.locationVerified = locVerified;
   }
 
-  if(!db) { showToast('❌ Firebase غير متاح'); return; }
+  if(!db) { showToast('❌ Firebase غير متاح'); resetSaveBtn(); return; }
 
   if(editingFirebaseKey) {
     // هل تغيّر التاريخ؟ إذا نعم اسأل الموظف عن إلغاء الموعد القديم
@@ -1280,18 +1336,20 @@ function saveAppt(){
           delete newData.previousDate;
           db.ref('appointments').push(newData)
             .then(function() {
+              resetSaveBtn();
               showToast('✅ تم إلغاء الموعد القديم وإنشاء موعد جديد بتاريخ ' + date);
               editingOriginalDate = '';
               closeModal();
             })
-            .catch(function(e){ showToast('❌ خطأ عند إنشاء الموعد الجديد: ' + e.message); });
+            .catch(function(e){ resetSaveBtn(); showToast('❌ خطأ عند إنشاء الموعد الجديد: ' + e.message); });
         } else {
+          resetSaveBtn();
           showToast('✅ تم تحديث الموعد');
           editingOriginalDate = '';
           closeModal();
         }
       })
-      .catch(e => showToast('❌ خطأ: ' + e.message));
+      .catch(e => { resetSaveBtn(); showToast('❌ خطأ: ' + e.message); });
   } else {
     data.createdAt = new Date().toISOString();
     db.ref('appointments').push(data)
@@ -1299,9 +1357,12 @@ function saveAppt(){
         if(document.getElementById('chk_save_to_customer').checked && _foundCustomerKey && mapsLink) {
           saveLocationToCustomer(_foundCustomerKey, {mapsLink, lat, lng, locSrc, locVerified});
         }
-        showToast('✅ تم إضافة الموعد'); sendAdminNotification(data); closeModal();
+        resetSaveBtn();
+        closeModal();
+        showToast('✅ تم إضافة الموعد');
+        sendAdminNotification(data);
       })
-      .catch(e => showToast('❌ خطأ: ' + e.message));
+      .catch(e => { resetSaveBtn(); showToast('❌ خطأ: ' + e.message); });
   }
 }
 
@@ -1315,9 +1376,9 @@ function saveLocationToCustomer(customerKey, loc) {
   }
   if(loc.locSrc) update.locationSource = loc.locSrc;
   update.locationVerified = loc.locVerified || false;
-  db.ref('customers/' + customerKey).update(update)
-    .then(function(){ console.log('location saved to customer', customerKey); })
-    .catch(function(e){ console.error('save to customer error:', e); });
+  db.ref('clients/' + customerKey).update(update)
+    .then(function(){ console.log('location saved to client', customerKey); })
+    .catch(function(e){ console.error('save to client error:', e); });
 }
 
 function closeModal(){ document.getElementById('apptModal').classList.remove('open'); editingId=null; editingFirebaseKey=null; }
