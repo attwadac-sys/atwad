@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مؤسسة أطواد - الإدارة المالية</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap');
+:root{
+  --deep:#0C3B5E;--steel:#1E5F8A;--sky:#0EA5E9;--ice:#E8F4FD;--frost:#F0F9FF;
+  --slate:#334155;--mist:#94A3B8;--success:#10B981;--warning:#F59E0B;--danger:#EF4444;--purple:#8B5CF6;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
+
+.sidebar{position:fixed;right:0;top:0;bottom:0;width:230px;background:linear-gradient(180deg,var(--deep),var(--steel));z-index:200;display:flex;flex-direction:column;}
+.sidebar-logo{padding:22px 18px 18px;border-bottom:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:12px;}
+.sidebar-logo .icon{width:42px;height:42px;background:linear-gradient(135deg,var(--sky),#38BDF8);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;}
+.sidebar-logo h1{color:#fff;font-size:16px;font-weight:800;}
+.sidebar-logo p{color:rgba(255,255,255,.5);font-size:11px;}
+.nav-section{padding:14px 10px 6px;}
+.nav-label{color:rgba(255,255,255,.3);font-size:10px;font-weight:700;padding:0 8px 5px;letter-spacing:1px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:rgba(255,255,255,.7);font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;margin-bottom:2px;}
+.nav-item:hover{background:rgba(255,255,255,.08);color:#fff;}
+.nav-item.active{background:rgba(14,165,233,.22);color:var(--sky);font-weight:700;}
+.nav-icon{font-size:16px;width:20px;text-align:center;}
+
+.main{margin-right:230px;}
+.topbar{background:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1.5px solid #E2E8F0;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.04);}
+.topbar-title{font-size:18px;font-weight:800;color:var(--deep);}
+.topbar-sub{font-size:12px;color:var(--mist);margin-top:1px;}
+.topbar-actions{display:flex;gap:8px;align-items:center;}
+
+/* PERIOD TABS */
+.period-tabs{display:flex;background:#F1F5F9;border-radius:10px;padding:3px;}
+.period-tab{padding:7px 16px;border-radius:8px;border:none;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:600;cursor:pointer;background:transparent;color:var(--mist);transition:all .2s;}
+.period-tab.active{background:#fff;color:var(--deep);box-shadow:0 2px 6px rgba(0,0,0,.08);}
+
+.btn-add{background:linear-gradient(90deg,var(--deep),var(--sky));color:#fff;border:none;border-radius:10px;padding:9px 18px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(14,165,233,.3);transition:all .2s;}
+.btn-add:hover{transform:translateY(-1px);}
+
+/* BIG KPI ROW */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;padding:20px 22px 0;}
+.kpi-card{background:#fff;border-radius:18px;padding:20px 22px;box-shadow:0 2px 14px rgba(0,0,0,.06);position:relative;overflow:hidden;}
+.kpi-card::before{content:'';position:absolute;top:-20px;left:-20px;width:80px;height:80px;border-radius:50%;opacity:.08;}
+.kpi-card.revenue::before{background:var(--sky);}
+.kpi-card.expense::before{background:var(--danger);}
+.kpi-card.profit::before{background:var(--success);}
+.kpi-card.pending::before{background:var(--warning);}
+.kpi-icon{font-size:28px;margin-bottom:10px;}
+.kpi-num{font-size:28px;font-weight:800;color:var(--deep);line-height:1;}
+.kpi-label{font-size:12px;color:var(--mist);margin-top:4px;font-weight:500;}
+.kpi-change{font-size:11px;font-weight:700;margin-top:6px;display:flex;align-items:center;gap:4px;}
+.kpi-change.up{color:var(--success);}
+.kpi-change.down{color:var(--danger);}
+.kpi-bar{height:4px;border-radius:2px;margin-top:10px;background:var(--ice);}
+.kpi-bar-fill{height:100%;border-radius:2px;}
+.revenue .kpi-bar-fill{background:var(--sky);}
+.expense .kpi-bar-fill{background:var(--danger);}
+.profit .kpi-bar-fill{background:var(--success);}
+.pending .kpi-bar-fill{background:var(--warning);}
+
+/* CHART AREA */
+.charts-row{display:grid;grid-template-columns:2fr 1fr;gap:16px;padding:16px 22px 0;}
+.chart-card{background:#fff;border-radius:16px;padding:18px 20px;box-shadow:0 2px 12px rgba(0,0,0,.05);}
+.chart-title{font-size:14px;font-weight:700;color:var(--deep);margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;}
+.chart-legend{display:flex;gap:14px;}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--mist);}
+.legend-dot{width:10px;height:10px;border-radius:50%;}
+
+/* BAR CHART */
+.bar-chart{display:flex;align-items:flex-end;gap:6px;height:140px;}
+.bar-group{display:flex;gap:3px;align-items:flex-end;flex:1;}
+.bar{border-radius:4px 4px 0 0;min-width:12px;transition:all .3s;cursor:pointer;position:relative;}
+.bar:hover::after{content:attr(data-val);position:absolute;top:-22px;right:50%;transform:translateX(50%);background:var(--deep);color:#fff;font-size:10px;padding:2px 6px;border-radius:4px;white-space:nowrap;font-family:'Tajawal',sans-serif;}
+.bar-label{font-size:10px;color:var(--mist);text-align:center;margin-top:4px;}
+.bar-chart-wrap{display:flex;flex-direction:column;}
+.bar-x-labels{display:flex;gap:6px;padding-top:4px;}
+.bar-x-label{flex:1;text-align:center;font-size:10px;color:var(--mist);}
+
+/* DONUT */
+.donut-wrap{display:flex;flex-direction:column;align-items:center;}
+.donut-svg{width:130px;height:130px;margin-bottom:12px;}
+.donut-legend{width:100%;}
+.donut-item{display:flex;align-items:center;justify-content:space-between;padding:5px 0;font-size:12px;border-bottom:1px solid var(--ice);}
+.donut-item:last-child{border-bottom:none;}
+.donut-dot{width:10px;height:10px;border-radius:3px;margin-left:6px;}
+.donut-pct{font-weight:700;color:var(--deep);}
+
+/* TABLES ROW */
+.tables-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:16px 22px 30px;}
+.table-card{background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,.05);overflow:hidden;}
+.table-hdr{padding:14px 18px;background:var(--frost);border-bottom:1.5px solid var(--ice);display:flex;align-items:center;justify-content:space-between;}
+.table-hdr h3{font-size:14px;font-weight:700;color:var(--deep);}
+.see-all{font-size:11px;color:var(--sky);font-weight:600;cursor:pointer;border:none;background:none;}
+.tbl{width:100%;border-collapse:collapse;}
+.tbl th{padding:9px 14px;text-align:right;font-size:11px;font-weight:700;color:var(--mist);border-bottom:1px solid var(--ice);}
+.tbl td{padding:9px 14px;font-size:13px;border-bottom:1px solid #F8FAFC;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tr:hover td{background:var(--frost);}
+.amount-in{color:var(--success);font-weight:700;}
+.amount-out{color:var(--danger);font-weight:700;}
+.badge-paid{background:#D1FAE5;color:#065F46;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;}
+.badge-pend{background:#FEF3C7;color:#92400E;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(12,59,94,.45);z-index:500;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px);}
+.modal-overlay.open{display:flex;}
+.modal{background:#fff;border-radius:20px;width:100%;max-width:460px;box-shadow:0 20px 60px rgba(12,59,94,.25);animation:slideUp .3s cubic-bezier(.34,1.56,.64,1);}
+@keyframes slideUp{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-hdr{padding:18px 22px 14px;background:linear-gradient(90deg,var(--frost),var(--ice));border-bottom:1.5px solid rgba(14,165,233,.12);display:flex;align-items:center;justify-content:space-between;}
+.modal-hdr h3{font-size:16px;font-weight:800;color:var(--deep);}
+.modal-close{width:28px;height:28px;border-radius:50%;border:none;background:#E2E8F0;color:var(--slate);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.modal-close:hover{background:var(--danger);color:#fff;}
+.modal-body{padding:20px 22px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.form-group{margin-bottom:12px;}
+.form-group label{display:block;font-size:12px;font-weight:700;color:var(--slate);margin-bottom:5px;}
+.req{color:var(--danger);}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:9px 12px;border:1.5px solid #E2E8F0;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:14px;color:var(--slate);background:var(--frost);outline:none;transition:all .2s;direction:rtl;}
+.form-group input:focus,.form-group select:focus{border-color:var(--sky);background:#fff;box-shadow:0 0 0 3px rgba(14,165,233,.1);}
+.type-toggle{display:flex;gap:8px;margin-bottom:16px;}
+.type-btn{flex:1;padding:10px;border-radius:10px;border:2px solid #E2E8F0;background:#fff;font-family:'Tajawal',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;text-align:center;}
+.type-btn.income.sel{border-color:var(--success);background:#D1FAE5;color:var(--success);}
+.type-btn.expense.sel{border-color:var(--danger);background:#FEE2E2;color:var(--danger);}
+.modal-footer{padding:14px 22px;border-top:1px solid #F1F5F9;display:flex;gap:10px;justify-content:flex-end;}
+.btn-cancel{padding:9px 18px;border:1.5px solid #E2E8F0;border-radius:9px;background:#fff;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:600;color:var(--slate);cursor:pointer;}
+.btn-save{padding:9px 24px;border:none;border-radius:9px;background:linear-gradient(90deg,var(--deep),var(--sky));color:#fff;font-family:'Tajawal',sans-serif;font-size:14px;font-weight:700;cursor:pointer;}
+
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--deep);color:#fff;padding:10px 22px;border-radius:10px;font-size:13px;font-weight:600;transition:transform .3s;z-index:999;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+@media(max-width:900px){.sidebar{display:none;}.main{margin-right:0;}.kpi-row{grid-template-columns:1fr 1fr;}.charts-row,.tables-row{grid-template-columns:1fr;}.period-tabs{display:none;}}
+
+.lang-btn{padding:7px 14px;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);border-radius:8px;color:#fff;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;}
+.lang-btn:hover{background:rgba(255,255,255,.25);}
+</style>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sidebar-logo"><div class="icon">❄️</div><div><h1 id="nav-brand">أطواد</h1><p id="nav-brandsub">لصيانة المكيفات</p></div></div>
+  <div class="nav-section">
+    <div class="nav-label">القائمة</div>
+    <div class="nav-item" id="nav-clients" id="nav-clients" id="nav-clients" onclick="location.href='atwad-customers.html'"><span class="nav-icon">👥</span> العملاء</div>
+    <div class="nav-item" id="nav-appts" id="nav-appts" id="nav-appts" onclick="location.href='atwad-appointments.html'"><span class="nav-icon">📅</span> المواعيد</div>
+    <div class="nav-item" id="nav-wo" id="nav-wo" id="nav-wo" onclick="location.href='atwad-workorders.html'"><span class="nav-icon">🔧</span> أوامر العمل</div>
+    <div class="nav-item active" id="nav-finance" id="nav-finance" id="nav-finance" onclick="location.href='atwad-finance.html'"><span class="nav-icon">💰</span> الإدارة المالية</div>
+    <div class="nav-item" id="nav-reports" id="nav-reports" id="nav-reports" onclick="location.href='atwad-reports.html'"><span class="nav-icon">📊</span> التقارير</div>
+  </div>
+  <div class="nav-section" style="margin-top:auto;border-top:1px solid rgba(255,255,255,.08);padding-top:10px;">
+    <div class="nav-item" id="nav-settings" onclick="alert('Settings — Coming Soon / قريباً ✨')"><span class="nav-icon">⚙️</span> الإعدادات</div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <div><div class="topbar-title" data-lang="title">💰 الإدارة المالية</div><div class="topbar-sub" id="periodLabel">هذا الشهر</div></div>
+    <div class="topbar-actions"><button class="lang-btn" id="langBtn" onclick="toggleLang()">🌐 EN</button>
+      <div class="period-tabs">
+        <button class="period-tab" onclick="setPeriod('today',this)">اليوم</button>
+        <button class="period-tab active" onclick="setPeriod('month',this)">هذا الشهر</button>
+        <button class="period-tab" onclick="setPeriod('year',this)">هذه السنة</button>
+        <button class="period-tab" onclick="setPeriod('all',this)">الكل</button>
+      </div>
+      <button onclick="importFinanceFromFirebase()" id="importFinBtn" style="background:#fff;border:1.5px solid #10B981;color:#10B981;border-radius:10px;padding:9px 16px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;" data-lang="importBtn">📥 استيراد إيرادات الحجوزات</button>
+      <button class="btn-add" onclick="openModal()" data-lang="addBtn">＋ إضافة قيد</button>
+    </div>
+  </div>
+
+  <!-- KPI -->
+  <div class="kpi-row">
+    <div class="kpi-card revenue">
+      <div class="kpi-icon">💵</div>
+      <div class="kpi-num" id="kRevenue">0</div>
+      <div class="kpi-label">إجمالي الإيرادات (ريال)</div>
+      <div class="kpi-change up" id="kRevenueChange">—</div>
+      <div class="kpi-bar"><div class="kpi-bar-fill" id="kRevenueBar" style="width:0%"></div></div>
+    </div>
+    <div class="kpi-card expense">
+      <div class="kpi-icon">💸</div>
+      <div class="kpi-num" id="kExpense">0</div>
+      <div class="kpi-label">إجمالي المصاريف (ريال)</div>
+      <div class="kpi-change" id="kExpenseChange">—</div>
+      <div class="kpi-bar"><div class="kpi-bar-fill" id="kExpenseBar" style="width:0%;background:var(--danger)"></div></div>
+    </div>
+    <div class="kpi-card profit">
+      <div class="kpi-icon">📈</div>
+      <div class="kpi-num" id="kProfit">0</div>
+      <div class="kpi-label">صافي الربح (ريال)</div>
+      <div class="kpi-change up" id="kProfitChange">—</div>
+      <div class="kpi-bar"><div class="kpi-bar-fill" id="kProfitBar" style="width:0%;background:var(--success)"></div></div>
+    </div>
+    <div class="kpi-card pending">
+      <div class="kpi-icon">⏳</div>
+      <div class="kpi-num" id="kPending">0</div>
+      <div class="kpi-label">مبالغ معلقة (ريال)</div>
+      <div class="kpi-change" id="kPendingCount" style="color:var(--warning)">—</div>
+      <div class="kpi-bar"><div class="kpi-bar-fill" id="kPendingBar" style="width:0%;background:var(--warning)"></div></div>
+    </div>
+  </div>
+
+  <!-- CHARTS -->
+  <div class="charts-row">
+    <div class="chart-card">
+      <div class="chart-title">
+        <span>📊 الإيرادات والمصاريف اليومية</span>
+        <div class="chart-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--sky)"></div>إيرادات</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--danger)"></div>مصاريف</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--success)"></div>أرباح</div>
+        </div>
+      </div>
+      <div class="bar-chart-wrap">
+        <div class="bar-chart" id="barChart"></div>
+        <div class="bar-x-labels" id="barLabels"></div>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">🥧 توزيع المصاريف</div>
+      <div class="donut-wrap">
+        <svg class="donut-svg" viewBox="0 0 36 36" id="donutSVG"></svg>
+        <div class="donut-legend" id="donutLegend"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLES -->
+  <div class="tables-row">
+    <div class="table-card">
+      <div class="table-hdr"><h3 data-lang="incTable">💵 آخر الإيرادات</h3><button class="see-all" onclick="showAll('income')">عرض الكل</button></div>
+      <table class="tbl">
+        <thead><tr><th>العميل</th><th>الخدمة</th><th>المبلغ</th><th>الحالة</th></tr></thead>
+        <tbody id="incomeTable"></tbody>
+      </table>
+    </div>
+    <div class="table-card">
+      <div class="table-hdr"><h3 data-lang="expTable">💸 آخر المصاريف</h3><button class="see-all" onclick="showAll('expense')">عرض الكل</button></div>
+      <table class="tbl">
+        <thead><tr><th>البيان</th><th>الفئة</th><th>المبلغ</th><th>التاريخ</th></tr></thead>
+        <tbody id="expenseTable"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ADD MODAL -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h3 id="modalTitle">➕ إضافة قيد مالي</h3>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="type-toggle">
+        <button class="type-btn income" id="typeIncome" onclick="selectType('income')">💵 إيراد</button>
+        <button class="type-btn expense" id="typeExpense" onclick="selectType('expense')">💸 مصروف</button>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>المبلغ (ريال) <span class="req">*</span></label>
+          <input type="number" id="f_amount" placeholder="0" min="0">
+        </div>
+        <div class="form-group">
+          <label>التاريخ <span class="req">*</span></label>
+          <input type="date" id="f_date">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>البيان / الوصف <span class="req">*</span></label>
+        <input type="text" id="f_desc" placeholder="مثال: تنظيف مكيف - أم سعود">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>الفئة</label>
+          <select id="f_category">
+            <option value="خدمة">خدمة صيانة</option>
+            <option value="قطع غيار">قطع غيار</option>
+            <option value="وقود">وقود</option>
+            <option value="رواتب">رواتب</option>
+            <option value="إيجار">إيجار</option>
+            <option value="تأمين">تأمين</option>
+            <option value="إعلانات">إعلانات</option>
+            <option value="صيانة سيارة">صيانة سيارة</option>
+            <option value="طعام">طعام</option>
+            <option value="أخرى">أخرى</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>طريقة الدفع</label>
+          <select id="f_method">
+            <option value="كاش">💵 كاش</option>
+            <option value="تحويل">🏦 تحويل</option>
+            <option value="مدى">💳 مدى</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>اسم العميل / الجهة</label>
+          <input type="text" id="f_party" placeholder="اختياري">
+        </div>
+        <div class="form-group" id="statusGroup">
+          <label>حالة الدفع</label>
+          <select id="f_status">
+            <option value="مدفوع">✅ مدفوع</option>
+            <option value="معلق">⏳ معلق</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">إلغاء</button>
+      <button class="btn-save" onclick="saveEntry()">💾 حفظ</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== DATA =====
+let entries = []; // loaded from Firebase
+
+// مزامنة Firebase
+function syncFromFirebase() {
+  if(!db) return;
+  db.ref('transactions').on('value', function(snap) {
+    var fbData = [];
+    snap.forEach(function(child) {
+      fbData.push({...child.val(), _fbKey: child.key});
+    });
+    entries = fbData; // دائماً نحدث entries حتى لو كانت فارغة
+    console.log('=== DIAG: entries after Firebase ===');
+    console.log('entries.length:', entries.length);
+    console.table(entries.map(function(e){ return {
+      _fbKey: e._fbKey, type: e.type, amount: e.amount,
+      desc: e.desc, party: e.party, date: e.date, status: e.status
+    }; }));
+    renderAll();
+  });
+}
+let period = 'month';
+let entryType = 'income';
+
+function saveData(){
+  // data saved to Firebase
+  if(db) {
+    entries.forEach(function(e) {
+      if(e._fbKey) {
+        var copy = {...e}; delete copy._fbKey;
+        db.ref('transactions/' + e._fbKey).set(copy);
+      } else {
+        var ref = db.ref('transactions').push();
+        e._fbKey = ref.key;
+        ref.set(e);
+      }
+    });
+  }
+}
+function today(){ return new Date().toISOString().split('T')[0]; }
+function genId(){ return 'F' + Date.now().toString().slice(-7); }
+function fmt(n){ return Number(n).toLocaleString('ar-SA'); }
+function fmtDate(d){ try{ return new Date(d+'T00:00:00').toLocaleDateString('ar-SA',{month:'short',day:'numeric'}); } catch{ return d||'—'; } }
+
+// ===== FIREBASE =====
+var db = null;
+try {
+  if(!firebase.apps.length) firebase.initializeApp({databaseURL:"https://atwad-booking-default-rtdb.firebaseio.com"});
+  db = firebase.database();
+} catch(e){ console.log('Firebase:',e); }
+
+// أسعار الخدمات
+var SVC_PRICES = {
+  'تنظيف مكيف': {1:110, 2:180, 3:240, 4:280},
+  'صيانة دورية': 120, 'تعبئة غاز': 150,
+  'كشف وإصلاح أعطال': 100, 'تركيب مكيف جديد': 200, 'باقة صيانة سنوية': 400
+};
+function calcPrice(svc, units) {
+  if(svc==='تنظيف مكيف'){ var p=SVC_PRICES[svc]; return units>=5?units*60:(p[units]||units*60); }
+  return (SVC_PRICES[svc]||100)*units;
+}
+
+function importFinanceFromFirebase() {
+  if(!db){ showToast('⚠️ Firebase غير متاح'); return; }
+  var btn = document.getElementById('importFinBtn');
+  btn.textContent = '⏳ جاري الاستيراد...'; btn.disabled = true;
+  db.ref('bookings').once('value', function(snap) {
+    var added = 0, skip = 0;
+    var existRefs = new Set(entries.map(function(e){ return e.firebaseRef||''; }));
+    snap.forEach(function(child) {
+      var b = child.val(); var key = child.key;
+      if(existRefs.has(key)){ skip++; return; }
+      if(!b.date) return;
+      var amount = calcPrice(b.service||'تنظيف مكيف', b.units||1);
+      entries.unshift({
+        id: 'F'+Date.now()+Math.random().toString(36).slice(2,5),
+        firebaseRef: key,
+        type: 'income',
+        amount: amount,
+        desc: (b.service||'خدمة') + ' - ' + (b.client||b.name||'عميل'),
+        date: b.date,
+        category: 'خدمة',
+        method: 'كاش',
+        party: b.client||b.name||'',
+        status: 'معلق',
+        createdAt: b.createdAt||new Date().toISOString()
+      });
+      existRefs.add(key); added++;
+    });
+    saveData(); renderAll();
+    btn.textContent = '📥 استيراد إيرادات الحجوزات'; btn.disabled = false;
+    if(added>0) showToast('✅ تم استيراد '+added+' إيراد جديد من الحجوزات');
+    else showToast('ℹ️ لا إيرادات جديدة — تم تخطي '+skip);
+  }, function(){ btn.textContent='📥 استيراد إيرادات الحجوزات'; btn.disabled=false; showToast('❌ خطأ'); });
+}
+// ===== PERIOD FILTER =====
+function setPeriod(p, btn){
+  period = p;
+  document.querySelectorAll('.period-tab').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  const labels = { today:'اليوم', month:'هذا الشهر', year:'هذه السنة', all:'كل الفترات' };
+  document.getElementById('periodLabel').textContent = labels[p];
+  renderAll();
+}
+
+function filterByPeriod(list){
+  const now = new Date();
+  return list.filter(e=>{
+    if(!e.date) return false;
+    const d = new Date(e.date+'T00:00:00');
+    if(period==='today') return e.date===today();
+    if(period==='month') return d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear();
+    if(period==='year') return d.getFullYear()===now.getFullYear();
+    return true;
+  });
+}
+
+// ===== CALCULATIONS =====
+function calcKPIs(){
+  const filtered = filterByPeriod(entries);
+  const income = filtered.filter(e=>e.type==='income');
+  const expense = filtered.filter(e=>e.type==='expense');
+  const revenue = income.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+  console.log('=== DIAG: calcKPIs ===');
+  console.log('period:', period);
+  console.log('entries.length (before filter):', entries.length);
+  console.log('filtered.length (after period filter):', filtered.length);
+  console.log('income.length:', income.length);
+  console.log('revenue raw sum:', income.reduce((s,e)=>s+(parseFloat(e.amount)||0),0));
+  console.table(income.map(function(e){ return {
+    key: e._fbKey||e.id, amount: e.amount, type: e.type,
+    desc: e.desc, party: e.party, date: e.date
+  }; }));
+  const totalExp = expense.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+  const profit = revenue - totalExp;
+  const pending = income.filter(e=>e.status==='معلق').reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+  const pendingCount = income.filter(e=>e.status==='معلق').length;
+  const max = Math.max(revenue, 1);
+  document.getElementById('kRevenue').textContent = fmt(revenue) + ' ﷼';
+  document.getElementById('kExpense').textContent = fmt(totalExp) + ' ﷼';
+  document.getElementById('kProfit').textContent = fmt(profit) + ' ﷼';
+  document.getElementById('kPending').textContent = fmt(pending) + ' ﷼';
+  document.getElementById('kRevenueChange').textContent = income.length + ' عملية';
+  document.getElementById('kExpenseChange').textContent = expense.length + ' بند';
+  document.getElementById('kProfitChange').textContent = revenue>0 ? '↑ هامش ' + Math.round(profit/revenue*100) + '%' : '—';
+  document.getElementById('kPendingCount').textContent = pendingCount + ' طلب معلق';
+  document.getElementById('kRevenueBar').style.width = Math.min(100,revenue/max*100)+'%';
+  document.getElementById('kExpenseBar').style.width = Math.min(100,totalExp/max*100)+'%';
+  document.getElementById('kProfitBar').style.width = Math.min(100,Math.max(0,profit)/max*100)+'%';
+  document.getElementById('kPendingBar').style.width = Math.min(100,pending/max*100)+'%';
+  return { revenue, totalExp, profit, pending };
+}
+
+// ===== BAR CHART =====
+function renderBarChart(){
+  const filtered = filterByPeriod(entries);
+  // Group last 7 days or last 7 months
+  let groups = [];
+  const now = new Date();
+  if(period==='today'){
+    // Hour groups
+    for(let h=7;h<=20;h++){
+      const rev = filtered.filter(e=>e.type==='income' && new Date(e.date+'T'+String(h).padStart(2,'0')+':00:00').getHours()===h).reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+      groups.push({label:h+':00', rev, exp:0});
+    }
+  } else if(period==='year' || period==='all'){
+    for(let m=0;m<12;m++){
+      const monthEntries = filtered.filter(e=>new Date(e.date+'T00:00:00').getMonth()===m);
+      const rev = monthEntries.filter(e=>e.type==='income').reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+      const exp = monthEntries.filter(e=>e.type==='expense').reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+      const mn=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+      groups.push({label:mn[m].substring(0,3), rev, exp});
+    }
+  } else {
+    // Last 7 days
+    for(let i=6;i>=0;i--){
+      const d=new Date(); d.setDate(d.getDate()-i);
+      const ds=d.toISOString().split('T')[0];
+      const dayE = filtered.filter(e=>e.date===ds);
+      const rev = dayE.filter(e=>e.type==='income').reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+      const exp = dayE.filter(e=>e.type==='expense').reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+      groups.push({label:fmtDate(ds), rev, exp});
+    }
+  }
+  const maxVal = Math.max(...groups.map(g=>Math.max(g.rev,g.exp)),1);
+  const barH = 130;
+  document.getElementById('barChart').innerHTML = groups.map(g=>{
+    const rh = Math.round(g.rev/maxVal*barH);
+    const eh = Math.round(g.exp/maxVal*barH);
+    const ph = Math.max(0,Math.round((g.rev-g.exp)/maxVal*barH));
+    return `<div class="bar-group" style="align-items:flex-end;flex:1;gap:2px;">
+      <div class="bar" style="height:${rh}px;background:var(--sky);flex:1" data-val="${fmt(g.rev)} ﷼"></div>
+      <div class="bar" style="height:${eh}px;background:var(--danger);flex:1" data-val="${fmt(g.exp)} ﷼"></div>
+      <div class="bar" style="height:${ph}px;background:var(--success);flex:1" data-val="${fmt(g.rev-g.exp)} ﷼"></div>
+    </div>`;
+  }).join('');
+  document.getElementById('barLabels').innerHTML = groups.map(g=>`<div class="bar-x-label">${g.label}</div>`).join('');
+}
+
+// ===== DONUT CHART =====
+function renderDonut(){
+  const filtered = filterByPeriod(entries).filter(e=>e.type==='expense');
+  const cats = {};
+  filtered.forEach(e=>{ const c=e.category||'أخرى'; cats[c]=(cats[c]||0)+(parseFloat(e.amount)||0); });
+  const total = Object.values(cats).reduce((s,v)=>s+v,0)||1;
+  const colors = ['#0EA5E9','#10B981','#F59E0B','#EF4444','#8B5CF6','#EC4899','#06B6D4','#84CC16','#F97316','#6B7280'];
+  const items = Object.entries(cats).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  let offset = 25; let paths = '';
+  items.forEach(([cat,val],i)=>{
+    const pct = val/total*100;
+    const dashArray = pct*0.3141592653589793;
+    const dashOffset = 25 - offset;
+    paths += `<circle cx="18" cy="18" r="15.9155" fill="none" stroke="${colors[i]}" stroke-width="3.5" stroke-dasharray="${dashArray} ${31.41592653589793-dashArray}" stroke-dashoffset="${-dashOffset}" style="transition:all .5s;"/>`;
+    offset += pct*0.3141592653589793;
+  });
+  document.getElementById('donutSVG').innerHTML = paths + `<text x="18" y="22" text-anchor="middle" font-size="5" font-family="Tajawal" fill="#334155" font-weight="700">${items.length} فئة</text>`;
+  document.getElementById('donutLegend').innerHTML = items.map(([cat,val],i)=>`
+    <div class="donut-item">
+      <div style="display:flex;align-items:center;gap:6px;"><div class="donut-dot" style="background:${colors[i]}"></div><span style="font-size:12px">${cat}</span></div>
+      <span class="donut-pct">${Math.round(val/total*100)}%</span>
+    </div>`).join('');
+}
+
+// ===== TABLES =====
+function renderTables(){
+  const filtered = filterByPeriod(entries);
+  const income = filtered.filter(e=>e.type==='income').sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,8);
+  const expense = filtered.filter(e=>e.type==='expense').sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,8);
+
+  document.getElementById('incomeTable').innerHTML = income.length===0
+    ? `<tr><td colspan="4" style="text-align:center;color:var(--mist);padding:20px">لا توجد إيرادات</td></tr>`
+    : income.map(e=>`<tr>
+      <td style="font-weight:600;color:var(--deep)">${e.party||'—'}</td>
+      <td style="font-size:12px;color:var(--mist)">${e.category||'—'}</td>
+      <td class="amount-in">+${fmt(e.amount)} ﷼</td>
+      <td><span class="${e.status==='مدفوع'?'badge-paid':'badge-pend'}">${e.status||'مدفوع'}</span></td>
+    </tr>`).join('');
+
+  document.getElementById('expenseTable').innerHTML = expense.length===0
+    ? `<tr><td colspan="4" style="text-align:center;color:var(--mist);padding:20px">لا توجد مصاريف</td></tr>`
+    : expense.map(e=>`<tr>
+      <td style="font-weight:600;color:var(--deep)">${e.desc||'—'}</td>
+      <td style="font-size:12px;color:var(--mist)">${e.category||'—'}</td>
+      <td class="amount-out">-${fmt(e.amount)} ﷼</td>
+      <td style="font-size:12px;color:var(--mist)">${fmtDate(e.date)}</td>
+    </tr>`).join('');
+}
+
+function renderAll(){ calcKPIs(); renderBarChart(); renderDonut(); renderTables(); }
+
+// ===== MODAL =====
+let selectedType = 'income';
+function openModal(){
+  selectType('income');
+  ['f_amount','f_desc','f_party'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f_date').value = today();
+  document.getElementById('f_category').value = 'خدمة';
+  document.getElementById('f_method').value = 'كاش';
+  document.getElementById('f_status').value = 'مدفوع';
+  document.getElementById('addModal').classList.add('open');
+}
+function closeModal(){ document.getElementById('addModal').classList.remove('open'); }
+function selectType(t){
+  selectedType = t;
+  document.getElementById('typeIncome').classList.toggle('sel', t==='income');
+  document.getElementById('typeExpense').classList.toggle('sel', t==='expense');
+  document.getElementById('statusGroup').style.display = t==='income'?'block':'none';
+  const cats = t==='income'
+    ? ['خدمة','قطع غيار','عقد سنوي','أخرى']
+    : ['قطع غيار','وقود','رواتب','إيجار','تأمين','إعلانات','صيانة سيارة','طعام','أخرى'];
+  document.getElementById('f_category').innerHTML = cats.map(c=>`<option>${c}</option>`).join('');
+}
+
+function saveEntry(){
+  const amount = parseFloat(document.getElementById('f_amount').value);
+  const desc = document.getElementById('f_desc').value.trim();
+  const date = document.getElementById('f_date').value;
+  if(!amount||amount<=0) return showToast('❌ أدخل مبلغاً صحيحاً');
+  if(!desc) return showToast('❌ أدخل البيان');
+  if(!date) return showToast('❌ اختر التاريخ');
+  entries.unshift({
+    id:genId(), type:selectedType, amount, desc, date,
+    category: document.getElementById('f_category').value,
+    method: document.getElementById('f_method').value,
+    party: document.getElementById('f_party').value.trim(),
+    status: selectedType==='income' ? document.getElementById('f_status').value : 'مدفوع',
+    createdAt: new Date().toISOString()
+  });
+  saveData(); closeModal(); renderAll();
+  showToast(selectedType==='income'?'✅ تم إضافة الإيراد':'✅ تم إضافة المصروف');
+}
+
+function showAll(type){
+  const filtered = filterByPeriod(entries).filter(e=>e.type===type);
+  const total = filtered.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+  showToast(`${type==='income'?'إيرادات':'مصاريف'}: ${fmt(total)} ﷼ — ${filtered.length} قيد`);
+}
+
+function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2800); }
+
+document.getElementById('addModal').addEventListener('click',e=>{ if(e.target===document.getElementById('addModal')) closeModal(); });
+
+// لا بيانات تجريبية — transactions تُحمَّل من Firebase فقط
+renderAll();
+syncFromFirebase();
+</script>
+
+
+<script>
+var LANG = localStorage.getItem('atwad_lang') || 'ar';
+
+var NAV_TEXT = {
+  ar: {clients:'العملاء', appts:'المواعيد', wo:'أوامر العمل', finance:'الإدارة المالية', reports:'التقارير', settings:'الإعدادات', brand:'أطواد', brandSub:'لصيانة المكيفات'},
+  en: {clients:'Clients', appts:'Appointments', wo:'Work Orders', finance:'Finance', reports:'Reports', settings:'Settings', brand:'Atwad', brandSub:'AC Maintenance'}
+};
+
+function applySharedLang() {
+  var l = LANG;
+  document.documentElement.lang = l;
+  document.documentElement.dir = l==='ar'?'rtl':'ltr';
+  var btn = document.getElementById('langBtn');
+  if(btn) btn.textContent = l==='ar'?'🌐 EN':'🌐 عر';
+  // Sidebar
+  var t = NAV_TEXT[l];
+  setTxt('nav-brand', t.brand);
+  setTxt('nav-brandsub', t.brandSub);
+  setTxt('nav-clients', t.clients);
+  setTxt('nav-appts', t.appts);
+  setTxt('nav-wo', t.wo);
+  setTxt('nav-finance', t.finance);
+  setTxt('nav-reports', t.reports);
+  setTxt('nav-settings', t.settings);
+  // page specific
+  if(typeof applyPageLang === 'function') applyPageLang(l);
+}
+
+function setTxt(id, txt) { var el=document.getElementById(id); if(el) el.textContent=txt; }
+function setHTML(id, txt) { var el=document.getElementById(id); if(el) el.innerHTML=txt; }
+function setPlh(id, txt) { var el=document.getElementById(id); if(el) el.placeholder=txt; }
+
+function toggleLang() {
+  LANG = LANG==='ar'?'en':'ar';
+  localStorage.setItem('atwad_lang', LANG);
+  applySharedLang();
+}
+
+document.addEventListener('DOMContentLoaded', applySharedLang);
+
+
+function applyPageLang(l) {
+  var P = { ar: {'title':'الإدارة المالية', 'sub':'هذا الشهر', 'addBtn':'＋ إضافة قيد', 'importBtn':'📥 استيراد إيرادات الحجوزات', 'rev':'إجمالي الإيرادات (ريال)', 'exp':'إجمالي المصاريف (ريال)', 'profit':'صافي الربح (ريال)', 'pending':'مبالغ معلقة (ريال)', 'chartTitle':'📊 الإيرادات والمصاريف اليومية', 'donutTitle':'🥧 توزيع المصاريف', 'incTable':'💵 آخر الإيرادات', 'expTable':'💸 آخر المصاريف', 'viewAll':'عرض الكل', 'colClient':'العميل', 'colSvc':'الخدمة', 'colAmt':'المبلغ', 'colStatus':'الحالة', 'colDesc':'البيان', 'colCat':'الفئة', 'colDate':'التاريخ', 'periodToday':'اليوم', 'periodMonth':'هذا الشهر', 'periodYear':'هذه السنة', 'periodAll':'الكل'}, en: {'title':'Financial Management', 'sub':'This Month', 'addBtn':'＋ Add Entry', 'importBtn':'📥 Import Booking Revenue', 'rev':'Total Revenue (SAR)', 'exp':'Total Expenses (SAR)', 'profit':'Net Profit (SAR)', 'pending':'Pending Amounts (SAR)', 'chartTitle':'📊 Daily Revenue & Expenses', 'donutTitle':'🥧 Expense Distribution', 'incTable':'💵 Recent Revenue', 'expTable':'💸 Recent Expenses', 'viewAll':'View All', 'colClient':'Client', 'colSvc':'Service', 'colAmt':'Amount', 'colStatus':'Status', 'colDesc':'Description', 'colCat':'Category', 'colDate':'Date', 'periodToday':'Today', 'periodMonth':'This Month', 'periodYear':'This Year', 'periodAll':'All'} };
+  var t = P[l] || P['ar'];
+  // تطبيق على العناصر بـ data-lang
+  document.querySelectorAll('[data-lang]').forEach(function(el) {
+    var key = el.dataset.lang;
+    if(t[key]) el.textContent = t[key];
+  });
+  document.querySelectorAll('[data-lang-ph]').forEach(function(el) {
+    var key = el.dataset.langPh;
+    if(t[key]) el.placeholder = t[key];
+  });
+}
+</script>
+</body>
+</html>
