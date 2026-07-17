@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>أطواد — تنظيف DEMO V6.3</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Tajawal', sans-serif; background: #F0F9FF; color: #0C3B5E; font-size: 14px; }
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
+
+.danger-banner {
+  background: #FEE2E2; border-bottom: 3px solid #EF4444; color: #991B1B;
+  padding: 12px 20px; text-align: center; font-weight: 700; font-size: 14px;
+  position: sticky; top: 0; z-index: 100;
+}
+.header {
+  background: #0C3B5E; color: #fff; padding: 14px 24px;
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+}
+.header h1 { font-size: 17px; font-weight: 700; }
+.badge { background: #0EA5E9; padding: 4px 12px; border-radius: 20px; font-size: 12px; }
+
+/* Stats */
+.stats-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px; padding: 16px 24px 8px;
+}
+.stat-card { background:#fff; border-radius:10px; padding:14px; text-align:center; box-shadow:0 2px 6px rgba(0,0,0,.06); }
+.stat-card .num { font-size:24px; font-weight:700; color:#0C3B5E; }
+.stat-card .lbl { font-size:11px; color:#6B7280; margin-top:3px; }
+.stat-card.demo  .num { color:#EF4444; }
+.stat-card.real  .num { color:#10B981; }
+.stat-card.warn  .num { color:#F59E0B; }
+
+/* Steps */
+.step-section { margin: 16px 24px; }
+.step-card {
+  background: #fff; border-radius: 12px; padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.06); margin-bottom: 14px;
+  border-right: 4px solid #CBD5E1;
+}
+.step-card.active { border-right-color: #0EA5E9; }
+.step-card.done   { border-right-color: #10B981; background: #F0FDF4; }
+.step-card.danger { border-right-color: #EF4444; }
+.step-card.blocked { opacity: .5; pointer-events: none; }
+.step-num { font-size:11px; font-weight:700; color:#6B7280; margin-bottom:6px; }
+.step-title { font-size:15px; font-weight:700; margin-bottom:10px; }
+
+/* Buttons */
+.btn { padding:10px 24px; border:none; border-radius:10px; cursor:pointer; font-family:'Tajawal',sans-serif; font-size:14px; font-weight:700; }
+.btn-backup { background:#0EA5E9; color:#fff; }
+.btn-backup:hover { background:#0284C7; }
+.btn-backup:disabled { background:#94A3B8; cursor:not-allowed; }
+.btn-delete { background:#EF4444; color:#fff; display:none; }
+.btn-delete:hover { background:#DC2626; }
+.btn-delete:disabled { background:#94A3B8; cursor:not-allowed; }
+.btn-reload { background:#6B7280; color:#fff; }
+.btn-reload:hover { background:#4B5563; }
+
+/* Confirm checkbox */
+.confirm-box {
+  background: #FEE2E2; border: 1.5px solid #FCA5A5; border-radius: 10px;
+  padding: 12px 18px; margin-top: 14px; display: flex; align-items: center; gap: 10px;
+}
+.confirm-box label { font-size: 13px; color: #991B1B; font-weight: 600; cursor: pointer; }
+.confirm-box input { width:18px; height:18px; cursor:pointer; }
+
+/* DELETE confirm input */
+.delete-confirm-section { margin-top: 14px; display: none; }
+.delete-confirm-section p { font-size:13px; color:#991B1B; margin-bottom:8px; font-weight:600; }
+.delete-input {
+  padding: 10px 14px; border: 2px solid #FCA5A5; border-radius: 8px;
+  font-family:'Tajawal',sans-serif; font-size:14px; font-weight:700;
+  letter-spacing:2px; width:180px; outline:none; margin-left:10px;
+}
+.delete-input:focus { border-color:#EF4444; }
+
+/* Diagnosis table */
+.diag-table { width:100%; border-collapse:collapse; font-size:11px; margin-top:10px; }
+.diag-table th { background:#0C3B5E; color:#fff; padding:8px; text-align:right; }
+.diag-table td { padding:8px; border-bottom:1px solid #F1F5F9; }
+.diag-table tr:last-child td { border-bottom:none; }
+.diag-table .pass { color:#10B981; font-weight:700; }
+.diag-table .fail { color:#EF4444; font-weight:700; }
+
+/* Progress */
+.progress-bar-wrap { background:#F1F5F9; border-radius:8px; height:12px; margin:10px 0; overflow:hidden; }
+.progress-bar-fill { background:linear-gradient(90deg,#0EA5E9,#10B981); height:12px; transition:width .3s; }
+
+/* Result box */
+.result-box { padding:20px; border-radius:12px; margin-top:14px; font-size:14px; font-weight:700; text-align:center; }
+.result-success { background:#D1FAE5; color:#065F46; border:2px solid #6EE7B7; }
+.result-error   { background:#FEE2E2; color:#991B1B; border:2px solid #FCA5A5; }
+.result-warn    { background:#FEF3C7; color:#92400E; border:2px solid #FDE68A; }
+
+/* Batch list */
+.batch-list { max-height:300px; overflow-y:auto; border:1px solid #E2E8F0; border-radius:8px; margin-top:10px; }
+.batch-item { padding:10px 14px; border-bottom:1px solid #F1F5F9; font-size:12px; }
+.batch-item:last-child { border-bottom:none; }
+.batch-item .bi-header { font-weight:700; color:#991B1B; margin-bottom:4px; }
+.batch-item .bi-meta { color:#6B7280; font-size:11px; }
+
+.copy-key { background:#EFF6FF;border:1px solid #BFDBFE;color:#1D4ED8;border-radius:5px;padding:2px 7px;cursor:pointer;font-family:monospace;font-size:10px; }
+.loading { text-align:center;padding:40px;color:#6B7280; }
+</style>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+</head>
+<body>
+
+<div class="danger-banner">
+  🔴 أداة تنظيف نهائية — اقرأ كل خطوة بعناية قبل التنفيذ
+</div>
+
+<div class="header">
+  <div>
+    <h1>🧹 تنظيف DEMO — V6.3 (إصلاح fmtDT)</h1>
+    <div style="font-size:11px;opacity:.7;margin-top:3px;">الحذف يتم فقط بعد 3 خطوات تأكيد إلزامية</div>
+  </div>
+  <div class="badge" id="connBadge">⏳ جاري التحميل...</div>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid">
+  <div class="stat-card"><div class="num" id="sTotal">—</div><div class="lbl">إجمالي السجلات</div></div>
+  <div class="stat-card demo"><div class="num" id="sBatches">—</div><div class="lbl">دفعات DEMO مؤكدة</div></div>
+  <div class="stat-card demo"><div class="num" id="sDemoRecs">—</div><div class="lbl">سجلات DEMO للحذف</div></div>
+  <div class="stat-card warn"><div class="num" id="sReview">—</div><div class="lbl">تحتاج مراجعة</div></div>
+  <div class="stat-card real"><div class="num" id="sReal">—</div><div class="lbl">حقيقي مؤكد</div></div>
+</div>
+
+<div class="step-section">
+
+  <!-- STEP 1: DIAGNOSIS -->
+  <div class="step-card active" id="step1">
+    <div class="step-num">الخطوة 1 من 3</div>
+    <div class="step-title">🔬 تشخيص البيانات</div>
+    <div id="diagResult"><div class="loading">⏳ جاري التشخيص...</div></div>
+    <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;">
+      <button class="btn btn-reload" onclick="runDiagnosis()">🔄 إعادة التشخيص</button>
+    </div>
+  </div>
+
+  <!-- STEP 2: BACKUP -->
+  <div class="step-card blocked" id="step2">
+    <div class="step-num">الخطوة 2 من 3 — إلزامية قبل الحذف</div>
+    <div class="step-title">⬇️ تنزيل النسخة الاحتياطية</div>
+    <p style="font-size:13px;color:#6B7280;margin-bottom:14px;">
+      سيتم تنزيل ملف JSON يحتوي على جميع سجلات transactions بمفاتيحها الأصلية.
+      احفظ الملف في مكان آمن قبل المتابعة.
+    </p>
+    <button class="btn btn-backup" id="btnBackup" onclick="downloadBackup()">
+      ⬇️ تنزيل نسخة احتياطية JSON
+    </button>
+    <div class="confirm-box" style="margin-top:14px;">
+      <input type="checkbox" id="backupConfirm" onchange="onBackupConfirm()">
+      <label for="backupConfirm">أؤكد أنني راجعت السجلات الحقيقية وحفظت النسخة الاحتياطية</label>
+    </div>
+  </div>
+
+  <!-- STEP 3: DELETE -->
+  <div class="step-card blocked danger" id="step3">
+    <div class="step-num">الخطوة 3 من 3 — لا رجعة بعدها</div>
+    <div class="step-title">🗑️ حذف دفعات DEMO المؤكدة</div>
+
+    <div id="step3Content">
+      <p style="font-size:13px;color:#991B1B;margin-bottom:10px;font-weight:600;">
+        ⚠️ سيتم حذف السجلات المحددة أعلاه فقط بعد التحقق الكامل مجدداً.
+      </p>
+      <div class="delete-confirm-section" id="deleteConfirmSection">
+        <p>اكتب <strong id="deleteCodeLabel">DELETE…</strong> للتأكيد النهائي:</p>
+        <input type="text" id="deleteInput" class="delete-input" placeholder="DELETE…" oninput="onDeleteInput()">
+        <button class="btn btn-delete" id="btnDelete" onclick="executeDelete()">
+          🗑️ حذف دفعات DEMO المؤكدة فقط
+        </button>
+      </div>
+    </div>
+
+    <div id="deleteProgress" style="display:none;">
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressBar" style="width:0%"></div></div>
+      <div id="progressText" style="font-size:12px;color:#6B7280;margin-top:4px;text-align:center;">جاري الحذف...</div>
+    </div>
+
+    <div id="deleteResult"></div>
+  </div>
+
+</div>
+
+<script>
+// ===== FIREBASE =====
+var db = null;
+try {
+  firebase.initializeApp({databaseURL:'https://atwad-booking-default-rtdb.firebaseio.com'});
+  db = firebase.database();
+} catch(e) {}
+
+// ============================================================
+// 18 قالب DEMO — multiset (وقود ميتسوبيشي مرتين عمداً)
+// ============================================================
+var DEMO_MULTISET = [
+  {type:'income',  amount:300,  desc:'تنظيف مكيف - Dr. Hasan',   party:'Dr. Hasan'},
+  {type:'income',  amount:230,  desc:'صيانة - Farash Al Shareef', party:'Farash'},
+  {type:'income',  amount:300,  desc:'تعبئة غاز - أم سعود',       party:'أم سعود'},
+  {type:'income',  amount:110,  desc:'تنظيف - نوره زبونة',        party:'نوره'},
+  {type:'income',  amount:1020, desc:'صيانة - Hashim Khalifa',    party:'Hashim'},
+  {type:'income',  amount:360,  desc:'تنظيف - M. AlShaalan',      party:'AlShaalan'},
+  {type:'income',  amount:150,  desc:'كشف أعطال - Sultan',        party:'Sultan'},
+  {type:'income',  amount:240,  desc:'تنظيف - Abdullah',          party:'Abdullah'},
+  {type:'income',  amount:150,  desc:'صيانة - Fury Rose',         party:'Fury Rose'},
+  {type:'income',  amount:320,  desc:'تنظيف - Abdurrahman',       party:'Abdurrahman'},
+  {type:'expense', amount:100,  desc:'وقود ميتسوبيشي',            party:''},
+  {type:'expense', amount:285,  desc:'قطع غيار - فريون R22',      party:''},
+  {type:'expense', amount:30,   desc:'غداء الفنيين',               party:''},
+  {type:'expense', amount:100,  desc:'وقود',                       party:''},
+  {type:'expense', amount:237,  desc:'كباستر وقطع غيار',           party:''},
+  {type:'expense', amount:400,  desc:'إعلان سناب أبحر',            party:''},
+  {type:'expense', amount:100,  desc:'وقود ميتسوبيشي',            party:''},
+  {type:'expense', amount:27,   desc:'طعام الفنيين',               party:''},
+];
+var DEMO_TOTAL = DEMO_MULTISET.length; // 18
+
+// بصمة multiset المطلوبة
+var DEMO_SIG_REQUIRED = {};
+DEMO_MULTISET.forEach(function(t) {
+  var s = mkSig(t.type, t.amount, t.desc, t.party);
+  DEMO_SIG_REQUIRED[s] = (DEMO_SIG_REQUIRED[s]||0) + 1;
+});
+
+var DEMO_SIG_SET = new Set(Object.keys(DEMO_SIG_REQUIRED));
+
+function mkSig(type, amount, desc, party) {
+  return String(type)+'||'+String(Number(amount))+'||'+String(desc)+'||'+String(party||'');
+}
+function recSig(r) {
+  return mkSig(r.type||'', r.amount||0, r.desc||r.description||'', r.party||'');
+}
+
+var BATCH_WINDOW_MS = 5000;
+
+// ===== STATE =====
+var allRecords    = [];
+var diagResult    = null;   // {batches, reviewRecs, realRecs, deleteKeys}
+var diagVerified  = false;  // true if diagnosis passed all guards
+var backupDone    = false;
+
+// ===== DIAGNOSIS =====
+function detectBatches(records) {
+  var demoMatchRecs = records.filter(function(r){ return DEMO_SIG_SET.has(recSig(r)); });
+  var nonDemoRecs   = records.filter(function(r){ return !DEMO_SIG_SET.has(recSig(r)); });
+
+  demoMatchRecs.sort(function(a,b){
+    return new Date(a.createdAt||0) - new Date(b.createdAt||0);
+  });
+
+  var windows = [];
+  var current = null;
+  demoMatchRecs.forEach(function(r) {
+    var ts = r.createdAt ? new Date(r.createdAt).getTime() : 0;
+    if (!current || (ts - current.endTs) > BATCH_WINDOW_MS) {
+      current = {startTs:ts, endTs:ts, records:[]};
+      windows.push(current);
+    }
+    current.endTs = ts;
+    current.records.push(r);
+  });
+
+  var batches    = [];
+  var reviewRecs = [];
+
+  windows.forEach(function(w) {
+    var windowSigCount = {};
+    w.records.forEach(function(r){
+      var s = recSig(r);
+      windowSigCount[s] = (windowSigCount[s]||0)+1;
+    });
+
+    // multiset intersection
+    var matched = 0;
+    Object.keys(DEMO_SIG_REQUIRED).forEach(function(s){
+      matched += Math.min(DEMO_SIG_REQUIRED[s], windowSigCount[s]||0);
+    });
+
+    var isFullDemoBatch = (matched === DEMO_TOTAL); // يجب 18/18
+
+    if (isFullDemoBatch) {
+      batches.push({
+        records:  w.records,
+        matched:  matched,
+        startTs:  w.startTs,
+        endTs:    w.endTs,
+        duration: Math.round((w.endTs - w.startTs)/1000)
+      });
+    } else {
+      w.records.forEach(function(r){ reviewRecs.push(r); });
+    }
+  });
+
+  var deleteKeys = new Set();
+  var realKeys   = new Set();
+  batches.forEach(function(b){ b.records.forEach(function(r){ deleteKeys.add(r._fbKey); }); });
+  nonDemoRecs.forEach(function(r){ realKeys.add(r._fbKey); });
+
+  return {
+    batches:    batches,
+    reviewRecs: reviewRecs,
+    realRecs:   nonDemoRecs,
+    realKeys:   realKeys,
+    deleteKeys: deleteKeys,
+    total:      records.length
+  };
+}
+
+function runDiagnosis() {
+  diagVerified = false;
+  document.getElementById('diagResult').innerHTML = '<div class="loading">⏳ جاري إعادة قراءة transactions من Firebase...</div>';
+  document.getElementById('step2').classList.add('blocked');
+  document.getElementById('step3').classList.add('blocked');
+  document.getElementById('backupConfirm').checked = false;
+  document.getElementById('deleteConfirmSection').style.display = 'none';
+  document.getElementById('btnDelete').style.display = 'none';
+  document.getElementById('deleteResult').innerHTML = '';
+
+  if (!db) {
+    document.getElementById('diagResult').innerHTML = '<div class="result-box result-error">❌ تعذر الاتصال بـ Firebase</div>';
+    return;
+  }
+
+  db.ref('transactions').once('value', function(snap) {
+    try {
+      var records = [];
+      snap.forEach(function(child){
+        records.push(Object.assign({}, child.val(), {_fbKey: child.key}));
+      });
+      allRecords = records;
+      diagResult = detectBatches(records);
+
+      // Update stats
+      document.getElementById('sTotal').textContent    = records.length;
+      document.getElementById('sBatches').textContent  = diagResult.batches.length;
+      document.getElementById('sDemoRecs').textContent = diagResult.deleteKeys.size;
+      document.getElementById('sReview').textContent   = diagResult.reviewRecs.length;
+      document.getElementById('sReal').textContent     = diagResult.realRecs.length;
+      document.getElementById('connBadge').textContent = '✅ متصل • ' + records.length + ' سجل';
+
+      renderDiagResult();
+    } catch(e) {
+      console.error('runDiagnosis callback error:', e);
+      document.getElementById('diagResult').innerHTML =
+        '<div class="result-box result-error">❌ خطأ أثناء التشخيص: ' + e.message + '<br>'
+        + '<small style="font-family:monospace;">' + (e.stack||'').split('\n')[0] + '</small></div>';
+    }
+  }, function(err) {
+    console.error('Firebase read error:', err);
+    document.getElementById('diagResult').innerHTML =
+      '<div class="result-box result-error">❌ فشل قراءة Firebase: ' + err.message + '</div>';
+  });
+}
+
+function renderDiagResult() {
+  try {
+  var d = diagResult;
+
+  var expectedDelete = d.batches.length * DEMO_TOTAL;
+  var deleteCode = 'DELETE' + expectedDelete;
+
+  // التحقق: لا يجوز أي تداخل بين deleteKeys و realKeys
+  var realInDelete = d.realRecs.filter(function(r){ return d.deleteKeys.has(r._fbKey); });
+
+  // Guard checks — V6.2: يجوز وجود سجلات حقيقية
+  var checks = [
+    { label:'عدد دفعات DEMO >= 1',
+      pass: d.batches.length >= 1,
+      value: d.batches.length },
+    { label:'كل دفعة = ' + DEMO_TOTAL + ' سجلاً بالضبط',
+      pass: d.batches.every(function(b){return b.records.length===DEMO_TOTAL;}),
+      value: d.batches.map(function(b){return b.records.length;}).join(', ')||'—' },
+    { label:'كل دفعة مطابقة ' + DEMO_TOTAL + '/' + DEMO_TOTAL,
+      pass: d.batches.every(function(b){return b.matched===DEMO_TOTAL;}),
+      value: d.batches.map(function(b){return b.matched+'/'+DEMO_TOTAL;}).join(', ')||'—' },
+    { label:'review = 0',
+      pass: d.reviewRecs.length === 0,
+      value: d.reviewRecs.length },
+    { label:'deleteKeys = دفعات × ' + DEMO_TOTAL,
+      pass: d.deleteKeys.size === expectedDelete,
+      value: d.deleteKeys.size + ' (متوقع: ' + expectedDelete + ')' },
+    { label:'total = deleteKeys + real',
+      pass: d.total === (expectedDelete + d.realRecs.length),
+      value: d.total + ' = ' + expectedDelete + ' + ' + d.realRecs.length },
+    { label:'لا يوجد تداخل بين deleteKeys و realKeys',
+      pass: realInDelete.length === 0,
+      value: realInDelete.length === 0 ? '✅ لا تداخل' : '❌ تداخل في ' + realInDelete.length + ' مفتاح' },
+  ];
+
+  var allPass = checks.every(function(c){ return c.pass; });
+  diagVerified = allPass;
+
+  var html = '<table class="diag-table"><thead><tr><th>الشرط</th><th>القيمة الفعلية</th><th>النتيجة</th></tr></thead><tbody>';
+  checks.forEach(function(c) {
+    html += '<tr><td>' + c.label + '</td><td>' + c.value + '</td>'
+      + '<td class="' + (c.pass?'pass':'fail') + '">' + (c.pass?'✅ مطابق':'❌ لا يطابق') + '</td></tr>';
+  });
+  html += '</tbody></table>';
+
+  if (allPass) {
+    // تحديث كود التأكيد الديناميكي
+    var lbl = document.getElementById('deleteCodeLabel');
+    var inp = document.getElementById('deleteInput');
+    if (lbl) lbl.textContent = deleteCode;
+    if (inp) { inp.placeholder = deleteCode; inp.value = ''; }
+    window._currentDeleteCode = deleteCode;
+
+    html += '<div class="result-box result-success" style="margin-top:10px;">✅ جميع الشروط مطابقة — يمكن المتابعة للخطوة التالية</div>';
+
+    // عرض السجلات الحقيقية التي ستبقى
+    if (d.realRecs.length > 0) {
+      html += '<div style="margin-top:12px;background:#F0FDF4;border:2px solid #6EE7B7;border-radius:10px;padding:14px;">'
+        + '<div style="font-weight:700;color:#065F46;margin-bottom:10px;">✅ السجلات الحقيقية التي سيتم الاحتفاظ بها (' + d.realRecs.length + ' سجل)</div>'
+        + '<table style="width:100%;border-collapse:collapse;font-size:11px;">'
+        + '<thead><tr style="background:#D1FAE5;">'
+        + '<th style="padding:6px 8px;text-align:right;">Firebase Key</th>'
+        + '<th style="padding:6px 8px;text-align:right;">التاريخ</th>'
+        + '<th style="padding:6px 8px;text-align:right;">النوع</th>'
+        + '<th style="padding:6px 8px;text-align:right;">المبلغ</th>'
+        + '<th style="padding:6px 8px;text-align:right;">البيان</th>'
+        + '<th style="padding:6px 8px;text-align:right;">العميل/الطرف</th>'
+        + '<th style="padding:6px 8px;text-align:right;">createdAt</th>'
+        + '</tr></thead><tbody>';
+      d.realRecs.forEach(function(r) {
+        var typeHtml = r.type==='income' ? '<span style="color:#10B981;font-weight:700;">💵 إيراد</span>' : '<span style="color:#EF4444;font-weight:700;">💸 مصروف</span>';
+        html += '<tr style="border-bottom:1px solid #D1FAE5;">'
+          + '<td style="padding:6px 8px;font-family:monospace;font-size:10px;">' + r._fbKey + '</td>'
+          + '<td style="padding:6px 8px;">' + (r.date||'—') + '</td>'
+          + '<td style="padding:6px 8px;">' + typeHtml + '</td>'
+          + '<td style="padding:6px 8px;font-weight:700;">' + fmt(parseFloat(r.amount)||0) + ' ﷼</td>'
+          + '<td style="padding:6px 8px;">' + (r.desc||r.description||'—') + '</td>'
+          + '<td style="padding:6px 8px;">' + (r.party||'—') + '</td>'
+          + '<td style="padding:6px 8px;font-size:10px;color:#6B7280;">' + fmtDT(r.createdAt) + '</td>'
+          + '</tr>';
+      });
+      html += '</tbody></table></div>';
+    }
+
+    html += '<div style="margin-top:10px;"><strong>الدفعات المكتشفة:</strong><div class="batch-list">';
+    d.batches.forEach(function(b, i) {
+      var dt = new Date(b.startTs);
+      var incAmt = b.records.filter(function(r){return r.type==='income';}).reduce(function(s,r){return s+(parseFloat(r.amount)||0);},0);
+      var expAmt = b.records.filter(function(r){return r.type==='expense';}).reduce(function(s,r){return s+(parseFloat(r.amount)||0);},0);
+      html += '<div class="batch-item"><div class="bi-header">دفعة #'+(i+1)+' — '+dt.toLocaleString('ar-SA')+'</div>'
+        + '<div class="bi-meta">'+b.records.length+' سجل | مطابقة '+b.matched+'/'+DEMO_TOTAL+' | مدة '+b.duration+'ث'
+        + ' | إيرادات: '+fmt(incAmt)+' ﷼ | مصروفات: '+fmt(expAmt)+' ﷼</div></div>';
+    });
+    html += '</div></div>';
+    document.getElementById('step2').classList.remove('blocked');
+  } else {
+    html += '<div class="result-box result-error" style="margin-top:10px;">❌ الشروط غير مكتملة — لا يمكن المتابعة للحذف<br>راجع القيم أعلاه وتأكد من صحة البيانات</div>';
+  }
+
+  document.getElementById('diagResult').innerHTML = html;
+  } catch(e) {
+    console.error('renderDiagResult error:', e);
+    document.getElementById('diagResult').innerHTML =
+      '<div class="result-box result-error">❌ خطأ في عرض النتائج: ' + e.message + '<br>'
+      + '<small style="font-family:monospace;">' + (e.stack||'').split('\n')[0] + '</small></div>';
+  }
+}
+
+// ===== BACKUP =====
+function downloadBackup() {
+  if (!db) { showToast('❌ Firebase غير متاح'); return; }
+  var btn = document.getElementById('btnBackup');
+  btn.disabled = true;
+  btn.textContent = '⏳ جاري التنزيل...';
+
+  db.ref('transactions').once('value', function(snap) {
+    var data = snap.val() || {};
+    var json = JSON.stringify(data, null, 2);
+    var now = new Date();
+    var pad = function(n){return String(n).padStart(2,'0');};
+    var fname = 'transactions-backup-'
+      + now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate())
+      + '-' + pad(now.getHours()) + pad(now.getMinutes()) + '.json';
+    var blob = new Blob([json], {type:'application/json;charset=utf-8;'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = fname;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+
+    btn.disabled = false;
+    btn.textContent = '✅ تم التنزيل — ' + fname;
+    showToast('✅ تم تنزيل: ' + fname);
+  }, function(err) {
+    btn.disabled = false;
+    btn.textContent = '⬇️ تنزيل نسخة احتياطية JSON';
+    showToast('❌ فشل التنزيل: ' + err.message);
+  });
+}
+
+function onBackupConfirm() {
+  backupDone = document.getElementById('backupConfirm').checked;
+  if (backupDone && diagVerified) {
+    document.getElementById('step3').classList.remove('blocked');
+    document.getElementById('deleteConfirmSection').style.display = 'block';
+  } else {
+    document.getElementById('step3').classList.add('blocked');
+    document.getElementById('deleteConfirmSection').style.display = 'none';
+    document.getElementById('btnDelete').style.display = 'none';
+  }
+}
+
+function onDeleteInput() {
+  var val = document.getElementById('deleteInput').value.trim();
+  var expected = window._currentDeleteCode || '';
+  var btn = document.getElementById('btnDelete');
+  btn.style.display = (val === expected && expected !== '') ? 'inline-block' : 'none';
+}
+
+// ===== EXECUTE DELETE =====
+function executeDelete() {
+  if (!db) { showToast('❌ Firebase غير متاح'); return; }
+  if (!diagVerified) { showToast('❌ التشخيص لم يُكتمل'); return; }
+  if (!backupDone)   { showToast('❌ يجب تأكيد النسخة الاحتياطية'); return; }
+  var expectedCode = window._currentDeleteCode || '';
+  if (document.getElementById('deleteInput').value.trim() !== expectedCode || !expectedCode) {
+    showToast('❌ كلمة التأكيد غير صحيحة — المطلوب: ' + expectedCode); return;
+  }
+
+  // STEP A: Re-read Firebase and re-diagnose
+  document.getElementById('deleteProgress').style.display = 'block';
+  document.getElementById('progressText').textContent = 'جاري إعادة قراءة Firebase قبل الحذف...';
+  document.getElementById('btnDelete').disabled = true;
+  document.getElementById('deleteResult').innerHTML = '';
+
+  db.ref('transactions').once('value', function(snap) {
+    var freshRecords = [];
+    snap.forEach(function(child){
+      freshRecords.push(Object.assign({}, child.val(), {_fbKey: child.key}));
+    });
+
+    var freshDiag = detectBatches(freshRecords);
+    var freshExpected = freshDiag.batches.length * DEMO_TOTAL;
+    var freshRealInDelete = freshDiag.realRecs.filter(function(r){ return freshDiag.deleteKeys.has(r._fbKey); });
+
+    // مقارنة مع التشخيص الأصلي لاكتشاف أي تغيير
+    var diagChanged =
+      freshDiag.batches.length     !== diagResult.batches.length     ||
+      freshDiag.deleteKeys.size    !== diagResult.deleteKeys.size    ||
+      freshDiag.realRecs.length    !== diagResult.realRecs.length    ||
+      freshDiag.reviewRecs.length  !== diagResult.reviewRecs.length  ||
+      // تحقق من تطابق مفاتيح real
+      freshDiag.realRecs.some(function(r){ return !diagResult.realKeys || !diagResult.realKeys.has(r._fbKey); }) ||
+      // تحقق من مفاتيح deleteKeys
+      Array.from(freshDiag.deleteKeys).some(function(k){ return !diagResult.deleteKeys.has(k); });
+
+    // STEP B: شروط الحماية V6.2
+    var allPass =
+      freshDiag.batches.length >= 1 &&
+      freshDiag.batches.every(function(b){return b.records.length===DEMO_TOTAL && b.matched===DEMO_TOTAL;}) &&
+      freshDiag.deleteKeys.size === freshExpected &&
+      freshDiag.total === (freshExpected + freshDiag.realRecs.length) &&
+      freshDiag.reviewRecs.length === 0 &&
+      freshRealInDelete.length === 0 && // لا تداخل بين deleteKeys و realKeys
+      !diagChanged;
+
+    if (!allPass) {
+      document.getElementById('deleteProgress').style.display = 'none';
+      document.getElementById('btnDelete').disabled = false;
+      var reason = diagChanged ? 'بيانات Firebase تغيرت بعد الفحص' : 'شروط الحماية غير مكتملة';
+      document.getElementById('deleteResult').innerHTML =
+        '<div class="result-box result-error">❌ تم إلغاء الحذف: ' + reason + '<br>'
+        + 'السجلات: ' + freshDiag.total + ' | دفعات: ' + freshDiag.batches.length
+        + ' | DEMO: ' + freshDiag.deleteKeys.size + ' | حقيقي: ' + freshDiag.realRecs.length
+        + (freshRealInDelete.length > 0 ? '<br>⚠️ تداخل في المفاتيح: ' + freshRealInDelete.length : '')
+        + '<br>أعد التشخيص من الخطوة 1</div>';
+      return;
+    }
+
+    // STEP C: Final confirmation dialog
+    var msg = 'تأكيد نهائي — لا رجعة بعدها:\n\n'
+      + '• سيتم حذف ' + freshDiag.deleteKeys.size + ' سجل DEMO\n'
+      + '• عدد الدفعات: ' + freshDiag.batches.length + '\n'
+      + '• كل دفعة مطابقة ' + DEMO_TOTAL + '/' + DEMO_TOTAL + '\n'
+      + '• سجلات حقيقية ستبقى: ' + freshDiag.realRecs.length + '\n'
+      + '• review = 0\n'
+      + '• لا تداخل بين DEMO والحقيقي\n\n'
+      + 'هل أنتِ متأكدة تماماً؟';
+
+    if (!confirm(msg)) {
+      document.getElementById('deleteProgress').style.display = 'none';
+      document.getElementById('btnDelete').disabled = false;
+      showToast('تم إلغاء العملية');
+      return;
+    }
+
+    // STEP D: Delete key by key
+    var keysToDelete = Array.from(freshDiag.deleteKeys);
+    var total   = keysToDelete.length;
+    var deleted = 0;
+    var failed  = 0;
+
+    console.log('=== V6.2 DELETE START ===');
+    console.log('Total keys to delete:', total);
+    console.log('Real keys to preserve:', Array.from(freshDiag.realKeys));
+
+    function deleteNext(i) {
+      if (i >= total) {
+        finishDelete(deleted, failed, total, freshDiag.realKeys);
+        return;
+      }
+
+      var pct = Math.round((i/total)*100);
+      document.getElementById('progressBar').style.width = pct + '%';
+      document.getElementById('progressText').textContent = 'جاري الحذف: ' + i + ' / ' + total;
+
+      var key = keysToDelete[i];
+
+      // حماية مزدوجة: يجب أن يكون في deleteKeys وليس في realKeys
+      if (!freshDiag.deleteKeys.has(key)) {
+        console.warn('SKIPPED — not in deleteKeys:', key);
+        deleteNext(i+1); return;
+      }
+      if (freshDiag.realKeys.has(key)) {
+        console.error('BLOCKED — key is in realKeys, will NOT delete:', key);
+        failed++;
+        deleteNext(i+1); return;
+      }
+
+      console.log('Deleting key:', key);
+      db.ref('transactions/' + key).remove()
+        .then(function() {
+          console.log('Deleted successfully:', key);
+          deleted++;
+          deleteNext(i+1);
+        })
+        .catch(function(err) {
+          console.error('Delete failed:', key, err.message);
+          failed++;
+          deleteNext(i+1);
+        });
+    }
+
+    deleteNext(0);
+
+  }, function(err) {
+    document.getElementById('deleteProgress').style.display = 'none';
+    document.getElementById('btnDelete').disabled = false;
+    document.getElementById('deleteResult').innerHTML =
+      '<div class="result-box result-error">❌ فشل قراءة Firebase: ' + err.message + '</div>';
+  });
+}
+
+function finishDelete(deleted, failed, total, expectedRealKeys) {
+  document.getElementById('progressBar').style.width = '100%';
+  document.getElementById('progressText').textContent = 'اكتمل الحذف';
+
+  console.log('=== V6.2 DELETE COMPLETE ===');
+  console.log('Deleted:', deleted, '— Failed:', failed);
+
+  db.ref('transactions').once('value', function(snap) {
+    var remaining = [];
+    var remainingData = {};
+    snap.forEach(function(child){
+      remaining.push(child.key);
+      remainingData[child.key] = child.val();
+    });
+
+    var expectedRemaining = expectedRealKeys ? Array.from(expectedRealKeys) : [];
+    var allRealPreserved = expectedRemaining.every(function(k){ return remaining.indexOf(k) !== -1; });
+    var onlyRealRemains  = remaining.length === expectedRemaining.length && allRealPreserved;
+
+    var resultHtml = '';
+    if (failed === 0 && onlyRealRemains && expectedRemaining.length > 0) {
+      resultHtml = '<div class="result-box result-success">'
+        + '✅ تم حذف ' + deleted + ' سجل DEMO بنجاح<br>'
+        + '✅ تم الاحتفاظ بالسجل الحقيقي دون تعديل<br>'
+        + '<span style="font-family:monospace;font-size:11px;color:#065F46;">Key: ' + expectedRemaining[0] + '</span></div>';
+    } else if (failed === 0 && remaining.length === 0 && expectedRemaining.length === 0) {
+      resultHtml = '<div class="result-box result-success">'
+        + '✅ تم حذف ' + deleted + ' سجل DEMO بنجاح<br>'
+        + '✅ transactions أصبحت فارغة تماماً</div>';
+    } else {
+      resultHtml = '<div class="result-box result-error">'
+        + '❌ التنظيف لم يكتمل كما هو متوقع<br>'
+        + 'تم الحذف: ' + deleted + ' | فشل: ' + failed + '<br>'
+        + 'متبقٍ: ' + remaining.length + ' (متوقع: ' + expectedRemaining.length + ')<br>'
+        + (!allRealPreserved ? '⚠️ السجل الحقيقي قد يكون تأثر — راجع Firebase<br>' : '')
+        + (remaining.length > 0 ? 'المفاتيح المتبقية: ' + remaining.slice(0,5).join(', ') : '')
+        + '</div>';
+    }
+
+    document.getElementById('deleteResult').innerHTML = resultHtml;
+    document.getElementById('deleteProgress').style.display = 'none';
+    document.getElementById('sTotal').textContent    = remaining.length;
+    document.getElementById('sDemoRecs').textContent = Math.max(0, remaining.length - expectedRemaining.length);
+  });
+}
+
+// ===== UTILS =====
+function fmt(n) { return Number(Math.round(n||0)).toLocaleString('ar-SA'); }
+
+function fmtDT(d) {
+  if (!d) return '—';
+  try { return new Date(d).toLocaleString('ar-SA', {dateStyle:'short', timeStyle:'short'}); }
+  catch(e) { return String(d); }
+}
+
+function showToast(msg) {
+  var t = document.createElement('div');
+  t.textContent = msg;
+  t.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#0C3B5E;color:#fff;padding:10px 20px;border-radius:10px;font-family:Tajawal,sans-serif;font-size:14px;z-index:9999;box-shadow:0 4px 14px rgba(0,0,0,.2);';
+  document.body.appendChild(t);
+  setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t); }, 3000);
+}
+
+function copyKey(key) {
+  navigator.clipboard.writeText(key).then(function(){ showToast('✅ تم نسخ المفتاح'); });
+}
+
+// ===== INIT =====
+runDiagnosis();
+</script>
+</body>
+</html>
