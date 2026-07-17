@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>أطواد — تنظيف المعاملات V2</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Tajawal', sans-serif; background: #F0F9FF; color: #0C3B5E; font-size: 14px; }
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
+
+.warning-banner {
+  background: #FEF3C7; border-bottom: 2px solid #F59E0B; color: #92400E;
+  padding: 12px 20px; text-align: center; font-weight: 700; font-size: 14px;
+  position: sticky; top: 0; z-index: 100;
+}
+.header {
+  background: #0C3B5E; color: #fff; padding: 14px 24px;
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+}
+.header h1 { font-size: 17px; font-weight: 700; }
+.badge { background: #0EA5E9; padding: 4px 12px; border-radius: 20px; font-size: 12px; }
+
+.stats-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px; padding: 16px 24px 8px;
+}
+.stat-card {
+  background: #fff; border-radius: 10px; padding: 14px; text-align: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,.06);
+}
+.stat-card .num { font-size: 24px; font-weight: 700; color: #0C3B5E; }
+.stat-card .lbl { font-size: 11px; color: #6B7280; margin-top: 3px; }
+.stat-card.keep .num { color: #10B981; }
+.stat-card.del .num { color: #EF4444; }
+.stat-card.dup .num { color: #8B5CF6; }
+
+/* Tabs */
+.tabs {
+  display: flex; gap: 0; padding: 16px 24px 0; border-bottom: 2px solid #E2E8F0;
+  background: #fff; margin: 0 0 0 0;
+}
+.tab-btn {
+  padding: 10px 20px; border: none; background: transparent; cursor: pointer;
+  font-family: 'Tajawal', sans-serif; font-size: 13px; font-weight: 600;
+  color: #6B7280; border-bottom: 3px solid transparent; margin-bottom: -2px;
+}
+.tab-btn.active { color: #0C3B5E; border-bottom-color: #0EA5E9; }
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* Controls */
+.controls {
+  padding: 14px 24px 10px;
+  display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+}
+.filter-btn {
+  padding: 6px 14px; border: 1.5px solid #CBD5E1; border-radius: 18px;
+  background: #fff; cursor: pointer; font-family: 'Tajawal', sans-serif;
+  font-size: 12px; color: #374151;
+}
+.filter-btn.active { background: #0C3B5E; color: #fff; border-color: #0C3B5E; }
+.search-box {
+  padding: 7px 14px; border: 1.5px solid #CBD5E1; border-radius: 18px;
+  font-family: 'Tajawal', sans-serif; font-size: 12px; min-width: 180px; outline: none;
+}
+.export-btn {
+  padding: 7px 16px; background: #10B981; color: #fff; border: none;
+  border-radius: 18px; cursor: pointer; font-family: 'Tajawal', sans-serif;
+  font-size: 12px; font-weight: 700; margin-right: auto;
+}
+
+/* Table */
+.table-wrap { padding: 0 24px 30px; overflow-x: auto; }
+table {
+  width: 100%; border-collapse: collapse; background: #fff;
+  border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,.06);
+  min-width: 750px;
+}
+thead { background: #0C3B5E; color: #fff; }
+th { padding: 10px 8px; font-size: 11px; font-weight: 600; text-align: right; white-space: nowrap; }
+td { padding: 9px 8px; border-bottom: 1px solid #F1F5F9; font-size: 11px; vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #F8FAFC; }
+
+.row-keep { background: #F0FDF4; }
+.row-keep:hover td { background: #DCFCE7 !important; }
+.row-del  { background: #FFF1F2; }
+.row-del:hover td  { background: #FFE4E6 !important; }
+.row-unique { }
+
+.group-header td {
+  background: #EDE9FE !important; color: #5B21B6;
+  font-weight: 700; font-size: 11px; padding: 7px 8px;
+  border-top: 2px solid #C4B5FD;
+}
+
+.badge-keep { display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;background:#D1FAE5;color:#065F46; }
+.badge-del  { display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;background:#FEE2E2;color:#991B1B; }
+.badge-uniq { display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;background:#F0F9FF;color:#0369A1; }
+
+.type-inc { color:#10B981;font-weight:700; }
+.type-exp { color:#EF4444;font-weight:700; }
+
+.copy-key {
+  background:#EFF6FF;border:1px solid #BFDBFE;color:#1D4ED8;
+  border-radius:5px;padding:2px 7px;cursor:pointer;
+  font-family:monospace;font-size:10px;white-space:nowrap;
+}
+
+.loading { text-align:center;padding:60px;color:#6B7280;font-size:15px; }
+.no-data { text-align:center;padding:30px;color:#9CA3AF; }
+
+/* Summary list */
+.summary-section { padding: 16px 24px 30px; }
+.summary-card {
+  background: #fff; border-radius: 12px; padding: 16px 20px; margin-bottom: 16px;
+  box-shadow: 0 2px 6px rgba(0,0,0,.06);
+}
+.summary-card h3 { font-size: 14px; font-weight: 700; margin-bottom: 12px; }
+.summary-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 0; border-bottom: 1px solid #F1F5F9; font-size: 12px;
+}
+.summary-item:last-child { border-bottom: none; }
+.summary-item .key { font-family: monospace; font-size: 10px; color: #6B7280; }
+.summary-item .info { flex: 1; padding: 0 12px; }
+.summary-item .amt { font-weight: 700; white-space: nowrap; }
+
+@media (max-width: 768px) {
+  .stats-grid { grid-template-columns: repeat(2,1fr); padding: 10px; }
+  .table-wrap { padding: 0 8px 30px; }
+  .controls { padding: 10px 10px; }
+  .summary-section { padding: 10px 10px 30px; }
+}
+</style>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+</head>
+<body>
+
+<div class="warning-banner">
+  ⚠️ معاينة فقط — لا يتم حذف أو تعديل أي بيانات في هذه المرحلة
+</div>
+
+<div class="header">
+  <div>
+    <h1>🧹 تنظيف المعاملات المالية — V2</h1>
+    <div style="font-size:11px;opacity:.7;margin-top:3px;">تكرار مطابق تماماً: date + type + amount + desc + party</div>
+  </div>
+  <div class="badge" id="connBadge">⏳ جاري التحميل...</div>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="num" id="sTotal">—</div>
+    <div class="lbl">إجمالي السجلات</div>
+  </div>
+  <div class="stat-card dup">
+    <div class="num" id="sDupGroups">—</div>
+    <div class="lbl">مجموعات تكرار</div>
+  </div>
+  <div class="stat-card keep">
+    <div class="num" id="sKeep">—</div>
+    <div class="lbl">✅ ستبقى</div>
+  </div>
+  <div class="stat-card del">
+    <div class="num" id="sDel">—</div>
+    <div class="lbl">🗑️ مرشحة للحذف</div>
+  </div>
+  <div class="stat-card">
+    <div class="num" id="sUnique">—</div>
+    <div class="lbl">سجلات فريدة</div>
+  </div>
+</div>
+
+<!-- Tabs -->
+<div class="tabs" style="background:#F8FAFC;padding:0 24px;">
+  <button class="tab-btn active" onclick="switchTab('all', this)">📋 جميع السجلات</button>
+  <button class="tab-btn" onclick="switchTab('keep', this)">✅ ستبقى (<span id="tabKeepCount">—</span>)</button>
+  <button class="tab-btn" onclick="switchTab('del', this)">🗑️ مرشحة للحذف (<span id="tabDelCount">—</span>)</button>
+</div>
+
+<!-- Tab: All records -->
+<div class="tab-content active" id="tab-all">
+  <div class="controls">
+    <button class="filter-btn active" onclick="setFilter('all',this,'all')">الكل</button>
+    <button class="filter-btn" onclick="setFilter('dup',this,'all')">🔁 مكررة فقط</button>
+    <button class="filter-btn" onclick="setFilter('unique',this,'all')">🔵 فريدة فقط</button>
+    <input class="search-box" type="text" id="searchAll"
+      placeholder="بحث بالبيان أو المبلغ أو التاريخ..." oninput="renderAll()">
+    <button class="export-btn" onclick="exportCSV('all')">📥 تصدير CSV</button>
+  </div>
+  <div class="table-wrap">
+    <div class="loading" id="loadingMsg">⏳ جاري التحميل...</div>
+    <table id="tableAll" style="display:none">
+      <thead><tr>
+        <th>#</th><th>القرار</th><th>المجموعة</th><th>Firebase Key</th>
+        <th>التاريخ</th><th>النوع</th><th>المبلغ</th><th>البيان</th>
+        <th>الفئة</th><th>الحالة</th><th>createdAt</th><th>سبب الاحتفاظ</th>
+      </tr></thead>
+      <tbody id="bodyAll"></tbody>
+    </table>
+    <div class="no-data" id="noDataAll" style="display:none">لا توجد سجلات مطابقة</div>
+  </div>
+</div>
+
+<!-- Tab: Keep list -->
+<div class="tab-content" id="tab-keep">
+  <div class="summary-section">
+    <div class="summary-card">
+      <h3>✅ السجلات التي ستبقى بعد التنظيف</h3>
+      <div id="keepList"><div class="loading">جاري التحميل...</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Tab: Delete list -->
+<div class="tab-content" id="tab-del">
+  <div class="summary-section">
+    <div class="summary-card" style="border:2px solid #FCA5A5;">
+      <h3 style="color:#991B1B;">🗑️ السجلات المرشحة للحذف — للمراجعة فقط</h3>
+      <div id="delList"><div class="loading">جاري التحميل...</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== FIREBASE =====
+var db = null;
+try {
+  firebase.initializeApp({databaseURL:'https://atwad-booking-default-rtdb.firebaseio.com'});
+  db = firebase.database();
+} catch(e) { console.log('Firebase:', e); }
+
+// ===== STATE =====
+var allRecords  = [];
+var keepKeys    = new Set();
+var deleteKeys  = new Set();
+var keepReasons = {};
+var dupGroupMap = {};
+var currentFilter = 'all';
+
+// ===== DEDUP KEY — exact match =====
+function makeDupKey(r) {
+  var desc  = (r.desc || r.description || '').trim();
+  var party = (r.party || '').trim();
+  var amt   = String(parseFloat(r.amount) || 0);
+  return (r.date||'') + '||' + (r.type||'') + '||' + amt + '||' + desc + '||' + party;
+}
+
+// ===== SCORE — which record to keep =====
+function scoreRecord(r) {
+  var s = 0;
+  if (r.createdAt) s += 100;
+  if (r._fbKey && r._fbKey.length > 10) s += 50; // Firebase auto-key = older/more stable
+  if (r.firebaseRef) s += 30;  // imported from booking
+  if (r.id) s += 10;
+  if (r.party) s += 5;
+  if (r.category) s += 5;
+  if (r.method) s += 3;
+  if (r.status === 'مدفوع') s += 20;
+  if (r.status === 'معلق') s += 5;
+  return s;
+}
+
+function fmtAmt(r) {
+  var amt = parseFloat(r.amount) || 0;
+  var sym = r.type === 'income' ? '+' : '−';
+  return sym + Number(Math.round(amt)).toLocaleString('ar-SA') + ' ﷼';
+}
+function fmtDT(d) {
+  if (!d) return '—';
+  try { return new Date(d).toLocaleString('ar-SA',{dateStyle:'short',timeStyle:'short'}); } catch { return d; }
+}
+function fmt(n) { return Number(n||0).toLocaleString('ar-SA'); }
+
+// ===== DECIDE =====
+function decideGroups(records) {
+  var groups = {};
+  records.forEach(function(r) {
+    var k = makeDupKey(r);
+    if (!groups[k]) groups[k] = [];
+    groups[k].push(r);
+  });
+
+  keepKeys    = new Set();
+  deleteKeys  = new Set();
+  keepReasons = {};
+  dupGroupMap = {};
+  var gNum = 0;
+
+  Object.keys(groups).forEach(function(k) {
+    var grp = groups[k];
+
+    if (grp.length === 1) {
+      keepKeys.add(grp[0]._fbKey);
+      keepReasons[grp[0]._fbKey] = 'سجل فريد';
+      return;
+    }
+
+    gNum++;
+    var gId = 'G' + gNum;
+    grp.forEach(function(r) { dupGroupMap[r._fbKey] = gId; });
+
+    // Choose best: highest score, then oldest _fbKey alphabetically (Firebase keys are time-ordered)
+    var best = grp.reduce(function(a, b) {
+      var sa = scoreRecord(a), sb = scoreRecord(b);
+      if (sa !== sb) return sa > sb ? a : b;
+      // Same score: earliest Firebase key (alphabetically first = created first)
+      return a._fbKey < b._fbKey ? a : b;
+    });
+
+    var reason = '';
+    if (best.createdAt) reason = 'الأقدم createdAt';
+    else reason = 'أعلى درجة بيانات + أقدم Firebase Key';
+
+    keepKeys.add(best._fbKey);
+    keepReasons[best._fbKey] = reason;
+    grp.forEach(function(r) {
+      if (r._fbKey !== best._fbKey) deleteKeys.add(r._fbKey);
+    });
+  });
+
+  return gNum;
+}
+
+// ===== LOAD =====
+function loadData() {
+  if (!db) {
+    document.getElementById('connBadge').textContent = '❌ خطأ';
+    document.getElementById('loadingMsg').textContent = '❌ تعذر الاتصال بـ Firebase';
+    return;
+  }
+
+  db.ref('transactions').once('value', function(snap) {
+    var records = [];
+    snap.forEach(function(child) {
+      records.push(Object.assign({}, child.val(), {_fbKey: child.key}));
+    });
+    allRecords = records;
+
+    var dupGroups = decideGroups(records);
+    var uniqueCount = records.length - deleteKeys.size;
+
+    // Console logs
+    console.log('Transactions raw count:', records.length);
+    console.log('Duplicate groups:', dupGroups);
+    console.log('Will keep:', keepKeys.size, '— Will delete:', deleteKeys.size);
+
+    // Stats
+    document.getElementById('sTotal').textContent     = records.length;
+    document.getElementById('sDupGroups').textContent = dupGroups;
+    document.getElementById('sKeep').textContent      = keepKeys.size;
+    document.getElementById('sDel').textContent       = deleteKeys.size;
+    document.getElementById('sUnique').textContent    = uniqueCount;
+    document.getElementById('tabKeepCount').textContent = keepKeys.size;
+    document.getElementById('tabDelCount').textContent  = deleteKeys.size;
+    document.getElementById('connBadge').textContent   = '✅ متصل • ' + records.length + ' سجل';
+
+    document.getElementById('loadingMsg').style.display = 'none';
+    document.getElementById('tableAll').style.display = '';
+
+    renderAll();
+    renderKeepList();
+    renderDelList();
+
+  }, function(err) {
+    document.getElementById('connBadge').textContent = '❌ خطأ';
+    document.getElementById('loadingMsg').textContent = '❌ ' + err.message;
+  });
+}
+
+// ===== TABS =====
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+  document.querySelectorAll('.tab-content').forEach(function(c){ c.classList.remove('active'); });
+  btn.classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+// ===== FILTER =====
+function setFilter(f, btn, tab) {
+  currentFilter = f;
+  document.querySelectorAll('#tab-all .filter-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  renderAll();
+}
+
+// ===== RENDER ALL =====
+function renderAll() {
+  var search = (document.getElementById('searchAll').value||'').trim().toLowerCase();
+
+  var filtered = allRecords.filter(function(r) {
+    var isDup  = dupGroupMap[r._fbKey];
+    if (currentFilter === 'dup'    && !isDup)  return false;
+    if (currentFilter === 'unique' && isDup)   return false;
+    if (search) {
+      var hay = ((r.desc||'')+(r.description||'')+(r.party||'')+(r.amount||'')+(r.date||'')).toLowerCase();
+      if (hay.indexOf(search) === -1) return false;
+    }
+    return true;
+  });
+
+  // Sort: dup groups first (keep before del), then by date desc
+  filtered.sort(function(a,b) {
+    var ga = dupGroupMap[a._fbKey] || 'ZZZ';
+    var gb = dupGroupMap[b._fbKey] || 'ZZZ';
+    if (ga !== gb) return ga.localeCompare(gb);
+    // Within group: keep first
+    var ka = keepKeys.has(a._fbKey) ? 0 : 1;
+    var kb = keepKeys.has(b._fbKey) ? 0 : 1;
+    if (ka !== kb) return ka - kb;
+    return (b.date||'').localeCompare(a.date||'');
+  });
+
+  var tbody = document.getElementById('bodyAll');
+  if (filtered.length === 0) {
+    tbody.innerHTML = '';
+    document.getElementById('noDataAll').style.display = '';
+    return;
+  }
+  document.getElementById('noDataAll').style.display = 'none';
+
+  var html = '';
+  var rowNum = 0;
+  var lastGroup = null;
+
+  filtered.forEach(function(r) {
+    rowNum++;
+    var isKeep = keepKeys.has(r._fbKey);
+    var isDel  = deleteKeys.has(r._fbKey);
+    var gId    = dupGroupMap[r._fbKey] || '';
+
+    if (gId && gId !== lastGroup) {
+      lastGroup = gId;
+      var grpSize = allRecords.filter(function(x){ return dupGroupMap[x._fbKey]===gId; }).length;
+      html += '<tr class="group-header"><td colspan="12">📦 مجموعة تكرار ' + gId
+        + ' — ' + grpSize + ' سجلات مطابقة تماماً ← ✅ يبقى 1 | 🗑️ يُحذف ' + (grpSize-1) + '</td></tr>';
+    }
+    if (!gId) lastGroup = null;
+
+    var rowClass = isDel ? 'row-del' : (gId ? 'row-keep' : 'row-unique');
+    var decision = isDel
+      ? '<span class="badge-del">🗑️ مرشح للحذف</span>'
+      : gId
+      ? '<span class="badge-keep">✅ الاحتفاظ</span>'
+      : '<span class="badge-uniq">🔵 فريد</span>';
+
+    var typeHtml = r.type === 'income'
+      ? '<span class="type-inc">💵 إيراد</span>'
+      : '<span class="type-exp">💸 مصروف</span>';
+
+    var desc = r.desc || r.description || r.party || '—';
+    var reason = keepReasons[r._fbKey] || '';
+
+    html += '<tr class="' + rowClass + '">'
+      + '<td>' + rowNum + '</td>'
+      + '<td>' + decision + '</td>'
+      + '<td style="font-weight:700;color:#5B21B6;font-size:11px;">' + (gId||'—') + '</td>'
+      + '<td><button class="copy-key" onclick="copyKey(\'' + r._fbKey + '\')">' + r._fbKey.substring(0,14) + '…</button></td>'
+      + '<td>' + (r.date||'—') + '</td>'
+      + '<td>' + typeHtml + '</td>'
+      + '<td style="font-weight:700;">' + fmt(parseFloat(r.amount)||0) + ' ﷼</td>'
+      + '<td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + desc + '">' + desc + '</td>'
+      + '<td>' + (r.category||'—') + '</td>'
+      + '<td>' + (r.status||'—') + '</td>'
+      + '<td style="font-size:10px;color:#6B7280;">' + fmtDT(r.createdAt) + '</td>'
+      + '<td style="font-size:10px;color:#059669;">' + reason + '</td>'
+      + '</tr>';
+  });
+
+  tbody.innerHTML = html;
+}
+
+// ===== RENDER KEEP LIST =====
+function renderKeepList() {
+  var keepList = allRecords.filter(function(r){ return keepKeys.has(r._fbKey); })
+    .sort(function(a,b){ return (b.date||'').localeCompare(a.date||''); });
+
+  if (keepList.length === 0) {
+    document.getElementById('keepList').innerHTML = '<div class="no-data">لا توجد سجلات</div>';
+    return;
+  }
+
+  var html = keepList.map(function(r, i) {
+    var gId = dupGroupMap[r._fbKey] || '';
+    var reason = keepReasons[r._fbKey] || 'سجل فريد';
+    var amtColor = r.type === 'income' ? '#10B981' : '#EF4444';
+    return '<div class="summary-item">'
+      + '<div class="key">' + (i+1) + '. ' + r._fbKey.substring(0,16) + '…</div>'
+      + '<div class="info">'
+      +   '<strong>' + (r.desc||r.party||'—') + '</strong>'
+      +   '<span style="margin:0 8px;color:#6B7280;">' + (r.date||'') + '</span>'
+      +   (gId ? '<span style="background:#EDE9FE;color:#5B21B6;padding:1px 6px;border-radius:8px;font-size:10px;">' + gId + '</span>' : '')
+      + '</div>'
+      + '<div class="amt" style="color:' + amtColor + '">' + fmt(parseFloat(r.amount)||0) + ' ﷼</div>'
+      + '</div>';
+  }).join('');
+
+  document.getElementById('keepList').innerHTML = html;
+}
+
+// ===== RENDER DELETE LIST =====
+function renderDelList() {
+  var delList = allRecords.filter(function(r){ return deleteKeys.has(r._fbKey); })
+    .sort(function(a,b){
+      var ga = dupGroupMap[a._fbKey]||'ZZZ', gb = dupGroupMap[b._fbKey]||'ZZZ';
+      return ga.localeCompare(gb);
+    });
+
+  if (delList.length === 0) {
+    document.getElementById('delList').innerHTML = '<div class="no-data">لا توجد سجلات مرشحة للحذف</div>';
+    return;
+  }
+
+  var html = '';
+  var lastG = null;
+
+  delList.forEach(function(r, i) {
+    var gId = dupGroupMap[r._fbKey] || '—';
+    var keepKey = '';
+    allRecords.forEach(function(x){
+      if (dupGroupMap[x._fbKey]===gId && keepKeys.has(x._fbKey)) keepKey = x._fbKey;
+    });
+
+    if (gId !== lastG) {
+      lastG = gId;
+      html += '<div style="background:#F5F3FF;padding:6px 12px;border-radius:8px;margin:10px 0 4px;font-size:11px;font-weight:700;color:#5B21B6;">📦 مجموعة ' + gId + ' — سيبقى: ' + keepKey.substring(0,16) + '…</div>';
+    }
+
+    var amtColor = r.type === 'income' ? '#10B981' : '#EF4444';
+    html += '<div class="summary-item" style="background:#FFF1F2;border-radius:8px;margin:4px 0;padding:8px 12px;">'
+      + '<div class="key" style="color:#991B1B;">🗑️ ' + r._fbKey.substring(0,16) + '…<br>'
+      +   '<button class="copy-key" onclick="copyKey(\'' + r._fbKey + '\')" style="margin-top:2px;">نسخ المفتاح</button>'
+      + '</div>'
+      + '<div class="info">'
+      +   '<strong>' + (r.desc||r.party||'—') + '</strong>'
+      +   '<span style="margin:0 8px;color:#6B7280;">' + (r.date||'') + '</span>'
+      +   '<span style="color:#6B7280;">' + (r.type==='income'?'إيراد':'مصروف') + '</span>'
+      + '</div>'
+      + '<div class="amt" style="color:' + amtColor + '">' + fmt(parseFloat(r.amount)||0) + ' ﷼</div>'
+      + '</div>';
+  });
+
+  document.getElementById('delList').innerHTML = html;
+}
+
+// ===== CSV EXPORT =====
+function exportCSV(tab) {
+  var data = tab === 'del'
+    ? allRecords.filter(function(r){ return deleteKeys.has(r._fbKey); })
+    : tab === 'keep'
+    ? allRecords.filter(function(r){ return keepKeys.has(r._fbKey); })
+    : allRecords;
+
+  var headers = ['Firebase Key','التاريخ','النوع','المبلغ','البيان','الفئة','الحالة','createdAt','القرار','المجموعة','سبب الاحتفاظ'];
+  var rows = data.map(function(r) {
+    var isDel  = deleteKeys.has(r._fbKey);
+    var isKeep = keepKeys.has(r._fbKey);
+    var decision = isDel ? 'مرشح للحذف' : (dupGroupMap[r._fbKey] ? 'الاحتفاظ (ضمن مجموعة)' : 'فريد');
+    return [
+      r._fbKey, r.date||'', r.type||'', r.amount||'',
+      r.desc||r.description||r.party||'', r.category||'', r.status||'', r.createdAt||'',
+      decision, dupGroupMap[r._fbKey]||'', keepReasons[r._fbKey]||''
+    ].map(function(v){ return '"'+(v+'').replace(/"/g,'""')+'"'; }).join(',');
+  });
+
+  var csv = '\uFEFF' + headers.join(',') + '\n' + rows.join('\n');
+  var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'transactions-cleanup-v2-' + (tab||'all') + '-' + new Date().toISOString().split('T')[0] + '.csv';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+// ===== COPY KEY =====
+function copyKey(key) {
+  navigator.clipboard.writeText(key).then(function(){
+    showToast('✅ تم نسخ: ' + key.substring(0,18) + '…');
+  }).catch(function(){
+    var el = document.createElement('textarea');
+    el.value = key; document.body.appendChild(el); el.select();
+    document.execCommand('copy'); document.body.removeChild(el);
+    showToast('✅ تم نسخ المفتاح');
+  });
+}
+
+function showToast(msg) {
+  var t = document.createElement('div');
+  t.textContent = msg;
+  t.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#0C3B5E;color:#fff;padding:9px 18px;border-radius:10px;font-family:Tajawal,sans-serif;font-size:13px;z-index:9999;box-shadow:0 4px 14px rgba(0,0,0,.2);';
+  document.body.appendChild(t);
+  setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t); }, 2500);
+}
+
+// ===== INIT =====
+loadData();
+</script>
+</body>
+</html>
