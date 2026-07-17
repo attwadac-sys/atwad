@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>أطواد — تشخيص V4</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Tajawal', sans-serif; background: #F0F9FF; color: #0C3B5E; font-size: 14px; }
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
+
+.warning-banner {
+  background: #FEF3C7; border-bottom: 2px solid #F59E0B; color: #92400E;
+  padding: 12px 20px; text-align: center; font-weight: 700; font-size: 14px;
+  position: sticky; top: 0; z-index: 100;
+}
+.header {
+  background: #0C3B5E; color: #fff; padding: 14px 24px;
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+}
+.header h1 { font-size: 17px; font-weight: 700; }
+.badge { background: #0EA5E9; padding: 4px 12px; border-radius: 20px; font-size: 12px; }
+
+/* Demo fingerprint panel */
+.fp-panel {
+  margin: 16px 24px; background: #FFF7ED;
+  border: 2px solid #FDE68A; border-radius: 12px; overflow: hidden;
+}
+.fp-header {
+  background: #F59E0B; color: #fff; padding: 10px 18px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.fp-header h3 { font-size: 14px; font-weight: 700; }
+.fp-body { padding: 12px 18px; }
+.fp-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+.fp-table th { background: #FEF3C7; padding: 6px 8px; text-align: right; color: #92400E; font-weight: 700; }
+.fp-table td { padding: 6px 8px; border-bottom: 1px solid #FDE68A; }
+.fp-table tr:last-child td { border-bottom: none; }
+.fp-table .match-count { font-weight: 700; color: #EF4444; }
+.fp-table .match-zero  { color: #10B981; font-weight: 700; }
+.fp-note { font-size: 11px; color: #92400E; margin-top: 8px; padding: 8px 12px; background: #FFFBEB; border-radius: 8px; }
+
+/* Stats */
+.stats-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px; padding: 0 24px 8px;
+}
+.stat-card {
+  background: #fff; border-radius: 10px; padding: 14px; text-align: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,.06);
+}
+.stat-card .num { font-size: 22px; font-weight: 700; color: #0C3B5E; }
+.stat-card .lbl { font-size: 11px; color: #6B7280; margin-top: 3px; }
+.stat-card.real  .num { color: #10B981; }
+.stat-card.demo  .num { color: #EF4444; }
+.stat-card.money .num { color: #0EA5E9; }
+
+/* Tabs */
+.tabs {
+  display: flex; padding: 0 24px;
+  border-bottom: 2px solid #E2E8F0; background: #F8FAFC; margin-top: 12px;
+}
+.tab-btn {
+  padding: 9px 16px; border: none; background: transparent; cursor: pointer;
+  font-family: 'Tajawal', sans-serif; font-size: 13px; font-weight: 600;
+  color: #6B7280; border-bottom: 3px solid transparent; margin-bottom: -2px;
+}
+.tab-btn.active { color: #0C3B5E; border-bottom-color: #0EA5E9; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+.controls { padding: 12px 24px 8px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.search-box {
+  padding: 7px 14px; border: 1.5px solid #CBD5E1; border-radius: 18px;
+  font-family: 'Tajawal', sans-serif; font-size: 12px; min-width: 200px; outline: none;
+}
+.export-btn {
+  padding: 7px 16px; background: #10B981; color: #fff; border: none;
+  border-radius: 18px; cursor: pointer; font-family: 'Tajawal', sans-serif;
+  font-size: 12px; font-weight: 700; margin-right: auto;
+}
+
+.table-wrap { padding: 0 24px 30px; overflow-x: auto; }
+table {
+  width: 100%; border-collapse: collapse; background: #fff;
+  border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,.06);
+  min-width: 800px;
+}
+thead { background: #0C3B5E; color: #fff; }
+th { padding: 10px 8px; font-size: 11px; font-weight: 600; text-align: right; white-space: nowrap; }
+td { padding: 9px 8px; border-bottom: 1px solid #F1F5F9; font-size: 11px; vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #F8FAFC; }
+.row-demo { background: #FFF7ED; }
+.row-real { }
+
+.badge-real { display:inline-block;padding:2px 9px;border-radius:10px;font-size:10px;font-weight:700;background:#D1FAE5;color:#065F46; }
+.badge-demo { display:inline-block;padding:2px 9px;border-radius:10px;font-size:10px;font-weight:700;background:#FEE2E2;color:#991B1B; }
+.type-inc { color:#10B981;font-weight:700; }
+.type-exp { color:#EF4444;font-weight:700; }
+.copy-key {
+  background:#EFF6FF;border:1px solid #BFDBFE;color:#1D4ED8;
+  border-radius:5px;padding:2px 7px;cursor:pointer;
+  font-family:monospace;font-size:10px;white-space:nowrap;
+}
+.loading { text-align:center;padding:60px;color:#6B7280;font-size:15px; }
+</style>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+</head>
+<body>
+
+<div class="warning-banner">
+  ⚠️ معاينة وتشخيص فقط — لا يتم حذف أو تعديل أي بيانات — V4
+</div>
+
+<div class="header">
+  <div>
+    <h1>🔬 تشخيص المعاملات — V4</h1>
+    <div style="font-size:11px;opacity:.7;margin-top:3px;">التحقق من البصمات أولاً قبل التصنيف</div>
+  </div>
+  <div class="badge" id="connBadge">⏳ جاري التحميل...</div>
+</div>
+
+<!-- DEMO FINGERPRINTS PANEL -->
+<div class="fp-panel">
+  <div class="fp-header">
+    <h3>📋 بصمات DEMO المعتمدة — المستخرجة حرفياً من كتلة DEMO DATA الأصلية</h3>
+    <span id="fpCount" style="background:#fff;color:#92400E;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:700;">18 بصمة</span>
+  </div>
+  <div class="fp-body">
+    <div class="fp-note">
+      ⚠️ التصنيف يعتمد على التطابق الحرفي الكامل لـ 4 حقول: <strong>type + amount + desc + party</strong> — التاريخ مستبعد لأنه يتغير في كل فتح للصفحة.
+      سجل يُصنَّف DEMO <strong>فقط</strong> إذا طابق إحدى هذه البصمات بالضبط.
+    </div>
+    <br>
+    <table class="fp-table" id="fpTable">
+      <thead><tr>
+        <th>#</th><th>النوع</th><th>المبلغ</th><th>البيان (desc)</th><th>العميل (party)</th>
+        <th>بصمة SHA</th><th>تطابقات في Firebase</th>
+      </tr></thead>
+      <tbody id="fpBody">
+        <tr><td colspan="7" style="text-align:center;padding:20px;color:#6B7280;">جاري التحميل...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Stats (shown after load) -->
+<div id="statsSection" style="display:none">
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="num" id="sTotal">—</div>
+      <div class="lbl">إجمالي سجلات Firebase</div>
+    </div>
+    <div class="stat-card real">
+      <div class="num" id="sReal">—</div>
+      <div class="lbl">✅ حقيقي مؤكد</div>
+    </div>
+    <div class="stat-card demo">
+      <div class="num" id="sDemo">—</div>
+      <div class="lbl">🗑️ DEMO مطابق</div>
+    </div>
+    <div class="stat-card money">
+      <div class="num" id="sRealInc">—</div>
+      <div class="lbl">إيرادات حقيقية ﷼</div>
+    </div>
+    <div class="stat-card money">
+      <div class="num" id="sRealExp">—</div>
+      <div class="lbl">مصروفات حقيقية ﷼</div>
+    </div>
+  </div>
+</div>
+
+<!-- Tabs -->
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('all',this)">📋 الكل</button>
+  <button class="tab-btn" onclick="switchTab('real',this)">✅ حقيقي (<span id="tc1">—</span>)</button>
+  <button class="tab-btn" onclick="switchTab('demo',this)">🗑️ DEMO (<span id="tc2">—</span>)</button>
+</div>
+
+<div class="tab-content active" id="tab-all">
+  <div class="controls">
+    <input class="search-box" type="text" id="searchAll" placeholder="بحث بالبيان أو العميل أو المبلغ..." oninput="renderTab('all')">
+    <button class="export-btn" onclick="exportCSV()">📥 تصدير CSV</button>
+  </div>
+  <div class="table-wrap">
+    <div class="loading" id="loadingMsg">⏳ جاري التحميل...</div>
+    <table id="tableAll" style="display:none"><thead><tr>
+      <th>#</th><th>التصنيف</th><th>Firebase Key</th><th>التاريخ</th>
+      <th>النوع</th><th>المبلغ</th><th>البيان</th><th>العميل</th>
+      <th>الحالة</th><th>createdAt</th><th>البصمة الفعلية</th>
+    </tr></thead><tbody id="bodyAll"></tbody></table>
+  </div>
+</div>
+
+<div class="tab-content" id="tab-real">
+  <div class="controls">
+    <input class="search-box" type="text" id="searchReal" placeholder="بحث..." oninput="renderTab('real')">
+  </div>
+  <div class="table-wrap">
+    <table><thead><tr>
+      <th>#</th><th>Firebase Key</th><th>التاريخ</th><th>النوع</th>
+      <th>المبلغ</th><th>البيان</th><th>العميل</th><th>الحالة</th><th>createdAt</th>
+    </tr></thead><tbody id="bodyReal"></tbody></table>
+    <div class="loading" id="noDataReal" style="display:none;padding:30px;font-size:13px;color:#9CA3AF;">لا توجد سجلات</div>
+  </div>
+</div>
+
+<div class="tab-content" id="tab-demo">
+  <div class="controls">
+    <input class="search-box" type="text" id="searchDemo" placeholder="بحث..." oninput="renderTab('demo')">
+  </div>
+  <div class="table-wrap">
+    <table><thead><tr>
+      <th>#</th><th>Firebase Key</th><th>التاريخ</th><th>النوع</th>
+      <th>المبلغ</th><th>البيان</th><th>العميل</th><th>الحالة</th>
+      <th>البصمة الفعلية</th><th>مطابق مع</th>
+    </tr></thead><tbody id="bodyDemo"></tbody></table>
+    <div class="loading" id="noDataDemo" style="display:none;padding:30px;font-size:13px;color:#9CA3AF;">لا توجد سجلات</div>
+  </div>
+</div>
+
+<script>
+// ===== FIREBASE =====
+var db = null;
+try {
+  firebase.initializeApp({databaseURL:'https://atwad-booking-default-rtdb.firebaseio.com'});
+  db = firebase.database();
+} catch(e) {}
+
+// ============================================================
+// 18 بصمة DEMO — مستخرجة حرفياً من كتلة DEMO DATA الأصلية
+// المصدر: atwad-finance.html السطور 619-639
+// ============================================================
+var DEMO_TEMPLATES = [
+  // 10 إيرادات
+  {type:'income',  amount:300,  desc:'تنظيف مكيف - Dr. Hasan',   party:'Dr. Hasan'},
+  {type:'income',  amount:230,  desc:'صيانة - Farash Al Shareef', party:'Farash'},
+  {type:'income',  amount:300,  desc:'تعبئة غاز - أم سعود',       party:'أم سعود'},
+  {type:'income',  amount:110,  desc:'تنظيف - نوره زبونة',        party:'نوره'},
+  {type:'income',  amount:1020, desc:'صيانة - Hashim Khalifa',    party:'Hashim'},
+  {type:'income',  amount:360,  desc:'تنظيف - M. AlShaalan',      party:'AlShaalan'},
+  {type:'income',  amount:150,  desc:'كشف أعطال - Sultan',        party:'Sultan'},
+  {type:'income',  amount:240,  desc:'تنظيف - Abdullah',          party:'Abdullah'},
+  {type:'income',  amount:150,  desc:'صيانة - Fury Rose',         party:'Fury Rose'},
+  {type:'income',  amount:320,  desc:'تنظيف - Abdurrahman',       party:'Abdurrahman'},
+  // 8 مصروفات — party فارغ في الكود الأصلي
+  {type:'expense', amount:100,  desc:'وقود ميتسوبيشي',            party:''},
+  {type:'expense', amount:285,  desc:'قطع غيار - فريون R22',      party:''},
+  {type:'expense', amount:30,   desc:'غداء الفنيين',               party:''},
+  {type:'expense', amount:100,  desc:'وقود',                       party:''},
+  {type:'expense', amount:237,  desc:'كباستر وقطع غيار',           party:''},
+  {type:'expense', amount:400,  desc:'إعلان سناب أبحر',            party:''},
+  {type:'expense', amount:100,  desc:'وقود ميتسوبيشي',            party:''},
+  {type:'expense', amount:27,   desc:'طعام الفنيين',               party:''},
+];
+
+// بناء Map من البصمة إلى قالب DEMO — للمطابقة الدقيقة
+function buildSig(type, amount, desc, party) {
+  // المطابقة الحرفية الكاملة — لا trim لأن Firebase قد يخزن بمسافات مختلفة
+  // نستخدم === مع toLowerCase فقط للمقارنة، لا للتخزين
+  return type + '||' + String(Number(amount)) + '||' + String(desc) + '||' + String(party);
+}
+
+var DEMO_SIG_MAP = {}; // sig → template index
+DEMO_TEMPLATES.forEach(function(t, i) {
+  var sig = buildSig(t.type, t.amount, t.desc, t.party);
+  DEMO_SIG_MAP[sig] = i;
+});
+
+console.log('=== DEMO SIGNATURES BUILT ===');
+Object.keys(DEMO_SIG_MAP).forEach(function(sig, i) {
+  console.log('DEMO[' + i + ']:', sig);
+});
+console.log('Total DEMO signatures:', Object.keys(DEMO_SIG_MAP).length);
+
+// ===== STATE =====
+var allRecords = [];
+var categories = {};  // fbKey → { cat, reason, matchedDemo }
+var matchCounts = {}; // demo template index → count in Firebase
+
+// ===== SIGNATURE FROM FIREBASE RECORD =====
+function recordSig(r) {
+  // نستخدم نفس المنطق بالضبط
+  var type  = String(r.type  || '');
+  var amount = String(Number(r.amount || 0));
+  var desc  = String(r.desc  || r.description || '');
+  var party = String(r.party || '');
+  return buildSig(type, amount, desc, party);
+}
+
+// ===== LOAD =====
+function loadData() {
+  if (!db) {
+    document.getElementById('connBadge').textContent = '❌ خطأ';
+    document.getElementById('loadingMsg').textContent = '❌ تعذر الاتصال';
+    return;
+  }
+
+  db.ref('transactions').once('value', function(snap) {
+    var records = [];
+    snap.forEach(function(child) {
+      records.push(Object.assign({}, child.val(), {_fbKey: child.key}));
+    });
+    allRecords = records;
+    categories = {};
+    matchCounts = {};
+    DEMO_TEMPLATES.forEach(function(_, i) { matchCounts[i] = 0; });
+
+    // === Console: first 5 records diagnostic ===
+    console.log('\n=== FIRST 5 RECORDS DIAGNOSTIC ===');
+    records.slice(0, 5).forEach(function(r, i) {
+      var sig = recordSig(r);
+      var matchIdx = DEMO_SIG_MAP.hasOwnProperty(sig) ? DEMO_SIG_MAP[sig] : -1;
+      console.log('Record[' + i + '] key=' + r._fbKey);
+      console.log('  type='   + JSON.stringify(r.type));
+      console.log('  amount=' + JSON.stringify(r.amount));
+      console.log('  desc='   + JSON.stringify(r.desc));
+      console.log('  party='  + JSON.stringify(r.party));
+      console.log('  actual fingerprint: ' + sig);
+      console.log('  matched DEMO index: ' + matchIdx + (matchIdx >= 0 ? ' (' + DEMO_TEMPLATES[matchIdx].desc + ')' : ' — NO MATCH'));
+    });
+
+    // === Classify all ===
+    records.forEach(function(r) {
+      var sig = recordSig(r);
+      if (DEMO_SIG_MAP.hasOwnProperty(sig)) {
+        var idx = DEMO_SIG_MAP[sig];
+        matchCounts[idx]++;
+        categories[r._fbKey] = {
+          cat: 'demo',
+          reason: 'تطابق حرفي مع DEMO[' + idx + ']: ' + DEMO_TEMPLATES[idx].desc,
+          matchedDemo: idx,
+          sig: sig
+        };
+      } else {
+        categories[r._fbKey] = { cat: 'real', reason: 'لا تطابق مع أي بصمة DEMO', sig: sig };
+      }
+    });
+
+    var real = records.filter(function(r){ return categories[r._fbKey].cat === 'real'; });
+    var demo = records.filter(function(r){ return categories[r._fbKey].cat === 'demo'; });
+
+    console.log('\n=== CLASSIFICATION RESULT ===');
+    console.log('Real:', real.length, '— Demo:', demo.length);
+    console.log('Match counts per template:');
+    DEMO_TEMPLATES.forEach(function(t, i) {
+      if (matchCounts[i] > 0) console.log('  DEMO[' + i + '] "' + t.desc + '" → ' + matchCounts[i] + ' matches');
+    });
+
+    var realInc = real.filter(function(r){return r.type==='income';}).reduce(function(s,r){return s+(parseFloat(r.amount)||0);},0);
+    var realExp = real.filter(function(r){return r.type==='expense';}).reduce(function(s,r){return s+(parseFloat(r.amount)||0);},0);
+
+    // Stats
+    document.getElementById('sTotal').textContent   = records.length;
+    document.getElementById('sReal').textContent    = real.length;
+    document.getElementById('sDemo').textContent    = demo.length;
+    document.getElementById('sRealInc').textContent = fmt(realInc);
+    document.getElementById('sRealExp').textContent = fmt(realExp);
+    document.getElementById('tc1').textContent = real.length;
+    document.getElementById('tc2').textContent = demo.length;
+    document.getElementById('statsSection').style.display = '';
+    document.getElementById('connBadge').textContent = '✅ متصل • ' + records.length + ' سجل';
+    document.getElementById('loadingMsg').style.display = 'none';
+    document.getElementById('tableAll').style.display = '';
+
+    // Render fingerprint table
+    renderFPTable();
+    renderTab('all');
+    renderTab('real');
+    renderTab('demo');
+
+  }, function(err) {
+    document.getElementById('connBadge').textContent = '❌ خطأ';
+    document.getElementById('loadingMsg').textContent = '❌ ' + err.message;
+  });
+}
+
+function fmt(n) { return Number(Math.round(n||0)).toLocaleString('ar-SA'); }
+function fmtDT(d) {
+  if (!d) return '—';
+  try { return new Date(d).toLocaleString('ar-SA',{dateStyle:'short',timeStyle:'short'}); } catch { return d; }
+}
+
+// ===== RENDER FINGERPRINT TABLE =====
+function renderFPTable() {
+  var html = '';
+  DEMO_TEMPLATES.forEach(function(t, i) {
+    var sig = buildSig(t.type, t.amount, t.desc, t.party);
+    var cnt = matchCounts[i] || 0;
+    var cntClass = cnt > 0 ? 'match-count' : 'match-zero';
+    var typeHtml = t.type === 'income'
+      ? '<span style="color:#10B981;font-weight:700;">💵 إيراد</span>'
+      : '<span style="color:#EF4444;font-weight:700;">💸 مصروف</span>';
+    html += '<tr>'
+      + '<td>' + (i+1) + '</td>'
+      + '<td>' + typeHtml + '</td>'
+      + '<td style="font-weight:700;">' + t.amount + ' ﷼</td>'
+      + '<td>' + t.desc + '</td>'
+      + '<td>' + (t.party || '<em style="color:#9CA3AF;">فارغ</em>') + '</td>'
+      + '<td style="font-family:monospace;font-size:9px;color:#6B7280;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + sig + '">' + sig.substring(0,40) + '…</td>'
+      + '<td class="' + cntClass + '">' + (cnt > 0 ? cnt + ' سجل' : '0 ✅') + '</td>'
+      + '</tr>';
+  });
+  document.getElementById('fpBody').innerHTML = html;
+  document.getElementById('fpCount').textContent = DEMO_TEMPLATES.length + ' بصمة';
+}
+
+// ===== TABS =====
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+  document.querySelectorAll('.tab-content').forEach(function(c){ c.classList.remove('active'); });
+  btn.classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+// ===== RENDER TABS =====
+function renderTab(tab) {
+  var searchId = {all:'searchAll', real:'searchReal', demo:'searchDemo'}[tab];
+  var search = ((document.getElementById(searchId)||{}).value||'').trim().toLowerCase();
+  var bodyId  = {all:'bodyAll', real:'bodyReal', demo:'bodyDemo'}[tab];
+
+  var filtered = allRecords.filter(function(r) {
+    var cat = (categories[r._fbKey]||{}).cat||'real';
+    if (tab === 'real' && cat !== 'real') return false;
+    if (tab === 'demo' && cat !== 'demo') return false;
+    if (search) {
+      var hay = ((r.desc||'')+(r.party||'')+(r.amount||'')+(r.date||'')).toLowerCase();
+      if (hay.indexOf(search) === -1) return false;
+    }
+    return true;
+  });
+
+  filtered.sort(function(a,b){ return (b.date||'').localeCompare(a.date||''); });
+
+  var html = '';
+  filtered.forEach(function(r, i) {
+    var cat    = (categories[r._fbKey]||{}).cat || 'real';
+    var reason = (categories[r._fbKey]||{}).reason || '';
+    var sig    = (categories[r._fbKey]||{}).sig || '';
+    var badge  = cat === 'demo'
+      ? '<span class="badge-demo">🗑️ DEMO</span>'
+      : '<span class="badge-real">✅ حقيقي</span>';
+    var typeHtml = r.type === 'income'
+      ? '<span class="type-inc">💵 إيراد</span>'
+      : '<span class="type-exp">💸 مصروف</span>';
+    var desc  = r.desc || r.description || '—';
+    var party = r.party || '—';
+    var rowClass = cat === 'demo' ? 'row-demo' : 'row-real';
+
+    if (tab === 'all') {
+      html += '<tr class="' + rowClass + '">'
+        + '<td>' + (i+1) + '</td>'
+        + '<td>' + badge + '</td>'
+        + '<td><button class="copy-key" onclick="copyKey(\'' + r._fbKey + '\')">' + r._fbKey.substring(0,13) + '…</button></td>'
+        + '<td>' + (r.date||'—') + '</td>'
+        + '<td>' + typeHtml + '</td>'
+        + '<td style="font-weight:700;">' + fmt(parseFloat(r.amount)||0) + ' ﷼</td>'
+        + '<td style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + desc + '">' + desc + '</td>'
+        + '<td>' + party + '</td>'
+        + '<td>' + (r.status||'—') + '</td>'
+        + '<td style="font-size:10px;color:#6B7280;">' + fmtDT(r.createdAt) + '</td>'
+        + '<td style="font-family:monospace;font-size:9px;color:#6B7280;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + sig + '">' + sig.substring(0,35) + '…</td>'
+        + '</tr>';
+    } else if (tab === 'real') {
+      html += '<tr>'
+        + '<td>' + (i+1) + '</td>'
+        + '<td><button class="copy-key" onclick="copyKey(\'' + r._fbKey + '\')">' + r._fbKey.substring(0,13) + '…</button></td>'
+        + '<td>' + (r.date||'—') + '</td>'
+        + '<td>' + typeHtml + '</td>'
+        + '<td style="font-weight:700;">' + fmt(parseFloat(r.amount)||0) + ' ﷼</td>'
+        + '<td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + desc + '">' + desc + '</td>'
+        + '<td>' + party + '</td>'
+        + '<td>' + (r.status||'—') + '</td>'
+        + '<td style="font-size:10px;color:#6B7280;">' + fmtDT(r.createdAt) + '</td>'
+        + '</tr>';
+    } else {
+      html += '<tr class="row-demo">'
+        + '<td>' + (i+1) + '</td>'
+        + '<td><button class="copy-key" onclick="copyKey(\'' + r._fbKey + '\')">' + r._fbKey.substring(0,13) + '…</button></td>'
+        + '<td>' + (r.date||'—') + '</td>'
+        + '<td>' + typeHtml + '</td>'
+        + '<td style="font-weight:700;">' + fmt(parseFloat(r.amount)||0) + ' ﷼</td>'
+        + '<td style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + desc + '">' + desc + '</td>'
+        + '<td>' + party + '</td>'
+        + '<td>' + (r.status||'—') + '</td>'
+        + '<td style="font-family:monospace;font-size:9px;color:#6B7280;" title="' + sig + '">' + sig.substring(0,40) + '…</td>'
+        + '<td style="font-size:10px;color:#991B1B;">' + reason + '</td>'
+        + '</tr>';
+    }
+  });
+
+  document.getElementById(bodyId).innerHTML = html || '<tr><td colspan="11" style="text-align:center;padding:30px;color:#9CA3AF;">لا توجد سجلات</td></tr>';
+}
+
+// ===== CSV =====
+function exportCSV() {
+  var headers = ['Firebase Key','التاريخ','النوع','المبلغ','البيان','العميل','الفئة','الحالة','createdAt','التصنيف','سبب التصنيف','البصمة الفعلية'];
+  var rows = allRecords.map(function(r) {
+    var c = categories[r._fbKey] || {};
+    return [
+      r._fbKey, r.date||'', r.type||'', r.amount||'',
+      r.desc||'', r.party||'', r.category||'', r.status||'', r.createdAt||'',
+      c.cat||'', c.reason||'', c.sig||''
+    ].map(function(v){ return '"'+(v+'').replace(/"/g,'""')+'"'; }).join(',');
+  });
+  var csv = '\uFEFF' + headers.join(',') + '\n' + rows.join('\n');
+  var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'transactions-v4-' + new Date().toISOString().split('T')[0] + '.csv';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+function copyKey(key) {
+  navigator.clipboard.writeText(key).then(function(){
+    showToast('✅ تم نسخ: ' + key.substring(0,18) + '…');
+  }).catch(function(){
+    var el = document.createElement('textarea');
+    el.value = key; document.body.appendChild(el); el.select();
+    document.execCommand('copy'); document.body.removeChild(el);
+    showToast('✅ تم نسخ المفتاح');
+  });
+}
+function showToast(msg) {
+  var t = document.createElement('div');
+  t.textContent = msg;
+  t.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#0C3B5E;color:#fff;padding:9px 18px;border-radius:10px;font-family:Tajawal,sans-serif;font-size:13px;z-index:9999;';
+  document.body.appendChild(t);
+  setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t); }, 2500);
+}
+
+loadData();
+</script>
+</body>
+</html>
