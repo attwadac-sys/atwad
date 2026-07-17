@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>أطواد — تشخيص المعاملات المالية</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Tajawal', sans-serif; background: #F0F9FF; color: #0C3B5E; font-size: 14px; }
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
+
+.warning-banner {
+  background: #FEF3C7; border-bottom: 2px solid #F59E0B; color: #92400E;
+  padding: 12px 20px; text-align: center; font-weight: 700; font-size: 14px;
+  position: sticky; top: 0; z-index: 100;
+}
+.header {
+  background: #0C3B5E; color: #fff; padding: 14px 24px;
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+}
+.header h1 { font-size: 17px; font-weight: 700; }
+.badge { background: #0EA5E9; padding: 4px 12px; border-radius: 20px; font-size: 12px; }
+
+.stats-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+  gap: 10px; padding: 16px 24px;
+}
+.stat-card {
+  background: #fff; border-radius: 10px; padding: 14px; text-align: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,.06);
+}
+.stat-card .num { font-size: 24px; font-weight: 700; color: #0C3B5E; }
+.stat-card .lbl { font-size: 11px; color: #6B7280; margin-top: 3px; }
+.stat-card.income .num { color: #10B981; }
+.stat-card.expense .num { color: #EF4444; }
+.stat-card.demo .num { color: #F59E0B; }
+.stat-card.dup .num { color: #8B5CF6; }
+
+.controls {
+  padding: 0 24px 14px;
+  display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+}
+.filter-btn {
+  padding: 6px 14px; border: 1.5px solid #CBD5E1; border-radius: 18px;
+  background: #fff; cursor: pointer; font-family: 'Tajawal', sans-serif;
+  font-size: 12px; color: #374151;
+}
+.filter-btn.active { background: #0C3B5E; color: #fff; border-color: #0C3B5E; }
+.search-box {
+  padding: 7px 14px; border: 1.5px solid #CBD5E1; border-radius: 18px;
+  font-family: 'Tajawal', sans-serif; font-size: 12px; min-width: 200px; outline: none;
+}
+.export-btn {
+  padding: 7px 16px; background: #10B981; color: #fff; border: none;
+  border-radius: 18px; cursor: pointer; font-family: 'Tajawal', sans-serif;
+  font-size: 12px; font-weight: 700; margin-right: auto;
+}
+
+.table-wrap { padding: 0 24px 40px; overflow-x: auto; }
+table {
+  width: 100%; border-collapse: collapse; background: #fff;
+  border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,.06);
+  min-width: 900px;
+}
+thead { background: #0C3B5E; color: #fff; }
+th { padding: 10px 8px; font-size: 11px; font-weight: 600; text-align: right; white-space: nowrap; }
+td { padding: 9px 8px; border-bottom: 1px solid #F1F5F9; font-size: 11px; vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #F8FAFC; }
+
+.row-income { }
+.row-expense { background: #FFFBF5; }
+.row-demo { background: #FFF7ED; }
+.row-dup { background: #F5F3FF; }
+
+.badge-real  { display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;background:#D1FAE5;color:#065F46; }
+.badge-demo  { display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;background:#FEF3C7;color:#92400E; }
+.badge-dup   { display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;background:#EDE9FE;color:#5B21B6; }
+
+.type-inc { color: #10B981; font-weight: 700; }
+.type-exp { color: #EF4444; font-weight: 700; }
+
+.copy-key {
+  background: #EFF6FF; border: 1px solid #BFDBFE; color: #1D4ED8;
+  border-radius: 5px; padding: 2px 7px; cursor: pointer;
+  font-family: monospace; font-size: 10px; white-space: nowrap;
+}
+
+.loading { text-align: center; padding: 60px; color: #6B7280; font-size: 15px; }
+.no-data { text-align: center; padding: 30px; color: #9CA3AF; }
+
+.dup-group-header td {
+  background: #EDE9FE !important; color: #5B21B6;
+  font-weight: 700; font-size: 11px; padding: 6px 8px;
+  border-top: 2px solid #C4B5FD;
+}
+.demo-group-header td {
+  background: #FEF9C3 !important; color: #92400E;
+  font-weight: 700; font-size: 11px; padding: 6px 8px;
+  border-top: 2px solid #FDE68A;
+}
+
+@media (max-width: 768px) {
+  .stats-grid { grid-template-columns: repeat(2,1fr); padding: 10px; }
+  .controls { padding: 0 10px 10px; }
+  .table-wrap { padding: 0 8px 40px; }
+}
+</style>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+</head>
+<body>
+
+<div class="warning-banner">
+  ⚠️ أداة تشخيص فقط — لا يتم حذف أو تعديل أي بيانات في Firebase
+</div>
+
+<div class="header">
+  <div>
+    <h1>🔍 تشخيص سجلات المعاملات المالية</h1>
+    <div style="font-size:11px;opacity:.7;margin-top:3px;">قراءة للعرض فقط — transactions</div>
+  </div>
+  <div class="badge" id="connBadge">⏳ جاري التحميل...</div>
+</div>
+
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="num" id="sTotal">—</div>
+    <div class="lbl">إجمالي السجلات</div>
+  </div>
+  <div class="stat-card income">
+    <div class="num" id="sIncCount">—</div>
+    <div class="lbl">عدد الإيرادات</div>
+  </div>
+  <div class="stat-card expense">
+    <div class="num" id="sExpCount">—</div>
+    <div class="lbl">عدد المصروفات</div>
+  </div>
+  <div class="stat-card income">
+    <div class="num" id="sIncAmt">—</div>
+    <div class="lbl">مجموع الإيرادات ﷼</div>
+  </div>
+  <div class="stat-card expense">
+    <div class="num" id="sExpAmt">—</div>
+    <div class="lbl">مجموع المصروفات ﷼</div>
+  </div>
+  <div class="stat-card demo">
+    <div class="num" id="sDemo">—</div>
+    <div class="lbl">تجريبية محتملة</div>
+  </div>
+  <div class="stat-card dup">
+    <div class="num" id="sDup">—</div>
+    <div class="lbl">مكررة محتملة</div>
+  </div>
+</div>
+
+<div class="controls">
+  <button class="filter-btn active" onclick="setFilter('all',this)">الكل</button>
+  <button class="filter-btn" onclick="setFilter('income',this)">💵 إيرادات</button>
+  <button class="filter-btn" onclick="setFilter('expense',this)">💸 مصروفات</button>
+  <button class="filter-btn" onclick="setFilter('demo',this)">🧪 تجريبية محتملة</button>
+  <button class="filter-btn" onclick="setFilter('dup',this)">🔁 مكررة محتملة</button>
+  <input class="search-box" type="text" id="searchInput"
+    placeholder="بحث بالبيان أو العميل أو المبلغ..." oninput="renderTable()">
+  <button class="export-btn" onclick="exportCSV()">📥 تصدير CSV</button>
+</div>
+
+<div class="table-wrap">
+  <div class="loading" id="loadingMsg">⏳ جاري تحميل البيانات من Firebase...</div>
+  <table id="mainTable" style="display:none">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Firebase Key</th>
+        <th>التاريخ</th>
+        <th>النوع</th>
+        <th>المبلغ</th>
+        <th>البيان / العميل</th>
+        <th>الفئة</th>
+        <th>الحالة</th>
+        <th>المصدر</th>
+        <th>createdAt</th>
+        <th>التصنيف</th>
+        <th>ملاحظة</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+  <div class="no-data" id="noData" style="display:none">لا توجد سجلات مطابقة</div>
+</div>
+
+<script>
+// ===== FIREBASE =====
+var db = null;
+try {
+  firebase.initializeApp({databaseURL:'https://atwad-booking-default-rtdb.firebaseio.com'});
+  db = firebase.database();
+} catch(e) { console.log('Firebase:', e); }
+
+// ===== DEMO DATA FINGERPRINTS =====
+// هذه البصمات مستخرجة من كتلة DEMO DATA التي كانت في atwad-finance.html
+var DEMO_DESCRIPTIONS = [
+  'تنظيف مكيف - Dr. Hasan', 'صيانة - Farash Al Shareef', 'تعبئة غاز - أم سعود',
+  'تنظيف - نوره زبونة', 'صيانة - Hashim Khalifa', 'تنظيف - M. AlShaalan',
+  'كشف أعطال - Sultan', 'تنظيف - Abdullah', 'صيانة - Fury Rose',
+  'تنظيف - Abdurrahman',
+  'وقود ميتسوبيشي', 'قطع غيار - فريون R22', 'غداء الفنيين',
+  'وقود', 'كباستر وقطع غيار', 'إعلان سناب أبحر', 'طعام الفنيين'
+];
+var DEMO_AMOUNTS_INC = [300, 230, 300, 110, 1020, 360, 150, 240, 150, 320];
+var DEMO_AMOUNTS_EXP = [100, 285, 30, 100, 237, 400, 100, 27];
+var DEMO_PARTIES = ['Dr. Hasan', 'Farash', 'أم سعود', 'نوره', 'Hashim',
+  'AlShaalan', 'Sultan', 'Abdullah', 'Fury Rose', 'Abdurrahman'];
+
+function isDemoRecord(r) {
+  var desc = (r.desc || r.description || r.party || '').trim();
+  // تطابق وصف حرفي
+  for (var i = 0; i < DEMO_DESCRIPTIONS.length; i++) {
+    if (desc === DEMO_DESCRIPTIONS[i]) return { demo: true, reason: 'وصف تجريبي معروف' };
+  }
+  // تطابق عميل تجريبي
+  var party = (r.party || '').trim();
+  for (var j = 0; j < DEMO_PARTIES.length; j++) {
+    if (party === DEMO_PARTIES[j]) return { demo: true, reason: 'عميل تجريبي معروف' };
+  }
+  // تطابق مبلغ + نوع تجريبي
+  var amt = parseFloat(r.amount) || 0;
+  if (r.type === 'income' && DEMO_AMOUNTS_INC.indexOf(amt) !== -1 && !r.firebaseRef) {
+    return { demo: true, reason: 'مبلغ إيراد تجريبي + لا firebaseRef' };
+  }
+  if (r.type === 'expense' && DEMO_AMOUNTS_EXP.indexOf(amt) !== -1) {
+    return { demo: true, reason: 'مبلغ مصروف تجريبي' };
+  }
+  // فحص pattern: id تبدأ بـ F + timestamp (نمط kتابة تجريبية)
+  if (r.id && /^F\d{13}/.test(r.id) && r.status === 'معلق' && r.type === 'income') {
+    return { demo: true, reason: 'نمط ID تجريبي (F+timestamp) مع status معلق' };
+  }
+  return { demo: false };
+}
+
+// ===== DEDUP =====
+function makeDupKey(r) {
+  var desc = (r.desc || r.description || '').trim().substring(0, 30);
+  var party = (r.party || '').trim();
+  return (r.date||'') + '|' + (r.type||'') + '|' + (parseFloat(r.amount)||0) + '|' + desc + '|' + party;
+}
+
+function fmt(n) { return Number(n||0).toLocaleString('ar-SA'); }
+function fmtDT(d) {
+  if(!d) return '—';
+  try { return new Date(d).toLocaleString('ar-SA',{dateStyle:'short',timeStyle:'short'}); } catch { return d; }
+}
+
+// ===== STATE =====
+var allRecords = [];
+var demoKeys   = new Set();
+var dupKeys    = new Set();
+var dupGroupMap = {};
+var demoReasons = {};
+var currentFilter = 'all';
+
+// ===== LOAD =====
+function loadData() {
+  if(!db) {
+    document.getElementById('connBadge').textContent = '❌ خطأ';
+    document.getElementById('loadingMsg').textContent = '❌ تعذر الاتصال بـ Firebase';
+    return;
+  }
+  db.ref('transactions').once('value', function(snap) {
+    var records = [];
+    snap.forEach(function(child) {
+      records.push(Object.assign({}, child.val(), {_fbKey: child.key}));
+    });
+    allRecords = records;
+
+    // Detect demo
+    records.forEach(function(r) {
+      var result = isDemoRecord(r);
+      if (result.demo) {
+        demoKeys.add(r._fbKey);
+        demoReasons[r._fbKey] = result.reason;
+      }
+    });
+
+    // Detect duplicates
+    var groups = {};
+    records.forEach(function(r) {
+      var k = makeDupKey(r);
+      if (!groups[k]) groups[k] = [];
+      groups[k].push(r._fbKey);
+    });
+    var gNum = 0;
+    Object.keys(groups).forEach(function(k) {
+      if (groups[k].length > 1) {
+        gNum++;
+        var gId = 'D' + gNum;
+        groups[k].forEach(function(fbKey) {
+          dupKeys.add(fbKey);
+          dupGroupMap[fbKey] = gId;
+        });
+      }
+    });
+
+    // Stats
+    var inc    = records.filter(function(r){ return r.type==='income'; });
+    var exp    = records.filter(function(r){ return r.type==='expense'; });
+    var incAmt = inc.reduce(function(s,r){ return s+(parseFloat(r.amount)||0); }, 0);
+    var expAmt = exp.reduce(function(s,r){ return s+(parseFloat(r.amount)||0); }, 0);
+
+    document.getElementById('sTotal').textContent    = records.length;
+    document.getElementById('sIncCount').textContent = inc.length;
+    document.getElementById('sExpCount').textContent = exp.length;
+    document.getElementById('sIncAmt').textContent   = fmt(Math.round(incAmt));
+    document.getElementById('sExpAmt').textContent   = fmt(Math.round(expAmt));
+    document.getElementById('sDemo').textContent     = demoKeys.size;
+    document.getElementById('sDup').textContent      = dupKeys.size;
+    document.getElementById('connBadge').textContent = '✅ متصل • ' + records.length + ' سجل';
+
+    // Console logs
+    console.log('Transactions raw count:', records.length);
+    console.log('Possible demo records:', demoKeys.size);
+    console.log('Possible duplicate groups:', gNum);
+    console.log('Demo keys:', Array.from(demoKeys));
+
+    document.getElementById('loadingMsg').style.display = 'none';
+    document.getElementById('mainTable').style.display = '';
+    renderTable();
+
+  }, function(err) {
+    document.getElementById('connBadge').textContent = '❌ خطأ';
+    document.getElementById('loadingMsg').textContent = '❌ ' + err.message;
+  });
+}
+
+// ===== FILTER =====
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  renderTable();
+}
+
+// ===== RENDER =====
+function renderTable() {
+  var search = (document.getElementById('searchInput').value||'').trim().toLowerCase();
+
+  var filtered = allRecords.filter(function(r) {
+    if (currentFilter === 'income'  && r.type !== 'income')           return false;
+    if (currentFilter === 'expense' && r.type !== 'expense')          return false;
+    if (currentFilter === 'demo'    && !demoKeys.has(r._fbKey))       return false;
+    if (currentFilter === 'dup'     && !dupKeys.has(r._fbKey))        return false;
+    if (search) {
+      var hay = ((r.desc||'')+(r.description||'')+(r.party||'')+(r.amount||'')).toLowerCase();
+      if (hay.indexOf(search) === -1) return false;
+    }
+    return true;
+  });
+
+  // Sort: dup groups first, then demo, then by date desc
+  filtered.sort(function(a,b) {
+    var ga = dupGroupMap[a._fbKey] || '';
+    var gb = dupGroupMap[b._fbKey] || '';
+    if (ga || gb) {
+      if (ga !== gb) return (ga||'ZZZ').localeCompare(gb||'ZZZ');
+    }
+    return (b.date||'').localeCompare(a.date||'');
+  });
+
+  var tbody = document.getElementById('tableBody');
+  if (filtered.length === 0) {
+    tbody.innerHTML = '';
+    document.getElementById('noData').style.display = '';
+    return;
+  }
+  document.getElementById('noData').style.display = 'none';
+
+  var html = '';
+  var rowNum = 0;
+  var lastGroup = null;
+
+  filtered.forEach(function(r) {
+    rowNum++;
+    var isDemo = demoKeys.has(r._fbKey);
+    var isDup  = dupKeys.has(r._fbKey);
+    var gId    = dupGroupMap[r._fbKey] || '';
+    var demoReason = demoReasons[r._fbKey] || '';
+
+    // Group headers
+    if (isDup && gId !== lastGroup) {
+      lastGroup = gId;
+      html += '<tr class="dup-group-header"><td colspan="12">🔁 مجموعة تكرار محتملة ' + gId + ' — نفس: التاريخ + النوع + المبلغ + البيان</td></tr>';
+    }
+    if (!isDup) lastGroup = null;
+
+    var rowClass = isDup ? 'row-dup' : isDemo ? 'row-demo' : r.type === 'expense' ? 'row-expense' : 'row-income';
+
+    var typeTxt = r.type === 'income'
+      ? '<span class="type-inc">💵 إيراد</span>'
+      : r.type === 'expense'
+      ? '<span class="type-exp">💸 مصروف</span>'
+      : (r.type || '—');
+
+    var classification = isDup
+      ? '<span class="badge-dup">🔁 مكرر محتمل</span>'
+      : isDemo
+      ? '<span class="badge-demo">🧪 تجريبي محتمل</span>'
+      : '<span class="badge-real">✅ حقيقي محتمل</span>';
+
+    var source = r.firebaseRef ? '📥 من حجوزات' : r.id && r.id.startsWith('F') ? '🤖 مستورد' : '✏️ يدوي';
+    var desc = r.desc || r.description || r.party || '—';
+    var amt = parseFloat(r.amount) || 0;
+    var amtClass = r.type === 'income' ? 'style="color:#10B981;font-weight:700;"' : 'style="color:#EF4444;font-weight:700;"';
+
+    html += '<tr class="' + rowClass + '">'
+      + '<td>' + rowNum + (gId ? ' <span style="font-size:9px;background:#C4B5FD;padding:1px 5px;border-radius:8px;color:#5B21B6">' + gId + '</span>' : '') + '</td>'
+      + '<td><button class="copy-key" onclick="copyKey(\'' + r._fbKey + '\')">' + r._fbKey.substring(0,14) + '…</button></td>'
+      + '<td>' + (r.date||'—') + '</td>'
+      + '<td>' + typeTxt + '</td>'
+      + '<td ' + amtClass + '>' + fmt(amt) + ' ﷼</td>'
+      + '<td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + desc + '">' + desc + '</td>'
+      + '<td>' + (r.category||'—') + '</td>'
+      + '<td>' + (r.status||'—') + '</td>'
+      + '<td style="font-size:10px;">' + source + '</td>'
+      + '<td style="font-size:10px;color:#6B7280;">' + fmtDT(r.createdAt) + '</td>'
+      + '<td>' + classification + '</td>'
+      + '<td style="font-size:10px;color:#92400E;">' + (demoReason || '') + '</td>'
+      + '</tr>';
+  });
+
+  tbody.innerHTML = html;
+}
+
+// ===== COPY KEY =====
+function copyKey(key) {
+  navigator.clipboard.writeText(key).then(function(){
+    showToast('✅ تم نسخ: ' + key.substring(0,18) + '…');
+  }).catch(function(){
+    var el = document.createElement('textarea');
+    el.value = key; document.body.appendChild(el); el.select();
+    document.execCommand('copy'); document.body.removeChild(el);
+    showToast('✅ تم نسخ المفتاح');
+  });
+}
+
+// ===== CSV EXPORT =====
+function exportCSV() {
+  var headers = ['Firebase Key','التاريخ','النوع','المبلغ','البيان','الفئة','الحالة','المصدر','createdAt','التصنيف','سبب التصنيف','مجموعة التكرار'];
+  var rows = allRecords.map(function(r) {
+    var isDemo = demoKeys.has(r._fbKey);
+    var isDup  = dupKeys.has(r._fbKey);
+    var cls = isDup ? 'مكرر محتمل' : isDemo ? 'تجريبي محتمل' : 'حقيقي محتمل';
+    var src = r.firebaseRef ? 'من حجوزات' : r.id && r.id.startsWith('F') ? 'مستورد' : 'يدوي';
+    return [
+      r._fbKey, r.date||'', r.type||'', r.amount||'',
+      r.desc||r.description||r.party||'', r.category||'', r.status||'',
+      src, r.createdAt||'', cls, demoReasons[r._fbKey]||'', dupGroupMap[r._fbKey]||''
+    ].map(function(v){ return '"'+(v+'').replace(/"/g,'""')+'"'; }).join(',');
+  });
+  var csv = '\uFEFF' + headers.join(',') + '\n' + rows.join('\n');
+  var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'transactions-diagnosis-' + new Date().toISOString().split('T')[0] + '.csv';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+// ===== TOAST =====
+function showToast(msg) {
+  var t = document.createElement('div');
+  t.textContent = msg;
+  t.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#0C3B5E;color:#fff;padding:9px 18px;border-radius:10px;font-family:Tajawal,sans-serif;font-size:13px;z-index:9999;box-shadow:0 4px 14px rgba(0,0,0,.2);';
+  document.body.appendChild(t);
+  setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t); }, 2500);
+}
+
+// ===== INIT =====
+loadData();
+</script>
+</body>
+</html>
