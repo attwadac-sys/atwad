@@ -626,6 +626,22 @@ function mergeAppointmentsAndBookings() {
   console.log('Appointments source count:', firebaseAppointments.length);
   console.log('Displayed appointments count:', appointments.length);
 
+  // تشخيص تفصيلي لجميع السجلات
+  console.table(firebaseAppointments.map(function(a) {
+    return {
+      _key:            a._fbKey || '—',
+      name:            a.client || a.name || '—',
+      phone:           a.phone || '—',
+      date:            a.date || '—',
+      time:            a.time || '—',
+      service:         a.service || '—',
+      technician:      a.tech || '—',
+      createdAt:       a.createdAt || '—',
+      sourceBookingKey: a.sourceBookingKey || '—',
+      bookingRef:      a.bookingRef || '—'
+    };
+  }));
+
   updateStats();
   renderWeek();
   renderList();
