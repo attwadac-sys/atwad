@@ -609,6 +609,15 @@ let firebaseAppointments = []; // من مسار appointments
 let firebaseBookings = [];     // من مسار bookings — يُحمَّل مرة واحدة
 var isSavingAppointment = false; // حماية من النقر المزدوج
 
+// دالة التنبيه المحلية
+function showToast(msg) {
+  var t = document.createElement('div');
+  t.textContent = msg;
+  t.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#0C3B5E;color:#fff;padding:10px 20px;border-radius:10px;font-family:"Tajawal",sans-serif;font-size:14px;font-weight:700;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.25);pointer-events:none;';
+  document.body.appendChild(t);
+  setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t); }, 3000);
+}
+
 function normalizePhone(p) {
   return (p || '').replace(/\s+/g, '').replace(/^00966/, '0').replace(/^\+966/, '0');
 }
@@ -1734,6 +1743,9 @@ function createWorkOrderFromAppt(apptId) {
         a.workOrderKey = existingWOKey;
         a.workOrderCreated = true;
         openDetail(apptId);
+      }).catch(function(e){
+        console.error('Link fix failed:', e.message);
+        if (btn) { btn.disabled = false; btn.textContent = '🛠️ إنشاء أمر عمل'; }
       });
       return;
     }
