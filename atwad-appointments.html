@@ -307,6 +307,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
         <span id="notifBadge" style="display:none;position:absolute;top:-6px;right:-6px;background:#EF4444;color:#fff;border-radius:50%;width:16px;height:16px;font-size:9px;font-weight:700;align-items:center;justify-content:center;font-family:'Tajawal',sans-serif;">0</span>
       </div>
       <button class="btn-primary" onclick="openNewAppt()" style="padding:8px 14px;font-size:12px;">＋ موعد</button>
+      <button onclick="toggleBookingsPanel()" style="padding:8px 14px;font-size:12px;background:#fff;border:1.5px solid #0EA5E9;color:#0C3B5E;border-radius:8px;cursor:pointer;font-family:'Tajawal',sans-serif;font-weight:700;">📥 الحجوزات <span id="bookingsToolbarBadge" style="display:none;background:#EF4444;color:#fff;padding:1px 7px;border-radius:12px;font-size:11px;margin-right:4px;">0</span></button>
       <button onclick="openWaitingList(null)" style="padding:7px 12px;background:#FEF9C3;color:#92400E;border:1.5px solid #FDE68A;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;">
         &#128196; <span id="waitingBadge" style="background:#EF4444;color:#fff;border-radius:50%;width:16px;height:16px;display:none;align-items:center;justify-content:center;font-size:9px;font-weight:700;margin-right:2px;"></span>
       </button>
@@ -340,7 +341,20 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
     <div class="week-grid" id="weekGrid"></div>
   </div>
   <div class="list-view" id="listView" style="display:none;"></div>
-</div>
+
+  <!-- قسم الحجوزات الإلكترونية الجديدة -->
+  <div id="bookingsPanel" style="margin:0 22px 30px;display:none;">
+    <div style="background:#fff;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.08);overflow:hidden;">
+      <div style="background:linear-gradient(135deg,#0C3B5E,#0EA5E9);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="color:#fff;">
+          <div style="font-size:15px;font-weight:700;">📥 الحجوزات الإلكترونية الجديدة</div>
+          <div style="font-size:11px;opacity:.8;margin-top:2px;">حجوزات لم تُحوَّل بعد إلى مواعيد</div>
+        </div>
+        <span id="bookingsBadge" style="background:#EF4444;color:#fff;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;">0</span>
+      </div>
+      <div id="bookingsList" style="padding:8px;"></div>
+    </div>
+  </div>
 
 <!-- APPOINTMENT MODAL -->
 <div class="modal-overlay" id="apptModal">
@@ -612,6 +626,7 @@ function mergeAppointmentsAndBookings() {
   console.log('Appointments source count:', firebaseAppointments.length);
   console.log('Displayed appointments count:', appointments.length);
 
+
   updateStats();
   renderWeek();
   renderList();
@@ -788,6 +803,8 @@ function initFirebaseSync() {
 
     // إعادة الدمج بدون قراءة appointments من Firebase مجدداً
     mergeAppointmentsAndBookings();
+    // تحديث قسم الحجوزات الإلكترونية
+    renderBookingsPanel();
 
   }, function(e) {
     console.log('bookings listener error (non-critical):', e.message);
@@ -925,6 +942,194 @@ function populateClients(){
       snap.forEach(c => { const v=c.val(); if(v.name) items.push(`<option value="${v.name}" data-phone="${v.phone||''}">`); });
       dl.innerHTML = items.join('');
     });
+  }
+}
+
+// ===== تحويل حجز إلى موعد =====
+function openNewApptFromBooking(bookingKey) {
+  if (!db) return;
+  db.ref('bookings/' + bookingKey).once('value', function(snap) {
+    const b = snap.val();
+    if (!b) { showToast('❌ لم يُعثر على الحجز'); return; }
+    if (b.convertedToAppointment) { showToast('⚠️ هذا الحجز محوَّل مسبقاً'); return; }
+
+    // ===== تعيين الخدمة — مطابقة قيم bookings مع options في f_service =====
+    const SERVICE_MAP = {
+      'تنظيف وغسيل المكيفات': 'غسيل مكيفات',
+      'تنظيف مكيفات':         'تنظيف مكيف',
+      'تنظيف مكيف':           'تنظيف مكيف',
+      'غسيل مكيفات':          'غسيل مكيفات',
+      'صيانة دورية':          'صيانة دورية',
+      'تعبئة غاز فريون':      'تعبئة غاز',
+      'تعبئة غاز':            'تعبئة غاز',
+      'كشف وإصلاح أعطال':     'كشف وإصلاح أعطال',
+      'كشف أعطال':             'كشف وإصلاح أعطال',
+      'تركيب مكيف':            'تركيب مكيف جديد',
+      'تركيب مكيف جديد':       'تركيب مكيف جديد',
+      'باقة صيانة سنوية':      'باقة صيانة سنوية',
+    };
+    const mappedService = SERVICE_MAP[b.service] || b.service || '';
+
+    // ===== رقم الحجز للعميل (ATW-xxxxx) من حقل ref في bookings =====
+    const bookingRef = b.ref || bookingKey; // b.ref هو ATW-47615
+
+    // ===== رابط الموقع من حقل mapsLink =====
+    const mapsLink = b.mapsLink || b.locationLink || b.addr || '';
+
+    // فتح مودال الموعد الجديد
+    editingId = null;
+    editingFirebaseKey = null;
+    document.getElementById('modalTitle').textContent = '📥 تحويل حجز إلى موعد';
+
+    document.getElementById('f_client').value  = b.client || b.name || '';
+    document.getElementById('f_phone').value   = b.phone || '';
+    document.getElementById('f_address').value = b.city || '';
+    document.getElementById('f_service').value = mappedService;
+    document.getElementById('f_units').value   = b.units || 1;
+    document.getElementById('f_date').value    = b.date || today();
+
+    // الوقت — الحجز يخزن "16:00 - 18:00" نأخذ الأول
+    const rawTime = b.time || '09:00';
+    document.getElementById('f_time').value = rawTime.includes(' - ') ? rawTime.split(' - ')[0] : rawTime;
+
+    // الملاحظات: رقم الحجز للعميل فقط (ATW-xxxxx)
+    document.getElementById('f_notes').value = 'مرجع الحجز: ' + bookingRef +
+      (b.problemDescriptionSummary ? '\nالمشكلة: ' + b.problemDescriptionSummary : '') +
+      (b.notes ? '\n' + b.notes : '');
+
+    // رابط الموقع — ينتقل كاملاً إذا كان موجوداً
+    if (mapsLink) {
+      var mapsInput = document.getElementById('f_maps_link') || document.querySelector('input[placeholder*="maps"], input[placeholder*="خرائط"]');
+      if (mapsInput) mapsInput.value = mapsLink;
+      // حفظه أيضاً في متغير عام يستخدمه saveAppt
+      window._pendingMapsLink = mapsLink;
+    }
+
+    document.getElementById('f_status').value = 'pending';
+    document.getElementById('f_tech').value   = '';
+
+    // حفظ مرجعَي الحجز: Firebase Key للكتابة الداخلية، وRef للعرض
+    document.getElementById('apptModal').dataset.sourceBookingKey = bookingKey;
+    document.getElementById('apptModal').dataset.sourceBookingRef = bookingRef;
+
+    populateClients();
+    document.getElementById('apptModal').classList.add('open');
+    currentImageBase64 = '';
+    resetSaveBtn();
+
+    if (b.phone) lookupCustomerByPhone(b.phone.trim());
+  });
+}
+
+// ===== عرض قسم الحجوزات =====
+function renderBookingsPanel() {
+  // الحجوزات غير المحوّلة فقط
+  var pending = firebaseBookings.filter(function(b) {
+    var raw = b;
+    // firebaseBookings stores transformed objects — need original data
+    return !raw._converted;
+  });
+
+  // نحتاج القيم الأصلية — نقرأها مباشرة من _fbKey
+  var panel = document.getElementById('bookingsPanel');
+  var list  = document.getElementById('bookingsList');
+  var badge = document.getElementById('bookingsBadge');
+
+  if (!db) { panel.style.display = 'none'; return; }
+
+  // جلب جميع الحجوزات والفلترة على الجانب العميل — Firebase لا يدعم equalTo(null) بشكل موثوق
+  db.ref('bookings').once('value', function(snap) {
+    var rawBookings = [];
+    snap.forEach(function(child) {
+      var v = child.val();
+      // عرض الحجوزات غير المحوّلة فقط
+      if (!v.convertedToAppointment) {
+        rawBookings.push(Object.assign({}, v, {_key: child.key}));
+      }
+    });
+
+    // ترتيب من الأحدث
+    rawBookings.sort(function(a,b){ return (b.createdAt||'').localeCompare(a.createdAt||''); });
+
+    badge.textContent = rawBookings.length;
+    panel.style.display = rawBookings.length > 0 ? 'block' : 'none';
+
+    if (rawBookings.length === 0) { list.innerHTML = ''; return; }
+
+    // ===== اكتشاف الحجوزات اليتيمة: حجز غير محوّل لكن موعده موجود =====
+    var orphanBookings = rawBookings.filter(function(b) {
+      return firebaseAppointments.some(function(a) { return a.sourceBookingKey === b._key; });
+    });
+
+    var orphanFixHtml = '';
+    if (orphanBookings.length > 0) {
+      orphanFixHtml = '<div style="background:#FEF3C7;border:1.5px solid #FDE68A;border-radius:10px;padding:12px 16px;margin:8px 0;">'
+        + '<div style="font-weight:700;color:#92400E;margin-bottom:8px;">⚠️ حجوزات بحاجة إصلاح (' + orphanBookings.length + '): موعدها أُنشئ لكن سجل الحجز لم يُحدَّث</div>'
+        + orphanBookings.map(function(b) {
+          var matchedAppt = firebaseAppointments.find(function(a){ return a.sourceBookingKey === b._key; });
+          return '<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid #FDE68A;">'
+            + '<span style="font-size:13px;color:#0C3B5E;">' + (b.client||b.name||'—') + ' — ' + (b.ref||b._key) + '</span>'
+            + '<button onclick="repairOrphanBooking(\'' + b._key + '\',\'' + (matchedAppt ? matchedAppt._fbKey : '') + '\')"'
+            + ' style="padding:6px 14px;background:#F59E0B;color:#fff;border:none;border-radius:7px;cursor:pointer;font-family:\'Tajawal\',sans-serif;font-size:12px;font-weight:700;">'
+            + '🔧 إصلاح الحالة</button>'
+            + '</div>';
+        }).join('')
+        + '</div>';
+    }
+
+    var TECH_AR = {Abrar:'أبرار', Shoib:'شعيب', Suhail:'سهيل'};
+    list.innerHTML = orphanFixHtml + rawBookings.map(function(b) {
+      var timeDisplay = b.time || '—';
+      return `<div style="border:1.5px solid #E2E8F0;border-radius:10px;padding:12px 16px;margin:8px 0;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:200px;">
+          <div style="font-weight:700;color:#0C3B5E;font-size:14px;">👤 ${b.client||b.name||'—'}</div>
+          <div style="font-size:12px;color:#6B7280;margin-top:4px;">
+            📱 ${b.phone||'—'} &nbsp;|&nbsp; 📅 ${b.date||'—'} &nbsp;|&nbsp; 🕐 ${timeDisplay}
+          </div>
+          <div style="font-size:12px;color:#6B7280;margin-top:2px;">
+            🔧 ${b.service||'—'} &nbsp;|&nbsp; 🌡️ ${b.units||1} وحدة &nbsp;|&nbsp; 📍 ${b.city||b.address||'—'}
+          </div>
+          <div style="font-size:10px;color:#9CA3AF;margin-top:2px;">رقم الحجز: ${b.ref || b._key}</div>
+        </div>
+        <button onclick="openNewApptFromBooking('${b._key}')"
+          style="padding:8px 16px;background:linear-gradient(135deg,#0C3B5E,#0EA5E9);color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;white-space:nowrap;">
+          📋 تحويل إلى موعد
+        </button>
+      </div>`;
+    }).join('');
+  });
+}
+
+function repairOrphanBooking(bookingKey, apptKey) {
+  if (!bookingKey || !apptKey) {
+    showToast('❌ بيانات الإصلاح غير مكتملة');
+    return;
+  }
+  if (!db) { showToast('❌ Firebase غير متاح'); return; }
+
+  console.log('repairOrphanBooking:', bookingKey, '→', apptKey);
+  db.ref('bookings/' + bookingKey).update({
+    convertedToAppointment: true,
+    appointmentKey: apptKey,
+    convertedAt: new Date().toISOString()
+  }).then(function() {
+    console.log('✅ Orphan booking repaired:', bookingKey);
+    showToast('✅ تم إصلاح حالة الحجز — يختفي الآن من القائمة');
+    renderBookingsPanel();
+  }).catch(function(e) {
+    console.error('❌ Repair failed:', bookingKey, e.message);
+    showToast('❌ فشل الإصلاح: ' + e.message);
+  });
+}
+
+function toggleBookingsPanel() {
+  var panel = document.getElementById('bookingsPanel');
+  if (panel.style.display === 'none' || panel.style.display === '') {
+    renderBookingsPanel();
+    panel.style.display = 'block';
+    panel.scrollIntoView({behavior:'smooth', block:'start'});
+  } else {
+    panel.style.display = 'none';
   }
 }
 
@@ -1352,17 +1557,90 @@ function saveAppt(){
       .catch(e => { resetSaveBtn(); showToast('❌ خطأ: ' + e.message); });
   } else {
     data.createdAt = new Date().toISOString();
-    db.ref('appointments').push(data)
-      .then(() => {
-        if(document.getElementById('chk_save_to_customer').checked && _foundCustomerKey && mapsLink) {
+
+    // ===== قراءة مرجعَي الحجز في متغيرات محلية ثابتة قبل أي Firebase =====
+    var srcKeyFixed  = document.getElementById('apptModal').dataset.sourceBookingKey || '';
+    var bRefFixed    = document.getElementById('apptModal').dataset.sourceBookingRef || '';
+    if (srcKeyFixed) { data.sourceBookingKey = srcKeyFixed; }
+    if (bRefFixed)   { data.bookingRef = bRefFixed; }
+
+    // ===== حماية من التكرار عبر sourceBookingKey =====
+    if (srcKeyFixed) {
+      var existingAppt = firebaseAppointments.find(function(a){ return a.sourceBookingKey === srcKeyFixed; });
+      if (existingAppt) {
+        console.warn('Duplicate prevented — updating booking only:', srcKeyFixed, '→', existingAppt._fbKey);
+        db.ref('bookings/' + srcKeyFixed).update({
+          convertedToAppointment: true,
+          appointmentKey: existingAppt._fbKey,
+          convertedAt: new Date().toISOString()
+        }).then(function(){
+          resetSaveBtn();
+          closeModal();
+          renderBookingsPanel();
+          showToast('ℹ️ الموعد موجود مسبقاً — تم تحديث حالة الحجز');
+        }).catch(function(e){
+          resetSaveBtn();
+          console.error('Booking update failed (duplicate path):', srcKeyFixed, e.message);
+          showToast('⚠️ الموعد موجود لكن فشل تحديث الحجز: ' + e.message);
+        });
+        return;
+      }
+    }
+
+    // ===== إنشاء الموعد ثم تحديث الحجز بشكل متسلسل =====
+    var apptPushRef = db.ref('appointments').push(data);
+    var newApptKey  = apptPushRef.key; // يتوفر فوراً من Firebase SDK
+
+    apptPushRef
+      .then(function() {
+        // نجح إنشاء الموعد
+        console.log('✅ Appointment created:', newApptKey);
+        if (document.getElementById('chk_save_to_customer').checked && _foundCustomerKey && mapsLink) {
           saveLocationToCustomer(_foundCustomerKey, {mapsLink, lat, lng, locSrc, locVerified});
         }
-        resetSaveBtn();
-        closeModal();
-        showToast('✅ تم إضافة الموعد');
         sendAdminNotification(data);
+
+        // إذا لم يكن من حجز — أنهِ هنا
+        if (!srcKeyFixed) {
+          resetSaveBtn();
+          closeModal();
+          showToast('✅ تم إضافة الموعد');
+          return;
+        }
+
+        // ===== التحديث المتسلسل: bookings أولاً ثم إغلاق النافذة =====
+        console.log('Updating booking:', srcKeyFixed, '→ appt:', newApptKey);
+        return db.ref('bookings/' + srcKeyFixed).update({
+          convertedToAppointment: true,
+          appointmentKey: newApptKey,
+          convertedAt: new Date().toISOString()
+        });
       })
-      .catch(e => { resetSaveBtn(); showToast('❌ خطأ: ' + e.message); });
+      .then(function(updateResult) {
+        // هذا الـ then ينفذ فقط إذا كان من حجز ونجح التحديث
+        if (updateResult !== undefined || !srcKeyFixed) {
+          // srcKeyFixed موجود ونجح التحديث
+          console.log('✅ Booking marked converted:', srcKeyFixed);
+          resetSaveBtn();
+          closeModal();
+          renderBookingsPanel();
+          showToast('✅ تم إنشاء الموعد وتحديث حالة الحجز بنجاح');
+        } else {
+          // لا يوجد srcKeyFixed — النجاح تمّ في .then() السابق
+        }
+      })
+      .catch(function(e) {
+        resetSaveBtn();
+        console.error('❌ Error in appointment/booking flow:', e.message);
+        if (newApptKey) {
+          // الموعد أُنشئ لكن تحديث الحجز فشل
+          showToast('⚠️ تم إنشاء الموعد (' + newApptKey + ') لكن فشل تحديث الحجز — لا تعِد التحويل');
+          console.error('appointmentKey:', newApptKey, '| sourceBookingKey:', srcKeyFixed);
+          renderBookingsPanel();
+        } else {
+          showToast('❌ خطأ: ' + e.message);
+        }
+      });
   }
 }
 
