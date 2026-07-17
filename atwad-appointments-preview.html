@@ -1036,12 +1036,12 @@ function renderBookingsPanel() {
 
   if (!db) { panel.style.display = 'none'; return; }
 
-  db.ref('bookings').orderByChild('convertedToAppointment').equalTo(null).once('value', function(snap) {
-    // Firebase null query — إذا convertedToAppointment غير موجود = غير محوَّل
+  // جلب جميع الحجوزات والفلترة على الجانب العميل — Firebase لا يدعم equalTo(null) بشكل موثوق
+  db.ref('bookings').once('value', function(snap) {
     var rawBookings = [];
     snap.forEach(function(child) {
       var v = child.val();
-      // تضمين الحجوزات غير المحوّلة فقط
+      // عرض الحجوزات غير المحوّلة فقط
       if (!v.convertedToAppointment) {
         rawBookings.push(Object.assign({}, v, {_key: child.key}));
       }
@@ -1524,13 +1524,18 @@ function saveAppt(){
         // تعليم الحجز كمحوَّل إذا كان مصدره bookings
         var srcKey = document.getElementById('apptModal').dataset.sourceBookingKey;
         if (srcKey && db) {
+          var apptId = ref.key;
           db.ref('bookings/' + srcKey).update({
             convertedToAppointment: true,
-            appointmentKey: ref.key,
+            appointmentKey: apptId,
             convertedAt: new Date().toISOString()
           }).then(function(){
+            console.log('Booking marked as converted:', srcKey, '→ appointment:', apptId);
             delete document.getElementById('apptModal').dataset.sourceBookingKey;
-            renderBookingsPanel(); // تحديث القسم
+            renderBookingsPanel();
+          }).catch(function(e) {
+            console.error('Failed to mark booking as converted:', srcKey, e.message);
+            showToast('⚠️ تم إنشاء الموعد لكن فشل تحديث سجل الحجز — راجع Console');
           });
         }
         sendAdminNotification(data);
