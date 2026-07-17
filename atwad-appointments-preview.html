@@ -642,6 +642,43 @@ function mergeAppointmentsAndBookings() {
     };
   }));
 
+  // ===== تشخيص أم حمزة =====
+  if (db) {
+    db.ref('bookings').once('value', function(snap) {
+      console.log('=== DIAG: جميع سجلات bookings ===');
+      snap.forEach(function(child) {
+        var v = child.val();
+        // عرض كل الحجوزات مع حالة التحويل
+        console.log({
+          _fbKey: child.key,
+          ref: v.ref,
+          client: v.client || v.name,
+          phone: v.phone,
+          date: v.date,
+          convertedToAppointment: v.convertedToAppointment,
+          appointmentKey: v.appointmentKey,
+          convertedAt: v.convertedAt
+        });
+      });
+    });
+
+    // عرض الموعد المقابل إن وُجد مع sourceBookingKey
+    console.log('=== DIAG: appointments مع sourceBookingKey ===');
+    firebaseAppointments.forEach(function(a) {
+      if (a.sourceBookingKey || a.bookingRef) {
+        console.log({
+          _key: a._fbKey,
+          client: a.client,
+          phone: a.phone,
+          date: a.date,
+          time: a.time,
+          sourceBookingKey: a.sourceBookingKey,
+          bookingRef: a.bookingRef
+        });
+      }
+    });
+  }
+
   updateStats();
   renderWeek();
   renderList();
@@ -1569,7 +1606,7 @@ function saveAppt(){
 
     var apptPushRef = db.ref('appointments').push(data);
     apptPushRef.then(function() {
-        var newApptKey = apptPushRef.key; // ← المفتاح الصحيح من push reference
+        var newApptKey = apptPushRef.key;
         if(document.getElementById('chk_save_to_customer').checked && _foundCustomerKey && mapsLink) {
           saveLocationToCustomer(_foundCustomerKey, {mapsLink, lat, lng, locSrc, locVerified});
         }
@@ -1579,20 +1616,34 @@ function saveAppt(){
 
         // تعليم الحجز كمحوَّل إذا كان مصدره bookings
         var srcKey = srcKeyForAppt;
+        var bRef = document.getElementById('apptModal').dataset.sourceBookingRef || '';
+        console.log('=== POST-SAVE BOOKING UPDATE ===');
+        console.log('srcKey:', srcKey);
+        console.log('newApptKey:', newApptKey);
+        console.log('bookingRef:', bRef);
+
         if (srcKey && db) {
-          db.ref('bookings/' + srcKey).update({
+          var updatePayload = {
             convertedToAppointment: true,
             appointmentKey: newApptKey,
             convertedAt: new Date().toISOString()
-          }).then(function(){
-            console.log('Booking marked as converted:', srcKey, '→ appointment:', newApptKey);
-            delete document.getElementById('apptModal').dataset.sourceBookingKey;
-            delete document.getElementById('apptModal').dataset.sourceBookingRef;
-            renderBookingsPanel();
-          }).catch(function(e) {
-            console.error('FAILED to mark booking as converted:', srcKey, e.message);
-            showToast('⚠️ تم إنشاء الموعد لكن فشل تحديث سجل الحجز ' + srcKey + ' — راجع Console');
-          });
+          };
+          console.log('Writing to bookings/' + srcKey, updatePayload);
+          db.ref('bookings/' + srcKey).update(updatePayload)
+            .then(function(){
+              console.log('✅ Booking marked as converted:', srcKey, '→', newApptKey);
+              delete document.getElementById('apptModal').dataset.sourceBookingKey;
+              delete document.getElementById('apptModal').dataset.sourceBookingRef;
+              renderBookingsPanel();
+            })
+            .catch(function(e) {
+              console.error('❌ FAILED to mark booking as converted:', srcKey, e.message);
+              showToast('⚠️ تم إنشاء الموعد لكن فشل تحديث سجل الحجز — ' + srcKey);
+              renderBookingsPanel(); // حاول تحديث القائمة على أي حال
+            });
+        } else {
+          console.log('No sourceBookingKey — not a booking conversion');
+          renderBookingsPanel();
         }
         sendAdminNotification(data);
       })
