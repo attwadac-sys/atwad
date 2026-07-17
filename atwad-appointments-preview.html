@@ -952,35 +952,71 @@ function openNewApptFromBooking(bookingKey) {
     if (!b) { showToast('❌ لم يُعثر على الحجز'); return; }
     if (b.convertedToAppointment) { showToast('⚠️ هذا الحجز محوَّل مسبقاً'); return; }
 
+    // ===== تعيين الخدمة — مطابقة قيم bookings مع options في f_service =====
+    const SERVICE_MAP = {
+      'تنظيف وغسيل المكيفات': 'غسيل مكيفات',
+      'تنظيف مكيفات':         'تنظيف مكيف',
+      'تنظيف مكيف':           'تنظيف مكيف',
+      'غسيل مكيفات':          'غسيل مكيفات',
+      'صيانة دورية':          'صيانة دورية',
+      'تعبئة غاز فريون':      'تعبئة غاز',
+      'تعبئة غاز':            'تعبئة غاز',
+      'كشف وإصلاح أعطال':     'كشف وإصلاح أعطال',
+      'كشف أعطال':             'كشف وإصلاح أعطال',
+      'تركيب مكيف':            'تركيب مكيف جديد',
+      'تركيب مكيف جديد':       'تركيب مكيف جديد',
+      'باقة صيانة سنوية':      'باقة صيانة سنوية',
+    };
+    const mappedService = SERVICE_MAP[b.service] || b.service || '';
+
+    // ===== رقم الحجز للعميل (ATW-xxxxx) من حقل ref في bookings =====
+    const bookingRef = b.ref || bookingKey; // b.ref هو ATW-47615
+
+    // ===== رابط الموقع من حقل mapsLink =====
+    const mapsLink = b.mapsLink || b.locationLink || b.addr || '';
+
     // فتح مودال الموعد الجديد
     editingId = null;
     editingFirebaseKey = null;
     document.getElementById('modalTitle').textContent = '📥 تحويل حجز إلى موعد';
 
-    // ملء الحقول من بيانات الحجز
     document.getElementById('f_client').value  = b.client || b.name || '';
     document.getElementById('f_phone').value   = b.phone || '';
-    document.getElementById('f_address').value = b.city || b.address || '';
-    document.getElementById('f_service').value = b.service || 'تنظيف وغسيل المكيفات';
+    document.getElementById('f_address').value = b.city || '';
+    document.getElementById('f_service').value = mappedService;
     document.getElementById('f_units').value   = b.units || 1;
     document.getElementById('f_date').value    = b.date || today();
-    // الوقت — الحجز يخزن "16:00 - 18:00" نأخذ الأول
-    var rawTime = b.time || '09:00';
-    document.getElementById('f_time').value = rawTime.includes(' - ') ? rawTime.split(' - ')[0] : rawTime;
-    document.getElementById('f_notes').value   = 'رقم الحجز: ' + bookingKey + (b.notes ? '\n' + b.notes : '');
-    document.getElementById('f_status').value  = 'pending';
-    document.getElementById('f_tech').value    = '';
 
-    // حفظ مرجع الحجز على العنصر لاستخدامه عند الحفظ
+    // الوقت — الحجز يخزن "16:00 - 18:00" نأخذ الأول
+    const rawTime = b.time || '09:00';
+    document.getElementById('f_time').value = rawTime.includes(' - ') ? rawTime.split(' - ')[0] : rawTime;
+
+    // الملاحظات: رقم الحجز للعميل فقط (ATW-xxxxx)
+    document.getElementById('f_notes').value = 'مرجع الحجز: ' + bookingRef +
+      (b.problemDescriptionSummary ? '\nالمشكلة: ' + b.problemDescriptionSummary : '') +
+      (b.notes ? '\n' + b.notes : '');
+
+    // رابط الموقع — ينتقل كاملاً إذا كان موجوداً
+    if (mapsLink) {
+      var mapsInput = document.getElementById('f_maps_link') || document.querySelector('input[placeholder*="maps"], input[placeholder*="خرائط"]');
+      if (mapsInput) mapsInput.value = mapsLink;
+      // حفظه أيضاً في متغير عام يستخدمه saveAppt
+      window._pendingMapsLink = mapsLink;
+    }
+
+    document.getElementById('f_status').value = 'pending';
+    document.getElementById('f_tech').value   = '';
+
+    // حفظ مرجعَي الحجز: Firebase Key للكتابة الداخلية، وRef للعرض
     document.getElementById('apptModal').dataset.sourceBookingKey = bookingKey;
+    document.getElementById('apptModal').dataset.sourceBookingRef = bookingRef;
 
     populateClients();
     document.getElementById('apptModal').classList.add('open');
     currentImageBase64 = '';
-
-    // البحث عن بيانات العميل الموجودة
-    if (b.phone) lookupCustomerByPhone(b.phone.trim());
     resetSaveBtn();
+
+    if (b.phone) lookupCustomerByPhone(b.phone.trim());
   });
 }
 
