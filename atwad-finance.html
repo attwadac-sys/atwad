@@ -332,12 +332,8 @@ function syncFromFirebase() {
     snap.forEach(function(child) {
       fbData.push({...child.val(), _fbKey: child.key});
     });
-    if(fbData.length > 0) {
-      entries = fbData;
-      // data saved to Firebase
-    }
+    entries = fbData; // دائماً نحدث entries حتى لو كانت فارغة
     renderAll();
-syncFromFirebase();
   });
 }
 let period = 'month';
@@ -611,46 +607,9 @@ function showToast(msg){ const t=document.getElementById('toast'); t.textContent
 
 document.getElementById('addModal').addEventListener('click',e=>{ if(e.target===document.getElementById('addModal')) closeModal(); });
 
-// ===== DEMO DATA =====
-if(entries.length===0){
-  const now = new Date();
-  const m = String(now.getMonth()+1).padStart(2,'0');
-  const y = now.getFullYear();
-  const sampleIncome = [
-    {desc:'تنظيف مكيف - Dr. Hasan',party:'Dr. Hasan',category:'خدمة',amount:300,method:'كاش',status:'مدفوع'},
-    {desc:'صيانة - Farash Al Shareef',party:'Farash',category:'خدمة',amount:230,method:'تحويل',status:'مدفوع'},
-    {desc:'تعبئة غاز - أم سعود',party:'أم سعود',category:'خدمة',amount:300,method:'كاش',status:'معلق'},
-    {desc:'تنظيف - نوره زبونة',party:'نوره',category:'خدمة',amount:110,method:'كاش',status:'مدفوع'},
-    {desc:'صيانة - Hashim Khalifa',party:'Hashim',category:'خدمة',amount:1020,method:'تحويل',status:'مدفوع'},
-    {desc:'تنظيف - M. AlShaalan',party:'AlShaalan',category:'خدمة',amount:360,method:'كاش',status:'مدفوع'},
-    {desc:'كشف أعطال - Sultan',party:'Sultan',category:'خدمة',amount:150,method:'كاش',status:'مدفوع'},
-    {desc:'تنظيف - Abdullah',party:'Abdullah',category:'خدمة',amount:240,method:'تحويل',status:'مدفوع'},
-    {desc:'صيانة - Fury Rose',party:'Fury Rose',category:'خدمة',amount:150,method:'كاش',status:'مدفوع'},
-    {desc:'تنظيف - Abdurrahman',party:'Abdurrahman',category:'خدمة',amount:320,method:'كاش',status:'مدفوع'},
-  ];
-  const sampleExpense = [
-    {desc:'وقود ميتسوبيشي',category:'وقود',amount:100,method:'كاش'},
-    {desc:'قطع غيار - فريون R22',category:'قطع غيار',amount:285,method:'كاش'},
-    {desc:'غداء الفنيين',category:'طعام',amount:30,method:'كاش'},
-    {desc:'وقود',category:'وقود',amount:100,method:'كاش'},
-    {desc:'كباستر وقطع غيار',category:'قطع غيار',amount:237,method:'كاش'},
-    {desc:'إعلان سناب أبحر',category:'إعلانات',amount:400,method:'تحويل'},
-    {desc:'وقود ميتسوبيشي',category:'وقود',amount:100,method:'كاش'},
-    {desc:'طعام الفنيين',category:'طعام',amount:27,method:'كاش'},
-  ];
-  let dayOffset = 0;
-  sampleIncome.forEach((e,i)=>{
-    const d=new Date(); d.setDate(d.getDate()-i);
-    entries.push({id:genId(),type:'income',...e,date:d.toISOString().split('T')[0],createdAt:new Date().toISOString()});
-  });
-  sampleExpense.forEach((e,i)=>{
-    const d=new Date(); d.setDate(d.getDate()-i);
-    entries.push({id:genId(),type:'expense',...e,party:'',status:'مدفوع',date:d.toISOString().split('T')[0],createdAt:new Date().toISOString()});
-  });
-  saveData();
-}
-
+// لا بيانات تجريبية — transactions تُحمَّل من Firebase فقط
 renderAll();
+syncFromFirebase();
 </script>
 
 
