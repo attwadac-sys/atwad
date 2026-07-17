@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>أطواد — تشخيص V5 — دفعات DEMO</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Tajawal', sans-serif; background: #F0F9FF; color: #0C3B5E; font-size: 14px; }
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
+
+.warning-banner {
+  background: #FEF3C7; border-bottom: 2px solid #F59E0B; color: #92400E;
+  padding: 12px 20px; text-align: center; font-weight: 700; font-size: 14px;
+  position: sticky; top: 0; z-index: 100;
+}
+.header {
+  background: #0C3B5E; color: #fff; padding: 14px 24px;
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+}
+.header h1 { font-size: 17px; font-weight: 700; }
+.badge { background: #0EA5E9; padding: 4px 12px; border-radius: 20px; font-size: 12px; }
+
+.stats-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px; padding: 16px 24px 8px;
+}
+.stat-card { background:#fff; border-radius:10px; padding:14px; text-align:center; box-shadow:0 2px 6px rgba(0,0,0,.06); }
+.stat-card .num { font-size:22px; font-weight:700; color:#0C3B5E; }
+.stat-card .lbl { font-size:11px; color:#6B7280; margin-top:3px; }
+.stat-card.demo  .num { color:#EF4444; }
+.stat-card.real  .num { color:#10B981; }
+.stat-card.warn  .num { color:#F59E0B; }
+.stat-card.money .num { color:#0EA5E9; }
+
+/* Batch card */
+.section-title { padding: 14px 24px 8px; font-size: 15px; font-weight: 700; color: #0C3B5E; }
+.batch-card {
+  margin: 0 24px 12px; background: #fff;
+  border-radius: 12px; border: 2px solid #FCA5A5; overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,.06);
+}
+.batch-header {
+  background: #FEE2E2; padding: 10px 16px;
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  cursor: pointer;
+}
+.batch-header h4 { font-size: 13px; font-weight: 700; color: #991B1B; flex: 1; }
+.batch-meta { display: flex; gap: 16px; flex-wrap: wrap; }
+.batch-meta span { font-size: 11px; color: #6B7280; }
+.batch-meta strong { color: #0C3B5E; }
+.batch-body { display: none; padding: 12px 16px; }
+.batch-body.open { display: block; }
+
+/* Review card */
+.review-card {
+  margin: 0 24px 12px; background: #fff;
+  border-radius: 12px; border: 2px solid #FDE68A; overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,.06);
+}
+.review-header { background: #FEF9C3; padding: 10px 16px; display: flex; align-items: center; gap: 12px; }
+.review-header h4 { font-size: 13px; font-weight: 700; color: #92400E; flex: 1; }
+.review-body { padding: 12px 16px; }
+
+/* Mini table inside cards */
+.mini-table { width:100%; border-collapse:collapse; font-size:11px; }
+.mini-table th { background:#F1F5F9; padding:6px 8px; text-align:right; color:#374151; font-weight:600; }
+.mini-table td { padding:7px 8px; border-bottom:1px solid #F1F5F9; }
+.mini-table tr:last-child td { border-bottom:none; }
+
+/* Tabs */
+.tabs { display:flex; padding:0 24px; border-bottom:2px solid #E2E8F0; background:#F8FAFC; margin-top:16px; }
+.tab-btn { padding:9px 16px; border:none; background:transparent; cursor:pointer; font-family:'Tajawal',sans-serif; font-size:13px; font-weight:600; color:#6B7280; border-bottom:3px solid transparent; margin-bottom:-2px; }
+.tab-btn.active { color:#0C3B5E; border-bottom-color:#0EA5E9; }
+.tab-content { display:none; }
+.tab-content.active { display:block; }
+
+.controls { padding:12px 24px 8px; display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+.search-box { padding:7px 14px; border:1.5px solid #CBD5E1; border-radius:18px; font-family:'Tajawal',sans-serif; font-size:12px; min-width:200px; outline:none; }
+.export-btn { padding:7px 16px; background:#10B981; color:#fff; border:none; border-radius:18px; cursor:pointer; font-family:'Tajawal',sans-serif; font-size:12px; font-weight:700; margin-right:auto; }
+
+.table-wrap { padding:0 24px 30px; overflow-x:auto; }
+table { width:100%; border-collapse:collapse; background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,.06); min-width:750px; }
+thead { background:#0C3B5E; color:#fff; }
+th { padding:10px 8px; font-size:11px; font-weight:600; text-align:right; white-space:nowrap; }
+td { padding:9px 8px; border-bottom:1px solid #F1F5F9; font-size:11px; vertical-align:middle; }
+tr:last-child td { border-bottom:none; }
+tr:hover td { background:#F8FAFC; }
+.row-demo { background:#FFF1F2; }
+.row-warn { background:#FFFBEB; }
+
+.badge-demo { display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;background:#FEE2E2;color:#991B1B; }
+.badge-real { display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;background:#D1FAE5;color:#065F46; }
+.badge-warn { display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;background:#FEF3C7;color:#92400E; }
+.type-inc { color:#10B981;font-weight:700; }
+.type-exp { color:#EF4444;font-weight:700; }
+.copy-key { background:#EFF6FF;border:1px solid #BFDBFE;color:#1D4ED8;border-radius:5px;padding:2px 7px;cursor:pointer;font-family:monospace;font-size:10px;white-space:nowrap; }
+.loading { text-align:center;padding:60px;color:#6B7280;font-size:15px; }
+</style>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+</head>
+<body>
+
+<div class="warning-banner">
+  ⚠️ معاينة وتشخيص فقط — لا يتم حذف أو تعديل أي بيانات — V5
+</div>
+
+<div class="header">
+  <div>
+    <h1>🔬 تشخيص دفعات DEMO — V5</h1>
+    <div style="font-size:11px;opacity:.7;margin-top:3px;">يُعتبر قيد DEMO فقط إذا كان جزءاً من دفعة كتابة كاملة خلال 5 ثوانٍ</div>
+  </div>
+  <div class="badge" id="connBadge">⏳ جاري التحميل...</div>
+</div>
+
+<div id="mainContent">
+  <div class="loading" style="padding:60px;text-align:center;">⏳ جاري تحميل البيانات...</div>
+</div>
+
+<script>
+// ===== FIREBASE =====
+var db = null;
+try {
+  firebase.initializeApp({databaseURL:'https://atwad-booking-default-rtdb.firebaseio.com'});
+  db = firebase.database();
+} catch(e) {}
+
+// ============================================================
+// DEMO MULTISET — 18 قالب حرفي (مع التكرار)
+// المصدر: atwad-finance.html السطور 619-639
+// وقود ميتسوبيشي يظهر مرتين عمداً لأنه مكرر في الأصل
+// ============================================================
+var DEMO_MULTISET = [
+  {type:'income',  amount:300,  desc:'تنظيف مكيف - Dr. Hasan',   party:'Dr. Hasan',   i:0},
+  {type:'income',  amount:230,  desc:'صيانة - Farash Al Shareef', party:'Farash',       i:1},
+  {type:'income',  amount:300,  desc:'تعبئة غاز - أم سعود',       party:'أم سعود',      i:2},
+  {type:'income',  amount:110,  desc:'تنظيف - نوره زبونة',        party:'نوره',          i:3},
+  {type:'income',  amount:1020, desc:'صيانة - Hashim Khalifa',    party:'Hashim',       i:4},
+  {type:'income',  amount:360,  desc:'تنظيف - M. AlShaalan',      party:'AlShaalan',    i:5},
+  {type:'income',  amount:150,  desc:'كشف أعطال - Sultan',        party:'Sultan',       i:6},
+  {type:'income',  amount:240,  desc:'تنظيف - Abdullah',          party:'Abdullah',     i:7},
+  {type:'income',  amount:150,  desc:'صيانة - Fury Rose',         party:'Fury Rose',    i:8},
+  {type:'income',  amount:320,  desc:'تنظيف - Abdurrahman',       party:'Abdurrahman',  i:9},
+  {type:'expense', amount:100,  desc:'وقود ميتسوبيشي',            party:'',             i:10},
+  {type:'expense', amount:285,  desc:'قطع غيار - فريون R22',      party:'',             i:11},
+  {type:'expense', amount:30,   desc:'غداء الفنيين',               party:'',             i:12},
+  {type:'expense', amount:100,  desc:'وقود',                       party:'',             i:13},
+  {type:'expense', amount:237,  desc:'كباستر وقطع غيار',           party:'',             i:14},
+  {type:'expense', amount:400,  desc:'إعلان سناب أبحر',            party:'',             i:15},
+  {type:'expense', amount:100,  desc:'وقود ميتسوبيشي',            party:'',             i:16}, // مكرر عمداً
+  {type:'expense', amount:27,   desc:'طعام الفنيين',               party:'',             i:17},
+];
+
+// بصمة مرنة — نفس المنطق في buildSig
+function sig(type, amount, desc, party) {
+  return String(type) + '||' + String(Number(amount)) + '||' + String(desc) + '||' + String(party||'');
+}
+function recSig(r) {
+  return sig(r.type||'', r.amount||0, r.desc||r.description||'', r.party||'');
+}
+
+// Set لجميع البصمات (للمطابقة السريعة)
+var DEMO_SIG_SET = new Set();
+DEMO_MULTISET.forEach(function(t){ DEMO_SIG_SET.add(sig(t.type, t.amount, t.desc, t.party)); });
+
+// ===== BATCH WINDOW =====
+var BATCH_WINDOW_MS = 5000; // 5 ثوانٍ
+
+// ===== STATE =====
+var allRecords = [];
+var recordCat  = {}; // fbKey → 'batch-demo' | 'review' | 'real'
+var batches    = []; // [{ts, records:[], matchCount, isFullDemoBatch}]
+var reviewRecs = []; // سجلات DEMO منفردة خارج دفعة
+
+function fmt(n) { return Number(Math.round(n||0)).toLocaleString('ar-SA'); }
+function fmtDT(d) {
+  if(!d) return '—';
+  try { return new Date(d).toLocaleString('ar-SA',{dateStyle:'short',timeStyle:'short'}); } catch { return d; }
+}
+
+// ===== BATCH DETECTION =====
+function detectBatches(records) {
+  // خطوة 1: عزل السجلات التي تطابق أي بصمة DEMO
+  var demoMatchRecs = records.filter(function(r){ return DEMO_SIG_SET.has(recSig(r)); });
+  var nonDemoRecs   = records.filter(function(r){ return !DEMO_SIG_SET.has(recSig(r)); });
+
+  // خطوة 2: ترتيب حسب createdAt
+  demoMatchRecs.sort(function(a,b){
+    return new Date(a.createdAt||0) - new Date(b.createdAt||0);
+  });
+
+  // خطوة 3: تجميع في نوافذ زمنية 5 ثوانٍ
+  var windows = [];
+  var current = null;
+
+  demoMatchRecs.forEach(function(r) {
+    var ts = r.createdAt ? new Date(r.createdAt).getTime() : 0;
+    if (!current || (ts - current.endTs) > BATCH_WINDOW_MS) {
+      current = { startTs: ts, endTs: ts, records: [] };
+      windows.push(current);
+    }
+    current.endTs = ts;
+    current.records.push(r);
+  });
+
+  // خطوة 4: لكل نافذة — هل تحتوي على DEMO كامل (18 قالب بالـ multiset)؟
+  batches = [];
+  reviewRecs = [];
+
+  windows.forEach(function(w) {
+    // بناء multiset من سجلات النافذة
+    var windowSigs = w.records.map(function(r){ return recSig(r); });
+
+    // مقارنة مع DEMO_MULTISET — نحسب التطابق كـ multiset
+    var demoSigCount = {};
+    DEMO_MULTISET.forEach(function(t){
+      var s = sig(t.type, t.amount, t.desc, t.party);
+      demoSigCount[s] = (demoSigCount[s]||0) + 1;
+    });
+
+    var windowSigCount = {};
+    windowSigs.forEach(function(s){ windowSigCount[s] = (windowSigCount[s]||0) + 1; });
+
+    // عدد التطابقات (multiset intersection)
+    var matched = 0;
+    Object.keys(demoSigCount).forEach(function(s){
+      matched += Math.min(demoSigCount[s], windowSigCount[s]||0);
+    });
+
+    var isFullDemoBatch = (matched >= 16); // 16 من 18 = دفعة DEMO مكتملة (هامش للبصمات المكررة)
+    var incTotal = w.records.filter(function(r){return r.type==='income';}).reduce(function(s,r){return s+(parseFloat(r.amount)||0);},0);
+    var expTotal = w.records.filter(function(r){return r.type==='expense';}).reduce(function(s,r){return s+(parseFloat(r.amount)||0);},0);
+
+    var batchInfo = {
+      startTs:      w.startTs,
+      endTs:        w.endTs,
+      records:      w.records,
+      matched:      matched,
+      isFullDemoBatch: isFullDemoBatch,
+      incTotal:     incTotal,
+      expTotal:     expTotal,
+      duration:     Math.round((w.endTs - w.startTs) / 1000)
+    };
+
+    if (isFullDemoBatch) {
+      batches.push(batchInfo);
+      w.records.forEach(function(r){ recordCat[r._fbKey] = 'batch-demo'; });
+    } else {
+      // ليست دفعة كاملة — تحتاج مراجعة
+      w.records.forEach(function(r){
+        recordCat[r._fbKey] = 'review';
+        reviewRecs.push(r);
+      });
+    }
+  });
+
+  // غير-DEMO كلها حقيقية
+  nonDemoRecs.forEach(function(r){ recordCat[r._fbKey] = 'real'; });
+
+  console.log('=== V5 BATCH DETECTION ===');
+  console.log('Total records:', records.length);
+  console.log('DEMO-matching records:', demoMatchRecs.length);
+  console.log('Time windows found:', windows.length);
+  console.log('Full DEMO batches:', batches.length, '(≥16 templates matched)');
+  console.log('Review (partial DEMO match):', reviewRecs.length);
+  var batchDemoCount = records.filter(function(r){return recordCat[r._fbKey]==='batch-demo';}).length;
+  console.log('Real records:', records.length - batchDemoCount - reviewRecs.length);
+  batches.forEach(function(b,i){
+    console.log('Batch[' + i + '] at', new Date(b.startTs).toISOString(), '— ' + b.records.length + ' records, matched=' + b.matched + ', duration=' + b.duration + 's');
+  });
+}
+
+// ===== LOAD =====
+function loadData() {
+  if(!db) {
+    document.getElementById('mainContent').innerHTML = '<div class="loading">❌ تعذر الاتصال بـ Firebase</div>';
+    return;
+  }
+
+  db.ref('transactions').once('value', function(snap) {
+    var records = [];
+    snap.forEach(function(child) {
+      records.push(Object.assign({}, child.val(), {_fbKey: child.key}));
+    });
+    allRecords = records;
+    recordCat  = {};
+    reviewRecs = [];
+    batches    = [];
+
+    detectBatches(records);
+
+    var batchDemoRecs = records.filter(function(r){return recordCat[r._fbKey]==='batch-demo';});
+    var realRecs      = records.filter(function(r){return recordCat[r._fbKey]==='real';});
+    var realInc = realRecs.filter(function(r){return r.type==='income';}).reduce(function(s,r){return s+(parseFloat(r.amount)||0);},0);
+    var realExp = realRecs.filter(function(r){return r.type==='expense';}).reduce(function(s,r){return s+(parseFloat(r.amount)||0);},0);
+
+    document.getElementById('connBadge').textContent = '✅ متصل • ' + records.length + ' سجل';
+    renderPage(records, batchDemoRecs, realRecs, realInc, realExp);
+
+  }, function(err) {
+    document.getElementById('mainContent').innerHTML = '<div class="loading">❌ ' + err.message + '</div>';
+  });
+}
+
+// ===== RENDER PAGE =====
+function renderPage(records, batchDemoRecs, realRecs, realInc, realExp) {
+  var html = '';
+
+  // Stats
+  html += '<div class="stats-grid">'
+    + stat(records.length,     'إجمالي السجلات', '')
+    + stat(batchDemoRecs.length, '🗑️ دفعات DEMO مؤكدة', 'demo')
+    + stat(reviewRecs.length,  '⚠️ تحتاج مراجعة', 'warn')
+    + stat(realRecs.length,    '✅ حقيقي مؤكد', 'real')
+    + stat(fmt(realInc),       'إيرادات حقيقية ﷼', 'money')
+    + stat(fmt(realExp),       'مصروفات حقيقية ﷼', 'money')
+    + '</div>';
+
+  // Batches section
+  html += '<div class="section-title">🗑️ دفعات DEMO المكتشفة — ' + batches.length + ' دفعة</div>';
+
+  if (batches.length === 0) {
+    html += '<div style="margin:0 24px 12px;padding:20px;background:#D1FAE5;border-radius:10px;color:#065F46;font-size:13px;">✅ لا توجد دفعات DEMO مكتملة</div>';
+  } else {
+    batches.forEach(function(b, i) {
+      html += '<div class="batch-card">'
+        + '<div class="batch-header" onclick="toggleBatch(\'batch' + i + '\')">'
+        + '<h4>📦 دفعة DEMO #' + (i+1) + ' — ' + new Date(b.startTs).toLocaleString('ar-SA') + '</h4>'
+        + '<div class="batch-meta">'
+        + '<span>سجلات: <strong>' + b.records.length + '</strong></span>'
+        + '<span>تطابق DEMO: <strong>' + b.matched + '/18</strong></span>'
+        + '<span>مدة: <strong>' + b.duration + ' ث</strong></span>'
+        + '<span>إيرادات: <strong style="color:#10B981">' + fmt(b.incTotal) + ' ﷼</strong></span>'
+        + '<span>مصروفات: <strong style="color:#EF4444">' + fmt(b.expTotal) + ' ﷼</strong></span>'
+        + '</div>'
+        + '<span style="font-size:12px;opacity:.7;">▼</span>'
+        + '</div>'
+        + '<div class="batch-body" id="batch' + i + '">'
+        + '<table class="mini-table"><thead><tr>'
+        + '<th>Firebase Key</th><th>التاريخ</th><th>النوع</th><th>المبلغ</th><th>البيان</th><th>العميل</th><th>createdAt</th>'
+        + '</tr></thead><tbody>'
+        + b.records.map(function(r){
+            var typeHtml = r.type==='income' ? '<span class="type-inc">💵 إيراد</span>' : '<span class="type-exp">💸 مصروف</span>';
+            return '<tr>'
+              + '<td><button class="copy-key" onclick="copyKey(\'' + r._fbKey + '\')">' + r._fbKey.substring(0,14) + '…</button></td>'
+              + '<td>' + (r.date||'—') + '</td>'
+              + '<td>' + typeHtml + '</td>'
+              + '<td style="font-weight:700;">' + fmt(parseFloat(r.amount)||0) + ' ﷼</td>'
+              + '<td>' + (r.desc||r.description||'—') + '</td>'
+              + '<td>' + (r.party||'—') + '</td>'
+              + '<td style="font-size:10px;color:#6B7280;">' + fmtDT(r.createdAt) + '</td>'
+              + '</tr>';
+          }).join('')
+        + '</tbody></table>'
+        + '</div></div>';
+    });
+  }
+
+  // Review section
+  html += '<div class="section-title">⚠️ تطابق جزئي — تحتاج مراجعة يدوية — ' + reviewRecs.length + ' سجل</div>';
+
+  if (reviewRecs.length === 0) {
+    html += '<div style="margin:0 24px 16px;padding:20px;background:#D1FAE5;border-radius:10px;color:#065F46;font-size:13px;">✅ لا توجد سجلات في هذه الفئة</div>';
+  } else {
+    html += '<div class="review-card"><div class="review-header"><h4>⚠️ هذه السجلات تطابق بصمات DEMO لكن لم تكن ضمن دفعة كاملة — لا تُحذف تلقائياً</h4></div>'
+      + '<div class="review-body">'
+      + '<table class="mini-table"><thead><tr>'
+      + '<th>Firebase Key</th><th>التاريخ</th><th>النوع</th><th>المبلغ</th><th>البيان</th><th>العميل</th><th>createdAt</th><th>البصمة المطابقة</th>'
+      + '</tr></thead><tbody>'
+      + reviewRecs.map(function(r){
+          var typeHtml = r.type==='income' ? '<span class="type-inc">💵 إيراد</span>' : '<span class="type-exp">💸 مصروف</span>';
+          return '<tr class="row-warn">'
+            + '<td><button class="copy-key" onclick="copyKey(\'' + r._fbKey + '\')">' + r._fbKey.substring(0,14) + '…</button></td>'
+            + '<td>' + (r.date||'—') + '</td>'
+            + '<td>' + typeHtml + '</td>'
+            + '<td style="font-weight:700;">' + fmt(parseFloat(r.amount)||0) + ' ﷼</td>'
+            + '<td>' + (r.desc||r.description||'—') + '</td>'
+            + '<td>' + (r.party||'—') + '</td>'
+            + '<td style="font-size:10px;color:#6B7280;">' + fmtDT(r.createdAt) + '</td>'
+            + '<td style="font-family:monospace;font-size:9px;color:#92400E;">' + recSig(r).substring(0,40) + '…</td>'
+            + '</tr>';
+        }).join('')
+      + '</tbody></table></div></div>';
+  }
+
+  // Tabs for full view
+  html += '<div class="tabs">'
+    + '<button class="tab-btn active" onclick="switchTab(\'all\',this)">📋 الكل</button>'
+    + '<button class="tab-btn" onclick="switchTab(\'real\',this)">✅ حقيقي (' + realRecs.length + ')</button>'
+    + '<button class="tab-btn" onclick="switchTab(\'demo\',this)">🗑️ دفعات DEMO (' + batchDemoRecs.length + ')</button>'
+    + '</div>';
+
+  // Tab all
+  html += '<div class="tab-content active" id="tab-all">'
+    + '<div class="controls">'
+    + '<input class="search-box" type="text" id="searchAll" placeholder="بحث..." oninput="renderTableTab(\'all\')">'
+    + '<button class="export-btn" onclick="exportCSV()">📥 تصدير CSV</button>'
+    + '</div>'
+    + '<div class="table-wrap"><table id="tableAll"><thead><tr>'
+    + '<th>#</th><th>التصنيف</th><th>Firebase Key</th><th>التاريخ</th>'
+    + '<th>النوع</th><th>المبلغ</th><th>البيان</th><th>العميل</th><th>الحالة</th><th>createdAt</th>'
+    + '</tr></thead><tbody id="bodyAll"></tbody></table></div></div>';
+
+  // Tab real
+  html += '<div class="tab-content" id="tab-real">'
+    + '<div class="controls"><input class="search-box" type="text" id="searchReal" placeholder="بحث..." oninput="renderTableTab(\'real\')"></div>'
+    + '<div class="table-wrap"><table><thead><tr>'
+    + '<th>#</th><th>Firebase Key</th><th>التاريخ</th><th>النوع</th>'
+    + '<th>المبلغ</th><th>البيان</th><th>العميل</th><th>الحالة</th><th>createdAt</th>'
+    + '</tr></thead><tbody id="bodyReal"></tbody></table></div></div>';
+
+  // Tab demo
+  html += '<div class="tab-content" id="tab-demo">'
+    + '<div class="controls"><input class="search-box" type="text" id="searchDemo" placeholder="بحث..." oninput="renderTableTab(\'demo\')"></div>'
+    + '<div class="table-wrap"><table><thead><tr>'
+    + '<th>#</th><th>الدفعة</th><th>Firebase Key</th><th>التاريخ</th>'
+    + '<th>النوع</th><th>المبلغ</th><th>البيان</th><th>الحالة</th><th>createdAt</th>'
+    + '</tr></thead><tbody id="bodyDemo"></tbody></table></div></div>';
+
+  document.getElementById('mainContent').innerHTML = html;
+  renderTableTab('all');
+  renderTableTab('real');
+  renderTableTab('demo');
+}
+
+function stat(num, lbl, cls) {
+  return '<div class="stat-card ' + (cls||'') + '"><div class="num">' + num + '</div><div class="lbl">' + lbl + '</div></div>';
+}
+
+function toggleBatch(id) {
+  var el = document.getElementById(id);
+  if (el) el.classList.toggle('open');
+}
+
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+  document.querySelectorAll('.tab-content').forEach(function(c){ c.classList.remove('active'); });
+  btn.classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+// ===== GET BATCH ID =====
+function getBatchId(fbKey) {
+  for (var i = 0; i < batches.length; i++) {
+    for (var j = 0; j < batches[i].records.length; j++) {
+      if (batches[i].records[j]._fbKey === fbKey) return (i+1);
+    }
+  }
+  return '—';
+}
+
+// ===== RENDER TABLE TABS =====
+function renderTableTab(tab) {
+  var searchEl = document.getElementById('search' + (tab==='all'?'All':tab==='real'?'Real':'Demo'));
+  var search = searchEl ? searchEl.value.trim().toLowerCase() : '';
+  var bodyId = 'body' + (tab==='all'?'All':tab==='real'?'Real':'Demo');
+  var body = document.getElementById(bodyId);
+  if (!body) return;
+
+  var filtered = allRecords.filter(function(r) {
+    var cat = recordCat[r._fbKey]||'real';
+    if (tab === 'real' && cat !== 'real') return false;
+    if (tab === 'demo' && cat !== 'batch-demo') return false;
+    if (search) {
+      var hay = ((r.desc||'')+(r.party||'')+(r.amount||'')+(r.date||'')).toLowerCase();
+      if (hay.indexOf(search) === -1) return false;
+    }
+    return true;
+  });
+
+  filtered.sort(function(a,b){ return (b.date||'').localeCompare(a.date||''); });
+
+  var html = '';
+  filtered.forEach(function(r, i) {
+    var cat = recordCat[r._fbKey]||'real';
+    var badge = cat === 'batch-demo' ? '<span class="badge-demo">🗑️ DEMO</span>'
+              : cat === 'review'     ? '<span class="badge-warn">⚠️ مراجعة</span>'
+              : '<span class="badge-real">✅ حقيقي</span>';
+    var typeHtml = r.type==='income' ? '<span class="type-inc">💵 إيراد</span>' : '<span class="type-exp">💸 مصروف</span>';
+    var rowClass = cat === 'batch-demo' ? 'row-demo' : cat === 'review' ? 'row-warn' : '';
+    var desc = r.desc||r.description||'—';
+
+    if (tab === 'all') {
+      html += '<tr class="' + rowClass + '">'
+        + '<td>' + (i+1) + '</td>'
+        + '<td>' + badge + '</td>'
+        + '<td><button class="copy-key" onclick="copyKey(\'' + r._fbKey + '\')">' + r._fbKey.substring(0,13) + '…</button></td>'
+        + '<td>' + (r.date||'—') + '</td>'
+        + '<td>' + typeHtml + '</td>'
+        + '<td style="font-weight:700;">' + fmt(parseFloat(r.amount)||0) + ' ﷼</td>'
+        + '<td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + desc + '">' + desc + '</td>'
+        + '<td>' + (r.party||'—') + '</td>'
+        + '<td>' + (r.status||'—') + '</td>'
+        + '<td style="font-size:10px;color:#6B7280;">' + fmtDT(r.createdAt) + '</td>'
+        + '</tr>';
+    } else if (tab === 'real') {
+      html += '<tr>'
+        + '<td>' + (i+1) + '</td>'
+        + '<td><button class="copy-key" onclick="copyKey(\'' + r._fbKey + '\')">' + r._fbKey.substring(0,13) + '…</button></td>'
+        + '<td>' + (r.date||'—') + '</td>'
+        + '<td>' + typeHtml + '</td>'
+        + '<td style="font-weight:700;">' + fmt(parseFloat(r.amount)||0) + ' ﷼</td>'
+        + '<td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + desc + '">' + desc + '</td>'
+        + '<td>' + (r.party||'—') + '</td>'
+        + '<td>' + (r.status||'—') + '</td>'
+        + '<td style="font-size:10px;color:#6B7280;">' + fmtDT(r.createdAt) + '</td>'
+        + '</tr>';
+    } else {
+      html += '<tr class="row-demo">'
+        + '<td>' + (i+1) + '</td>'
+        + '<td style="font-weight:700;color:#991B1B;">دفعة #' + getBatchId(r._fbKey) + '</td>'
+        + '<td><button class="copy-key" onclick="copyKey(\'' + r._fbKey + '\')">' + r._fbKey.substring(0,13) + '…</button></td>'
+        + '<td>' + (r.date||'—') + '</td>'
+        + '<td>' + typeHtml + '</td>'
+        + '<td style="font-weight:700;">' + fmt(parseFloat(r.amount)||0) + ' ﷼</td>'
+        + '<td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + desc + '">' + desc + '</td>'
+        + '<td>' + (r.status||'—') + '</td>'
+        + '<td style="font-size:10px;color:#6B7280;">' + fmtDT(r.createdAt) + '</td>'
+        + '</tr>';
+    }
+  });
+
+  body.innerHTML = html || '<tr><td colspan="10" style="text-align:center;padding:30px;color:#9CA3AF;">لا توجد سجلات</td></tr>';
+}
+
+// ===== CSV =====
+function exportCSV() {
+  var headers = ['Firebase Key','التاريخ','النوع','المبلغ','البيان','العميل','الفئة','الحالة','createdAt','التصنيف','رقم الدفعة'];
+  var rows = allRecords.map(function(r) {
+    var cat = recordCat[r._fbKey]||'real';
+    var catLabel = cat==='batch-demo' ? 'DEMO مؤكد' : cat==='review' ? 'يحتاج مراجعة' : 'حقيقي';
+    return [
+      r._fbKey, r.date||'', r.type||'', r.amount||'',
+      r.desc||r.description||'', r.party||'', r.category||'', r.status||'', r.createdAt||'',
+      catLabel, cat==='batch-demo' ? getBatchId(r._fbKey) : ''
+    ].map(function(v){ return '"'+(v+'').replace(/"/g,'""')+'"'; }).join(',');
+  });
+  var csv = '\uFEFF' + headers.join(',') + '\n' + rows.join('\n');
+  var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'transactions-v5-' + new Date().toISOString().split('T')[0] + '.csv';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+function copyKey(key) {
+  navigator.clipboard.writeText(key).then(function(){
+    showToast('✅ تم نسخ: ' + key.substring(0,18) + '…');
+  }).catch(function(){
+    var el = document.createElement('textarea');
+    el.value = key; document.body.appendChild(el); el.select();
+    document.execCommand('copy'); document.body.removeChild(el);
+    showToast('✅ تم نسخ المفتاح');
+  });
+}
+function showToast(msg) {
+  var t = document.createElement('div');
+  t.textContent = msg;
+  t.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#0C3B5E;color:#fff;padding:9px 18px;border-radius:10px;font-family:Tajawal,sans-serif;font-size:13px;z-index:9999;';
+  document.body.appendChild(t);
+  setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t); }, 2500);
+}
+
+loadData();
+</script>
+</body>
+</html>
