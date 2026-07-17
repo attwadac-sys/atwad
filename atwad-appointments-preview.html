@@ -1117,8 +1117,29 @@ function renderBookingsPanel() {
 
     if (rawBookings.length === 0) { list.innerHTML = ''; return; }
 
+    // ===== اكتشاف الحجوزات اليتيمة: حجز غير محوّل لكن موعده موجود =====
+    var orphanBookings = rawBookings.filter(function(b) {
+      return firebaseAppointments.some(function(a) { return a.sourceBookingKey === b._key; });
+    });
+
+    var orphanFixHtml = '';
+    if (orphanBookings.length > 0) {
+      orphanFixHtml = '<div style="background:#FEF3C7;border:1.5px solid #FDE68A;border-radius:10px;padding:12px 16px;margin:8px 0;">'
+        + '<div style="font-weight:700;color:#92400E;margin-bottom:8px;">⚠️ حجوزات بحاجة إصلاح (' + orphanBookings.length + '): موعدها أُنشئ لكن سجل الحجز لم يُحدَّث</div>'
+        + orphanBookings.map(function(b) {
+          var matchedAppt = firebaseAppointments.find(function(a){ return a.sourceBookingKey === b._key; });
+          return '<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid #FDE68A;">'
+            + '<span style="font-size:13px;color:#0C3B5E;">' + (b.client||b.name||'—') + ' — ' + (b.ref||b._key) + '</span>'
+            + '<button onclick="repairOrphanBooking(\'' + b._key + '\',\'' + (matchedAppt ? matchedAppt._fbKey : '') + '\')"'
+            + ' style="padding:6px 14px;background:#F59E0B;color:#fff;border:none;border-radius:7px;cursor:pointer;font-family:\'Tajawal\',sans-serif;font-size:12px;font-weight:700;">'
+            + '🔧 إصلاح الحالة</button>'
+            + '</div>';
+        }).join('')
+        + '</div>';
+    }
+
     var TECH_AR = {Abrar:'أبرار', Shoib:'شعيب', Suhail:'سهيل'};
-    list.innerHTML = rawBookings.map(function(b) {
+    list.innerHTML = orphanFixHtml + rawBookings.map(function(b) {
       var timeDisplay = b.time || '—';
       return `<div style="border:1.5px solid #E2E8F0;border-radius:10px;padding:12px 16px;margin:8px 0;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
         <div style="flex:1;min-width:200px;">
@@ -1137,6 +1158,28 @@ function renderBookingsPanel() {
         </button>
       </div>`;
     }).join('');
+  });
+}
+
+function repairOrphanBooking(bookingKey, apptKey) {
+  if (!bookingKey || !apptKey) {
+    showToast('❌ بيانات الإصلاح غير مكتملة');
+    return;
+  }
+  if (!db) { showToast('❌ Firebase غير متاح'); return; }
+
+  console.log('repairOrphanBooking:', bookingKey, '→', apptKey);
+  db.ref('bookings/' + bookingKey).update({
+    convertedToAppointment: true,
+    appointmentKey: apptKey,
+    convertedAt: new Date().toISOString()
+  }).then(function() {
+    console.log('✅ Orphan booking repaired:', bookingKey);
+    showToast('✅ تم إصلاح حالة الحجز — يختفي الآن من القائمة');
+    renderBookingsPanel();
+  }).catch(function(e) {
+    console.error('❌ Repair failed:', bookingKey, e.message);
+    showToast('❌ فشل الإصلاح: ' + e.message);
   });
 }
 
@@ -1575,79 +1618,90 @@ function saveAppt(){
       .catch(e => { resetSaveBtn(); showToast('❌ خطأ: ' + e.message); });
   } else {
     data.createdAt = new Date().toISOString();
-    // إضافة sourceBookingKey في بيانات الموعد إذا كان مصدره حجز
-    var srcKeyForAppt = document.getElementById('apptModal').dataset.sourceBookingKey;
-    if (srcKeyForAppt) data.sourceBookingKey = srcKeyForAppt;
-    if (document.getElementById('apptModal').dataset.sourceBookingRef) {
-      data.bookingRef = document.getElementById('apptModal').dataset.sourceBookingRef;
-    }
 
-    // حماية من التكرار: هل يوجد موعد بنفس sourceBookingKey؟
-    if (srcKeyForAppt) {
-      var existingAppt = firebaseAppointments.find(function(a){ return a.sourceBookingKey === srcKeyForAppt; });
+    // ===== قراءة مرجعَي الحجز في متغيرات محلية ثابتة قبل أي Firebase =====
+    var srcKeyFixed  = document.getElementById('apptModal').dataset.sourceBookingKey || '';
+    var bRefFixed    = document.getElementById('apptModal').dataset.sourceBookingRef || '';
+    if (srcKeyFixed) { data.sourceBookingKey = srcKeyFixed; }
+    if (bRefFixed)   { data.bookingRef = bRefFixed; }
+
+    // ===== حماية من التكرار عبر sourceBookingKey =====
+    if (srcKeyFixed) {
+      var existingAppt = firebaseAppointments.find(function(a){ return a.sourceBookingKey === srcKeyFixed; });
       if (existingAppt) {
-        // موعد موجود مسبقاً — حدّث الحجز فقط ولا تنشئ موعداً جديداً
-        console.warn('Duplicate prevented: appointment already exists for booking', srcKeyForAppt, '→', existingAppt._fbKey);
-        db.ref('bookings/' + srcKeyForAppt).update({
+        console.warn('Duplicate prevented — updating booking only:', srcKeyFixed, '→', existingAppt._fbKey);
+        db.ref('bookings/' + srcKeyFixed).update({
           convertedToAppointment: true,
           appointmentKey: existingAppt._fbKey,
           convertedAt: new Date().toISOString()
         }).then(function(){
-          delete document.getElementById('apptModal').dataset.sourceBookingKey;
-          delete document.getElementById('apptModal').dataset.sourceBookingRef;
-          renderBookingsPanel();
           resetSaveBtn();
           closeModal();
+          renderBookingsPanel();
           showToast('ℹ️ الموعد موجود مسبقاً — تم تحديث حالة الحجز');
+        }).catch(function(e){
+          resetSaveBtn();
+          console.error('Booking update failed (duplicate path):', srcKeyFixed, e.message);
+          showToast('⚠️ الموعد موجود لكن فشل تحديث الحجز: ' + e.message);
         });
         return;
       }
     }
 
+    // ===== إنشاء الموعد ثم تحديث الحجز بشكل متسلسل =====
     var apptPushRef = db.ref('appointments').push(data);
-    apptPushRef.then(function() {
-        var newApptKey = apptPushRef.key;
-        if(document.getElementById('chk_save_to_customer').checked && _foundCustomerKey && mapsLink) {
+    var newApptKey  = apptPushRef.key; // يتوفر فوراً من Firebase SDK
+
+    apptPushRef
+      .then(function() {
+        // نجح إنشاء الموعد
+        console.log('✅ Appointment created:', newApptKey);
+        if (document.getElementById('chk_save_to_customer').checked && _foundCustomerKey && mapsLink) {
           saveLocationToCustomer(_foundCustomerKey, {mapsLink, lat, lng, locSrc, locVerified});
         }
-        resetSaveBtn();
-        closeModal();
-        showToast('✅ تم إضافة الموعد');
-
-        // تعليم الحجز كمحوَّل إذا كان مصدره bookings
-        var srcKey = srcKeyForAppt;
-        var bRef = document.getElementById('apptModal').dataset.sourceBookingRef || '';
-        console.log('=== POST-SAVE BOOKING UPDATE ===');
-        console.log('srcKey:', srcKey);
-        console.log('newApptKey:', newApptKey);
-        console.log('bookingRef:', bRef);
-
-        if (srcKey && db) {
-          var updatePayload = {
-            convertedToAppointment: true,
-            appointmentKey: newApptKey,
-            convertedAt: new Date().toISOString()
-          };
-          console.log('Writing to bookings/' + srcKey, updatePayload);
-          db.ref('bookings/' + srcKey).update(updatePayload)
-            .then(function(){
-              console.log('✅ Booking marked as converted:', srcKey, '→', newApptKey);
-              delete document.getElementById('apptModal').dataset.sourceBookingKey;
-              delete document.getElementById('apptModal').dataset.sourceBookingRef;
-              renderBookingsPanel();
-            })
-            .catch(function(e) {
-              console.error('❌ FAILED to mark booking as converted:', srcKey, e.message);
-              showToast('⚠️ تم إنشاء الموعد لكن فشل تحديث سجل الحجز — ' + srcKey);
-              renderBookingsPanel(); // حاول تحديث القائمة على أي حال
-            });
-        } else {
-          console.log('No sourceBookingKey — not a booking conversion');
-          renderBookingsPanel();
-        }
         sendAdminNotification(data);
+
+        // إذا لم يكن من حجز — أنهِ هنا
+        if (!srcKeyFixed) {
+          resetSaveBtn();
+          closeModal();
+          showToast('✅ تم إضافة الموعد');
+          return;
+        }
+
+        // ===== التحديث المتسلسل: bookings أولاً ثم إغلاق النافذة =====
+        console.log('Updating booking:', srcKeyFixed, '→ appt:', newApptKey);
+        return db.ref('bookings/' + srcKeyFixed).update({
+          convertedToAppointment: true,
+          appointmentKey: newApptKey,
+          convertedAt: new Date().toISOString()
+        });
       })
-      .catch(e => { resetSaveBtn(); showToast('❌ خطأ: ' + e.message); });
+      .then(function(updateResult) {
+        // هذا الـ then ينفذ فقط إذا كان من حجز ونجح التحديث
+        if (updateResult !== undefined || !srcKeyFixed) {
+          // srcKeyFixed موجود ونجح التحديث
+          console.log('✅ Booking marked converted:', srcKeyFixed);
+          resetSaveBtn();
+          closeModal();
+          renderBookingsPanel();
+          showToast('✅ تم إنشاء الموعد وتحديث حالة الحجز بنجاح');
+        } else {
+          // لا يوجد srcKeyFixed — النجاح تمّ في .then() السابق
+        }
+      })
+      .catch(function(e) {
+        resetSaveBtn();
+        console.error('❌ Error in appointment/booking flow:', e.message);
+        if (newApptKey) {
+          // الموعد أُنشئ لكن تحديث الحجز فشل
+          showToast('⚠️ تم إنشاء الموعد (' + newApptKey + ') لكن فشل تحديث الحجز — لا تعِد التحويل');
+          console.error('appointmentKey:', newApptKey, '| sourceBookingKey:', srcKeyFixed);
+          renderBookingsPanel();
+        } else {
+          showToast('❌ خطأ: ' + e.message);
+        }
+      });
   }
 }
 
