@@ -1504,6 +1504,11 @@ function setSaveBtn(loading) {
   btn.textContent = loading ? '⏳ جاري الحفظ...' : '💾 حفظ الموعد';
 }
 
+function resetSaveBtn() {
+  isSavingAppointment = false;
+  setSaveBtn(false);
+}
+
 function saveAppt(){
   // حماية من النقر المزدوج
   if(isSavingAppointment) return;
@@ -1536,12 +1541,6 @@ function saveAppt(){
     duration: 90,
     updatedAt: new Date().toISOString()
   };
-
-  // دالة إعادة التفعيل عند الانتهاء
-  function resetSaveBtn() {
-    isSavingAppointment = false;
-    setSaveBtn(false);
-  }
 
   // موقع العميل — حقول اختيارية
   var mapsLink = document.getElementById('appointment_maps_link').value.trim();
