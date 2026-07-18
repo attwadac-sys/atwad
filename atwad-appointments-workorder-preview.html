@@ -383,7 +383,10 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
       </div>
       <div class="form-row">
         <div class="form-group"><label>تاريخ الزيارة <span class="req">*</span></label><input type="date" id="f_date"></div>
-        <div class="form-group"><label>وقت البداية <span class="req">*</span></label><input type="time" id="f_time" value="09:00"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div class="form-group"><label>وقت البداية <span class="req">*</span></label><input type="time" id="f_time" value="09:00"></div>
+          <div class="form-group"><label>وقت النهاية <span class="req">*</span></label><input type="time" id="f_end_time"></div>
+        </div>
       </div>
       <div class="form-row">
         <div class="form-group"><label>الفني المسؤول <span class="req">*</span></label>
@@ -853,10 +856,16 @@ function renderWeek(){
     appointments.filter(a=>a.date===date&&(techFilter==='all'||a.tech===techFilter)).forEach(a=>{
       const [hh,mm] = (a.time||'09:00').split(':').map(Number);
       const top = (hh - 7) * 60 + mm;
-      const dur = (a.duration||60);
+      // حساب المدة من endTime إن وُجد، وإلا 60 دقيقة افتراضياً (للمواعيد القديمة فقط)
+      var dur = 60;
+      if (a.endTime) {
+        const [eh,em] = a.endTime.split(':').map(Number);
+        dur = Math.max((eh*60+em) - (hh*60+mm), 30);
+      }
       const tc = TECH_COLORS[a.tech]||'#0EA5E9';
+      const timeLabel = a.endTime ? `${a.time} - ${a.endTime}` : a.time;
       html += `<div class="appt-block status-${a.status||'pending'}" style="top:${top}px;height:${Math.max(dur-4,20)}px;" onclick="openDetail('${a.id||a._fbKey}')">
-        <div class="appt-time">${a.time}</div>
+        <div class="appt-time">${timeLabel}</div>
         <div class="appt-name">${a.client}</div>
         <div class="appt-tech" style="color:${tc}">▪ ${TECHS[a.tech]||a.tech||'—'}</div>
       </div>`;
@@ -1000,6 +1009,7 @@ function openNewApptFromBooking(bookingKey) {
     // الوقت — الحجز يخزن "16:00 - 18:00" نأخذ الأول
     const rawTime = b.time || '09:00';
     document.getElementById('f_time').value = rawTime.includes(' - ') ? rawTime.split(' - ')[0] : rawTime;
+    document.getElementById('f_end_time').value = ''; // المؤسسة تحدد وقت النهاية
 
     // الملاحظات: رقم الحجز للعميل فقط (ATW-xxxxx)
     document.getElementById('f_notes').value = 'مرجع الحجز: ' + bookingRef +
@@ -1152,6 +1162,7 @@ function openNewAppt(){
   document.getElementById('f_units').value='1';
   document.getElementById('f_date').value=today();
   document.getElementById('f_time').value='09:00';
+  document.getElementById('f_end_time').value='';
   resetImageField();
   resetLocFields();
   document.getElementById('apptModal').classList.add('open');
@@ -1174,6 +1185,7 @@ function editAppt(id){
   document.getElementById('f_units').value=a.units||1;
   document.getElementById('f_date').value=a.date||today();
   document.getElementById('f_time').value=a.time||'09:00';
+  document.getElementById('f_end_time').value=a.endTime||'';
   document.getElementById('f_notes').value=a.notes||'';
   loadImageInModal(a.locationImage||'');
   // استعادة حقول الموقع
@@ -1474,6 +1486,11 @@ function saveAppt(){
   const date=document.getElementById('f_date').value;
   if(!client||!phone||!service||!tech||!date) return showToast('❌ أكمل الحقول المطلوبة');
 
+  const startTime = document.getElementById('f_time').value;
+  const endTime   = document.getElementById('f_end_time').value;
+  if (!endTime) return showToast('❌ يرجى تحديد وقت نهاية الموعد');
+  if (endTime <= startTime) return showToast('❌ وقت النهاية يجب أن يكون بعد وقت البداية');
+
   // تفعيل الحماية وتعطيل الزر
   isSavingAppointment = true;
   setSaveBtn(true);
@@ -1483,6 +1500,7 @@ function saveAppt(){
     status: document.getElementById('f_status').value,
     units: parseInt(document.getElementById('f_units').value)||1,
     date, time: document.getElementById('f_time').value,
+    endTime: endTime,
     notes: document.getElementById('f_notes').value.trim(),
     locationImage: currentImageBase64 || '',
     duration: 90,
@@ -1686,7 +1704,7 @@ function openDetail(id){
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
       <div style="background:#fff;border:1.5px solid var(--ice);border-radius:10px;padding:12px;"><div style="font-size:11px;color:var(--mist);margin-bottom:4px;">🛠️ الخدمة</div><div style="font-weight:700;color:var(--deep)">${a.service||'—'}</div><div style="font-size:12px;color:var(--mist)">${a.units||1} وحدة</div></div>
-      <div style="background:#fff;border:1.5px solid var(--ice);border-radius:10px;padding:12px;"><div style="font-size:11px;color:var(--mist);margin-bottom:4px;">📅 الموعد</div><div style="font-weight:700;color:var(--deep)">${formatDateShort(a.date)}</div><div style="font-size:12px;color:var(--mist)">⏰ ${a.time||'—'}</div></div>
+      <div style="background:#fff;border:1.5px solid var(--ice);border-radius:10px;padding:12px;"><div style="font-size:11px;color:var(--mist);margin-bottom:4px;">📅 الموعد</div><div style="font-weight:700;color:var(--deep)">${formatDateShort(a.date)}</div><div style="font-size:12px;color:var(--mist)">⏰ ${a.time||'—'}${a.endTime?' - '+a.endTime:''}</div></div>
       <div style="background:#fff;border:1.5px solid var(--ice);border-radius:10px;padding:12px;"><div style="font-size:11px;color:var(--mist);margin-bottom:4px;">👷 الفني</div><div style="font-weight:700;color:${tc}">${TECHS[a.tech]||a.tech||'—'}</div></div>
       <div style="background:#fff;border:1.5px solid var(--ice);border-radius:10px;padding:12px;"><div style="font-size:11px;color:var(--mist);margin-bottom:4px;">📍 الموقع</div><div style="font-weight:700;color:var(--deep);font-size:12px">${a.address||'—'}</div></div>
     </div>
@@ -1760,6 +1778,7 @@ function createWorkOrderFromAppt(apptId) {
       units:       a.units      || 1,
       date:        a.date       || '',
       time:        (a.time||'').split(' - ')[0] || a.time || '',
+      endTime:     a.endTime || '',
       tech:        a.tech       || 'Abrar',
       address:     a.address    || '',
       mapsLink:    a.mapsLink   || '',
@@ -2104,7 +2123,7 @@ function sendReminder(id) {
   var msg = 'مرحباً ' + a.client + ' 😊\n\n' +
     'نود تذكيركم بموعدكم مع مؤسسة أطواد لصيانة المكيفات:\n\n' +
     '📅 التاريخ: ' + formatDateShort(a.date) + '\n' +
-    '⏰ الوقت: ' + (a.time||'—') + '\n' +
+    '⏰ الوقت: ' + (a.time||'—') + (a.endTime?' - '+a.endTime:'') + '\n' +
     '🛠️ الخدمة: ' + (a.service||'—') + '\n\n' +
     'يرجى التأكيد بالرد على هذه الرسالة، أو إعلامنا إذا كنتم تودّون إعادة الجدولة.\n' +
     'شكراً لثقتكم 🙏';
