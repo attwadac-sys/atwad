@@ -1866,8 +1866,16 @@ function deleteAppt(id, e){
   })
   .then(function() {
     showToast('✅ تم إلغاء الموعد — السجل محفوظ في Firebase');
-    // ملاحظة: لا نغيّر convertedToAppointment في bookings —
-    // الحجز يبقى محوّلاً ولا يعود إلى قائمة الحجوزات الجديدة
+    document.getElementById('detailModal').classList.remove('open');
+    // عرض قسم المرشحين لتعبئة الموعد الشاغر
+    showCandidatesPanel({
+      _fbKey:  a._fbKey,
+      date:    a.date,
+      time:    a.time,
+      endTime: a.endTime || '',
+      tech:    a.tech || ''
+    });
+    // لا نغيّر convertedToAppointment في bookings
   })
   .catch(function(err) { showToast('❌ خطأ: ' + err.message); });
 }
@@ -2576,6 +2584,146 @@ function markNotifRead(key) {
 
 // تشغيل مراقبة الإشعارات
 watchNotifications();
+</script>
+
+<!-- ===== modal المرشحين للموعد الشاغر ===== -->
+<div class="modal-overlay" id="candidatesModal">
+  <div style="background:#fff;border-radius:16px;width:min(94vw,600px);max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);">
+    <div style="background:linear-gradient(135deg,#0C3B5E,#0EA5E9);padding:14px 20px;border-radius:16px 16px 0 0;position:sticky;top:0;z-index:1;display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="color:#fff;font-size:15px;font-weight:700;">🔄 مرشحون لتقديم الموعد</div>
+        <div id="candidatesModalSubtitle" style="color:rgba(255,255,255,.8);font-size:11px;margin-top:2px;"></div>
+      </div>
+      <button onclick="document.getElementById('candidatesModal').classList.remove('open')" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer;padding:4px 8px;">×</button>
+    </div>
+    <div id="candidatesModalBody" style="padding:16px;"></div>
+  </div>
+</div>
+
+<script>
+// ===== عرض المرشحين بعد إلغاء موعد =====
+function showCandidatesPanel(vacantAppt) {
+  if (!vacantAppt || !vacantAppt.date || !vacantAppt.time) return;
+
+  document.getElementById('candidatesModalSubtitle').textContent =
+    'الموعد الشاغر: ' + (formatDateShort ? formatDateShort(vacantAppt.date) : vacantAppt.date) +
+    ' | ' + fmtTimeRange(vacantAppt.time, vacantAppt.endTime);
+
+  // قراءة بيانات حديثة من Firebase مباشرة
+  db.ref('appointments').once('value', function(snap) {
+    var now = new Date().toISOString().split('T')[0];
+    var candidates = [];
+    snap.forEach(function(child) {
+      var a = child.val();
+      var fbKey = child.key;
+      if (a.status === 'cancelled' || a.status === 'done') return;
+      if (fbKey === vacantAppt._fbKey) return;  // نفس الموعد الملغي
+      if (!a.date || a.date < now) return;      // ماضٍ
+      candidates.push(Object.assign({}, a, {_fbKey: fbKey}));
+    });
+
+    // ترتيب: الأقرب زمنياً أولاً
+    candidates.sort(function(a,b) {
+      return ((a.date||'')+(a.time||'')).localeCompare((b.date||'')+(b.time||''));
+    });
+
+    if (candidates.length === 0) {
+      document.getElementById('candidatesModalBody').innerHTML =
+        '<div style="text-align:center;padding:40px;color:#6B7280;">لا توجد مواعيد نشطة مستقبلية يمكن تقديمها</div>';
+    } else {
+      document.getElementById('candidatesModalBody').innerHTML =
+        '<div style="font-size:12px;color:#6B7280;margin-bottom:12px;">' + candidates.length + ' موعد مرشح — اضغطي للتقديم إلى الوقت الشاغر</div>' +
+        candidates.map(function(c) {
+          return '<div style="border:1.5px solid #E2E8F0;border-radius:10px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">' +
+            '<div style="flex:1;min-width:180px;">' +
+            '<div style="font-weight:700;color:#0C3B5E;font-size:13px;">👤 ' + (c.client||'—') + '</div>' +
+            '<div style="font-size:11px;color:#6B7280;margin-top:3px;">📱 ' + (c.phone||'—') + '</div>' +
+            '<div style="font-size:11px;color:#6B7280;margin-top:2px;">📅 ' + (formatDateShort ? formatDateShort(c.date) : c.date) + ' | ⏰ ' + fmtTimeRange(c.time, c.endTime) + '</div>' +
+            '<div style="font-size:11px;color:#6B7280;margin-top:2px;">🔧 ' + (c.service||'—') + ' | 👷 ' + (TECHS[c.tech]||c.tech||'—') + '</div>' +
+            '</div>' +
+            '<button onclick="promoteCandidate(\'' + c._fbKey + '\',' + JSON.stringify({
+              date: vacantAppt.date, time: vacantAppt.time, endTime: vacantAppt.endTime||'',
+              _fbKey: vacantAppt._fbKey
+            }).replace(/'/g,"\\'") + ')" ' +
+            'style="padding:8px 14px;background:linear-gradient(135deg,#0C3B5E,#0EA5E9);color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:\'Tajawal\',sans-serif;font-size:12px;font-weight:700;white-space:nowrap;">' +
+            '⏩ تقديم</button>' +
+            '</div>';
+        }).join('');
+    }
+
+    document.getElementById('candidatesModal').classList.add('open');
+  }, function(err) {
+    console.error('showCandidatesPanel read error:', err.message);
+    showToast('❌ فشل تحميل المرشحين: ' + err.message);
+  });
+}
+
+// ===== تقديم مرشح إلى الموعد الشاغر =====
+function promoteCandidate(candidateFbKey, vacantInfo) {
+  if (!db) { showToast('❌ Firebase غير متاح'); return; }
+
+  // قراءة الموعد الشاغر والمرشح من Firebase في نفس الوقت للتأكد من البيانات الحديثة
+  Promise.all([
+    db.ref('appointments/' + vacantInfo._fbKey).once('value'),
+    db.ref('appointments/' + candidateFbKey).once('value'),
+    db.ref('appointments').orderByChild('date').equalTo(vacantInfo.date).once('value')
+  ]).then(function(results) {
+    var vacantSnap    = results[0];
+    var candidateSnap = results[1];
+    var sameDay       = results[2];
+
+    // 1. تأكد أن الموعد الشاغر لا يزال ملغياً
+    var vacant = vacantSnap.val();
+    if (!vacant || vacant.status !== 'cancelled') {
+      showToast('⚠️ الموعد الشاغر لم يعد متاحاً — ربما أصبح نشطاً من جديد');
+      document.getElementById('candidatesModal').classList.remove('open');
+      return;
+    }
+
+    // 2. تأكد أن لا يوجد موعد نشط آخر بنفس التاريخ ونطاق الوقت
+    var conflictFound = false;
+    sameDay.forEach(function(child) {
+      var a = child.val();
+      if (child.key === vacantInfo._fbKey) return;  // الموعد الملغي نفسه
+      if (child.key === candidateFbKey) return;      // المرشح نفسه
+      if (a.status === 'cancelled' || a.status === 'done') return;
+      // تحقق من تداخل الوقت
+      if (a.time === vacantInfo.time) { conflictFound = true; }
+    });
+    if (conflictFound) {
+      showToast('⚠️ الموعد الشاغر أصبح مشغولاً — لا يمكن التقديم');
+      document.getElementById('candidatesModal').classList.remove('open');
+      return;
+    }
+
+    // 3. تأكد أن المرشح لا يزال نشطاً
+    var candidate = candidateSnap.val();
+    if (!candidate || candidate.status === 'cancelled' || candidate.status === 'done') {
+      showToast('⚠️ الموعد المرشح لم يعد متاحاً');
+      return;
+    }
+
+    // 4. تحديث نفس Firebase Key للمرشح — .update() يحفظ جميع حقول الربط
+    db.ref('appointments/' + candidateFbKey).update({
+      date:    vacantInfo.date,
+      time:    vacantInfo.time,
+      endTime: vacantInfo.endTime || candidate.endTime || '',
+      updatedAt: new Date().toISOString()
+    }).then(function() {
+      console.log('✅ Candidate promoted:', candidateFbKey, '→', vacantInfo.date, vacantInfo.time);
+      document.getElementById('candidatesModal').classList.remove('open');
+      showToast('✅ تم تقديم الموعد بنجاح');
+      // لا نُعيد الحجز الأصلي — convertedToAppointment يبقى كما هو
+    }).catch(function(err) {
+      console.error('promoteCandidate update error:', err.message);
+      showToast('❌ فشل تقديم الموعد: ' + err.message);
+    });
+
+  }).catch(function(err) {
+    console.error('promoteCandidate check error:', err.message);
+    showToast('❌ فشل فحص البيانات: ' + err.message);
+  });
+}
 </script>
 
 </body>
