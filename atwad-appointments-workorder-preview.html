@@ -1565,51 +1565,17 @@ function saveAppt(){
   if(!db) { showToast('❌ Firebase غير متاح'); resetSaveBtn(); return; }
 
   if(editingFirebaseKey) {
-    // هل تغيّر التاريخ؟ إذا نعم اسأل الموظف عن إلغاء الموعد القديم
-    var dateChanged = editingOriginalDate && editingOriginalDate !== date;
-    var cancelPrevious = false;
-    if(dateChanged) {
-      cancelPrevious = confirm(
-        'تم تغيير تاريخ الموعد من ' + editingOriginalDate + ' إلى ' + date + '.\n\n' +
-        'هل تريد تغيير حالة الموعد القديم إلى «ملغي»؟'
-      );
-      if(cancelPrevious) {
-        data.previousDate   = editingOriginalDate;
-        data.cancelledAt    = new Date().toISOString();
-        data.cancelReason   = 'تم إعادة الجدولة إلى ' + date;
-      }
-    }
-
-    db.ref('appointments/' + editingFirebaseKey).update(
-      cancelPrevious ? Object.assign({}, data, {status: 'cancelled'}) : data
-    ).then(() => {
+    // تحديث نفس سجل الموعد دائماً — بغض النظر عن تغيير التاريخ
+    // .update() لا يمس الحقول غير الموجودة في data (sourceBookingKey, bookingRef, workOrderKey تبقى)
+    db.ref('appointments/' + editingFirebaseKey).update(data)
+      .then(() => {
         if(document.getElementById('chk_save_to_customer').checked && _foundCustomerKey && mapsLink) {
           saveLocationToCustomer(_foundCustomerKey, {mapsLink, lat, lng, locSrc, locVerified});
         }
-        if(cancelPrevious) {
-          // إنشاء موعد جديد بالتاريخ الجديد
-          var newData = Object.assign({}, data, {
-            status: 'pending',
-            createdAt: new Date().toISOString(),
-            rescheduledFrom: editingOriginalDate
-          });
-          delete newData.cancelledAt;
-          delete newData.cancelReason;
-          delete newData.previousDate;
-          db.ref('appointments').push(newData)
-            .then(function() {
-              resetSaveBtn();
-              showToast('✅ تم إلغاء الموعد القديم وإنشاء موعد جديد بتاريخ ' + date);
-              editingOriginalDate = '';
-              closeModal();
-            })
-            .catch(function(e){ resetSaveBtn(); showToast('❌ خطأ عند إنشاء الموعد الجديد: ' + e.message); });
-        } else {
-          resetSaveBtn();
-          showToast('✅ تم تحديث الموعد');
-          editingOriginalDate = '';
-          closeModal();
-        }
+        resetSaveBtn();
+        showToast('✅ تم تحديث الموعد');
+        editingOriginalDate = '';
+        closeModal();
       })
       .catch(e => { resetSaveBtn(); showToast('❌ خطأ: ' + e.message); });
   } else {
