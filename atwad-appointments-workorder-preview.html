@@ -846,11 +846,12 @@ function initFirebaseSync() {
 // ===== STATS =====
 function updateStats(){
   const tod = today();
-  document.getElementById('statToday').textContent = appointments.filter(a=>a.date===tod).length;
-  document.getElementById('statPending').textContent = appointments.filter(a=>a.status==='pending').length;
+  const active = appointments.filter(a=>a.status!=='cancelled');
+  document.getElementById('statToday').textContent  = active.filter(a=>a.date===tod).length;
+  document.getElementById('statPending').textContent = active.filter(a=>a.status==='pending').length;
   const weekDates = getWeekDates(0);
-  document.getElementById('statDone').textContent = appointments.filter(a=>weekDates.includes(a.date)&&a.status==='done').length;
-  document.getElementById('statTotal').textContent = appointments.length;
+  document.getElementById('statDone').textContent   = active.filter(a=>weekDates.includes(a.date)&&a.status==='done').length;
+  document.getElementById('statTotal').textContent  = active.length;
 }
 
 // ===== WEEK VIEW =====
@@ -873,7 +874,7 @@ function renderWeek(){
     const d = new Date(date+'T00:00:00');
     html += `<div><div class="week-day-header${isToday?' today':''}"><div class="week-day-name">${dayNames[d.getDay()]}</div><div class="week-day-num">${d.getDate()}</div></div><div class="day-col">`;
     hours.forEach(()=>{ html += `<div class="day-hour"></div>`; });
-    appointments.filter(a=>a.date===date&&(techFilter==='all'||a.tech===techFilter)).forEach(a=>{
+    appointments.filter(a=>a.date===date&&(techFilter==='all'||a.tech===techFilter)&&a.status!=='cancelled').forEach(a=>{
       const [hh,mm] = (a.time||'09:00').split(':').map(Number);
       const top = (hh - 7) * 60 + mm;
       // حساب المدة من endTime إن وُجد، وإلا 60 دقيقة افتراضياً (للمواعيد القديمة فقط)
@@ -1884,13 +1885,25 @@ function markDone(id){
 
 function deleteAppt(id, e){
   if(e) e.stopPropagation();
-  if(!confirm('⚠️ هل تريدين حذف هذا الموعد نهائياً؟')) return;
+  if(!confirm('⚠️ هل تريدين إلغاء هذا الموعد؟\nسيبقى السجل محفوظاً ويمكن مراجعته في التقارير.')) return;
   const a = findAppt(id);
   if(!a || !db) return;
-  const ref = a._source==='bookings' ? 'bookings/'+a._fbKey : 'appointments/'+a._fbKey;
-  db.ref(ref).remove()
-    .then(() => showToast('🗑️ تم حذف الموعد'))
-    .catch(e => showToast('❌ خطأ: ' + e.message));
+
+  // السجلات من bookings لا تُلغى — تُعالَج بشكل مستقل
+  // جميع المواعيد في appointments تُلغى بتحديث الحالة فقط
+  const apptRef = a._fbKey ? 'appointments/' + a._fbKey : null;
+  if (!apptRef) { showToast('❌ لم يُعثر على مفتاح الموعد'); return; }
+
+  db.ref(apptRef).update({
+    status: 'cancelled',
+    cancelledAt: new Date().toISOString()
+  })
+  .then(function() {
+    showToast('✅ تم إلغاء الموعد — السجل محفوظ في Firebase');
+    // ملاحظة: لا نغيّر convertedToAppointment في bookings —
+    // الحجز يبقى محوّلاً ولا يعود إلى قائمة الحجوزات الجديدة
+  })
+  .catch(function(err) { showToast('❌ خطأ: ' + err.message); });
 }
 
 function sendWhatsapp(id){
