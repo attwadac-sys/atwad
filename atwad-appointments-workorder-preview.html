@@ -656,7 +656,7 @@ function mergeAppointmentsAndBookings() {
 
   updateStats();
   _renderCount++;
-  console.log('[renderWeek #'+_renderCount+'] source=firebase-listener | currentWeekOffset='+currentWeekOffset);
+  console.log('⚡ firebase-listener → renderWeek #'+_renderCount+' | currentWeekOffset='+currentWeekOffset);
   renderWeek();
   renderList();
   document.getElementById('fbStatusText').textContent = 'متصل • ' + appointments.length + ' موعد';
@@ -667,9 +667,8 @@ function formatDate(d){ try{ return new Date(d+'T00:00:00').toLocaleDateString('
 function formatDateShort(d){ try{ return new Date(d+'T00:00:00').toLocaleDateString('ar-SA',{month:'short',day:'numeric'}); } catch{ return d; } }
 function getWeekDates(offset=0){
   const d = new Date(); d.setDate(d.getDate() - d.getDay() + offset*7);
-  console.log('getWeekDates('+offset+') → d =', d.toISOString().split('T')[0], '| d.getDate()=', d.getDate(), '| d.getDay()=', d.getDay());
   const days = Array.from({length:7},(_,i)=>{ const dd=new Date(d); dd.setDate(d.getDate()+i); return dd.toISOString().split('T')[0]; });
-  console.log('weekDates:', days[0], '→', days[6]);
+  console.log('  getWeekDates('+offset+') → start='+days[0]+' end='+days[6]+' | d.getDate()='+d.getDate()+' d.getDay()='+d.getDay());
   return days;
 }
 function autoAssignTech(date) {
@@ -857,7 +856,7 @@ function updateStats(){
 // ===== WEEK VIEW =====
 function renderWeek(){
   const dates = getWeekDates(currentWeekOffset);
-  console.log('[renderWeek] drawing dates:', dates[0], '→', dates[6], '| offset='+currentWeekOffset);
+  console.log('  renderWeek drawing: '+dates[0]+' → '+dates[6]+' (offset='+currentWeekOffset+')');
   const tod = today();
   const dayNames = ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
   const weekStart = new Date(dates[0]+'T00:00:00');
@@ -963,11 +962,15 @@ function switchView(v){
   if(v==='week') renderWeek(); else renderList();
 }
 function changeWeek(dir){
-  console.log('=== changeWeek('+dir+') | offset: '+currentWeekOffset+' → '+(currentWeekOffset+dir)+' | now='+new Date().toISOString().split('T')[0]);
-  currentWeekOffset+=dir;
+  console.groupCollapsed('▶ changeWeek('+dir+') — #'+(currentWeekOffset+dir));
+  console.log('offset قبل:', currentWeekOffset);
+  console.log('offset بعد:', currentWeekOffset+dir);
+  console.log('now:', new Date().toISOString().split('T')[0]);
+  currentWeekOffset += dir;
   _renderCount++;
-  console.log('[renderWeek #'+_renderCount+'] source=changeWeek | currentWeekOffset='+currentWeekOffset);
+  console.log('renderWeek #'+_renderCount+' | source=changeWeek | offset='+currentWeekOffset);
   renderWeek();
+  console.groupEnd();
 }
 function goToday(){ currentWeekOffset=0; renderWeek(); }
 function filterTech(t,btn){
