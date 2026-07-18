@@ -2609,6 +2609,9 @@ function showCandidatesPanel(vacantAppt) {
     'الموعد الشاغر: ' + (formatDateShort ? formatDateShort(vacantAppt.date) : vacantAppt.date) +
     ' | ' + fmtTimeRange(vacantAppt.time, vacantAppt.endTime);
 
+  // حفظ بيانات الموعد الشاغر في متغير عام لاستخدامها في أزرار التقديم
+  window._currentVacantAppt = vacantAppt;
+
   // قراءة بيانات حديثة من Firebase مباشرة
   db.ref('appointments').once('value', function(snap) {
     var now = new Date().toISOString().split('T')[0];
@@ -2641,10 +2644,7 @@ function showCandidatesPanel(vacantAppt) {
             '<div style="font-size:11px;color:#6B7280;margin-top:2px;">📅 ' + (formatDateShort ? formatDateShort(c.date) : c.date) + ' | ⏰ ' + fmtTimeRange(c.time, c.endTime) + '</div>' +
             '<div style="font-size:11px;color:#6B7280;margin-top:2px;">🔧 ' + (c.service||'—') + ' | 👷 ' + (TECHS[c.tech]||c.tech||'—') + '</div>' +
             '</div>' +
-            '<button onclick="promoteCandidate(\'' + c._fbKey + '\',' + JSON.stringify({
-              date: vacantAppt.date, time: vacantAppt.time, endTime: vacantAppt.endTime||'',
-              _fbKey: vacantAppt._fbKey
-            }).replace(/'/g,"\\'") + ')" ' +
+            '<button onclick="promoteCandidate(\'' + c._fbKey + '\')" ' +
             'style="padding:8px 14px;background:linear-gradient(135deg,#0C3B5E,#0EA5E9);color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:\'Tajawal\',sans-serif;font-size:12px;font-weight:700;white-space:nowrap;">' +
             '⏩ تقديم</button>' +
             '</div>';
@@ -2659,7 +2659,9 @@ function showCandidatesPanel(vacantAppt) {
 }
 
 // ===== تقديم مرشح إلى الموعد الشاغر =====
-function promoteCandidate(candidateFbKey, vacantInfo) {
+function promoteCandidate(candidateFbKey) {
+  var vacantInfo = window._currentVacantAppt;
+  if (!vacantInfo) { showToast('❌ بيانات الموعد الشاغر غير متوفرة'); return; }
   if (!db) { showToast('❌ Firebase غير متاح'); return; }
 
   // قراءة الموعد الشاغر والمرشح من Firebase في نفس الوقت للتأكد من البيانات الحديثة
