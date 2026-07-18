@@ -627,6 +627,20 @@ function normalizePhone(p) {
 
 function makeDedupeKey(phone, date, time, service) {
   var t = (time || '').includes(' - ') ? time.split(' - ')[0] : (time || '');
+
+// تنسيق الوقت: 24 ساعة → 12 ساعة مع ص/م
+function fmtTime12(t24) {
+  if (!t24) return '';
+  var parts = t24.split(':');
+  var h = parseInt(parts[0], 10), m = parts[1] || '00';
+  var suffix = h < 12 ? 'ص' : 'م';
+  var h12 = h % 12 || 12;
+  return String(h12).padStart(2,'0') + ':' + m + ' ' + suffix;
+}
+function fmtTimeRange(start, end) {
+  if (!end) return fmtTime12(start);
+  return fmtTime12(start) + ' ← ' + fmtTime12(end);
+}
   return normalizePhone(phone) + '|' + (date||'') + '|' + t + '|' + (service||'');
 }
 
@@ -863,7 +877,7 @@ function renderWeek(){
         dur = Math.max((eh*60+em) - (hh*60+mm), 30);
       }
       const tc = TECH_COLORS[a.tech]||'#0EA5E9';
-      const timeLabel = a.endTime ? `${a.time} - ${a.endTime}` : a.time;
+      const timeLabel = fmtTimeRange(a.time, a.endTime);
       html += `<div class="appt-block status-${a.status||'pending'}" style="top:${top}px;height:${Math.max(dur-4,20)}px;" onclick="openDetail('${a.id||a._fbKey}')">
         <div class="appt-time">${timeLabel}</div>
         <div class="appt-name">${a.client}</div>
@@ -1704,7 +1718,7 @@ function openDetail(id){
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
       <div style="background:#fff;border:1.5px solid var(--ice);border-radius:10px;padding:12px;"><div style="font-size:11px;color:var(--mist);margin-bottom:4px;">🛠️ الخدمة</div><div style="font-weight:700;color:var(--deep)">${a.service||'—'}</div><div style="font-size:12px;color:var(--mist)">${a.units||1} وحدة</div></div>
-      <div style="background:#fff;border:1.5px solid var(--ice);border-radius:10px;padding:12px;"><div style="font-size:11px;color:var(--mist);margin-bottom:4px;">📅 الموعد</div><div style="font-weight:700;color:var(--deep)">${formatDateShort(a.date)}</div><div style="font-size:12px;color:var(--mist)">⏰ ${a.time||'—'}${a.endTime?' - '+a.endTime:''}</div></div>
+      <div style="background:#fff;border:1.5px solid var(--ice);border-radius:10px;padding:12px;"><div style="font-size:11px;color:var(--mist);margin-bottom:4px;">📅 الموعد</div><div style="font-weight:700;color:var(--deep)">${formatDateShort(a.date)}</div><div style="font-size:12px;color:var(--mist)">⏰ ${fmtTimeRange(a.time, a.endTime)}</div></div>
       <div style="background:#fff;border:1.5px solid var(--ice);border-radius:10px;padding:12px;"><div style="font-size:11px;color:var(--mist);margin-bottom:4px;">👷 الفني</div><div style="font-weight:700;color:${tc}">${TECHS[a.tech]||a.tech||'—'}</div></div>
       <div style="background:#fff;border:1.5px solid var(--ice);border-radius:10px;padding:12px;"><div style="font-size:11px;color:var(--mist);margin-bottom:4px;">📍 الموقع</div><div style="font-weight:700;color:var(--deep);font-size:12px">${a.address||'—'}</div></div>
     </div>
@@ -1896,7 +1910,8 @@ function buildTechnicianMessage(a) {
   // الوقت: يدعم time و endTime
   var timeStr = a.time || '';
   if(a.endTime) timeStr += ' - ' + a.endTime;
-  if(timeStr)    lines.push('🕘 الوقت: '    + timeStr);
+  var timeDisplay = fmtTimeRange(a.time, a.endTime);
+  if(timeDisplay) lines.push('🕘 الوقت: ' + timeDisplay);
 
   if(a.service)  lines.push('🛠 الخدمة: '   + a.service);
   if(a.units && a.units > 1) lines.push('❄️ العدد: ' + a.units + ' مكيف');
