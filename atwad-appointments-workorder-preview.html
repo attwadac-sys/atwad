@@ -308,6 +308,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
       </div>
       <button class="btn-primary" onclick="openNewAppt()" style="padding:8px 14px;font-size:12px;">＋ موعد</button>
       <button onclick="toggleBookingsPanel()" style="padding:8px 14px;font-size:12px;background:#fff;border:1.5px solid #0EA5E9;color:#0C3B5E;border-radius:8px;cursor:pointer;font-family:'Tajawal',sans-serif;font-weight:700;">📥 الحجوزات <span id="bookingsToolbarBadge" style="display:none;background:#EF4444;color:#fff;padding:1px 7px;border-radius:12px;font-size:11px;margin-right:4px;">0</span></button>
+      <button onclick="openApptWaitlistForm()" style="padding:8px 14px;font-size:12px;background:#FEF9C3;border:1.5px solid #FDE68A;color:#92400E;border-radius:8px;cursor:pointer;font-family:'Tajawal',sans-serif;font-weight:700;">⏳ قائمة الانتظار <span id="apptWaitlistBadge" style="display:none;background:#F59E0B;color:#fff;padding:1px 7px;border-radius:12px;font-size:11px;margin-right:4px;">0</span></button>
       <button onclick="openWaitingList(null)" style="padding:7px 12px;background:#FEF9C3;color:#92400E;border:1.5px solid #FDE68A;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;">
         &#128196; <span id="waitingBadge" style="background:#EF4444;color:#fff;border-radius:50%;width:16px;height:16px;display:none;align-items:center;justify-content:center;font-size:9px;font-weight:700;margin-right:2px;"></span>
       </button>
@@ -2447,6 +2448,7 @@ const ms = new Date(calDates[0]+'T00:00:00');
 document.getElementById('calMonth').textContent = ms.toLocaleDateString('ar-SA',{month:'long',year:'numeric'});
 switchView('week');
 initFirebaseSync(); // تشغيل المزامنة التلقائية
+initApptWaitlist(); // تشغيل مراقبة قائمة الانتظار
 loadFridaySetting(); // تحميل إعداد الجمعة
 </script>
 
@@ -2586,6 +2588,47 @@ function markNotifRead(key) {
 watchNotifications();
 </script>
 
+<!-- ===== modal إضافة طلب انتظار جديد ===== -->
+<div class="modal-overlay" id="apptWaitlistModal">
+  <div style="background:#fff;border-radius:16px;width:min(94vw,520px);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);">
+    <div style="background:linear-gradient(135deg,#92400E,#F59E0B);padding:14px 20px;border-radius:16px 16px 0 0;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;">
+      <div style="color:#fff;font-size:15px;font-weight:700;">⏳ إضافة طلب لقائمة الانتظار</div>
+      <button onclick="document.getElementById('apptWaitlistModal').classList.remove('open')" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer;">×</button>
+    </div>
+    <div style="padding:20px;display:grid;gap:12px;">
+      <div class="form-group"><label>اسم العميل <span class="req">*</span></label><input type="text" id="wl_client" placeholder="اسم العميل"></div>
+      <div class="form-group"><label>رقم الجوال <span class="req">*</span></label><input type="tel" id="wl_phone" placeholder="05XXXXXXXX" dir="ltr"></div>
+      <div class="form-group"><label>الخدمة <span class="req">*</span></label>
+        <select id="wl_service"><option value="">— اختر —</option><option>غسيل مكيفات</option><option>تنظيف مكيف</option><option>صيانة دورية</option><option>تعبئة غاز</option><option>كشف وإصلاح أعطال</option><option>تركيب مكيف جديد</option><option>باقة صيانة سنوية</option></select>
+      </div>
+      <div class="form-group"><label>عدد الوحدات</label><input type="number" id="wl_units" value="1" min="1" max="20"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="form-group"><label>التاريخ المطلوب <span class="req">*</span></label><input type="date" id="wl_date"></div>
+        <div class="form-group"><label>الفني المفضل</label>
+          <select id="wl_tech"><option value="">— أي فني —</option><option value="Abrar">أبرار</option><option value="Shoib">شعيب</option><option value="Suhail">سهيل</option></select>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="form-group"><label>وقت البداية <span class="req">*</span></label><input type="time" id="wl_time"></div>
+        <div class="form-group"><label>وقت النهاية</label><input type="time" id="wl_endTime"></div>
+      </div>
+      <div class="form-group"><label>ملاحظات</label><textarea id="wl_notes" rows="2" style="width:100%;border:1.5px solid var(--ice);border-radius:8px;padding:8px;font-family:'Tajawal',sans-serif;font-size:13px;" placeholder="أي تفاصيل إضافية"></textarea></div>
+      <button onclick="saveApptWaitlistEntry()" style="width:100%;padding:12px;background:linear-gradient(90deg,#92400E,#F59E0B);color:#fff;border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">⏳ حفظ في قائمة الانتظار</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== modal عرض قائمة الانتظار ===== -->
+<div class="modal-overlay" id="apptWaitlistViewModal">
+  <div style="background:#fff;border-radius:16px;width:min(94vw,580px);max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);">
+    <div style="background:linear-gradient(135deg,#92400E,#F59E0B);padding:14px 20px;border-radius:16px 16px 0 0;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;">
+      <div style="color:#fff;font-size:15px;font-weight:700;">⏳ قائمة الانتظار</div>
+      <button onclick="document.getElementById('apptWaitlistViewModal').classList.remove('open')" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer;">×</button>
+    </div>
+    <div id="apptWaitlistViewBody" style="padding:16px;"></div>
+  </div>
+</div>
+
 <!-- ===== modal المرشحين للموعد الشاغر ===== -->
 <div class="modal-overlay" id="candidatesModal">
   <div style="background:#fff;border-radius:16px;width:min(94vw,600px);max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);">
@@ -2601,6 +2644,214 @@ watchNotifications();
 </div>
 
 <script>
+// ===== appointmentWaitlist — متغير الحالة =====
+var apptWaitlist = [];
+
+// ===== listener على appointmentWaitlist — تحديث العداد =====
+function initApptWaitlist() {
+  if (!db) return;
+  db.ref('appointmentWaitlist').orderByChild('status').equalTo('waiting').on('value', function(snap) {
+    apptWaitlist = [];
+    snap.forEach(function(c){ apptWaitlist.push(Object.assign({}, c.val(), {_key: c.key})); });
+    var badge = document.getElementById('apptWaitlistBadge');
+    if (badge) {
+      badge.textContent = apptWaitlist.length;
+      badge.style.display = apptWaitlist.length > 0 ? 'inline' : 'none';
+    }
+  });
+}
+
+// ===== فتح نموذج الانتظار =====
+function openApptWaitlistForm() {
+  ['wl_client','wl_phone','wl_notes'].forEach(function(id){ document.getElementById(id).value=''; });
+  document.getElementById('wl_service').value = '';
+  document.getElementById('wl_units').value = '1';
+  document.getElementById('wl_date').value = '';
+  document.getElementById('wl_time').value = '';
+  document.getElementById('wl_endTime').value = '';
+  document.getElementById('wl_tech').value = '';
+  document.getElementById('apptWaitlistModal').classList.add('open');
+}
+
+// ===== حفظ طلب انتظار جديد =====
+function saveApptWaitlistEntry() {
+  var client  = document.getElementById('wl_client').value.trim();
+  var phone   = document.getElementById('wl_phone').value.trim();
+  var service = document.getElementById('wl_service').value;
+  var reqDate = document.getElementById('wl_date').value;
+  var reqTime = document.getElementById('wl_time').value;
+  if (!client || !phone || !service || !reqDate || !reqTime) {
+    showToast('❌ أكمل الحقول المطلوبة: الاسم، الجوال، الخدمة، التاريخ، الوقت');
+    return;
+  }
+  if (!db) { showToast('❌ Firebase غير متاح'); return; }
+
+  var entry = {
+    client:           client,
+    phone:            phone,
+    service:          service,
+    units:            parseInt(document.getElementById('wl_units').value)||1,
+    requestedDate:    reqDate,
+    requestedTime:    reqTime,
+    requestedEndTime: document.getElementById('wl_endTime').value || '',
+    preferredTech:    document.getElementById('wl_tech').value || '',
+    notes:            document.getElementById('wl_notes').value.trim(),
+    status:           'waiting',
+    createdAt:        new Date().toISOString()
+  };
+
+  db.ref('appointmentWaitlist').push(entry).then(function() {
+    document.getElementById('apptWaitlistModal').classList.remove('open');
+    showToast('✅ تم إضافة الطلب لقائمة الانتظار');
+  }).catch(function(e){ showToast('❌ فشل الحفظ: ' + e.message); });
+}
+
+// ===== تحويل طلب انتظار إلى موعد =====
+function acceptWaitlistEntry(waitlistKey, vacantAppt) {
+  if (!db) { showToast('❌ Firebase غير متاح'); return; }
+
+  Promise.all([
+    db.ref('appointmentWaitlist/' + waitlistKey).once('value'),
+    db.ref('appointments/' + vacantAppt._fbKey).once('value'),
+    db.ref('appointments').orderByChild('sourceWaitlistKey').equalTo(waitlistKey).once('value'),
+    db.ref('appointments').orderByChild('date').equalTo(vacantAppt.date).once('value')
+  ]).then(function(results) {
+    var wlSnap      = results[0];
+    var vacantSnap  = results[1];
+    var dupByWL     = results[2];
+    var sameDay     = results[3];
+
+    var wlEntry = wlSnap.val();
+    if (!wlEntry) { showToast('❌ طلب الانتظار غير موجود'); return; }
+
+    // حماية 1: الطلب محوّل مسبقاً
+    if (wlEntry.convertedToAppointment) {
+      showToast('ℹ️ هذا الطلب محوّل مسبقاً — appointmentKey: ' + (wlEntry.appointmentKey||'—'));
+      return;
+    }
+    // حماية 2: يوجد موعد بـ sourceWaitlistKey مطابق
+    if (dupByWL.numChildren() > 0) {
+      var existingKey = null;
+      dupByWL.forEach(function(c){ existingKey = c.key; });
+      console.warn('WL duplicate found:', existingKey, '— fixing link only');
+      db.ref('appointmentWaitlist/' + waitlistKey).update({
+        convertedToAppointment: true, appointmentKey: existingKey, convertedAt: new Date().toISOString(), status: 'converted'
+      }).then(function(){ showToast('ℹ️ موعد موجود — تم إصلاح الربط'); renderApptWaitlistInPanel(); });
+      return;
+    }
+
+    // تحقق من الموعد الشاغر
+    var vacant = vacantSnap.val();
+    if (!vacant || vacant.status !== 'cancelled') {
+      showToast('⚠️ الموعد الشاغر لم يعد متاحاً');
+      document.getElementById('candidatesModal').classList.remove('open');
+      return;
+    }
+
+    // تحقق من تعارض الوقت
+    var conflict = false;
+    sameDay.forEach(function(c) {
+      var a = c.val();
+      if (c.key === vacantAppt._fbKey) return;
+      if (a.status === 'cancelled' || a.status === 'done') return;
+      if (a.time === vacantAppt.time) conflict = true;
+    });
+    if (conflict) { showToast('⚠️ الفترة الزمنية أصبحت مشغولة'); return; }
+
+    // إنشاء موعد جديد من طلب الانتظار
+    var newAppt = {
+      client:           wlEntry.client,
+      phone:            wlEntry.phone,
+      service:          wlEntry.service,
+      units:            wlEntry.units || 1,
+      date:             vacantAppt.date,
+      time:             vacantAppt.time,
+      endTime:          vacantAppt.endTime || '',
+      tech:             wlEntry.preferredTech || 'Abrar',
+      address:          '',
+      notes:            wlEntry.notes || '',
+      status:           'pending',
+      sourceWaitlistKey: waitlistKey,
+      createdAt:        new Date().toISOString(),
+      updatedAt:        new Date().toISOString()
+    };
+
+    var newRef = db.ref('appointments').push(newAppt);
+    var newKey = newRef.key;
+
+    newRef.then(function() {
+      console.log('✅ Appt from waitlist created:', newKey);
+      return db.ref('appointmentWaitlist/' + waitlistKey).update({
+        convertedToAppointment: true,
+        appointmentKey: newKey,
+        convertedAt: new Date().toISOString(),
+        status: 'converted'
+      });
+    }).then(function() {
+      document.getElementById('candidatesModal').classList.remove('open');
+      showToast('✅ تم إنشاء الموعد من قائمة الانتظار بنجاح');
+    }).catch(function(e) {
+      console.error('WL accept error:', e.message, '| apptKey:', newKey);
+      if (newKey) showToast('⚠️ تم إنشاء الموعد (' + newKey + ') لكن فشل تحديث طلب الانتظار');
+      else showToast('❌ فشل: ' + e.message);
+    });
+  }).catch(function(e) {
+    console.error('acceptWaitlistEntry check error:', e.message);
+    showToast('❌ فشل الفحص: ' + e.message);
+  });
+}
+
+// ===== عرض طلبات الانتظار داخل نافذة المرشحين =====
+function renderApptWaitlistInPanel(vacantAppt) {
+  var va = vacantAppt || window._currentVacantAppt;
+  if (!va) return '';
+
+  // مطابقة محافظة: نفس التاريخ + نفس وقت البداية + (نفس وقت النهاية إن وُجد)
+  var matches = apptWaitlist.filter(function(w) {
+    if (w.requestedDate !== va.date) return false;
+    if (w.requestedTime !== va.time) return false;
+    if (w.requestedEndTime && va.endTime && w.requestedEndTime !== va.endTime) return false;
+    return true;
+  });
+
+  if (matches.length === 0) return '';
+
+  return '<div style="background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:10px;padding:12px 14px;margin-bottom:14px;">'
+    + '<div style="font-weight:700;color:#92400E;margin-bottom:10px;font-size:13px;">🎯 قائمة الانتظار المطابقة (' + matches.length + ')</div>'
+    + matches.map(function(w) {
+      return '<div style="background:#fff;border:1px solid #FDE68A;border-radius:8px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">'
+        + '<div style="flex:1;min-width:180px;">'
+        + '<div style="font-weight:700;color:#0C3B5E;font-size:13px;">👤 ' + (w.client||'—') + '</div>'
+        + '<div style="font-size:11px;color:#6B7280;margin-top:3px;">📱 ' + (w.phone||'—') + '</div>'
+        + '<div style="font-size:11px;color:#6B7280;margin-top:2px;">🔧 ' + (w.service||'—') + ' | 🌡️ ' + (w.units||1) + ' وحدة</div>'
+        + (w.preferredTech ? '<div style="font-size:11px;color:#6B7280;margin-top:2px;">👷 مفضل: ' + (TECHS[w.preferredTech]||w.preferredTech) + '</div>' : '')
+        + '</div>'
+        + '<button onclick="acceptWaitlistEntry(\'' + w._key + '\')" '
+        + 'style="padding:8px 14px;background:linear-gradient(135deg,#92400E,#F59E0B);color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:\'Tajawal\',sans-serif;font-size:12px;font-weight:700;white-space:nowrap;">'
+        + '✅ تحويل للموعد</button>'
+        + '</div>';
+    }).join('')
+    + '</div>';
+}
+
+// ===== عرض قائمة الانتظار الكاملة =====
+function openApptWaitlistView() {
+  var body = document.getElementById('apptWaitlistViewBody');
+  if (apptWaitlist.length === 0) {
+    body.innerHTML = '<div style="text-align:center;padding:40px;color:#6B7280;">قائمة الانتظار فارغة</div>';
+  } else {
+    body.innerHTML = apptWaitlist.map(function(w) {
+      return '<div style="border:1.5px solid #FDE68A;border-radius:10px;padding:12px 14px;margin-bottom:10px;background:#FFFBEB;">'
+        + '<div style="font-weight:700;color:#0C3B5E;">👤 ' + (w.client||'—') + ' <span style="font-size:11px;color:#6B7280;">— ' + (w.phone||'') + '</span></div>'
+        + '<div style="font-size:12px;color:#6B7280;margin-top:4px;">📅 ' + (w.requestedDate||'—') + ' | ⏰ ' + fmtTimeRange(w.requestedTime, w.requestedEndTime) + '</div>'
+        + '<div style="font-size:12px;color:#6B7280;margin-top:2px;">🔧 ' + (w.service||'—') + ' | ' + (w.units||1) + ' وحدة</div>'
+        + (w.notes ? '<div style="font-size:11px;color:#9CA3AF;margin-top:2px;">📝 ' + w.notes + '</div>' : '')
+        + '</div>';
+    }).join('');
+  }
+  document.getElementById('apptWaitlistViewModal').classList.add('open');
+}
+
 // ===== عرض المرشحين بعد إلغاء موعد =====
 function showCandidatesPanel(vacantAppt) {
   if (!vacantAppt || !vacantAppt.date || !vacantAppt.time) return;
@@ -2632,10 +2883,12 @@ function showCandidatesPanel(vacantAppt) {
 
     if (candidates.length === 0) {
       document.getElementById('candidatesModalBody').innerHTML =
+        renderApptWaitlistInPanel(vacantAppt) +
         '<div style="text-align:center;padding:40px;color:#6B7280;">لا توجد مواعيد نشطة مستقبلية يمكن تقديمها</div>';
     } else {
       document.getElementById('candidatesModalBody').innerHTML =
-        '<div style="font-size:12px;color:#6B7280;margin-bottom:12px;">' + candidates.length + ' موعد مرشح — اضغطي للتقديم إلى الوقت الشاغر</div>' +
+        renderApptWaitlistInPanel(vacantAppt) +
+        '<div style="font-weight:700;color:#0C3B5E;font-size:13px;margin-bottom:8px;">📅 مواعيد يمكن تقديمها (' + candidates.length + ')</div>' +
         candidates.map(function(c) {
           return '<div style="border:1.5px solid #E2E8F0;border-radius:10px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">' +
             '<div style="flex:1;min-width:180px;">' +
