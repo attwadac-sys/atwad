@@ -627,6 +627,8 @@ function normalizePhone(p) {
 
 function makeDedupeKey(phone, date, time, service) {
   var t = (time || '').includes(' - ') ? time.split(' - ')[0] : (time || '');
+  return normalizePhone(phone) + '|' + (date||'') + '|' + t + '|' + (service||'');
+}
 
 // تنسيق الوقت: 24 ساعة → 12 ساعة مع ص/م
 function fmtTime12(t24) {
@@ -640,8 +642,6 @@ function fmtTime12(t24) {
 function fmtTimeRange(start, end) {
   if (!end) return fmtTime12(start);
   return fmtTime12(start) + ' ← ' + fmtTime12(end);
-}
-  return normalizePhone(phone) + '|' + (date||'') + '|' + t + '|' + (service||'');
 }
 
 var _renderCount = 0;
