@@ -664,7 +664,10 @@ function formatDate(d){ try{ return new Date(d+'T00:00:00').toLocaleDateString('
 function formatDateShort(d){ try{ return new Date(d+'T00:00:00').toLocaleDateString('ar-SA',{month:'short',day:'numeric'}); } catch{ return d; } }
 function getWeekDates(offset=0){
   const d = new Date(); d.setDate(d.getDate() - d.getDay() + offset*7);
-  return Array.from({length:7},(_,i)=>{ const dd=new Date(d); dd.setDate(d.getDate()+i); return dd.toISOString().split('T')[0]; });
+  console.log('getWeekDates('+offset+') → d =', d.toISOString().split('T')[0], '| d.getDate()=', d.getDate(), '| d.getDay()=', d.getDay());
+  const days = Array.from({length:7},(_,i)=>{ const dd=new Date(d); dd.setDate(d.getDate()+i); return dd.toISOString().split('T')[0]; });
+  console.log('weekDates:', days[0], '→', days[6]);
+  return days;
 }
 function autoAssignTech(date) {
   const dayAppts = appointments.filter(a => a.date === date);
@@ -955,7 +958,10 @@ function switchView(v){
   document.getElementById('listView').style.display = v==='list'?'block':'none';
   if(v==='week') renderWeek(); else renderList();
 }
-function changeWeek(dir){ currentWeekOffset+=dir; renderWeek(); }
+function changeWeek(dir){
+  console.log('changeWeek('+dir+') — offset before:', currentWeekOffset, '→ after:', currentWeekOffset+dir);
+  currentWeekOffset+=dir; renderWeek();
+}
 function goToday(){ currentWeekOffset=0; renderWeek(); }
 function filterTech(t,btn){
   techFilter=t;
