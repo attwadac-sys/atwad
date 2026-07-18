@@ -644,6 +644,8 @@ function fmtTimeRange(start, end) {
   return normalizePhone(phone) + '|' + (date||'') + '|' + t + '|' + (service||'');
 }
 
+var _renderCount = 0;
+
 function mergeAppointmentsAndBookings() {
   // عرض appointments فقط — bookings لا تُدمج في العرض
   appointments = firebaseAppointments.slice();
@@ -652,8 +654,9 @@ function mergeAppointmentsAndBookings() {
   console.log('Appointments source count:', firebaseAppointments.length);
   console.log('Displayed appointments count:', appointments.length);
 
-
   updateStats();
+  _renderCount++;
+  console.log('[renderWeek #'+_renderCount+'] source=firebase-listener | currentWeekOffset='+currentWeekOffset);
   renderWeek();
   renderList();
   document.getElementById('fbStatusText').textContent = 'متصل • ' + appointments.length + ' موعد';
@@ -854,6 +857,7 @@ function updateStats(){
 // ===== WEEK VIEW =====
 function renderWeek(){
   const dates = getWeekDates(currentWeekOffset);
+  console.log('[renderWeek] drawing dates:', dates[0], '→', dates[6], '| offset='+currentWeekOffset);
   const tod = today();
   const dayNames = ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
   const weekStart = new Date(dates[0]+'T00:00:00');
@@ -959,8 +963,11 @@ function switchView(v){
   if(v==='week') renderWeek(); else renderList();
 }
 function changeWeek(dir){
-  console.log('changeWeek('+dir+') — offset before:', currentWeekOffset, '→ after:', currentWeekOffset+dir);
-  currentWeekOffset+=dir; renderWeek();
+  console.log('=== changeWeek('+dir+') | offset: '+currentWeekOffset+' → '+(currentWeekOffset+dir)+' | now='+new Date().toISOString().split('T')[0]);
+  currentWeekOffset+=dir;
+  _renderCount++;
+  console.log('[renderWeek #'+_renderCount+'] source=changeWeek | currentWeekOffset='+currentWeekOffset);
+  renderWeek();
 }
 function goToday(){ currentWeekOffset=0; renderWeek(); }
 function filterTech(t,btn){
