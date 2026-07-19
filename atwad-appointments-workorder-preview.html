@@ -2710,11 +2710,21 @@ function saveApptWaitlistEntry() {
 function acceptWaitlistEntry(waitlistKey, vacantAppt) {
   if (!db) { showToast('❌ Firebase غير متاح'); return; }
 
+  // تعطيل جميع أزرار التحويل فوراً لمنع الضغط المزدوج
+  document.querySelectorAll('#candidatesModal button').forEach(function(b){
+    if (b.textContent.indexOf('تحويل') !== -1) { b.disabled = true; b.textContent = '⏳ جاري التحويل...'; }
+  });
+
+  var vacantInfo = window._currentVacantAppt || vacantAppt;
+  console.log('=== acceptWaitlistEntry ===');
+  console.log('waitlistKey:', waitlistKey);
+  console.log('vacantInfo:', JSON.stringify(vacantInfo));
+
   Promise.all([
     db.ref('appointmentWaitlist/' + waitlistKey).once('value'),
-    db.ref('appointments/' + vacantAppt._fbKey).once('value'),
+    db.ref('appointments/' + vacantInfo._fbKey).once('value'),
     db.ref('appointments').orderByChild('sourceWaitlistKey').equalTo(waitlistKey).once('value'),
-    db.ref('appointments').orderByChild('date').equalTo(vacantAppt.date).once('value')
+    db.ref('appointments').orderByChild('date').equalTo(vacantInfo.date).once('value')
   ]).then(function(results) {
     var wlSnap      = results[0];
     var vacantSnap  = results[1];
@@ -2722,76 +2732,74 @@ function acceptWaitlistEntry(waitlistKey, vacantAppt) {
     var sameDay     = results[3];
 
     var wlEntry = wlSnap.val();
+    console.log('wlEntry:', JSON.stringify(wlEntry));
+    console.log('dupByWL numChildren:', dupByWL.numChildren());
     if (!wlEntry) { showToast('❌ طلب الانتظار غير موجود'); return; }
 
-    // حماية 1: الطلب محوّل مسبقاً
     if (wlEntry.convertedToAppointment) {
+      console.log('Already converted → appointmentKey:', wlEntry.appointmentKey);
       showToast('ℹ️ هذا الطلب محوّل مسبقاً — appointmentKey: ' + (wlEntry.appointmentKey||'—'));
+      document.getElementById('candidatesModal').classList.remove('open');
       return;
     }
-    // حماية 2: يوجد موعد بـ sourceWaitlistKey مطابق
     if (dupByWL.numChildren() > 0) {
       var existingKey = null;
-      dupByWL.forEach(function(c){ existingKey = c.key; });
-      console.warn('WL duplicate found:', existingKey, '— fixing link only');
+      dupByWL.forEach(function(c){ existingKey = c.key; console.log('dup:', c.key); });
+      console.warn('WL duplicate found — fixing link:', existingKey);
       db.ref('appointmentWaitlist/' + waitlistKey).update({
         convertedToAppointment: true, appointmentKey: existingKey, convertedAt: new Date().toISOString(), status: 'converted'
-      }).then(function(){ showToast('ℹ️ موعد موجود — تم إصلاح الربط'); renderApptWaitlistInPanel(); });
+      }).then(function(){
+        document.getElementById('candidatesModal').classList.remove('open');
+        showToast('ℹ️ موعد موجود — تم إصلاح الربط');
+      });
       return;
     }
 
-    // تحقق من الموعد الشاغر
     var vacant = vacantSnap.val();
+    console.log('vacant status:', vacant ? vacant.status : 'NOT FOUND');
     if (!vacant || vacant.status !== 'cancelled') {
       showToast('⚠️ الموعد الشاغر لم يعد متاحاً');
       document.getElementById('candidatesModal').classList.remove('open');
       return;
     }
 
-    // تحقق من تعارض الوقت
     var conflict = false;
     sameDay.forEach(function(c) {
       var a = c.val();
-      if (c.key === vacantAppt._fbKey) return;
+      if (c.key === vacantInfo._fbKey) return;
       if (a.status === 'cancelled' || a.status === 'done') return;
-      if (a.time === vacantAppt.time) conflict = true;
+      if (a.time === vacantInfo.time) { conflict = true; console.log('CONFLICT:', c.key); }
     });
     if (conflict) { showToast('⚠️ الفترة الزمنية أصبحت مشغولة'); return; }
 
-    // إنشاء موعد جديد من طلب الانتظار
     var newAppt = {
-      client:           wlEntry.client,
-      phone:            wlEntry.phone,
-      service:          wlEntry.service,
-      units:            wlEntry.units || 1,
-      date:             vacantAppt.date,
-      time:             vacantAppt.time,
-      endTime:          vacantAppt.endTime || '',
-      tech:             wlEntry.preferredTech || 'Abrar',
-      address:          '',
-      notes:            wlEntry.notes || '',
-      status:           'pending',
-      sourceWaitlistKey: waitlistKey,
-      createdAt:        new Date().toISOString(),
-      updatedAt:        new Date().toISOString()
+      client:            wlEntry.client,   phone: wlEntry.phone,
+      service:           wlEntry.service,  units: wlEntry.units || 1,
+      date:              vacantInfo.date,  time: vacantInfo.time,
+      endTime:           vacantInfo.endTime || '',
+      tech:              wlEntry.preferredTech || 'Abrar',
+      address: '', notes: wlEntry.notes || '',
+      status: 'pending', sourceWaitlistKey: waitlistKey,
+      createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
     };
+    console.log('Creating appointment:', JSON.stringify(newAppt));
 
     var newRef = db.ref('appointments').push(newAppt);
     var newKey = newRef.key;
+    console.log('New appointment key:', newKey);
 
     newRef.then(function() {
-      console.log('✅ Appt from waitlist created:', newKey);
+      console.log('✅ Appointment created:', newKey);
       return db.ref('appointmentWaitlist/' + waitlistKey).update({
-        convertedToAppointment: true,
-        appointmentKey: newKey,
-        convertedAt: new Date().toISOString(),
-        status: 'converted'
+        convertedToAppointment: true, appointmentKey: newKey,
+        convertedAt: new Date().toISOString(), status: 'converted'
       });
     }).then(function() {
+      console.log('✅ Waitlist entry updated');
       document.getElementById('candidatesModal').classList.remove('open');
       showToast('✅ تم إنشاء الموعد من قائمة الانتظار بنجاح');
     }).catch(function(e) {
-      console.error('WL accept error:', e.message, '| apptKey:', newKey);
+      console.error('push/update error:', e.message, '| apptKey:', newKey);
       if (newKey) showToast('⚠️ تم إنشاء الموعد (' + newKey + ') لكن فشل تحديث طلب الانتظار');
       else showToast('❌ فشل: ' + e.message);
     });
