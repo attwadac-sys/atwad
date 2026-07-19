@@ -2860,35 +2860,79 @@ function showCandidatesPanel(vacantAppt) {
     'الموعد الشاغر: ' + (formatDateShort ? formatDateShort(vacantAppt.date) : vacantAppt.date) +
     ' | ' + fmtTimeRange(vacantAppt.time, vacantAppt.endTime);
 
-  // حفظ بيانات الموعد الشاغر في متغير عام لاستخدامها في أزرار التقديم
   window._currentVacantAppt = vacantAppt;
 
-  // قراءة بيانات حديثة من Firebase مباشرة
-  db.ref('appointments').once('value', function(snap) {
+  // توحيد صيغة الوقت: "9:00" → "09:00"
+  function normTime(t) {
+    if (!t) return '';
+    var parts = String(t).split(':');
+    return parts[0].padStart(2,'0') + ':' + (parts[1]||'00');
+  }
+  var vaDate    = vacantAppt.date;
+  var vaTime    = normTime(vacantAppt.time);
+  var vaEndTime = normTime(vacantAppt.endTime);
+
+  // قراءة appointments وappointmentWaitlist معاً من Firebase
+  Promise.all([
+    db.ref('appointments').once('value'),
+    db.ref('appointmentWaitlist').orderByChild('requestedDate').equalTo(vaDate).once('value')
+  ]).then(function(results) {
+    var apptSnap = results[0];
+    var wlSnap   = results[1];
     var now = new Date().toISOString().split('T')[0];
+
+    // ===== بناء المرشحين =====
     var candidates = [];
-    snap.forEach(function(child) {
+    apptSnap.forEach(function(child) {
       var a = child.val();
       var fbKey = child.key;
       if (a.status === 'cancelled' || a.status === 'done') return;
-      if (fbKey === vacantAppt._fbKey) return;  // نفس الموعد الملغي
-      if (!a.date || a.date < now) return;      // ماضٍ
+      if (fbKey === vacantAppt._fbKey) return;
+      if (!a.date || a.date < now) return;
       candidates.push(Object.assign({}, a, {_fbKey: fbKey}));
     });
-
-    // ترتيب: الأقرب زمنياً أولاً
     candidates.sort(function(a,b) {
       return ((a.date||'')+(a.time||'')).localeCompare((b.date||'')+(b.time||''));
     });
 
-    if (candidates.length === 0) {
-      document.getElementById('candidatesModalBody').innerHTML =
-        renderApptWaitlistInPanel(vacantAppt) +
-        '<div style="text-align:center;padding:40px;color:#6B7280;">لا توجد مواعيد نشطة مستقبلية يمكن تقديمها</div>';
-    } else {
-      document.getElementById('candidatesModalBody').innerHTML =
-        renderApptWaitlistInPanel(vacantAppt) +
-        '<div style="font-weight:700;color:#0C3B5E;font-size:13px;margin-bottom:8px;">📅 مواعيد يمكن تقديمها (' + candidates.length + ')</div>' +
+    // ===== بناء قائمة الانتظار المطابقة (مباشرة من Firebase) =====
+    var wlMatches = [];
+    wlSnap.forEach(function(child) {
+      var w = child.val();
+      if (w.status !== 'waiting') return;
+      var wTime    = normTime(w.requestedTime);
+      var wEndTime = normTime(w.requestedEndTime);
+      if (wTime !== vaTime) return;
+      // مطابقة وقت النهاية إذا كلاهما محدد
+      if (wEndTime && vaEndTime && wEndTime !== vaEndTime) return;
+      wlMatches.push(Object.assign({}, w, {_key: child.key}));
+    });
+
+    // ===== بناء HTML قسم قائمة الانتظار =====
+    var wlHTML = '';
+    if (wlMatches.length > 0) {
+      wlHTML = '<div style="background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:10px;padding:12px 14px;margin-bottom:14px;">'
+        + '<div style="font-weight:700;color:#92400E;margin-bottom:10px;font-size:13px;">🎯 قائمة الانتظار المطابقة (' + wlMatches.length + ')</div>'
+        + wlMatches.map(function(w) {
+          return '<div style="background:#fff;border:1px solid #FDE68A;border-radius:8px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">'
+            + '<div style="flex:1;min-width:180px;">'
+            + '<div style="font-weight:700;color:#0C3B5E;font-size:13px;">👤 ' + (w.client||'—') + '</div>'
+            + '<div style="font-size:11px;color:#6B7280;margin-top:3px;">📱 ' + (w.phone||'—') + '</div>'
+            + '<div style="font-size:11px;color:#6B7280;margin-top:2px;">🔧 ' + (w.service||'—') + ' | 🌡️ ' + (w.units||1) + ' وحدة</div>'
+            + (w.preferredTech ? '<div style="font-size:11px;color:#6B7280;margin-top:2px;">👷 مفضل: ' + (TECHS[w.preferredTech]||w.preferredTech) + '</div>' : '')
+            + '</div>'
+            + '<button onclick="acceptWaitlistEntry(\'' + w._key + '\')" '
+            + 'style="padding:8px 14px;background:linear-gradient(135deg,#92400E,#F59E0B);color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:\'Tajawal\',sans-serif;font-size:12px;font-weight:700;white-space:nowrap;">'
+            + '✅ تحويل للموعد</button>'
+            + '</div>';
+        }).join('')
+        + '</div>';
+    }
+
+    // ===== بناء HTML المرشحين =====
+    var candidatesHTML = '';
+    if (candidates.length > 0) {
+      candidatesHTML = '<div style="font-weight:700;color:#0C3B5E;font-size:13px;margin-bottom:8px;">📅 مواعيد يمكن تقديمها (' + candidates.length + ')</div>' +
         candidates.map(function(c) {
           return '<div style="border:1.5px solid #E2E8F0;border-radius:10px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">' +
             '<div style="flex:1;min-width:180px;">' +
@@ -2902,12 +2946,16 @@ function showCandidatesPanel(vacantAppt) {
             '⏩ تقديم</button>' +
             '</div>';
         }).join('');
+    } else if (wlMatches.length === 0) {
+      candidatesHTML = '<div style="text-align:center;padding:30px;color:#6B7280;">لا توجد مواعيد نشطة مستقبلية يمكن تقديمها</div>';
     }
 
+    document.getElementById('candidatesModalBody').innerHTML = wlHTML + candidatesHTML;
     document.getElementById('candidatesModal').classList.add('open');
-  }, function(err) {
-    console.error('showCandidatesPanel read error:', err.message);
-    showToast('❌ فشل تحميل المرشحين: ' + err.message);
+
+  }).catch(function(err) {
+    console.error('showCandidatesPanel error:', err.message);
+    showToast('❌ فشل تحميل البيانات: ' + err.message);
   });
 }
 
