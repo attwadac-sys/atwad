@@ -2897,16 +2897,29 @@ function showCandidatesPanel(vacantAppt) {
 
     // ===== بناء قائمة الانتظار المطابقة (مباشرة من Firebase) =====
     var wlMatches = [];
+    console.log('=== DIAG: showCandidatesPanel ===');
+    console.log('vacantAppt:', JSON.stringify({date:vacantAppt.date, time:vacantAppt.time, endTime:vacantAppt.endTime, _fbKey:vacantAppt._fbKey}));
+    console.log('vaDate:', vaDate, '| vaTime (normalized):', vaTime, '| vaEndTime (normalized):', vaEndTime);
+    console.log('appointmentWaitlist raw from Firebase (numChildren):', wlSnap.numChildren());
     wlSnap.forEach(function(child) {
       var w = child.val();
-      if (w.status !== 'waiting') return;
       var wTime    = normTime(w.requestedTime);
       var wEndTime = normTime(w.requestedEndTime);
-      if (wTime !== vaTime) return;
-      // مطابقة وقت النهاية إذا كلاهما محدد
-      if (wEndTime && vaEndTime && wEndTime !== vaEndTime) return;
+      var statusOK = (w.status === 'waiting');
+      var timeOK   = (wTime === vaTime);
+      var endOK    = !(wEndTime && vaEndTime && wEndTime !== vaEndTime);
+      console.log('  WL[' + child.key + '] client=' + w.client
+        + ' | requestedDate=' + JSON.stringify(w.requestedDate)
+        + ' | requestedTime=' + JSON.stringify(w.requestedTime) + ' normalized=' + wTime
+        + ' | requestedEndTime=' + JSON.stringify(w.requestedEndTime) + ' normalized=' + wEndTime
+        + ' | status=' + JSON.stringify(w.status)
+        + ' | PASS: status=' + statusOK + ' time=' + timeOK + ' end=' + endOK);
+      if (!statusOK) { return; }
+      if (!timeOK) { return; }
+      if (!endOK) { return; }
       wlMatches.push(Object.assign({}, w, {_key: child.key}));
     });
+    console.log('wlMatches found:', wlMatches.length);
 
     // ===== بناء HTML قسم قائمة الانتظار =====
     var wlHTML = '';
