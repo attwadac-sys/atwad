@@ -2886,10 +2886,10 @@ function showCandidatesPanel(vacantAppt) {
   var vaTime    = normTime(vacantAppt.time);
   var vaEndTime = normTime(vacantAppt.endTime);
 
-  // قراءة appointments وappointmentWaitlist معاً من Firebase
+  // قراءة appointments وappointmentWaitlist معاً — بدون orderByChild لتجنب مشكلة الـ index
   Promise.all([
     db.ref('appointments').once('value'),
-    db.ref('appointmentWaitlist').orderByChild('requestedDate').equalTo(vaDate).once('value')
+    db.ref('appointmentWaitlist').once('value')
   ]).then(function(results) {
     var apptSnap = results[0];
     var wlSnap   = results[1];
@@ -2913,24 +2913,24 @@ function showCandidatesPanel(vacantAppt) {
     var wlMatches = [];
     console.log('=== DIAG: showCandidatesPanel ===');
     console.log('vacantAppt:', JSON.stringify({date:vacantAppt.date, time:vacantAppt.time, endTime:vacantAppt.endTime, _fbKey:vacantAppt._fbKey}));
-    console.log('vaDate:', vaDate, '| vaTime (normalized):', vaTime, '| vaEndTime (normalized):', vaEndTime);
-    console.log('appointmentWaitlist raw from Firebase (numChildren):', wlSnap.numChildren());
+    console.log('vaDate:', vaDate, '| vaTime:', vaTime, '| vaEndTime:', vaEndTime);
+    console.log('appointmentWaitlist total entries:', wlSnap.numChildren());
     wlSnap.forEach(function(child) {
       var w = child.val();
       var wTime    = normTime(w.requestedTime);
       var wEndTime = normTime(w.requestedEndTime);
+      var dateOK   = (w.requestedDate === vaDate);
       var statusOK = (w.status === 'waiting');
       var timeOK   = (wTime === vaTime);
       var endOK    = !(wEndTime && vaEndTime && wEndTime !== vaEndTime);
-      console.log('  WL[' + child.key + '] client=' + w.client
-        + ' | requestedDate=' + JSON.stringify(w.requestedDate)
-        + ' | requestedTime=' + JSON.stringify(w.requestedTime) + ' normalized=' + wTime
-        + ' | requestedEndTime=' + JSON.stringify(w.requestedEndTime) + ' normalized=' + wEndTime
-        + ' | status=' + JSON.stringify(w.status)
-        + ' | PASS: status=' + statusOK + ' time=' + timeOK + ' end=' + endOK);
-      if (!statusOK) { return; }
-      if (!timeOK) { return; }
-      if (!endOK) { return; }
+      console.log('  WL[' + child.key + ']'
+        + ' client=' + w.client
+        + ' | requestedDate=' + JSON.stringify(w.requestedDate) + ' dateOK=' + dateOK
+        + ' | requestedTime=' + JSON.stringify(w.requestedTime) + ' normalized=' + wTime + ' timeOK=' + timeOK
+        + ' | requestedEndTime=' + JSON.stringify(w.requestedEndTime) + ' normalized=' + wEndTime + ' endOK=' + endOK
+        + ' | status=' + JSON.stringify(w.status) + ' statusOK=' + statusOK
+        + ' | OVERALL=' + (dateOK && statusOK && timeOK && endOK));
+      if (!dateOK || !statusOK || !timeOK || !endOK) return;
       wlMatches.push(Object.assign({}, w, {_key: child.key}));
     });
     console.log('wlMatches found:', wlMatches.length);
