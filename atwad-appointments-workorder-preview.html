@@ -2707,15 +2707,21 @@ function saveApptWaitlistEntry() {
 }
 
 // ===== تحويل طلب انتظار إلى موعد =====
-function acceptWaitlistEntry(waitlistKey, vacantAppt) {
+function acceptWaitlistEntry(waitlistKey) {
   if (!db) { showToast('❌ Firebase غير متاح'); return; }
 
-  // تعطيل جميع أزرار التحويل فوراً لمنع الضغط المزدوج
+  // تعطيل أزرار التحويل فوراً لمنع الضغط المزدوج
   document.querySelectorAll('#candidatesModal button').forEach(function(b){
     if (b.textContent.indexOf('تحويل') !== -1) { b.disabled = true; b.textContent = '⏳ جاري التحويل...'; }
   });
 
-  var vacantInfo = window._currentVacantAppt || vacantAppt;
+  // الموعد الشاغر دائماً من window._currentVacantAppt
+  var vacantInfo = window._currentVacantAppt;
+  if (!vacantInfo || !vacantInfo._fbKey) {
+    showToast('❌ بيانات الموعد الشاغر غير متوفرة — أعيدي فتح النافذة');
+    return;
+  }
+
   console.log('=== acceptWaitlistEntry ===');
   console.log('waitlistKey:', waitlistKey);
   console.log('vacantInfo:', JSON.stringify(vacantInfo));
