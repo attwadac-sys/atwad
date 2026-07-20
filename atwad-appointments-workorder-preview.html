@@ -374,7 +374,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
         <div class="form-group"><label>نوع الخدمة <span class="req">*</span></label>
           <select id="f_service">
             <option value="">-- اختر --</option>
-            <option>تنظيف مكيف</option><option>غسيل مكيفات</option>
+            <option>غسيل مكيفات</option>
             <option>صيانة دورية</option><option>تعبئة غاز</option>
             <option>كشف وإصلاح أعطال</option><option>تركيب مكيف جديد</option>
             <option>باقة صيانة سنوية</option>
@@ -506,8 +506,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
         <div class="form-group"><label>نوع الخدمة</label>
           <select id="wf_service">
             <option value="">أي خدمة</option>
-            <option>تنظيف وغسيل المكيفات</option>
-            <option>تنظيف مكيف</option>
+            <option>غسيل مكيفات</option>
             <option>صيانة دورية</option>
             <option>تعبئة غاز</option>
             <option>كشف وإصلاح أعطال</option>
@@ -614,6 +613,13 @@ let firebaseBookings = [];     // من مسار bookings — يُحمَّل مر
 var isSavingAppointment = false; // حماية من النقر المزدوج
 
 // دالة التنبيه المحلية
+// توحيد اسم الخدمة — قيمة واحدة لكل خدمة (يتعامل مع البيانات القديمة)
+function normalizeService(s) {
+  if (!s) return s;
+  if (s === 'تنظيف مكيف' || s === 'تنظيف مكيفات' || s === 'تنظيف وغسيل المكيفات') return 'غسيل مكيفات';
+  return s;
+}
+
 function showToast(msg) {
   var t = document.createElement('div');
   t.textContent = msg;
@@ -820,7 +826,7 @@ function initFirebaseSync() {
         client: b.client || b.name || '—',
         phone: b.phone || '',
         address: b.city || 'جدة',
-        service: b.service || 'تنظيف مكيف',
+        service: normalizeService(b.service) || 'غسيل مكيفات',
         units: b.units || 1,
         date: b.date,
         time: t,
@@ -1006,8 +1012,8 @@ function openNewApptFromBooking(bookingKey) {
     // ===== تعيين الخدمة — مطابقة قيم bookings مع options في f_service =====
     const SERVICE_MAP = {
       'تنظيف وغسيل المكيفات': 'غسيل مكيفات',
-      'تنظيف مكيفات':         'تنظيف مكيف',
-      'تنظيف مكيف':           'تنظيف مكيف',
+      'تنظيف مكيفات':         'غسيل مكيفات',
+      'تنظيف مكيف':           'غسيل مكيفات',
       'غسيل مكيفات':          'غسيل مكيفات',
       'صيانة دورية':          'صيانة دورية',
       'تعبئة غاز فريون':      'تعبئة غاز',
@@ -1018,7 +1024,7 @@ function openNewApptFromBooking(bookingKey) {
       'تركيب مكيف جديد':       'تركيب مكيف جديد',
       'باقة صيانة سنوية':      'باقة صيانة سنوية',
     };
-    const mappedService = SERVICE_MAP[b.service] || b.service || '';
+    const mappedService = SERVICE_MAP[b.service] || normalizeService(b.service) || '';
 
     // ===== رقم الحجز للعميل (ATW-xxxxx) من حقل ref في bookings =====
     const bookingRef = b.ref || bookingKey; // b.ref هو ATW-47615
@@ -1211,7 +1217,7 @@ function editAppt(id){
   document.getElementById('f_client').value=a.client||'';
   document.getElementById('f_phone').value=a.phone||'';
   document.getElementById('f_address').value=a.address||'';
-  document.getElementById('f_service').value=a.service||'';
+  document.getElementById('f_service').value = normalizeService(a.service)||'';
   document.getElementById('f_tech').value=a.tech||'';
   document.getElementById('f_status').value=a.status||'pending';
   document.getElementById('f_units').value=a.units||1;
@@ -1788,7 +1794,7 @@ function createWorkOrderFromAppt(apptId) {
       bookingRef:  a.bookingRef || '',
       client:      a.client     || '',
       phone:       (a.phone||'').replace(/[^0-9]/g,'').replace(/^966/,'0'),
-      service:     a.service    || 'تنظيف مكيف',
+      service:     normalizeService(a.service) || 'غسيل مكيفات',
       units:       a.units      || 1,
       date:        a.date       || '',
       time:        (a.time||'').split(' - ')[0] || a.time || '',
@@ -2599,7 +2605,7 @@ watchNotifications();
       <div class="form-group"><label>اسم العميل <span class="req">*</span></label><input type="text" id="wl_client" placeholder="اسم العميل"></div>
       <div class="form-group"><label>رقم الجوال <span class="req">*</span></label><input type="tel" id="wl_phone" placeholder="05XXXXXXXX" dir="ltr"></div>
       <div class="form-group"><label>الخدمة <span class="req">*</span></label>
-        <select id="wl_service"><option value="">— اختر —</option><option>غسيل مكيفات</option><option>تنظيف مكيف</option><option>صيانة دورية</option><option>تعبئة غاز</option><option>كشف وإصلاح أعطال</option><option>تركيب مكيف جديد</option><option>باقة صيانة سنوية</option></select>
+        <select id="wl_service"><option value="">— اختر —</option><option>غسيل مكيفات</option><option>صيانة دورية</option><option>تعبئة غاز</option><option>كشف وإصلاح أعطال</option><option>تركيب مكيف جديد</option><option>باقة صيانة سنوية</option></select>
       </div>
       <div class="form-group"><label>عدد الوحدات</label><input type="number" id="wl_units" value="1" min="1" max="20"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
