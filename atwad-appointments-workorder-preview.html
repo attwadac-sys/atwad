@@ -651,19 +651,11 @@ function fmtTimeRange(start, end) {
   return fmtTime12(start) + ' ← ' + fmtTime12(end);
 }
 
-var _renderCount = 0;
 
 function mergeAppointmentsAndBookings() {
   // عرض appointments فقط — bookings لا تُدمج في العرض
   appointments = firebaseAppointments.slice();
-
-  // Console log تشخيصي مؤقت
-  console.log('Appointments source count:', firebaseAppointments.length);
-  console.log('Displayed appointments count:', appointments.length);
-
   updateStats();
-  _renderCount++;
-  console.log('⚡ firebase-listener → renderWeek #'+_renderCount+' | currentWeekOffset='+currentWeekOffset);
   renderWeek();
   renderList();
   document.getElementById('fbStatusText').textContent = 'متصل • ' + appointments.length + ' موعد';
@@ -675,7 +667,6 @@ function formatDateShort(d){ try{ return new Date(d+'T00:00:00').toLocaleDateStr
 function getWeekDates(offset=0){
   const d = new Date(); d.setDate(d.getDate() - d.getDay() + offset*7);
   const days = Array.from({length:7},(_,i)=>{ const dd=new Date(d); dd.setDate(d.getDate()+i); return dd.toISOString().split('T')[0]; });
-  console.log('  getWeekDates('+offset+') → start='+days[0]+' end='+days[6]+' | d.getDate()='+d.getDate()+' d.getDay()='+d.getDay());
   return days;
 }
 function autoAssignTech(date) {
@@ -864,7 +855,6 @@ function updateStats(){
 // ===== WEEK VIEW =====
 function renderWeek(){
   const dates = getWeekDates(currentWeekOffset);
-  console.log('  renderWeek drawing: '+dates[0]+' → '+dates[6]+' (offset='+currentWeekOffset+')');
   const tod = today();
   const dayNames = ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
   const weekStart = new Date(dates[0]+'T00:00:00');
@@ -970,15 +960,8 @@ function switchView(v){
   if(v==='week') renderWeek(); else renderList();
 }
 function changeWeek(dir){
-  console.groupCollapsed('▶ changeWeek('+dir+') — #'+(currentWeekOffset+dir));
-  console.log('offset قبل:', currentWeekOffset);
-  console.log('offset بعد:', currentWeekOffset+dir);
-  console.log('now:', new Date().toISOString().split('T')[0]);
   currentWeekOffset += dir;
-  _renderCount++;
-  console.log('renderWeek #'+_renderCount+' | source=changeWeek | offset='+currentWeekOffset);
   renderWeek();
-  console.groupEnd();
 }
 function goToday(){ currentWeekOffset=0; renderWeek(); }
 function filterTech(t,btn){
@@ -1664,14 +1647,12 @@ function doCreateAppointment(data, srcKeyFixed, bRefFixed) {
 
   // مسار متسلسل: إنشاء الموعد → تحديث الحجز (إذا وُجد) → نجاح واحد
   var chain = apptPushRef.then(function() {
-    console.log('✅ Appointment created:', newApptKey);
     if (document.getElementById('chk_save_to_customer').checked && _foundCustomerKey && mapsLink) {
       saveLocationToCustomer(_foundCustomerKey, {mapsLink, lat, lng, locSrc, locVerified});
     }
     sendAdminNotification(data);
     if (!srcKeyFixed) return null; // لا يوجد حجز — مسار مباشر
-    console.log('Updating booking:', srcKeyFixed, '→ appt:', newApptKey);
-    return db.ref('bookings/' + srcKeyFixed).update({
+      return db.ref('bookings/' + srcKeyFixed).update({
       convertedToAppointment: true,
       appointmentKey: newApptKey,
       convertedAt: new Date().toISOString()
@@ -1681,8 +1662,7 @@ function doCreateAppointment(data, srcKeyFixed, bRefFixed) {
   chain.then(function(updateResult) {
     resetSaveBtn(); closeModal();
     if (srcKeyFixed) {
-      console.log('✅ Booking marked converted:', srcKeyFixed);
-      renderBookingsPanel();
+          renderBookingsPanel();
       showToast('✅ تم إنشاء الموعد وتحديث حالة الحجز بنجاح');
     } else {
       showToast('✅ تم إضافة الموعد');
@@ -2764,9 +2744,6 @@ function acceptWaitlistEntry(waitlistKey) {
     return;
   }
 
-  console.log('=== acceptWaitlistEntry ===');
-  console.log('waitlistKey:', waitlistKey);
-  console.log('vacantInfo:', JSON.stringify(vacantInfo));
 
   Promise.all([
     db.ref('appointmentWaitlist/' + waitlistKey).once('value'),
@@ -2780,19 +2757,15 @@ function acceptWaitlistEntry(waitlistKey) {
     var sameDay     = results[3];
 
     var wlEntry = wlSnap.val();
-    console.log('wlEntry:', JSON.stringify(wlEntry));
-    console.log('dupByWL numChildren:', dupByWL.numChildren());
     if (!wlEntry) { showToast('❌ طلب الانتظار غير موجود'); return; }
 
     if (wlEntry.convertedToAppointment) {
-      console.log('Already converted → appointmentKey:', wlEntry.appointmentKey);
       showToast('ℹ️ هذا الطلب محوّل مسبقاً — appointmentKey: ' + (wlEntry.appointmentKey||'—'));
       document.getElementById('candidatesModal').classList.remove('open');
       return;
     }
     if (dupByWL.numChildren() > 0) {
       var existingKey = null;
-      dupByWL.forEach(function(c){ existingKey = c.key; console.log('dup:', c.key); });
       console.warn('WL duplicate found — fixing link:', existingKey);
       db.ref('appointmentWaitlist/' + waitlistKey).update({
         convertedToAppointment: true, appointmentKey: existingKey, convertedAt: new Date().toISOString(), status: 'converted'
@@ -2804,7 +2777,6 @@ function acceptWaitlistEntry(waitlistKey) {
     }
 
     var vacant = vacantSnap.val();
-    console.log('vacant status:', vacant ? vacant.status : 'NOT FOUND');
     if (!vacant || vacant.status !== 'cancelled') {
       showToast('⚠️ الموعد الشاغر لم يعد متاحاً');
       document.getElementById('candidatesModal').classList.remove('open');
@@ -2817,7 +2789,6 @@ function acceptWaitlistEntry(waitlistKey) {
       var a = c.val();
       if (c.key === vacantInfo._fbKey) return;
       if (a.status === 'cancelled' || a.status === 'done') return;
-      if (normT(a.time) === normT(vacantInfo.time)) { conflict = true; console.log('CONFLICT:', c.key); }
     });
     if (conflict) { showToast('⚠️ الفترة الزمنية أصبحت مشغولة'); return; }
 
@@ -2831,20 +2802,16 @@ function acceptWaitlistEntry(waitlistKey) {
       status: 'pending', sourceWaitlistKey: waitlistKey,
       createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
     };
-    console.log('Creating appointment:', JSON.stringify(newAppt));
 
     var newRef = db.ref('appointments').push(newAppt);
     var newKey = newRef.key;
-    console.log('New appointment key:', newKey);
 
     newRef.then(function() {
-      console.log('✅ Appointment created:', newKey);
       return db.ref('appointmentWaitlist/' + waitlistKey).update({
         convertedToAppointment: true, appointmentKey: newKey,
         convertedAt: new Date().toISOString(), status: 'converted'
       });
     }).then(function() {
-      console.log('✅ Waitlist entry updated');
       document.getElementById('candidatesModal').classList.remove('open');
       showToast('✅ تم إنشاء الموعد من قائمة الانتظار بنجاح');
     }).catch(function(e) {
@@ -2858,40 +2825,7 @@ function acceptWaitlistEntry(waitlistKey) {
   });
 }
 
-// ===== عرض طلبات الانتظار داخل نافذة المرشحين =====
-function renderApptWaitlistInPanel(vacantAppt) {
-  var va = vacantAppt || window._currentVacantAppt;
-  if (!va) return '';
 
-  // مطابقة محافظة: نفس التاريخ + نفس وقت البداية + (نفس وقت النهاية إن وُجد)
-  var matches = apptWaitlist.filter(function(w) {
-    if (w.requestedDate !== va.date) return false;
-    if (w.requestedTime !== va.time) return false;
-    if (w.requestedEndTime && va.endTime && w.requestedEndTime !== va.endTime) return false;
-    return true;
-  });
-
-  if (matches.length === 0) return '';
-
-  return '<div style="background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:10px;padding:12px 14px;margin-bottom:14px;">'
-    + '<div style="font-weight:700;color:#92400E;margin-bottom:10px;font-size:13px;">🎯 قائمة الانتظار المطابقة (' + matches.length + ')</div>'
-    + matches.map(function(w) {
-      return '<div style="background:#fff;border:1px solid #FDE68A;border-radius:8px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">'
-        + '<div style="flex:1;min-width:180px;">'
-        + '<div style="font-weight:700;color:#0C3B5E;font-size:13px;">👤 ' + (w.client||'—') + '</div>'
-        + '<div style="font-size:11px;color:#6B7280;margin-top:3px;">📱 ' + (w.phone||'—') + '</div>'
-        + '<div style="font-size:11px;color:#6B7280;margin-top:2px;">🔧 ' + (w.service||'—') + ' | 🌡️ ' + (w.units||1) + ' وحدة</div>'
-        + (w.preferredTech ? '<div style="font-size:11px;color:#6B7280;margin-top:2px;">👷 مفضل: ' + (TECHS[w.preferredTech]||w.preferredTech) + '</div>' : '')
-        + '</div>'
-        + '<button onclick="acceptWaitlistEntry(\'' + w._key + '\')" '
-        + 'style="padding:8px 14px;background:linear-gradient(135deg,#92400E,#F59E0B);color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:\'Tajawal\',sans-serif;font-size:12px;font-weight:700;white-space:nowrap;">'
-        + '✅ تحويل للموعد</button>'
-        + '</div>';
-    }).join('')
-    + '</div>';
-}
-
-// ===== عرض قائمة الانتظار الكاملة =====
 function openApptWaitlistView() {
   var body = document.getElementById('apptWaitlistViewBody');
   if (apptWaitlist.length === 0) {
@@ -2954,11 +2888,7 @@ function showCandidatesPanel(vacantAppt) {
 
     // ===== بناء قائمة الانتظار المطابقة (مباشرة من Firebase) =====
     var wlMatches = [];
-    console.log('=== DIAG: showCandidatesPanel ===');
-    console.log('vacantAppt:', JSON.stringify({date:vacantAppt.date, time:vacantAppt.time, endTime:vacantAppt.endTime, _fbKey:vacantAppt._fbKey}));
-    console.log('vaDate:', vaDate, '| vaTime:', vaTime, '| vaEndTime:', vaEndTime);
-    console.log('appointmentWaitlist total entries:', wlSnap.numChildren());
-    wlSnap.forEach(function(child) {
+            wlSnap.forEach(function(child) {
       var w = child.val();
       var wTime    = normTime(w.requestedTime);
       var wEndTime = normTime(w.requestedEndTime);
@@ -2966,18 +2896,10 @@ function showCandidatesPanel(vacantAppt) {
       var statusOK = (w.status === 'waiting');
       var timeOK   = (wTime === vaTime);
       var endOK    = !(wEndTime && vaEndTime && wEndTime !== vaEndTime);
-      console.log('  WL[' + child.key + ']'
-        + ' client=' + w.client
-        + ' | requestedDate=' + JSON.stringify(w.requestedDate) + ' dateOK=' + dateOK
-        + ' | requestedTime=' + JSON.stringify(w.requestedTime) + ' normalized=' + wTime + ' timeOK=' + timeOK
-        + ' | requestedEndTime=' + JSON.stringify(w.requestedEndTime) + ' normalized=' + wEndTime + ' endOK=' + endOK
-        + ' | status=' + JSON.stringify(w.status) + ' statusOK=' + statusOK
-        + ' | OVERALL=' + (dateOK && statusOK && timeOK && endOK));
       if (!dateOK || !statusOK || !timeOK || !endOK) return;
       wlMatches.push(Object.assign({}, w, {_key: child.key}));
     });
-    console.log('wlMatches found:', wlMatches.length);
-
+  
     // ===== بناء HTML قسم قائمة الانتظار =====
     var wlHTML = '';
     if (wlMatches.length > 0) {
