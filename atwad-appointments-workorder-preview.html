@@ -1071,7 +1071,12 @@ function openNewApptFromBooking(bookingKey) {
 
     populateClients();
     document.getElementById('apptModal').classList.add('open');
-    currentImageBase64 = '';
+    // نقل صورة الموقع من الحجز إذا وُجدت
+    if (b.locationImage) {
+      loadImageInModal(b.locationImage);
+    } else {
+      currentImageBase64 = '';
+    }
     resetSaveBtn();
 
     if (b.phone) lookupCustomerByPhone(b.phone.trim());
@@ -1531,8 +1536,11 @@ function saveAppt(){
 
   const startTime = document.getElementById('f_time').value;
   const endTime   = document.getElementById('f_end_time').value;
-  if (!endTime) return showToast('❌ يرجى تحديد وقت نهاية الموعد');
-  if (endTime <= startTime) return showToast('❌ وقت النهاية يجب أن يكون بعد وقت البداية');
+  // endTime إلزامي فقط للمواعيد الجديدة — عند التعديل يُقبل فارغاً
+  if (!editingFirebaseKey) {
+    if (!endTime) return showToast('❌ يرجى تحديد وقت نهاية الموعد');
+  }
+  if (endTime && endTime <= startTime) return showToast('❌ وقت النهاية يجب أن يكون بعد وقت البداية');
 
   // تفعيل الحماية وتعطيل الزر
   isSavingAppointment = true;
@@ -1545,10 +1553,11 @@ function saveAppt(){
     date, time: document.getElementById('f_time').value,
     endTime: endTime,
     notes: document.getElementById('f_notes').value.trim(),
-    locationImage: currentImageBase64 || '',
     duration: 90,
     updatedAt: new Date().toISOString()
   };
+  // locationImage: تُكتب فقط إذا كانت هناك صورة جديدة — لا نُلغي صورة موجودة بقيمة فارغة
+  if (currentImageBase64) data.locationImage = currentImageBase64;
 
   // موقع العميل — حقول اختيارية
   var mapsLink = document.getElementById('appointment_maps_link').value.trim();
@@ -1653,43 +1662,41 @@ function doCreateAppointment(data, srcKeyFixed, bRefFixed) {
   var apptPushRef = db.ref('appointments').push(data);
   var newApptKey  = apptPushRef.key;
 
-  apptPushRef
-    .then(function() {
-      console.log('✅ Appointment created:', newApptKey);
-      if (document.getElementById('chk_save_to_customer').checked && _foundCustomerKey && mapsLink) {
-        saveLocationToCustomer(_foundCustomerKey, {mapsLink, lat, lng, locSrc, locVerified});
-      }
-      sendAdminNotification(data);
-
-      if (!srcKeyFixed) {
-        resetSaveBtn(); closeModal();
-        showToast('✅ تم إضافة الموعد');
-        return;
-      }
-
-      console.log('Updating booking:', srcKeyFixed, '→ appt:', newApptKey);
-      return db.ref('bookings/' + srcKeyFixed).update({
-        convertedToAppointment: true,
-        appointmentKey: newApptKey,
-        convertedAt: new Date().toISOString()
-      });
-    })
-    .then(function() {
-      if (!srcKeyFixed) return; // أُغلق أعلاه
-      console.log('✅ Booking marked converted:', srcKeyFixed);
-      resetSaveBtn(); closeModal(); renderBookingsPanel();
-      showToast('✅ تم إنشاء الموعد وتحديث حالة الحجز بنجاح');
-    })
-    .catch(function(e) {
-      resetSaveBtn();
-      console.error('❌ Appointment/booking flow error:', e.message);
-      if (newApptKey) {
-        showToast('⚠️ تم إنشاء الموعد (' + newApptKey + ') لكن فشل تحديث الحجز — لا تعِد التحويل');
-        renderBookingsPanel();
-      } else {
-        showToast('❌ خطأ: ' + e.message);
-      }
+  // مسار متسلسل: إنشاء الموعد → تحديث الحجز (إذا وُجد) → نجاح واحد
+  var chain = apptPushRef.then(function() {
+    console.log('✅ Appointment created:', newApptKey);
+    if (document.getElementById('chk_save_to_customer').checked && _foundCustomerKey && mapsLink) {
+      saveLocationToCustomer(_foundCustomerKey, {mapsLink, lat, lng, locSrc, locVerified});
+    }
+    sendAdminNotification(data);
+    if (!srcKeyFixed) return null; // لا يوجد حجز — مسار مباشر
+    console.log('Updating booking:', srcKeyFixed, '→ appt:', newApptKey);
+    return db.ref('bookings/' + srcKeyFixed).update({
+      convertedToAppointment: true,
+      appointmentKey: newApptKey,
+      convertedAt: new Date().toISOString()
     });
+  });
+
+  chain.then(function(updateResult) {
+    resetSaveBtn(); closeModal();
+    if (srcKeyFixed) {
+      console.log('✅ Booking marked converted:', srcKeyFixed);
+      renderBookingsPanel();
+      showToast('✅ تم إنشاء الموعد وتحديث حالة الحجز بنجاح');
+    } else {
+      showToast('✅ تم إضافة الموعد');
+    }
+  }).catch(function(e) {
+    resetSaveBtn();
+    console.error('❌ Appointment/booking flow error:', e.message);
+    if (newApptKey) {
+      showToast('⚠️ تم إنشاء الموعد (' + newApptKey + ') لكن فشل تحديث الحجز — لا تعِد التحويل');
+      renderBookingsPanel();
+    } else {
+      showToast('❌ خطأ: ' + e.message);
+    }
+  });
 }
 
 function saveLocationToCustomer(customerKey, loc) {
@@ -1802,6 +1809,7 @@ function createWorkOrderFromAppt(apptId) {
       tech:        a.tech       || 'Abrar',
       address:     a.address    || '',
       mapsLink:    a.mapsLink   || '',
+      locationImage: a.locationImage || '',
       notes:       a.notes      || '',
       price: 0, partsCost: 0, discount: 0, total: 0,
       payment: 'كاش', status: 'open', rating: 0,
@@ -1999,6 +2007,21 @@ var pendingTechApptId        = '';
 // ============================================================
 // sendToTechnician — ينسخ الرسالة تلقائياً ثم يفتح النافذة
 // ============================================================
+function openLocationImage() {
+  var img = window._currentTechLocationImage;
+  if (!img) { showToast('لا توجد صورة موقع'); return; }
+  var win = window.open('', '_blank');
+  if (win) {
+    win.document.write('<html dir="rtl"><head><title>صورة موقع العميل</title>'
+      + '<style>body{margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh;}'
+      + 'img{max-width:100%;max-height:100vh;object-fit:contain;}</style></head>'
+      + '<body><img src="' + img + '" alt="صورة موقع العميل"></body></html>');
+    win.document.close();
+  } else {
+    showToast('⚠️ تعذّر فتح نافذة جديدة — تحقق من إعدادات المتصفح');
+  }
+}
+
 function sendToTechnician(id) {
   var a = findAppt(id);
   if(!a) return;
@@ -2031,6 +2054,13 @@ function sendToTechnician(id) {
     document.getElementById('techModalName').textContent   = techName;
     document.getElementById('techModalPhone').textContent  = rawPhone;
     document.getElementById('techMsgPreview').textContent  = msg;
+
+    // زر صورة الموقع — يظهر فقط إذا كانت الصورة موجودة
+    var imgWrap = document.getElementById('techLocationImageWrap');
+    if (imgWrap) {
+      window._currentTechLocationImage = a.locationImage || '';
+      imgWrap.style.display = a.locationImage ? 'block' : 'none';
+    }
 
     // رابط wa.me
     var waUrl = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msg);
@@ -2500,6 +2530,12 @@ document.addEventListener('DOMContentLoaded', applySharedLang);
         سيتم فتح تطبيق واتساب الافتراضي على جهازك.<br>
         إذا فتح واتساب الشخصي، أغلقه وافتح واتساب الأعمال ثم الصق الرسالة المنسوخة.
       </div>
+      <!-- زر صورة الموقع — يظهر فقط إذا كانت موجودة -->
+      <div id="techLocationImageWrap" style="display:none;margin-bottom:12px;">
+        <button onclick="openLocationImage()" style="width:100%;padding:10px;background:#F0FDF4;border:1.5px solid #6EE7B7;border-radius:8px;color:#065F46;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">
+          📷 عرض صورة الموقع
+        </button>
+      </div>
       <!-- الأزرار -->
       <div class="tech-modal-btns">
         <a class="btn-wa-open" id="openWhatsappBtn" href="#" target="_blank" rel="noopener" onclick="onOpenWhatsapp()">
@@ -2776,11 +2812,12 @@ function acceptWaitlistEntry(waitlistKey) {
     }
 
     var conflict = false;
+    function normT(t){ if(!t) return ''; var p=String(t).split(':'); return p[0].padStart(2,'0')+':'+(p[1]||'00'); }
     sameDay.forEach(function(c) {
       var a = c.val();
       if (c.key === vacantInfo._fbKey) return;
       if (a.status === 'cancelled' || a.status === 'done') return;
-      if (a.time === vacantInfo.time) { conflict = true; console.log('CONFLICT:', c.key); }
+      if (normT(a.time) === normT(vacantInfo.time)) { conflict = true; console.log('CONFLICT:', c.key); }
     });
     if (conflict) { showToast('⚠️ الفترة الزمنية أصبحت مشغولة'); return; }
 
@@ -3018,13 +3055,13 @@ function promoteCandidate(candidateFbKey) {
 
     // 2. تأكد أن لا يوجد موعد نشط آخر بنفس التاريخ ونطاق الوقت
     var conflictFound = false;
+    function normTP(t){ if(!t) return ''; var p=String(t).split(':'); return p[0].padStart(2,'0')+':'+(p[1]||'00'); }
     sameDay.forEach(function(child) {
       var a = child.val();
-      if (child.key === vacantInfo._fbKey) return;  // الموعد الملغي نفسه
-      if (child.key === candidateFbKey) return;      // المرشح نفسه
+      if (child.key === vacantInfo._fbKey) return;
+      if (child.key === candidateFbKey) return;
       if (a.status === 'cancelled' || a.status === 'done') return;
-      // تحقق من تداخل الوقت
-      if (a.time === vacantInfo.time) { conflictFound = true; }
+      if (normTP(a.time) === normTP(vacantInfo.time)) { conflictFound = true; }
     });
     if (conflictFound) {
       showToast('⚠️ الموعد الشاغر أصبح مشغولاً — لا يمكن التقديم');
