@@ -25,10 +25,10 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 .nav-item.active{background:rgba(14,165,233,.22);color:var(--sky);font-weight:700;}
 .nav-icon{font-size:16px;width:20px;text-align:center;}
 .main{margin-right:230px;}
-.topbar{background:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1.5px solid #E2E8F0;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.04);}
-.topbar-title{font-size:18px;font-weight:800;color:var(--deep);}
-.topbar-sub{font-size:12px;color:var(--mist);margin-top:1px;}
-.topbar-actions{display:flex;gap:10px;align-items:center;}
+.topbar{background:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1.5px solid #E2E8F0;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.04);flex-wrap:wrap;gap:8px;}
+.topbar-title{font-size:16px;font-weight:800;color:var(--deep);}
+.topbar-sub{font-size:11px;color:var(--mist);margin-top:1px;}
+.topbar-actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap;}
 .btn-primary{background:linear-gradient(90deg,var(--deep),var(--sky));color:#fff;border:none;border-radius:10px;padding:9px 18px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(14,165,233,.3);transition:all .2s;display:flex;align-items:center;gap:6px;}
 .btn-primary:hover{transform:translateY(-1px);}
 .view-toggle{display:flex;background:#F1F5F9;border-radius:10px;padding:3px;}
@@ -177,7 +177,60 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 .loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.85);z-index:300;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
 .loading-spinner{width:48px;height:48px;border:4px solid var(--ice);border-top-color:var(--sky);border-radius:50%;animation:spin 0.8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg)}}
-@media(max-width:900px){.sidebar{display:none;}.main{margin-right:0;}.stats-row{grid-template-columns:1fr 1fr;}}
+@media(max-width:900px){
+  .sidebar{display:none;}
+  .main{margin-right:0;}
+  .stats-row{grid-template-columns:repeat(3,1fr);gap:8px;padding:12px;}
+}
+@media(max-width:600px){
+  /* الإحصاءات */
+  .stats-row{grid-template-columns:repeat(2,1fr);gap:6px;padding:10px 12px;}
+  .stat-card{padding:10px 8px;}
+  .stat-num{font-size:22px;}
+  .stat-lbl{font-size:10px;}
+
+  /* بطاقة الموعد */
+  .appt-card{flex-direction:column;align-items:stretch;gap:8px;padding:12px;}
+  .appt-avatar{display:none;}
+  .appt-info{flex:1;}
+  .appt-actions{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:5px;
+    width:100%;
+  }
+  .act-btn{
+    padding:8px 4px;
+    font-size:10px;
+    text-align:center;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  /* إخفاء نص الأزرار الثانوية وإبقاء الأيقونة */
+  .act-send-tech{font-size:10px;}
+
+  /* الهيدر */
+  .page-header{flex-wrap:wrap;gap:8px;padding:10px 12px;}
+  .page-header h1{font-size:16px;}
+  .header-actions{flex-wrap:wrap;gap:6px;}
+  .header-actions button{font-size:11px;padding:7px 10px;}
+
+  /* شريط الفلتر */
+  .filter-bar{flex-wrap:wrap;gap:6px;padding:8px 12px;}
+  .filter-bar select,.filter-bar input{font-size:12px;}
+
+  /* الـ Modal */
+  .modal{border-radius:14px 14px 0 0;max-height:95vh;position:fixed;bottom:0;left:0;right:0;max-width:100% !important;width:100% !important;}
+  .modal-overlay{align-items:flex-end;}
+  .cancel-box{border-radius:14px 14px 0 0;max-width:100%;width:100%;position:fixed;bottom:0;left:0;right:0;max-height:90vh;overflow-y:auto;}
+
+  /* نافذة إضافة الانتظار */
+  .two-col{grid-template-columns:1fr !important;}
+
+  /* تبويبات العرض */
+  .view-tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+}
 .lang-btn{padding:7px 14px;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);border-radius:8px;color:#fff;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;}
 .lang-btn:hover{background:rgba(255,255,255,.25);}
 /* قسم موقع العميل */
@@ -248,13 +301,15 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
         <button class="view-btn" id="vWeek" onclick="switchView('week')">📆 أسبوع</button>
         <button class="view-btn active" id="vList" onclick="switchView('list')">📋 قائمة</button>
       </div>
-      <button id="fridayBtn" onclick="toggleFriday()" style="padding:9px 16px;border-radius:10px;border:none;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;background:#FEF3C7;color:#92400E;">⛔ الجمعة مغلق</button>
+      <button id="fridayBtn" onclick="toggleFriday()" style="padding:7px 12px;border-radius:10px;border:none;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;background:#FEF3C7;color:#92400E;">&#9940; الجمعة</button>
       <div style="position:relative;display:inline-block;">
-        <button onclick="openNotifications()" style="padding:9px 16px;border-radius:10px;border:1.5px solid #E2E8F0;background:#fff;font-family:'Tajawal',sans-serif;font-size:13px;cursor:pointer;color:var(--slate);">?? الإشعارات</button>
-        <span id="notifBadge" style="display:none;position:absolute;top:-6px;right:-6px;background:#EF4444;color:#fff;border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:'Tajawal',sans-serif;">0</span>
+        <button onclick="openNotifications()" style="padding:7px 12px;border-radius:10px;border:1.5px solid #E2E8F0;background:#fff;font-family:'Tajawal',sans-serif;font-size:12px;cursor:pointer;color:var(--slate);">&#128276;</button>
+        <span id="notifBadge" style="display:none;position:absolute;top:-6px;right:-6px;background:#EF4444;color:#fff;border-radius:50%;width:16px;height:16px;font-size:9px;font-weight:700;align-items:center;justify-content:center;font-family:'Tajawal',sans-serif;">0</span>
       </div>
-      <button class="btn-primary" onclick="openNewAppt()">＋ موعد جديد</button>
-      <button onclick="openWaitingList(null)" style="padding:9px 14px;background:#FEF9C3;color:#92400E;border:1.5px solid #FDE68A;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;">👥 قائمة الانتظار</button>
+      <button class="btn-primary" onclick="openNewAppt()" style="padding:8px 14px;font-size:12px;">＋ موعد</button>
+      <button onclick="openWaitingList(null)" style="padding:7px 12px;background:#FEF9C3;color:#92400E;border:1.5px solid #FDE68A;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;">
+        &#128196; <span id="waitingBadge" style="background:#EF4444;color:#fff;border-radius:50%;width:16px;height:16px;display:none;align-items:center;justify-content:center;font-size:9px;font-weight:700;margin-right:2px;"></span>
+      </button>
     </div>
   </div>
 
@@ -276,7 +331,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 
   <div class="tech-filter">
     <button class="tech-chip active" onclick="filterTech('all',this)">الكل</button>
-    <button class="tech-chip" onclick="filterTech('Abrar',this)">👷 أبرار</button>
+    <button class="tech-chip" onclick="filterTech('Abrar',this)">👷 أحمد</button>
     <button class="tech-chip" onclick="filterTech('Shoib',this)">👷 شعيب</button>
     <button class="tech-chip" onclick="filterTech('Suhail',this)">👷 سهيل</button>
   </div>
@@ -320,7 +375,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
         <div class="form-group"><label>الفني المسؤول <span class="req">*</span></label>
           <select id="f_tech">
             <option value="">-- اختر الفني --</option>
-            <option value="Abrar">أبرار</option><option value="Shoib">شعيب</option><option value="Suhail">سهيل</option>
+            <option value="Abrar">أحمد</option><option value="Shoib">شعيب</option><option value="Suhail">سهيل</option>
           </select>
         </div>
         <div class="form-group"><label>الحالة</label>
@@ -416,18 +471,80 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 
 <div class="toast" id="toast"></div>
 
-<!-- Modal قائمة الانتظار -->
+<!-- Modal إضافة إلى قائمة الانتظار -->
+<div class="modal-overlay" id="addWaitingModal">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-hdr">
+      <span style="font-size:15px;font-weight:800;color:var(--deep);">➕ إضافة إلى قائمة الانتظار</span>
+      <button class="modal-close" onclick="document.getElementById('addWaitingModal').classList.remove('open')">×</button>
+    </div>
+    <div class="modal-body" style="padding:18px 20px;display:flex;flex-direction:column;gap:10px;">
+      <div class="form-row two-col">
+        <div class="form-group"><label>اسم العميل *</label><input type="text" id="wf_name" placeholder="محمد الأحمد"></div>
+        <div class="form-group"><label>الجوال *</label><input type="tel" id="wf_phone" placeholder="05XXXXXXXX"></div>
+      </div>
+      <div class="form-row two-col">
+        <div class="form-group"><label>الحي</label><input type="text" id="wf_district" placeholder="الصفا، الرحاب..."></div>
+        <div class="form-group"><label>نوع الخدمة</label>
+          <select id="wf_service">
+            <option value="">أي خدمة</option>
+            <option>تنظيف وغسيل المكيفات</option>
+            <option>تنظيف مكيف</option>
+            <option>صيانة دورية</option>
+            <option>تعبئة غاز</option>
+            <option>كشف وإصلاح أعطال</option>
+            <option>تركيب مكيف</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row two-col">
+        <div class="form-group"><label>الفني المفضل</label>
+          <select id="wf_tech">
+            <option value="">أي فني</option>
+            <option value="Abrar">أحمد</option>
+            <option value="Shoib">شعيب</option>
+            <option value="Suhail">سهيل</option>
+          </select>
+        </div>
+        <div class="form-group"><label>التاريخ المطلوب</label><input type="date" id="wf_date"></div>
+      </div>
+      <div class="form-row two-col">
+        <div class="form-group"><label>الفترة المفضلة</label>
+          <select id="wf_period">
+            <option value="anytime">أي وقت</option>
+            <option value="morning">صباح (8-12)</option>
+            <option value="noon">ظهر (12-15)</option>
+            <option value="evening">مساء (15-20)</option>
+          </select>
+        </div>
+        <div class="form-group"><label>مرونة الموعد</label>
+          <select id="wf_flex">
+            <option value="today">اليوم فقط</option>
+            <option value="tomorrow">غداً</option>
+            <option value="anytime" selected>أي وقت</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group"><label>ملاحظات</label><textarea id="wf_notes" rows="2" placeholder="أي تفاصيل إضافية..."></textarea></div>
+      <button onclick="saveWaitingEntry()" style="width:100%;padding:12px;background:linear-gradient(90deg,var(--deep),var(--sky));color:#fff;border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">
+        ✅ إضافة إلى قائمة الانتظار
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal قائمة الانتظار الذكية -->
 <div class="cancel-modal" id="waitingListModal">
-  <div class="cancel-box" style="max-width:480px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-      <h3 style="margin:0;">👥 قائمة الانتظار</h3>
-      <button onclick="document.getElementById('waitingListModal').classList.remove('open')" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--mist);">×</button>
+  <div class="cancel-box" style="max-width:500px;max-height:85vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;position:sticky;top:0;background:#fff;padding-bottom:10px;border-bottom:1px solid var(--ice);">
+      <h3 style="margin:0;font-size:15px;">&#128196; قائمة الانتظار</h3>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span id="waitingBadge" style="background:#EF4444;color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;"></span>
+        <button onclick="openAddWaitingModal()" style="padding:6px 12px;background:var(--sky);color:#fff;border:none;border-radius:8px;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">➕ إضافة</button>
+        <button onclick="document.getElementById('waitingListModal').classList.remove('open')" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--mist);">×</button>
+      </div>
     </div>
     <div id="waitingListBody"></div>
-    <div style="margin-top:12px;display:flex;gap:8px;">
-      <button onclick="addToWaitingList()" style="flex:1;padding:10px;background:var(--sky);color:#fff;border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">➕ إضافة عميل</button>
-      <button onclick="document.getElementById('waitingListModal').classList.remove('open')" style="flex:1;padding:10px;background:#F1F5F9;color:var(--slate);border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">إغلاق</button>
-    </div>
   </div>
 </div>
 
@@ -468,7 +585,7 @@ let editingId = null;
 let editingFirebaseKey = null;
 let editingOriginalDate = ''; // التاريخ الأصلي للموعد قبل التعديل
 
-const TECHS = { Abrar:'أبرار', Shoib:'شعيب', Suhail:'سهيل' };
+const TECHS = { Abrar:'أحمد', 'أبرار':'أحمد', 'Abrar':'أحمد', Shoib:'شعيب', Suhail:'سهيل' };
 const STATUS_LABELS = { confirmed:'مؤكد', pending:'في الانتظار', done:'مكتمل', cancelled:'ملغي' };
 const STATUS_ICONS = { confirmed:'✅', pending:'⏳', done:'🎉', cancelled:'❌' };
 const TECH_COLORS = { Abrar:'#0EA5E9', Shoib:'#10B981', Suhail:'#8B5CF6' };
@@ -849,7 +966,7 @@ function sendAdminNotification(booking) {
 function sendWhatsAppConfirmation(appt) {
   if(!appt.phone) return;
   var phone = appt.phone.replace(/^0/,'966');
-  var techNames = {Abrar:'أبرار',Shoib:'شعيب',Suhail:'سهيل'};
+  var techNames = {Abrar:'أحمد',Shoib:'شعيب',Suhail:'سهيل'};
   var msg = 'مرحباً ' + (appt.client||'') + '\n\n' +
     '✅ تم تأكيد موعدكم مع مؤسسة أطواد\n\n' +
     'الخدمة: '+(appt.service||'')+'\n' +
@@ -1274,7 +1391,7 @@ function sendWhatsapp(id){
 // الرقم بصيغة دولية 9665XXXXXXXX
 // ============================================================
 var TECHNICIAN_PHONES = {
-  'Abrar': '966539791802', // أبرار
+  'Abrar': '966539791802', // أحمد
   'Shoib': '966551853763'  // شعيب
 };
 
@@ -1613,83 +1730,211 @@ function confirmCancel() {
 // ============================================================
 // ٣. قائمة الانتظار — عرض الوقت الحر عند الإلغاء
 // ============================================================
-var waitingList = JSON.parse(localStorage.getItem('atwad_waiting') || '[]');
+// ============================================================
+// قائمة الانتظار الذكية — Firebase Collection: waitingList
+// ============================================================
+var waitingList = []; // تُحمَّل من Firebase
+var _freeSlotForWaiting = null; // الموعد الشاغر الحالي
 
-function showFreeSlot(cancelledAppt) {
-  // بحث في قائمة الانتظار عن طلبات تناسب نفس الخدمة أو الوقت
-  var matches = waitingList.filter(function(w){
-    return !w.booked && (!w.service || w.service === cancelledAppt.service);
+/** تحميل قائمة الانتظار من Firebase */
+function loadWaitingList() {
+  if(!db) return;
+  db.ref('waitingList').orderByChild('booked').equalTo(false).on('value', function(snap) {
+    waitingList = [];
+    snap.forEach(function(c) {
+      waitingList.push(Object.assign({}, c.val(), {_key: c.key}));
+    });
+    // تحديث عداد قائمة الانتظار
+    var badge = document.getElementById('waitingBadge');
+    if(badge) badge.textContent = waitingList.length || '';
   });
+}
 
-  var notice = '🕐 تحرّر وقت: ' + formatDateShort(cancelledAppt.date) + ' — ' + (cancelledAppt.time||'') +
-    ' (' + (cancelledAppt.service||'') + ')';
+/** حساب نقاط الأولوية لعميل الانتظار مقابل موعد شاغر */
+function calcPriorityScore(w, freeAppt) {
+  var score = 0;
+  if(!freeAppt) return score;
 
-  if(matches.length) {
-    notice += '\n\n👥 عملاء في قائمة الانتظار يناسبهم هذا الوقت:\n';
-    notice += matches.slice(0,3).map(function(w){ return '• ' + w.name + ' — ' + w.phone; }).join('\n');
+  // نفس الحي
+  if(w.district && freeAppt.address && freeAppt.address.indexOf(w.district) !== -1) score += 40;
+  // نفس الفني المفضل
+  if(w.preferredTech && freeAppt.tech && w.preferredTech === freeAppt.tech) score += 20;
+  // نفس نوع الخدمة
+  if(w.service && freeAppt.service && w.service === freeAppt.service) score += 15;
+  // يريد اليوم
+  var today = new Date().toISOString().split('T')[0];
+  if(w.flexibility === 'today' && freeAppt.date === today) score += 25;
+  else if(w.flexibility === 'tomorrow') score += 10;
+  else if(w.flexibility === 'anytime') score += 5;
+  // الفترة
+  if(freeAppt.time) {
+    var h = parseInt(freeAppt.time.split(':')[0]);
+    if(w.period === 'morning' && h < 12) score += 10;
+    else if(w.period === 'noon' && h >= 12 && h < 15) score += 10;
+    else if(w.period === 'evening' && h >= 15) score += 10;
   }
+  return score;
+}
 
-  showToast('📢 وقت حر متاح — راجع قائمة الانتظار');
+/** فتح نموذج إضافة إلى قائمة الانتظار */
+function openAddWaitingModal() {
+  document.getElementById('wf_name').value    = '';
+  document.getElementById('wf_phone').value   = '';
+  document.getElementById('wf_district').value= '';
+  document.getElementById('wf_service').value = '';
+  document.getElementById('wf_tech').value    = '';
+  document.getElementById('wf_date').value    = '';
+  document.getElementById('wf_period').value  = 'anytime';
+  document.getElementById('wf_flex').value    = 'anytime';
+  document.getElementById('wf_notes').value   = '';
+  document.getElementById('addWaitingModal').classList.add('open');
+}
 
-  // فتح modal الانتظار إذا وجدت مطابقات
-  if(matches.length) {
-    setTimeout(function(){ openWaitingList(cancelledAppt); }, 1000);
+/** حفظ عميل في قائمة الانتظار → Firebase */
+function saveWaitingEntry() {
+  var name  = document.getElementById('wf_name').value.trim();
+  var phone = document.getElementById('wf_phone').value.trim();
+  if(!name || !phone) { showToast('⚠️ الاسم والجوال مطلوبان'); return; }
+
+  var entry = {
+    name:         name,
+    phone:        phone,
+    district:     document.getElementById('wf_district').value.trim(),
+    service:      document.getElementById('wf_service').value,
+    preferredTech:document.getElementById('wf_tech').value,
+    requestedDate:document.getElementById('wf_date').value,
+    period:       document.getElementById('wf_period').value,
+    flexibility:  document.getElementById('wf_flex').value,
+    notes:        document.getElementById('wf_notes').value.trim(),
+    booked:       false,
+    addedAt:      new Date().toISOString()
+  };
+
+  if(db) {
+    db.ref('waitingList').push(entry).then(function() {
+      showToast('✅ تم إضافة ' + name + ' إلى قائمة الانتظار');
+      document.getElementById('addWaitingModal').classList.remove('open');
+    }).catch(function(e){ showToast('❌ خطأ: ' + e.message); });
   }
 }
 
+/** عرض قائمة الانتظار مع الأولويات */
 function openWaitingList(freeAppt) {
+  _freeSlotForWaiting = freeAppt;
   var wl = document.getElementById('waitingListModal');
   if(!wl) return;
-  var matches = waitingList.filter(function(w){ return !w.booked; });
-  var html = '';
-  if(!matches.length) {
-    html = '<div style="text-align:center;padding:20px;color:var(--mist);">قائمة الانتظار فارغة</div>';
+
+  var candidates = waitingList.filter(function(w){ return !w.booked; });
+
+  // ترتيب حسب الأولوية إذا وجد موعد شاغر
+  if(freeAppt) {
+    candidates = candidates.map(function(w){
+      return Object.assign({}, w, {_score: calcPriorityScore(w, freeAppt)});
+    }).sort(function(a,b){ return b._score - a._score; });
+  }
+
+  var slotInfo = '';
+  if(freeAppt) {
+    slotInfo = '<div style="background:#EFF6FF;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:var(--deep);">' +
+      '🕐 الموعد الشاغر: <strong>' + formatDateShort(freeAppt.date) + '</strong> — ' + (freeAppt.time||'') +
+      ' (' + (freeAppt.service||'') + ')' +
+      '</div>';
+  }
+
+  var html = slotInfo;
+  if(!candidates.length) {
+    html += '<div style="text-align:center;padding:20px;color:var(--mist);">قائمة الانتظار فارغة</div>';
   } else {
-    html = matches.map(function(w, i) {
-      return '<div class="waiting-row">' +
-        '<div><div class="wname">' + w.name + '</div>' +
-        '<div class="wservice">🛠️ ' + (w.service||'أي خدمة') + ' · 📱 ' + w.phone + '</div>' +
-        (w.notes ? '<div style="font-size:11px;color:var(--mist);">' + w.notes + '</div>' : '') +
+    html += '<div style="font-size:11px;color:var(--mist);margin-bottom:8px;">مرتبون حسب الأولوية</div>';
+    html += candidates.map(function(w) {
+      var stars = freeAppt ? Math.min(5, Math.max(1, Math.round((w._score||0)/20))) : 3;
+      var starsHtml = '⭐'.repeat(stars);
+      var periodLabels = {morning:'صباح',noon:'ظهر',evening:'مساء',anytime:'أي وقت'};
+      var flexLabels   = {today:'اليوم فقط',tomorrow:'غداً',anytime:'أي وقت'};
+      return '<div class="waiting-row" style="flex-direction:column;align-items:stretch;gap:8px;">' +
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;">' +
+          '<div>' +
+            '<div class="wname">' + starsHtml + ' ' + w.name + '</div>' +
+            '<div class="wservice">' +
+              (w.district ? '📍 ' + w.district + ' · ' : '') +
+              '🛠️ ' + (w.service||'أي خدمة') +
+            '</div>' +
+            '<div style="font-size:11px;color:var(--mist);margin-top:2px;">' +
+              '⏰ ' + (periodLabels[w.period]||'أي وقت') +
+              ' · ' + (flexLabels[w.flexibility]||'أي وقت') +
+              (w.preferredTech ? ' · 👷 ' + (TECHS[w.preferredTech]||w.preferredTech) : '') +
+            '</div>' +
+            (w.notes ? '<div style="font-size:11px;color:var(--mist);">📝 ' + w.notes + '</div>' : '') +
+          '</div>' +
         '</div>' +
-        '<button class="btn-book-waiting" onclick="bookFromWaiting(' + i + ',\'' + (freeAppt ? JSON.stringify(freeAppt).replace(/'/g,'') : '') + '\')">📅 احجز له</button>' +
-        '</div>';
+        '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
+          '<a class="btn-book-waiting" style="background:#DCFCE7;color:#15803D;text-decoration:none;padding:5px 10px;border-radius:7px;font-size:11px;font-weight:700;" href="tel:' + w.phone + '">📞 اتصال</a>' +
+          '<a class="btn-book-waiting" style="background:#DCFCE7;color:#15803D;text-decoration:none;padding:5px 10px;border-radius:7px;font-size:11px;font-weight:700;" href="https://wa.me/966' + w.phone.replace(/^0/,'') + '" target="_blank">📲 واتساب</a>' +
+          '<button class="btn-book-waiting" style="background:#DBEAFE;color:#1E40AF;" onclick="agreeFromWaiting(\'' + w._key + '\')">✅ تم الاتفاق</button>' +
+          '<button class="btn-book-waiting" style="background:#FEE2E2;color:#991B1B;" onclick="removeFromWaiting(\'' + w._key + '\')">✕ إزالة</button>' +
+        '</div>' +
+      '</div>';
     }).join('');
   }
+
   document.getElementById('waitingListBody').innerHTML = html;
   wl.classList.add('open');
 }
 
-function addToWaitingList() {
-  var name  = prompt('اسم العميل:');
-  if(!name) return;
-  var phone = prompt('رقم الجوال:');
-  if(!phone) return;
-  var service = prompt('نوع الخدمة (اتركه فارغاً لأي خدمة):') || '';
-  var notes   = prompt('ملاحظات (اختياري):') || '';
-  waitingList.push({name:name.trim(), phone:phone.trim(), service:service.trim(), notes:notes.trim(), addedAt:new Date().toISOString(), booked:false});
-  localStorage.setItem('atwad_waiting', JSON.stringify(waitingList));
-  showToast('✅ تم إضافة ' + name + ' إلى قائمة الانتظار');
-}
-
-function bookFromWaiting(idx, freeAppt) {
-  var w = waitingList[idx];
+/** تم الاتفاق — ينقل للموعد تلقائياً */
+function agreeFromWaiting(key) {
+  var w = waitingList.find(function(x){ return x._key === key; });
   if(!w) return;
-  // فتح نموذج موعد جديد مملوء ببيانات العميل من قائمة الانتظار
+  var freeAppt = _freeSlotForWaiting;
+
+  // فتح نموذج موعد جديد مملوءاً
   openNewAppt();
   setTimeout(function(){
     document.getElementById('f_client').value = w.name;
     document.getElementById('f_phone').value  = w.phone;
-    if(w.service) document.getElementById('f_service').value = w.service;
+    document.getElementById('f_address').value= w.district || '';
+    if(w.service)       document.getElementById('f_service').value = w.service;
+    if(w.preferredTech) document.getElementById('f_tech').value    = w.preferredTech;
     if(freeAppt && freeAppt.date) document.getElementById('f_date').value = freeAppt.date;
     if(freeAppt && freeAppt.time) document.getElementById('f_time').value = freeAppt.time;
-    if(freeAppt && freeAppt.tech) document.getElementById('f_tech').value = freeAppt.tech;
+    if(freeAppt && freeAppt.tech && !w.preferredTech) document.getElementById('f_tech').value = freeAppt.tech;
   }, 300);
-  // تعليم العميل كـ محجوز في قائمة الانتظار
-  waitingList[idx].booked = true;
-  localStorage.setItem('atwad_waiting', JSON.stringify(waitingList));
+
+  // تعليم كـ محجوز في Firebase
+  if(db) db.ref('waitingList/' + key).update({booked: true, bookedAt: new Date().toISOString()});
+
   document.getElementById('waitingListModal').classList.remove('open');
-  showToast('✅ تم فتح نموذج الموعد لـ ' + w.name);
+  showToast('✅ تم فتح نموذج الموعد لـ ' + w.name + ' — أكمل البيانات واحفظ');
 }
+
+/** إزالة من قائمة الانتظار */
+function removeFromWaiting(key) {
+  if(!confirm('إزالة هذا العميل من قائمة الانتظار؟')) return;
+  if(db) {
+    db.ref('waitingList/' + key).remove().then(function(){
+      showToast('تم الإزالة');
+      openWaitingList(_freeSlotForWaiting);
+    });
+  }
+}
+
+/** عرض الوقت الحر بعد الإلغاء */
+function showFreeSlot(cancelledAppt) {
+  var candidates = waitingList.filter(function(w){ return !w.booked; });
+  var scored = candidates.map(function(w){
+    return Object.assign({}, w, {_score: calcPriorityScore(w, cancelledAppt)});
+  }).sort(function(a,b){ return b._score - a._score; });
+
+  if(scored.length) {
+    showToast('🔍 يوجد ' + scored.length + ' عميل في قائمة الانتظار — افتح القائمة للبديل');
+    setTimeout(function(){ openWaitingList(cancelledAppt); }, 800);
+  } else {
+    showToast('📢 تحرّر وقت: ' + formatDateShort(cancelledAppt.date) + ' — ' + (cancelledAppt.time||''));
+  }
+}
+
+// تحميل قائمة الانتظار عند البدء
+loadWaitingList();
 
 document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
 
@@ -1770,7 +2015,7 @@ document.addEventListener('DOMContentLoaded', applySharedLang);
 <div id="notifModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:2000;align-items:flex-start;justify-content:flex-end;">
   <div style="background:#fff;width:360px;max-width:100%;height:100%;overflow-y:auto;padding:20px;box-shadow:-4px 0 20px rgba(0,0,0,.15);">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-      <h3 style="font-size:16px;font-weight:800;color:var(--deep);">?? الإشعارات</h3>
+      <h3 style="font-size:16px;font-weight:800;color:var(--deep);">&#128276; الإشعارات</h3>
       <button onclick="closeNotifications()" style="border:none;background:none;font-size:18px;cursor:pointer;">&#x2715;</button>
     </div>
     <div id="notifList"><div style="text-align:center;color:var(--mist);padding:30px;">لا توجد إشعارات</div></div>
@@ -1804,8 +2049,17 @@ function openNotifications() {
       return;
     }
     list.innerHTML = items.map(function(n) {
+      // إصلاح العناوين القديمة التي تحتوي على ?? بدل emoji
+      var title = (n.title||'').replace(/^\?\?\s*/,'');
+      // إضافة أيقونة نصية حسب نوع الإشعار
+      var icon = '';
+      if(title.indexOf('حجز جديد من الموقع') !== -1) icon = '📍 ';
+      else if(title.indexOf('حجز جديد') !== -1) icon = '📋 ';
+      else if(title.indexOf('تذكير') !== -1) icon = '🔔 ';
+      else if(title.indexOf('إلغاء') !== -1) icon = '❌ ';
+      else icon = '🔔 ';
       return '<div style="background:'+(n.read?'#F8FAFC':'#EFF6FF')+';border-radius:10px;padding:12px;margin-bottom:8px;border-right:3px solid '+(n.read?'#E2E8F0':'#0EA5E9')+';">' +
-        '<div style="font-size:13px;font-weight:700;color:var(--deep);">' + (n.title||'') + '</div>' +
+        '<div style="font-size:13px;font-weight:700;color:var(--deep);">' + icon + title + '</div>' +
         '<div style="font-size:12px;color:var(--mist);margin-top:4px;">' + (n.body||'') + '</div>' +
         '<div style="font-size:11px;color:var(--mist);margin-top:4px;">' + (n.createdAt?new Date(n.createdAt).toLocaleString('ar-SA'):'') + '</div>' +
         (!n.read ? '<button onclick="markNotifRead(\'' + n.key + '\')" style="margin-top:6px;padding:3px 10px;background:var(--sky);color:#fff;border:none;border-radius:6px;font-family:Tajawal,sans-serif;font-size:11px;cursor:pointer;">تم القراءة</button>' : '') +

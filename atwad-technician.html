@@ -131,7 +131,7 @@ body{font-family:'Cairo',sans-serif;background:#F1F5F9;color:var(--slate);min-he
   <div class="tech-selector">
     <p>👷 اختر الفني:</p>
     <div class="tech-btns">
-      <button class="tech-btn" onclick="selectTech('Abrar','أبرار',this)">أبرار</button>
+      <button class="tech-btn" onclick="selectTech('Abrar','أحمد',this)">أحمد</button>
       <button class="tech-btn" onclick="selectTech('Shoib','شعيب',this)">شعيب</button>
       <button class="tech-btn" onclick="selectTech('Suhail','سهيل',this)">سهيل</button>
     </div>
@@ -268,7 +268,7 @@ function loadAppts() {
 }
 
 function autoAssign(date, existing) {
-  // تعيين أبرار افتراضياً للحجوزات الجديدة
+  // تعيين أحمد افتراضياً للحجوزات الجديدة
   return 'Abrar';
 }
 
@@ -367,7 +367,12 @@ function openWhatsApp(phone, name, service, time) {
 }
 
 function openMap(address) {
-  window.open(`https://maps.google.com?q=${encodeURIComponent(address)}`, '_blank');
+  // إذا كان الرابط من Google Maps يفتحه مباشرة
+  if(address.includes('maps.app.goo.gl') || address.includes('google.com/maps') || address.includes('goo.gl/maps')) {
+    window.open(address, '_blank');
+  } else {
+    window.open('https://maps.google.com?q=' + encodeURIComponent(address), '_blank');
+  }
 }
 
 function markDone(id, source, fbKey) {
