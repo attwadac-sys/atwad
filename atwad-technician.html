@@ -188,8 +188,8 @@ const STATUS_LABELS = {confirmed:'مؤكد', pending:'في الانتظار', do
 const STATUS_BADGES = {confirmed:'badge-confirmed', pending:'badge-pending', done:'badge-done', cancelled:'badge-cancelled'};
 
 function today(){ return new Date().toISOString().split('T')[0]; }
-function formatDate(d){ try{ return new Date(d+'T00:00:00').toLocaleDateString('ar-SA',{weekday:'long',month:'long',day:'numeric'}); } catch{ return d; } }
-function formatDateShort(d){ try{ return new Date(d+'T00:00:00').toLocaleDateString('ar-SA',{month:'short',day:'numeric'}); } catch{ return d; } }
+function formatDate(d){ try{ return new Date(d+'T00:00:00').toLocaleDateString('ar-SA-u-ca-gregory',{weekday:'long',month:'long',day:'numeric'}); } catch{ return d; } }
+function formatDateShort(d){ try{ return new Date(d+'T00:00:00').toLocaleDateString('ar-SA-u-ca-gregory',{month:'short',day:'numeric'}); } catch{ return d; } }
 
 function getWeekDates(){
   const dates = [];
@@ -206,7 +206,7 @@ function updateDate(){
   const now = new Date();
   const days = ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
   document.getElementById('dayName').textContent = days[now.getDay()];
-  document.getElementById('todayDate').textContent = now.toLocaleDateString('ar-SA',{year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('todayDate').textContent = now.toLocaleDateString('ar-SA-u-ca-gregory',{year:'numeric',month:'long',day:'numeric'});
 }
 
 // اختيار الفني

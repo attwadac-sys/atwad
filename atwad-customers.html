@@ -564,7 +564,7 @@ try {
 } catch(e){ console.log('Firebase:', e); }
 
 // ========== DATA ==========
-let clients = []; // always load from Firebase
+let clients = JSON.parse(localStorage.getItem('atwad_clients') || '[]');
 
 // مزامنة Firebase — استخدام on('value') لمراقبة التغييرات مباشرة
 // هذا يضمن تحديث العدادات فور أي إضافة/حذف/تعديل في Firebase
@@ -574,7 +574,7 @@ function syncFromFirebase() {
   if(!db) return;
 
   // on('value') على customers — يُطلق عند كل تغيير في الوقت الفعلي
-  db.ref('clients').on('value', function(snapC) {
+  db.ref('customers').on('value', function(snapC) {
     var fbData = [];
     var phones = {};
     snapC.forEach(function(child) {
@@ -609,7 +609,10 @@ function syncFromFirebase() {
         }
       });
 
-      clients = fbData;
+      if(fbData.length > 0) {
+        clients = fbData;
+        localStorage.setItem('atwad_clients', JSON.stringify(clients));
+      }
       // تحديث فوري للعدادات والجدول
       updateStats();
       renderTable();
@@ -623,16 +626,16 @@ let selectedType = '';
 const avatarColors = ['#0EA5E9','#8B5CF6','#10B981','#F59E0B','#EF4444','#EC4899','#0C3B5E'];
 
 function saveData() {
-  // data saved to Firebase
+  localStorage.setItem('atwad_clients', JSON.stringify(clients));
 
   // حفظ في Firebase
   if(db) {
     clients.forEach(function(c) {
       if(c._fbKey) {
         var copy = {...c}; delete copy._fbKey;
-        db.ref('clients/' + c._fbKey).set(copy);
+        db.ref('customers/' + c._fbKey).set(copy);
       } else {
-        var ref = db.ref('clients').push();
+        var ref = db.ref('customers').push();
         c._fbKey = ref.key;
         ref.set(c);
       }
@@ -792,7 +795,7 @@ function saveClient() {
     clients[idx] = Object.assign({}, clients[idx], data);
     showToast('✅ تم تحديث بيانات العميل');
   } else {
-    clients.unshift(Object.assign({ id: genId(), visits:0, lastVisit:'', createdAt: new Date().toLocaleDateString('ar-SA') }, data));
+    clients.unshift(Object.assign({ id: genId(), visits:0, lastVisit:'', createdAt: new Date().toLocaleDateString('ar-SA-u-ca-gregory') }, data));
     showToast('✅ تم إضافة العميل بنجاح');
   }
 
@@ -863,13 +866,13 @@ function deleteClient(id) {
   // حذف من Firebase أولاً إذا كان له مفتاح
   var c = clients.find(function(x){ return x.id === id; });
   if(c && c._fbKey && db && !c._fbKey.startsWith('B_')) {
-    db.ref('clients/' + c._fbKey).remove().catch(function(e){
+    db.ref('customers/' + c._fbKey).remove().catch(function(e){
       console.error('Firebase delete error:', e);
     });
   }
 
   clients = clients.filter(function(c){ return c.id !== id; });
-  // data saved to Firebase
+  localStorage.setItem('atwad_clients', JSON.stringify(clients));
 
   // تحديث فوري للعدادات
   updateStats();
@@ -905,7 +908,20 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
 });
 
 // ========== INIT ==========
-// البيانات تُحمَّل من Firebase تلقائياً
+// بيانات تجريبية إذا كانت القاعدة فارغة
+if (clients.length === 0) {
+  clients = [
+    { id:'C100001', name:'محمد العتيبي',    phone:'0501234567', city:'الرياض',  type:'دائم',    address:'حي النرجس', company:'', notes:'يفضل الصباح', visits:5, lastVisit:'10/06/2025', createdAt:'01/01/2025' },
+    { id:'C100002', name:'سارة الشمري',     phone:'0551234567', city:'جدة',     type:'جديد',    address:'حي الزهراء', company:'', notes:'', visits:1, lastVisit:'20/06/2025', createdAt:'20/06/2025' },
+    { id:'C100003', name:'شركة الأفق للتطوير', phone:'0561234567', city:'الرياض', type:'شركات', address:'طريق الملك فهد', company:'الأفق للتطوير العقاري', notes:'مبنى إداري - 12 وحدة', visits:3, lastVisit:'01/06/2025', createdAt:'15/03/2025' },
+    { id:'C100004', name:'خالد الدوسري',    phone:'0571234567', city:'الدمام',  type:'دائم',    address:'حي الشاطئ', company:'', notes:'', visits:8, lastVisit:'05/06/2025', createdAt:'10/11/2024' },
+    { id:'C100005', name:'نورة القحطاني',   phone:'0581234567', city:'الرياض',  type:'جديد',    address:'حي الملقا', company:'', notes:'التواصل فقط واتساب', visits:0, lastVisit:'', createdAt:'25/06/2025' },
+  ];
+  saveData();
+}
+
+renderTable();
+updateStats();
 </script>
 
 

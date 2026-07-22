@@ -586,8 +586,8 @@ function saveSingleEntry(e) {
 
 function today(){ return new Date().toISOString().split('T')[0]; }
 function genId(){ return 'F' + Date.now().toString().slice(-7); }
-function fmt(n){ return Number(n).toLocaleString('ar-SA'); }
-function fmtDate(d){ try{ return new Date(d+'T00:00:00').toLocaleDateString('ar-SA',{month:'short',day:'numeric'}); } catch(e){ return d||'—'; } }
+function fmt(n){ return Number(n).toLocaleString('ar-SA-u-ca-gregory'); }
+function fmtDate(d){ try{ return new Date(d+'T00:00:00').toLocaleDateString('ar-SA-u-ca-gregory',{month:'short',day:'numeric'}); } catch(e){ return d||'—'; } }
 
 // ===== PERIOD FILTER =====
 function setPeriod(p, btn){
@@ -775,7 +775,7 @@ function openRecDetail(fbKey) {
     (e.dueType ? '<div class="rec-detail-row"><span class="rec-detail-label">موعد السداد</span><span class="rec-detail-val">'+(DUE_TYPE_LABELS[e.dueType]||e.dueType)+'</span></div>' : '') +
     (e.dueDate ? '<div class="rec-detail-row"><span class="rec-detail-label">تاريخ الاستحقاق</span><span class="rec-detail-val">'+(fmtDate(e.dueDate)+' ('+CAT_LABELS[cat]+')')+'</span></div>' : '') +
     (e.paymentNote ? '<div class="rec-detail-row"><span class="rec-detail-label">ملاحظة</span><span class="rec-detail-val">'+(e.paymentNote)+'</span></div>' : '') +
-    (e.lastReminderAt ? '<div class="rec-detail-row"><span class="rec-detail-label">آخر فتح رسالة تذكير</span><span class="rec-detail-val">'+new Date(e.lastReminderAt).toLocaleString('ar-SA')+'</span></div>' : '') +
+    (e.lastReminderAt ? '<div class="rec-detail-row"><span class="rec-detail-label">آخر فتح رسالة تذكير</span><span class="rec-detail-val">'+new Date(e.lastReminderAt).toLocaleString('ar-SA-u-ca-gregory')+'</span></div>' : '') +
     paymentsHtml +
     '<div class="rec-modal-btns">' +
       '<button class="rec-modal-btns btn-register-pay" onclick="openPayModal()">💵 تسجيل سداد</button>' +

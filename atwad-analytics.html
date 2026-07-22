@@ -3,14 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>أطواد - التحليلات المتقدمة</title>
+<title>أطواد - التحليلات v1.1</title>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
-:root{--deep:#0C3B5E;--sky:#0EA5E9;--ice:#E8F4FD;--frost:#F0F9FF;--success:#10B981;--warning:#F59E0B;--danger:#EF4444;--purple:#8B5CF6;--slate:#334155;--mist:#94A3B8;}
+:root{
+  --deep:#0C3B5E;--sky:#0EA5E9;--ice:#E8F4FD;--frost:#F0F9FF;
+  --success:#10B981;--warning:#F59E0B;--danger:#EF4444;
+  --purple:#8B5CF6;--slate:#334155;--mist:#94A3B8;
+  --c-done:#10B981;--c-onway:#F59E0B;--c-inprog:#8B5CF6;
+  --c-late:#EF4444;--c-new:#0EA5E9;
+}
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:'Cairo',sans-serif;background:#F1F5F9;color:var(--slate);}
+
+/* HEADER */
 .header{background:linear-gradient(135deg,var(--deep),#0e5fa8,var(--sky));padding:18px 20px;display:flex;align-items:center;justify-content:space-between;}
 .header h1{color:#fff;font-size:20px;font-weight:900;}
 .header p{color:rgba(255,255,255,.7);font-size:12px;}
@@ -23,7 +31,7 @@ body{font-family:'Cairo',sans-serif;background:#F1F5F9;color:var(--slate);}
 .tab-content{display:none;padding:16px;}
 .tab-content.active{display:block;}
 
-/* CARDS */
+/* KPI CARDS */
 .kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px;}
 .kpi{background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);text-align:center;}
 .kpi .num{font-size:28px;font-weight:900;color:var(--deep);}
@@ -33,19 +41,88 @@ body{font-family:'Cairo',sans-serif;background:#F1F5F9;color:var(--slate);}
 .kpi.orange{border-top:3px solid var(--warning);}
 .kpi.purple{border-top:3px solid var(--purple);}
 
-/* MAP */
+/* MAP CONTAINER */
 .map-container{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:16px;}
-.map-header{background:var(--deep);color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;}
+.map-header{background:var(--deep);color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
 .map-header h3{font-size:15px;font-weight:700;}
-#mapFrame{width:100%;height:400px;border:none;}
-.map-list{padding:12px;}
-.map-appt{display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;background:var(--frost);margin-bottom:8px;cursor:pointer;}
-.map-appt:hover{background:var(--ice);}
-.map-num{width:28px;height:28px;border-radius:50%;background:var(--sky);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;}
-.map-info{flex:1;}
-.map-name{font-size:13px;font-weight:700;color:var(--deep);}
-.map-sub{font-size:11px;color:var(--mist);}
-.map-time{font-size:12px;font-weight:700;color:var(--sky);}
+.map-date{font-size:11px;opacity:.7;}
+
+/* TOUR BUTTON */
+.tour-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;border:none;font-family:'Cairo',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;}
+.tour-btn.active{background:#10B981;color:#fff;}
+.tour-btn.disabled{background:rgba(255,255,255,.15);color:rgba(255,255,255,.5);cursor:not-allowed;border:1px solid rgba(255,255,255,.2);}
+
+/* MAP SPLIT LAYOUT — قائمة 30% (يمين RTL) | خريطة 70% (يسار) */
+.map-body{
+  display:grid;
+  grid-template-columns:minmax(300px,30%) 1fr;
+  gap:0;
+  min-height:560px;
+}
+/* في RTL: العمود الأول = القائمة (يمين)، العمود الثاني = الخريطة (يسار) */
+.map-list-wrap{
+  overflow-y:auto;
+  height:560px;
+  border-left:1px solid var(--ice);
+}
+#mapFrame{
+  width:100%;
+  height:560px;
+  border:0;
+  display:block;
+}
+
+/* مؤشر الموعد المختار */
+#mapSelectedLabel{
+  font-size:11px;color:var(--mist);padding:5px 12px;
+  background:var(--frost);border-bottom:1px solid var(--ice);
+  display:none;min-height:26px;
+}
+
+/* عداد مواقع الجولة */
+#tourCount{
+  font-size:10px;color:rgba(255,255,255,.6);
+  margin-top:3px;display:none;
+}
+
+/* no-coords notice */
+.no-coords{font-size:11px;color:var(--mist);padding:6px 16px;text-align:center;font-style:italic;border-top:1px solid var(--ice);}
+
+/* APPOINTMENT CARDS (compact) */
+.appt-card{padding:10px 12px;border-bottom:1px solid var(--ice);cursor:pointer;transition:background .15s;position:relative;}
+.appt-card:last-child{border-bottom:none;}
+.appt-card:hover{background:var(--frost);}
+.appt-card.selected{background:var(--ice);border-right:3px solid var(--sky);}
+.appt-card.highlighted{animation:flashCard .6s ease-out;}
+@keyframes flashCard{0%,100%{background:transparent;}50%{background:#FEF9C3;}}
+
+.appt-row1{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.appt-num{width:24px;height:24px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;flex-shrink:0;}
+.appt-name{font-size:13px;font-weight:800;color:var(--deep);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.appt-time{font-size:12px;font-weight:700;color:var(--sky);flex-shrink:0;}
+
+.appt-row2{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px;padding-right:32px;}
+.appt-service{font-size:11px;color:var(--slate);}
+.appt-location{font-size:11px;color:var(--mist);}
+.appt-tech{font-size:11px;color:var(--mist);}
+
+.appt-row3{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-right:32px;}
+.status-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;flex-shrink:0;}
+.appt-phone{font-size:11px;color:var(--mist);}
+
+.appt-actions{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px;padding-right:32px;}
+.act-btn{display:inline-flex;align-items:center;gap:3px;padding:4px 9px;border-radius:6px;text-decoration:none;font-size:11px;font-weight:700;border:none;cursor:pointer;font-family:'Cairo',sans-serif;transition:opacity .2s;}
+.act-btn:hover{opacity:.85;}
+.btn-call{background:#E0F2FE;color:#0369A1;}
+.btn-wa{background:#DCFCE7;color:#15803D;}
+.btn-map{background:#FEF3C7;color:#92400E;}
+
+/* Status badge colors */
+.s-done{background:#DCFCE7;color:#15803D;}
+.s-onway{background:#FEF9C3;color:#92400E;}
+.s-inprog{background:#EDE9FE;color:#5B21B6;}
+.s-late{background:#FEE2E2;color:#991B1B;}
+.s-new{background:#E0F2FE;color:#0369A1;}
 
 /* TECH PERFORMANCE */
 .tech-card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:12px;}
@@ -79,12 +156,27 @@ body{font-family:'Cairo',sans-serif;background:#F1F5F9;color:var(--slate);}
 .loyalty-history{font-size:12px;color:var(--mist);}
 .history-item{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed #E2E8F0;}
 
-/* LOADING */
+/* LOADING / EMPTY */
 .loading{text-align:center;padding:40px;color:var(--mist);}
 .spinner{width:32px;height:32px;border:3px solid var(--ice);border-top-color:var(--sky);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 10px;}
 @keyframes spin{to{transform:rotate(360deg)}}
-.empty{text-align:center;padding:40px;color:var(--mist);}
+.empty{text-align:center;padding:30px;color:var(--mist);font-size:13px;}
 .section-title{font-size:15px;font-weight:800;color:var(--deep);margin-bottom:12px;}
+
+/* RESPONSIVE: جوال/لوحي — الخريطة فوق، القائمة تحتها */
+@media(max-width:900px){
+  .map-body{
+    grid-template-columns:1fr;
+    min-height:auto;
+  }
+  #mapFrame{height:350px;}
+  .map-list-wrap{
+    height:auto;
+    max-height:420px;
+    border-left:none;
+    border-top:1px solid var(--ice);
+  }
+}
 </style>
 </head>
 <body>
@@ -97,7 +189,6 @@ body{font-family:'Cairo',sans-serif;background:#F1F5F9;color:var(--slate);}
   <a href="index.html" class="back-btn">← الرئيسية</a>
 </div>
 
-<!-- TABS -->
 <div class="tabs">
   <button class="tab active" onclick="switchTab('map',this)">🗺️ خريطة</button>
   <button class="tab" onclick="switchTab('techs',this)">👷 الفنيون</button>
@@ -106,7 +197,7 @@ body{font-family:'Cairo',sans-serif;background:#F1F5F9;color:var(--slate);}
 
 <!-- TAB: MAP -->
 <div class="tab-content active" id="tab-map">
-  <div class="kpi-grid" id="mapKPIs">
+  <div class="kpi-grid">
     <div class="kpi blue"><div class="num" id="kpiTotal">0</div><div class="lbl">مواعيد اليوم</div></div>
     <div class="kpi green"><div class="num" id="kpiDone">0</div><div class="lbl">مكتملة</div></div>
     <div class="kpi orange"><div class="num" id="kpiPending">0</div><div class="lbl">في الانتظار</div></div>
@@ -115,12 +206,33 @@ body{font-family:'Cairo',sans-serif;background:#F1F5F9;color:var(--slate);}
 
   <div class="map-container">
     <div class="map-header">
-      <h3>🗺️ مواعيد اليوم على الخريطة</h3>
-      <span id="mapDate" style="font-size:11px;opacity:.7;"></span>
+      <div>
+        <h3>🗺️ مواعيد اليوم على الخريطة</h3>
+        <div class="map-date" id="mapDate"></div>
+      </div>
+      <!-- زر بدء الجولة — واحد فقط، يُحدَّث عبر JS ولا يُعاد إنشاؤه -->
+      <div style="text-align:left;">
+        <button class="tour-btn disabled" id="tourBtn" onclick="startTour()" disabled>
+          لا توجد مواقع للجولة
+        </button>
+        <div id="tourCount"></div>
+      </div>
     </div>
-    <iframe id="mapFrame" src="about:blank"></iframe>
-    <div class="map-list" id="mapList">
-      <div class="loading"><div class="spinner"></div><div>جاري تحميل المواعيد...</div></div>
+    <!-- ملاحظة تقنية: الخريطة iframe وليست Google Maps JavaScript API.
+         لذلك لا يمكن إضافة علامات برمجية متعددة.
+         الحل: تغيير src الـ iframe عند اختيار موعد، + قائمة بطاقات جانبية
+         مع روابط Google Maps منفصلة وزر بدء الجولة. -->
+    <div id="mapSelectedLabel"></div>
+    <div class="map-body">
+      <div class="map-list-wrap">
+        <div id="mapList">
+          <div class="loading"><div class="spinner"></div><div>جاري تحميل المواعيد...</div></div>
+        </div>
+      </div>
+      <iframe id="mapFrame" src="about:blank"></iframe>
+    </div>
+    <div id="noCoordsNotice" style="display:none;" class="no-coords">
+      ℹ️ لا توجد إحداثيات محفوظة لمواعيد اليوم
     </div>
   </div>
 </div>
@@ -144,10 +256,12 @@ body{font-family:'Cairo',sans-serif;background:#F1F5F9;color:var(--slate);}
 </div>
 
 <script>
-// Firebase
+// ============================================================
+// Firebase — لا تغيير
+// ============================================================
 var db = null;
 try {
-  firebase.initializeApp({databaseURL:"https://atwad-booking-default-rtdb.firebaseio.com"});
+  firebase.initializeApp({databaseURL:'https://atwad-booking-default-rtdb.firebaseio.com'});
   db = firebase.database();
 } catch(e){ console.error('Firebase initialization error:', e); }
 
@@ -155,36 +269,304 @@ var allAppts = [], allWOs = [], allClients = [];
 var TECHS = { Abrar:'أحمد', 'أبرار':'أحمد', 'Abrar':'أحمد', Shoib:'شعيب', Suhail:'سهيل'};
 var TECH_COLORS = {Abrar:'#0EA5E9', Shoib:'#10B981', Suhail:'#8B5CF6'};
 
-// ===== تحميل البيانات =====
+// مواعيد اليوم المرتبة (مرجع عالمي للربط بين البطاقة والخريطة)
+var todayAppts = [];
+var selectedIdx = -1;
+
+// ============================================================
+// دوال مساعدة موحدة
+// ============================================================
+
+/**
+ * extractCoordinatesFromMapUrl — استخراج إحداثيات من رابط Google Maps
+ * تدعم الصيغ:
+ *   ?q=LAT,LNG  |  /?q=LAT,LNG  |  @LAT,LNG,Xz
+ *
+ * تحذير: روابط maps.app.goo.gl المختصرة لا يمكن استخراج إحداثياتها مباشرة
+ * داخل المتصفح دون متابعة إعادة التوجيه (تحتاج fetch + CORS).
+ * هذه الدالة ترجع null لهذه الروابط — يبقى زر "الموقع" فعّالاً.
+ */
+function extractCoordinatesFromMapUrl(url) {
+  if(!url || typeof url !== 'string') return null;
+  var s = url.trim();
+
+  // روابط مختصرة maps.app.goo.gl — لا يمكن استخراج إحداثياتها بدون fetch/CORS
+  if(s.indexOf('maps.app.goo.gl') !== -1) return null;
+
+  // صيغة ?q=LAT,LNG أو &q=LAT,LNG
+  var qMatch = s.match(/[?&]q=([-\d.]+),([-\d.]+)/);
+  if(qMatch) {
+    var lat = Number(qMatch[1]), lng = Number(qMatch[2]);
+    if(isValidCoord(lat, lng)) return {lat:lat, lng:lng};
+  }
+
+  // صيغة @LAT,LNG,Xz (من روابط google.com/maps/@...)
+  var atMatch = s.match(/@([-\d.]+),([-\d.]+)/);
+  if(atMatch) {
+    var lat2 = Number(atMatch[1]), lng2 = Number(atMatch[2]);
+    if(isValidCoord(lat2, lng2)) return {lat:lat2, lng:lng2};
+  }
+
+  return null;
+}
+
+/**
+ * isValidCoord — التحقق من صحة إحداثيات
+ * - يرفض NaN وInfinity والأصفار المزدوجة (0,0) والنص الفارغ
+ */
+function isValidCoord(lat, lng) {
+  if(!Number.isFinite(lat) || !Number.isFinite(lng)) return false;
+  if(lat === 0 && lng === 0) return false; // 0,0 = وسط المحيط الأطلسي وليس موقعاً حقيقياً
+  if(lat < -90 || lat > 90) return false;
+  if(lng < -180 || lng > 180) return false;
+  return true;
+}
+
+/**
+ * getCoordinates — استخراج إحداثيات صالحة من سجل
+ * الترتيب:
+ *  1. lat/lng مباشرة
+ *  2. latitude/longitude
+ *  3. location.lat/lng أو location.latitude/longitude
+ *  4. coordinates.lat/lng أو coordinates.latitude/longitude
+ *  5. استخراج من روابط URL في الحقول المعروفة
+ */
+function getCoordinates(record) {
+  if(!record) return null;
+
+  // 1-2: قيم رقمية مباشرة
+  var directPairs = [
+    [record.lat,       record.lng],
+    [record.latitude,  record.longitude]
+  ];
+  for(var i = 0; i < directPairs.length; i++) {
+    var lat = Number(directPairs[i][0]);
+    var lng = Number(directPairs[i][1]);
+    if(isValidCoord(lat, lng)) return {lat:lat, lng:lng};
+  }
+
+  // 3: location object
+  if(record.location && typeof record.location === 'object') {
+    var loc = record.location;
+    var ll = [
+      [Number(loc.lat),       Number(loc.lng)],
+      [Number(loc.latitude),  Number(loc.longitude)]
+    ];
+    for(var j = 0; j < ll.length; j++) {
+      if(isValidCoord(ll[j][0], ll[j][1])) return {lat:ll[j][0], lng:ll[j][1]};
+    }
+  }
+
+  // 4: coordinates object
+  if(record.coordinates && typeof record.coordinates === 'object') {
+    var co = record.coordinates;
+    var cc = [
+      [Number(co.lat),       Number(co.lng)],
+      [Number(co.latitude),  Number(co.longitude)]
+    ];
+    for(var k = 0; k < cc.length; k++) {
+      if(isValidCoord(cc[k][0], cc[k][1])) return {lat:cc[k][0], lng:cc[k][1]};
+    }
+  }
+
+  // 5: استخراج من روابط URL
+  var urlFields = [
+    record.mapUrl, record.locationUrl, record.googleMapsUrl,
+    record.mapsUrl, record.customerLocation, record.locationLink,
+    record.addressUrl, record.mapsLink
+  ];
+  for(var u = 0; u < urlFields.length; u++) {
+    var extracted = extractCoordinatesFromMapUrl(urlFields[u]);
+    if(extracted) return extracted;
+  }
+
+  return null;
+}
+
+/**
+ * hasLocationUrl — هل يوجد رابط موقع (مختصر أو غير ذلك) حتى لو بلا إحداثيات؟
+ * يُستخدم لإظهار زر الموقع حتى عند غياب الإحداثيات الصالحة للجولة.
+ */
+function hasLocationUrl(record) {
+  var fields = [
+    record.mapUrl, record.locationUrl, record.googleMapsUrl,
+    record.mapsUrl, record.customerLocation, record.locationLink,
+    record.addressUrl, record.mapsLink
+  ];
+  return fields.some(function(f){ return f && typeof f === 'string' && f.trim().length > 0; });
+}
+
+/**
+ * getDistrict — استخراج الحي أو المنطقة من سجل
+ * يبحث بالترتيب في الحقول الأدق أولاً
+ */
+function getDistrict(record) {
+  if(!record) return '';
+  var fields = [
+    record.district,
+    record.neighborhood,
+    record.area,
+    record.subArea,
+    record.region,
+    record.zone,
+    record.address && typeof record.address === 'object' && record.address.district,
+    record.location && typeof record.location === 'object' && record.location.district,
+    record.customerDistrict,
+    record.customerArea
+  ];
+  for(var i = 0; i < fields.length; i++) {
+    var v = fields[i];
+    if(v && typeof v === 'string' && v.trim().length > 0) return v.trim();
+  }
+  return '';
+}
+
+/**
+ * debugLocationFields — تشخيص حقول الموقع في Console (preview فقط، لا يعرض للمستخدم)
+ */
+function debugLocationFields(record, source, key) {
+  console.log('[LocationDebug]', {
+    source: source,
+    key: key,
+    customer: record.customerName || record.client || record.name || '',
+    lat: record.lat,
+    lng: record.lng,
+    latitude: record.latitude,
+    longitude: record.longitude,
+    location: record.location,
+    coordinates: record.coordinates,
+    mapUrl: record.mapUrl,
+    locationUrl: record.locationUrl,
+    googleMapsUrl: record.googleMapsUrl,
+    mapsUrl: record.mapsUrl,
+    customerLocation: record.customerLocation,
+    locationLink: record.locationLink,
+    addressUrl: record.addressUrl,
+    mapsLink: record.mapsLink,
+    resolvedCoords: getCoordinates(record)
+  });
+}
+
+/**
+ * normalizeStatus — توحيد قيم الحالة إلى فئة واحدة
+ */
+function normalizeStatus(raw) {
+  var s = (raw || '').toString().toLowerCase().trim().replace(/[\s_-]/g,'');
+  if(s === 'done' || s === 'completed' || s === 'مكتمل' || s === 'منجز') return 'done';
+  if(s === 'ontheway' || s === 'onway' || s === 'enroute' || s === 'في الطريق') return 'onway';
+  if(s === 'inprogress' || s === 'inwork' || s === 'قيد التنفيذ' || s === 'جاري') return 'inprog';
+  if(s === 'late' || s === 'delayed' || s === 'متأخر') return 'late';
+  return 'new'; // pending / scheduled / جديد / بدون حالة → أزرق
+}
+
+var STATUS_LABELS = {done:'مكتمل', onway:'في الطريق', inprog:'قيد التنفيذ', late:'متأخر', new:'جديد'};
+var STATUS_CLASSES = {done:'s-done', onway:'s-onway', inprog:'s-inprog', late:'s-late', new:'s-new'};
+var STATUS_COLORS  = {done:'#10B981', onway:'#F59E0B', inprog:'#8B5CF6', late:'#EF4444', new:'#0EA5E9'};
+
+/**
+ * formatTime — تنسيق الوقت إلى صيغة 12 ساعة بالعربية
+ * تقبل: "10:00" | "10:00:00" | ISO string | timestamp | startTime/endTime | time | from/to
+ */
+function formatTime(record) {
+  // جمع حقول الوقت المحتملة
+  var startRaw = record.time || record.startTime || record.from || record.timeFrom || '';
+  var endRaw   = record.endTime || record.to || record.timeTo || '';
+
+  var startStr = parseTimeStr(startRaw);
+  var endStr   = endRaw ? parseTimeStr(endRaw) : null;
+
+  if(!startStr) return '—';
+  return endStr ? startStr + ' - ' + endStr : startStr;
+}
+
+function parseTimeStr(raw) {
+  if(!raw) return null;
+  // إذا كان timestamp رقمياً
+  if(typeof raw === 'number') {
+    var d = new Date(raw);
+    if(!isNaN(d.getTime())) return to12h(d.getHours(), d.getMinutes());
+  }
+  var s = String(raw).trim();
+  if(!s) return null;
+  // HH:MM أو HH:MM:SS
+  var m = s.match(/^(\d{1,2}):(\d{2})/);
+  if(m) return to12h(parseInt(m[1]), parseInt(m[2]));
+  // ISO
+  var d2 = new Date(s);
+  if(!isNaN(d2.getTime())) return to12h(d2.getHours(), d2.getMinutes());
+  return null;
+}
+
+function to12h(h, m) {
+  var period = h >= 12 ? 'م' : 'ص';
+  var h12 = h % 12 || 12;
+  var mm = m < 10 ? '0'+m : m;
+  return h12 + ':' + mm + ' ' + period;
+}
+
+/**
+ * toWaNumber — تحويل رقم سعودي إلى صيغة دولية
+ */
+function toWaNumber(phone) {
+  if(!phone) return null;
+  var s = String(phone).replace(/\D/g,'');
+  if(s.startsWith('05') && s.length === 10) return '966' + s.substring(1);
+  if(s.startsWith('5') && s.length === 9) return '966' + s;
+  if(s.startsWith('966')) return s;
+  return s;
+}
+
+/**
+ * sortByTime — مقارنة للترتيب التصاعدي حسب الوقت
+ */
+function timeKey(a) {
+  var raw = a.time || a.startTime || a.from || '';
+  if(!raw) return 'Z'; // بلا وقت → نهاية القائمة
+  if(typeof raw === 'number') return String(raw).padStart(15,'0');
+  var m = String(raw).match(/^(\d{1,2}):(\d{2})/);
+  if(m) return ('0'+m[1]).slice(-2) + ':' + m[2];
+  return String(raw);
+}
+
+// ============================================================
+// تحميل البيانات
+// ============================================================
 function loadAll() {
   if(!db) {
     console.error('Firebase not initialized — cannot load data');
-    document.getElementById('mapList').innerHTML =
-      '<div class="empty">⚠️ تعذّر الاتصال بقاعدة البيانات</div>';
-    document.getElementById('techCards').innerHTML =
-      '<div class="empty">⚠️ تعذّر الاتصال بقاعدة البيانات</div>';
-    document.getElementById('loyaltyList').innerHTML =
-      '<div class="empty">⚠️ تعذّر الاتصال بقاعدة البيانات</div>';
+    document.getElementById('mapList').innerHTML   = '<div class="empty">⚠️ تعذّر الاتصال بقاعدة البيانات</div>';
+    document.getElementById('techCards').innerHTML  = '<div class="empty">⚠️ تعذّر الاتصال بقاعدة البيانات</div>';
+    document.getElementById('loyaltyList').innerHTML = '<div class="empty">⚠️ تعذّر الاتصال بقاعدة البيانات</div>';
     return;
   }
-  var today = new Date().toISOString().split('T')[0];
-  document.getElementById('mapDate').textContent = new Date().toLocaleDateString('ar-SA',{weekday:'long',month:'long',day:'numeric'});
 
-  // تحميل المواعيد من appointments + bookings مع معالجة أخطاء واضحة
+  var today = new Date().toISOString().split('T')[0];
+  document.getElementById('mapDate').textContent =
+    new Date().toLocaleDateString('ar-SA-u-ca-gregory',{weekday:'long', month:'long', day:'numeric'});
+
+  // appointments + bookings
   var mapListEl = document.getElementById('mapList');
   db.ref('appointments').once('value').then(function(snap) {
     allAppts = [];
-    snap.forEach(function(c){ allAppts.push(Object.assign({}, c.val(), {_key:c.key})); });
+    snap.forEach(function(c){
+      var rec = c.val();
+      allAppts.push(Object.assign({}, rec, {_key:c.key}));
+      debugLocationFields(rec, 'appointments', c.key); // تشخيص — preview فقط
+    });
     return db.ref('bookings').once('value');
   }).then(function(snap2) {
-    snap2.forEach(function(c){ allAppts.push(Object.assign({}, c.val(), {_key:c.key, _src:'booking'})); });
+    snap2.forEach(function(c){
+      var rec = c.val();
+      allAppts.push(Object.assign({}, rec, {_key:c.key, _src:'booking'}));
+      debugLocationFields(rec, 'bookings', c.key); // تشخيص — preview فقط
+    });
     renderMap(today);
   }).catch(function(e) {
     console.error('Firebase read error (appointments/bookings):', e);
     mapListEl.innerHTML = '<div class="empty">⚠️ تعذّر تحميل المواعيد، يرجى المحاولة مرة أخرى</div>';
   });
 
-  // تحميل أوامر العمل
+  // workOrders
   db.ref('workOrders').once('value').then(function(snap) {
     allWOs = [];
     snap.forEach(function(c){ allWOs.push(Object.assign({}, c.val(), {_key:c.key})); });
@@ -195,7 +577,7 @@ function loadAll() {
       '<div class="empty">⚠️ تعذّر تحميل بيانات الفنيين، يرجى المحاولة مرة أخرى</div>';
   });
 
-  // تحميل العملاء
+  // customers
   db.ref('customers').once('value').then(function(snap) {
     allClients = [];
     snap.forEach(function(c){ allClients.push(Object.assign({}, c.val(), {_key:c.key})); });
@@ -207,51 +589,230 @@ function loadAll() {
   });
 }
 
-// ===== 🗺️ خريطة المواعيد =====
+// ============================================================
+// 🗺️ خريطة المواعيد
+// ============================================================
 function renderMap(today) {
-  var todayAppts = allAppts.filter(function(a){ return a.date === today; })
-    .sort(function(a,b){ return (a.time||'').localeCompare(b.time||''); });
+  // فلترة مواعيد اليوم + ترتيب تصاعدي بالوقت
+  todayAppts = allAppts
+    .filter(function(a){ return a.date === today; })
+    .sort(function(a,b){ return timeKey(a).localeCompare(timeKey(b)); });
 
-  // تحديث KPIs
-  document.getElementById('kpiTotal').textContent = todayAppts.length;
-  document.getElementById('kpiDone').textContent = todayAppts.filter(function(a){ return a.status==='done'; }).length;
-  document.getElementById('kpiPending').textContent = todayAppts.filter(function(a){ return a.status==='pending'||a.status==='confirmed'; }).length;
+  // KPIs
+  document.getElementById('kpiTotal').textContent   = todayAppts.length;
+  document.getElementById('kpiDone').textContent    = todayAppts.filter(function(a){ return normalizeStatus(a.status)==='done'; }).length;
+  document.getElementById('kpiPending').textContent = todayAppts.filter(function(a){
+    var s = normalizeStatus(a.status);
+    return s === 'new' || s === 'onway' || s === 'inprog';
+  }).length;
 
-  // بناء رابط الخريطة مع كل المواعيد
-  var addresses = todayAppts.map(function(a){ return a.address||a.city||'جدة'; });
-  var mapLinks = todayAppts.filter(function(a){ return a.mapsLink||a.address; });
+  // إحداثيات صالحة
+  var withCoords = todayAppts.map(function(a, i){
+    return {appt:a, idx:i, coords: getCoordinates(a)};
+  }).filter(function(x){ return x.coords !== null; });
 
-  if(mapLinks.length > 0) {
-    // خريطة Google Maps مع نقاط المسار
-    var firstLink = mapLinks[0].mapsLink || ('https://maps.google.com?q='+encodeURIComponent(mapLinks[0].address||'جدة'));
-    document.getElementById('mapFrame').src = 'https://maps.google.com/maps?q='+encodeURIComponent('جدة، المملكة العربية السعودية')+'&output=embed&z=12';
+  // ===== IFRAME =====
+  // الخريطة iframe — لا تدعم علامات برمجية متعددة.
+  // عند التحميل الأول: نركز على أول موعد له إحداثيات، أو على جدة.
+  // عند اختيار بطاقة: تتغير الإحداثيات عبر selectCard().
+  var noCoordsEl = document.getElementById('noCoordsNotice');
+  if(withCoords.length > 0) {
+    var first = withCoords[0].coords;
+    document.getElementById('mapFrame').src =
+      'https://maps.google.com/maps?q='+first.lat+','+first.lng+'&output=embed&z=14';
+    noCoordsEl.style.display = 'none';
   } else {
-    document.getElementById('mapFrame').src = 'https://maps.google.com/maps?q=جدة&output=embed&z=12';
+    document.getElementById('mapFrame').src =
+      'https://maps.google.com/maps?q='+encodeURIComponent('جدة، المملكة العربية السعودية')+'&output=embed&z=12';
+    noCoordsEl.style.display = todayAppts.length > 0 ? 'block' : 'none';
   }
 
-  // قائمة المواعيد
+  // إخفاء مؤشر الموعد المختار عند إعادة التحميل
+  var selLabel = document.getElementById('mapSelectedLabel');
+  selLabel.style.display = 'none';
+  selLabel.textContent = '';
+  selectedIdx = -1;
+
+  // ===== زر بدء الجولة — يُحدَّث نصه وحالته ولا يُعاد إنشاؤه =====
+  var tourBtn   = document.getElementById('tourBtn');
+  var tourCount = document.getElementById('tourCount');
+  if(withCoords.length === 0) {
+    tourBtn.disabled   = true;
+    tourBtn.className  = 'tour-btn disabled';
+    tourBtn.textContent = 'لا توجد مواقع للجولة';
+    tourCount.style.display = 'none';
+  } else if(withCoords.length === 1) {
+    tourBtn.disabled   = false;
+    tourBtn.className  = 'tour-btn active';
+    tourBtn.textContent = '📍 فتح الموقع';
+    tourCount.style.display = 'block';
+    tourCount.textContent = 'المواقع المتاحة للجولة: 1 من '+todayAppts.length;
+  } else {
+    tourBtn.disabled   = false;
+    tourBtn.className  = 'tour-btn active';
+    tourBtn.textContent = '🚗 بدء الجولة';
+    tourCount.style.display = 'block';
+    tourCount.textContent = 'المواقع المتاحة للجولة: '+withCoords.length+' من '+todayAppts.length;
+  }
+
+  // ===== قائمة المواعيد — innerHTML = (لا +=) لمنع التكرار =====
   var list = document.getElementById('mapList');
+
   if(todayAppts.length === 0) {
     list.innerHTML = '<div class="empty">📅 لا توجد مواعيد اليوم</div>';
     return;
   }
 
-  list.innerHTML = '<p class="section-title" style="padding:8px 0 4px;">📋 قائمة المواعيد</p>' +
-    todayAppts.map(function(a, idx) {
-      var mapsUrl = a.mapsLink || ('https://maps.google.com?q='+encodeURIComponent(a.address||a.city||'جدة'));
-      return '<div class="map-appt" onclick="window.open(\''+mapsUrl+'\',\'_blank\')">' +
-        '<div class="map-num" style="background:'+( TECH_COLORS[a.tech]||'#0EA5E9')+'">'+((idx+1))+'</div>' +
-        '<div class="map-info">' +
-          '<div class="map-name">'+(a.client||'—')+'</div>' +
-          '<div class="map-sub">🛠️ '+(a.service||'—')+' | 👷 '+(TECHS[a.tech]||a.tech||'—')+'</div>' +
-          '<div class="map-sub">📍 '+(a.address||a.city||'جدة')+'</div>' +
-        '</div>' +
-        '<div class="map-time">⏰ '+(a.time||'—')+'</div>' +
-        '</div>';
-    }).join('');
+  var html = '<div style="padding:6px 12px 3px;font-size:11px;font-weight:700;color:var(--mist);">'+
+    '📋 المواعيد ('+todayAppts.length+')</div>';
+
+  html += todayAppts.map(function(a, idx) {
+    var st       = normalizeStatus(a.status);
+    var color    = STATUS_COLORS[st];
+    var label    = STATUS_LABELS[st];
+    var cls      = STATUS_CLASSES[st];
+    var timeStr  = formatTime(a);
+    var coords   = getCoordinates(a);
+    var phone    = a.phone || a.mobile || a.tel || '';
+    var waNum    = toWaNumber(phone);
+    var techName = TECHS[a.tech] || a.tech || '';
+
+    // الحي/المنطقة عبر دالة getDistrict، ثم العنوان، ثم المدينة
+    var district = getDistrict(a);
+    var location = district || a.address || a.city || '';
+    var locationLabel = district
+      ? '📍 حي/منطقة: '+district
+      : (location ? '📍 '+location : '');
+
+    // رابط Google Maps:
+    // إذا وجدت إحداثيات صالحة → استخدمها
+    // إذا لم توجد → ابحث في حقول URL المعروفة (تشمل روابط مختصرة)
+    var mapsUrl = null;
+    if(coords) {
+      mapsUrl = 'https://www.google.com/maps?q='+coords.lat+','+coords.lng;
+    } else {
+      var urlFields = [
+        a.mapUrl, a.locationUrl, a.googleMapsUrl, a.mapsUrl,
+        a.customerLocation, a.locationLink, a.addressUrl, a.mapsLink
+      ];
+      for(var ui = 0; ui < urlFields.length; ui++) {
+        if(urlFields[ui] && typeof urlFields[ui] === 'string' && urlFields[ui].trim()) {
+          mapsUrl = urlFields[ui].trim();
+          break;
+        }
+      }
+    }
+
+    // أزرار — لا تظهر إذا لم توجد البيانات
+    var actBtns = '';
+    if(phone) {
+      actBtns += '<a class="act-btn btn-call" href="tel:'+phone+'" onclick="event.stopPropagation()">📞 اتصال</a>';
+      if(waNum) {
+        actBtns += '<a class="act-btn btn-wa" href="https://wa.me/'+waNum+'" target="_blank" onclick="event.stopPropagation()">💬 واتساب</a>';
+      }
+    }
+    if(mapsUrl) {
+      actBtns += '<a class="act-btn btn-map" href="'+mapsUrl+'" target="_blank" onclick="event.stopPropagation()">📍 الموقع</a>';
+    }
+
+    return '<div class="appt-card" id="card-'+idx+'" onclick="selectCard('+idx+')">' +
+      '<div class="appt-row1">' +
+        '<div class="appt-num" style="background:'+color+'">'+( idx+1)+'</div>' +
+        '<div class="appt-name">'+(a.client || a.customerName || '—')+'</div>' +
+        '<div class="appt-time">'+timeStr+'</div>' +
+      '</div>' +
+      '<div class="appt-row2">' +
+        (a.service    ? '<span class="appt-service">🛠️ '+a.service+'</span>' : '') +
+        (locationLabel ? '<span class="appt-location">'+locationLabel+'</span>' : '') +
+        (techName     ? '<span class="appt-tech">👷 '+techName+'</span>' : '') +
+      '</div>' +
+      '<div class="appt-row3">' +
+        '<span class="status-badge '+cls+'">'+label+'</span>' +
+        (phone ? '<span class="appt-phone">📱 '+phone+'</span>' : '') +
+      '</div>' +
+      (actBtns ? '<div class="appt-actions">'+actBtns+'</div>' : '') +
+    '</div>';
+  }).join('');
+
+  list.innerHTML = html;
 }
 
-// ===== 👷 أداء الفنيين =====
+// ============================================================
+// selectCard — ربط البطاقة بالخريطة
+// الخريطة iframe لا تدعم علامات متعددة، لذلك نغير src عند اختيار كل موعد
+// ============================================================
+function selectCard(idx) {
+  // إلغاء تمييز البطاقة السابقة
+  if(selectedIdx >= 0) {
+    var prev = document.getElementById('card-'+selectedIdx);
+    if(prev) prev.classList.remove('selected');
+  }
+  selectedIdx = idx;
+  var card = document.getElementById('card-'+idx);
+  if(card) card.classList.add('selected');
+
+  var a = todayAppts[idx];
+  if(!a) return;
+
+  var selLabel   = document.getElementById('mapSelectedLabel');
+  var clientName = a.client || a.customerName || 'موعد '+(idx+1);
+  var coords     = getCoordinates(a);
+
+  if(coords) {
+    // إحداثيات صالحة — حرّك الخريطة
+    document.getElementById('mapFrame').src =
+      'https://maps.google.com/maps?q='+coords.lat+','+coords.lng+'&output=embed&z=16';
+    selLabel.textContent = '📍 الموقع المحدد: '+clientName+' — موعد '+(idx+1);
+  } else if(hasLocationUrl(a)) {
+    // رابط موجود لكن بلا إحداثيات (قد يكون مختصراً) — لا تغيّر الخريطة
+    selLabel.textContent = '🔗 الموقع متاح عبر الرابط فقط — '+clientName;
+  } else {
+    selLabel.textContent = '📍 '+clientName+' — لا يوجد موقع محفوظ';
+  }
+  selLabel.style.display = 'block';
+}
+
+// ============================================================
+// زر بدء الجولة
+// ============================================================
+function startTour() {
+  // جمع المواعيد التي لها إحداثيات، بترتيبها
+  var pts = todayAppts.map(function(a){ return getCoordinates(a); }).filter(Boolean);
+
+  if(pts.length === 0) {
+    alert('لا توجد مواقع كافية لبدء الجولة');
+    return;
+  }
+
+  if(pts.length === 1) {
+    // موقع واحد فقط — افتح كوجهة مباشرة
+    window.open('https://www.google.com/maps?q='+pts[0].lat+','+pts[0].lng, '_blank');
+    return;
+  }
+
+  // Google Maps Directions:
+  // origin = أول موعد، destination = آخر موعد
+  // waypoints = المواعيد الوسطية
+  // تحذير: Google Maps يقبل حداً أقصى من 10 waypoints للمستخدم العادي.
+  // نأخذ حداً أقصى 8 waypoints (بين origin و destination) لتجنب تجاوز الحد.
+  var MAX_WAYPOINTS = 8; // حد Google Maps للمستخدم العادي
+  var origin      = pts[0].lat+','+pts[0].lng;
+  var destination = pts[pts.length-1].lat+','+pts[pts.length-1].lng;
+  var middle      = pts.slice(1, pts.length-1).slice(0, MAX_WAYPOINTS);
+  var waypointStr = middle.map(function(p){ return p.lat+','+p.lng; }).join('|');
+
+  var url = 'https://www.google.com/maps/dir/?api=1' +
+    '&origin='+encodeURIComponent(origin) +
+    '&destination='+encodeURIComponent(destination) +
+    (waypointStr ? '&waypoints='+encodeURIComponent(waypointStr) : '') +
+    '&travelmode=driving';
+
+  window.open(url, '_blank');
+}
+
+// ============================================================
+// 👷 أداء الفنيين — بدون تغيير
+// ============================================================
 function renderTechs() {
   var cards = document.getElementById('techCards');
   var thirtyDaysAgo = new Date();
@@ -263,7 +824,6 @@ function renderTechs() {
     techData[t] = {total:0, done:0, revenue:0, ratings:[], appts:0};
   });
 
-  // من أوامر العمل
   allWOs.forEach(function(w) {
     if(!w.tech || !techData[w.tech]) return;
     if(w.date && w.date >= since) {
@@ -272,14 +832,13 @@ function renderTechs() {
         techData[w.tech].done++;
         var price = parseFloat(w.price)||0;
         var parts = parseFloat(w.partsCost)||0;
-        var disc = parseFloat(w.discount)||0;
+        var disc  = parseFloat(w.discount)||0;
         techData[w.tech].revenue += Math.max(0, price+parts-disc);
       }
       if(w.rating) techData[w.tech].ratings.push(parseFloat(w.rating));
     }
   });
 
-  // من المواعيد
   allAppts.forEach(function(a) {
     if(!a.tech || !techData[a.tech]) return;
     if(a.date && a.date >= since) techData[a.tech].appts++;
@@ -287,9 +846,11 @@ function renderTechs() {
 
   cards.innerHTML = ['Abrar','Shoib','Suhail'].map(function(t) {
     var d = techData[t];
-    var avgRating = d.ratings.length ? (d.ratings.reduce(function(s,r){return s+r;},0)/d.ratings.length).toFixed(1) : '—';
+    var avgRating = d.ratings.length
+      ? (d.ratings.reduce(function(s,r){return s+r;},0)/d.ratings.length).toFixed(1) : '—';
     var completionRate = d.total ? Math.round((d.done/d.total)*100) : 0;
-    var stars = avgRating !== '—' ? '★'.repeat(Math.round(avgRating)) + '☆'.repeat(5-Math.round(avgRating)) : '—';
+    var stars = avgRating !== '—'
+      ? '★'.repeat(Math.round(avgRating))+'☆'.repeat(5-Math.round(avgRating)) : '—';
     return '<div class="tech-card">' +
       '<div class="tech-header">' +
         '<div class="tech-avatar" style="background:'+TECH_COLORS[t]+'">'+TECHS[t][0]+'</div>' +
@@ -308,22 +869,22 @@ function renderTechs() {
         '<span style="font-size:12px;color:var(--mist);">متوسط التقييم</span>' +
         '<span style="color:#F59E0B;font-size:14px;">'+(avgRating!=='—'?stars+' '+avgRating:'لا توجد تقييمات')+'</span>' +
       '</div>' +
-      '</div>';
+    '</div>';
   }).join('');
 }
 
-// ===== ⭐ برنامج ولاء العملاء =====
+// ============================================================
+// ⭐ ولاء العملاء — بدون تغيير
+// ============================================================
 function calcPoints(client) {
-  // حساب النقاط من أوامر العمل
   var clientWOs = allWOs.filter(function(w){
     return w.client && (w.client.includes(client.name)||w.phone===client.phone);
   });
-  var points = 0;
-  var history = [];
+  var points = 0, history = [];
   clientWOs.forEach(function(w) {
     if(w.status==='done'||w.status==='invoiced') {
       var price = parseFloat(w.price)||0;
-      var earned = Math.floor(price/10); // 1 نقطة لكل 10 ريال
+      var earned = Math.floor(price/10);
       points += earned;
       history.push({date:w.date||'—', service:w.service||'—', earned:earned});
     }
@@ -333,8 +894,8 @@ function calcPoints(client) {
 
 function getTier(points) {
   if(points >= 500) return {name:'بلاتيني 💎', class:'tier-platinum', min:500, max:1000};
-  if(points >= 200) return {name:'ذهبي 🥇', class:'tier-gold', min:200, max:500};
-  if(points >= 50) return {name:'فضي 🥈', class:'tier-silver', min:50, max:200};
+  if(points >= 200) return {name:'ذهبي 🥇',   class:'tier-gold',     min:200, max:500};
+  if(points >= 50)  return {name:'فضي 🥈',     class:'tier-silver',   min:50,  max:200};
   return {name:'برونزي 🥉', class:'tier-bronze', min:0, max:50};
 }
 
@@ -347,7 +908,6 @@ function renderLoyalty(search) {
       return (c.name||'').toLowerCase().includes(search)||(c.phone||'').includes(search);
     });
   }
-  // فرز بالنقاط
   var withPoints = clients.map(function(c){
     var p = calcPoints(c);
     return Object.assign({}, c, {points:p.points, history:p.history});
@@ -384,13 +944,15 @@ function renderLoyalty(search) {
         '<div style="font-size:12px;font-weight:700;color:var(--slate);margin-bottom:6px;">آخر المعاملات</div>' +
         c.history.map(function(h){ return '<div class="history-item"><span>'+(h.service||'—')+'</span><span style="color:var(--success);font-weight:700;">+'+h.earned+' نقطة</span></div>'; }).join('') +
         '</div>' : '') +
-      '</div>';
+    '</div>';
   }).join('');
 }
 
 function searchLoyalty(val) { renderLoyalty(val); }
 
-// ===== TABS =====
+// ============================================================
+// TABS — بدون تغيير
+// ============================================================
 function switchTab(id, btn) {
   document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
   document.querySelectorAll('.tab-content').forEach(function(t){t.classList.remove('active');});

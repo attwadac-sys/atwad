@@ -238,7 +238,7 @@ function syncReportsFromFirebase() {
 }
 
 function today(){ return new Date().toISOString().split('T')[0]; }
-function fmt(n){ return Number(n||0).toLocaleString('ar-SA'); }
+function fmt(n){ return Number(n||0).toLocaleString('ar-SA-u-ca-gregory'); }
 
 function filterByPeriod(list, dateKey) {
   var now = new Date();
@@ -294,7 +294,7 @@ function renderRevChart() {
     for(var i=6;i>=0;i--){
       var d=new Date(); d.setDate(d.getDate()-i);
       var ds=d.toISOString().split('T')[0];
-      var lbl=d.toLocaleDateString('ar-SA',{month:'short',day:'numeric'});
+      var lbl=d.toLocaleDateString('ar-SA-u-ca-gregory',{month:'short',day:'numeric'});
       groups[ds]={lbl:lbl,val:0};
     }
     inc.forEach(function(e){ if(groups[e.date]) groups[e.date].val+=parseFloat(e.amount)||0; });
