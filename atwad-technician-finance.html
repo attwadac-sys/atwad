@@ -1,5 +1,347 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Atwad — Technician Daily Finance</title>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+:root{
+  --deep:#0C3B5E;--sky:#0EA5E9;--ice:#E8F4FD;--frost:#F0F9FF;
+  --success:#10B981;--danger:#EF4444;--warning:#F59E0B;
+  --slate:#334155;--mist:#94A3B8;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:#F1F5F9;color:var(--slate);min-height:100vh;}
+
+.header{background:linear-gradient(135deg,var(--deep),#0e5fa8,var(--sky));padding:16px 20px;text-align:center;}
+.header h1{color:#fff;font-size:18px;font-weight:800;margin-bottom:2px;}
+.header p{color:rgba(255,255,255,.75);font-size:12px;}
+
+.card{background:#fff;border-radius:16px;margin:16px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,.07);}
+.card-title{font-size:14px;font-weight:700;color:var(--deep);margin-bottom:16px;display:flex;align-items:center;gap:6px;}
+
+.type-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.type-btn{padding:14px;border:2px solid #E2E8F0;border-radius:12px;background:#fff;font-family:'Inter',sans-serif;font-size:14px;font-weight:700;cursor:pointer;text-align:center;transition:all .2s;color:var(--mist);}
+.type-btn.income.sel{border-color:var(--success);background:#D1FAE5;color:var(--success);}
+.type-btn.expense.sel{border-color:var(--danger);background:#FEE2E2;color:var(--danger);}
+.type-btn:not(.sel):hover{border-color:var(--sky);color:var(--sky);}
+
+.form-group{margin-bottom:14px;}
+.form-group label{display:block;font-size:12px;font-weight:600;color:var(--slate);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px;}
+.form-group input,
+.form-group select{
+  width:100%;padding:11px 14px;border:1.5px solid #E2E8F0;border-radius:10px;
+  font-family:'Inter',sans-serif;font-size:14px;color:var(--slate);
+  background:var(--frost);outline:none;transition:border-color .2s;
+}
+.form-group input:focus,
+.form-group select:focus{border-color:var(--sky);}
+.form-group input[type="number"]{font-weight:700;font-size:18px;color:var(--deep);}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.hidden{display:none;}
+
+.btn-save{
+  width:100%;padding:14px;
+  background:linear-gradient(90deg,var(--deep),var(--sky));
+  color:#fff;border:none;border-radius:12px;
+  font-family:'Inter',sans-serif;font-size:15px;font-weight:700;
+  cursor:pointer;margin-top:4px;
+  box-shadow:0 4px 14px rgba(14,165,233,.35);
+  transition:opacity .2s;
+}
+.btn-save:hover{opacity:.9;}
+.btn-save:disabled{opacity:.5;cursor:not-allowed;}
+
+.success-banner{
+  display:none;background:#D1FAE5;border:1.5px solid #6EE7B7;
+  border-radius:12px;padding:16px;margin:0 16px 16px;text-align:center;
+}
+.success-banner.show{display:block;}
+.success-banner .icon{font-size:32px;margin-bottom:6px;}
+.success-banner p{font-size:14px;font-weight:700;color:#065F46;}
+.success-banner small{font-size:12px;color:#047857;margin-top:4px;display:block;}
+
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--deep);color:#fff;padding:10px 22px;border-radius:10px;
+  font-size:13px;font-weight:600;transition:transform .3s;z-index:999;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+.today-list{margin-top:8px;}
+.today-item{display:flex;justify-content:space-between;align-items:center;
+  padding:10px 0;border-bottom:1px solid var(--ice);font-size:13px;}
+.today-item:last-child{border-bottom:none;}
+.today-item .ti-desc{font-weight:600;color:var(--deep);}
+.today-item .ti-meta{font-size:11px;color:var(--mist);margin-top:2px;}
+.today-item .ti-amt{font-weight:800;white-space:nowrap;}
+.ti-amt.in{color:var(--success);}
+.ti-amt.out{color:var(--danger);}
+
+@media(max-width:480px){.two-col{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>💰 Technician Daily Finance</h1>
+  <p>Atwad AC Maintenance</p>
+</div>
+
+<div class="success-banner" id="successBanner">
+  <div class="icon">✅</div>
+  <p id="successText">Entry saved successfully</p>
+  <small id="successDetail"></small>
+</div>
+
+<div class="card">
+  <div class="card-title">📋 New Entry</div>
+
+  <div class="type-row">
+    <button class="type-btn income sel" id="btnIncome" onclick="selType('income')">💵 Income</button>
+    <button class="type-btn expense" id="btnExpense" onclick="selType('expense')">💸 Expense</button>
+  </div>
+
+  <div class="form-group">
+    <label>👷 Technician Name</label>
+    <select id="f_tech">
+      <option value="أحمد">Ahmed</option>
+      <option value="شعيب">Shoib</option>
+      <option value="سهيل">Suhail</option>
+    </select>
+  </div>
+
+  <div class="two-col">
+    <div class="form-group">
+      <label>📅 Date</label>
+      <input type="date" id="f_date">
+    </div>
+    <div class="form-group">
+      <label>💵 Amount (SAR) *</label>
+      <input type="number" id="f_amount" placeholder="0" min="0" inputmode="decimal">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label>📝 Description *</label>
+    <input type="text" id="f_desc" placeholder="e.g. AC cleaning — Khalid Al-Ahmadi">
+  </div>
+
+  <!-- Customer Name — income only -->
+  <div class="form-group" id="partyGroup">
+    <label>👤 Customer Name</label>
+    <input type="text" id="f_party" placeholder="Optional">
+  </div>
+
+  <!-- Expense Category — expense only -->
+  <div class="form-group hidden" id="categoryGroup">
+    <label>🗂 Expense Category *</label>
+    <select id="f_category">
+      <option value="قطع غيار">🔩 Spare Parts</option>
+      <option value="وقود">⛽ Fuel</option>
+      <option value="طعام">🍽 Lunch / Dinner</option>
+      <option value="أدوات">🔧 Tools</option>
+      <option value="صيانة سيارة">🚗 Vehicle Maintenance</option>
+      <option value="رواتب">👷 Salary</option>
+      <option value="إيجار">🏠 Rent</option>
+      <option value="تأمين">🛡 Insurance</option>
+      <option value="إعلانات">📢 Advertising</option>
+      <option value="أخرى">📦 Other</option>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label>💳 Payment Method</label>
+    <select id="f_method">
+      <option value="كاش">💵 Cash</option>
+      <option value="تحويل">🏦 Bank Transfer</option>
+      <option value="مدى">💳 Mada</option>
+    </select>
+  </div>
+
+  <button class="btn-save" id="btnSave" onclick="saveEntry()">✅ Save Entry</button>
+</div>
+
+<div class="card">
+  <div class="card-title">🗓 Today's Entries</div>
+  <div class="today-list" id="todayList">
+    <div style="text-align:center;padding:20px;color:var(--mist);font-size:13px;">No entries recorded today yet.</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== Firebase — unchanged =====
+var db = null;
+try {
+  if(!firebase.apps.length) firebase.initializeApp({databaseURL:'https://atwad-booking-default-rtdb.firebaseio.com'});
+  db = firebase.database();
+} catch(e){ console.error('Firebase:', e); }
+
+// ===== Helpers =====
+function todayDate() {
+  return new Intl.DateTimeFormat('en-CA', {timeZone:'Asia/Riyadh'}).format(new Date());
+}
+function genId() { return 'TF' + Date.now().toString().slice(-8); }
+function fmtAmt(n) { return Number(n).toLocaleString('en-US'); }
+function fmtDate(d) {
+  try {
+    return new Date(d + 'T00:00:00').toLocaleDateString('en-US', {
+      weekday:'short', month:'long', day:'numeric', year:'numeric'
+    });
+  } catch(e) { return d; }
+}
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 2800);
+}
+
+// ===== Form state =====
+var currentType = 'income';
+
+function selType(type) {
+  currentType = type;
+  document.getElementById('btnIncome').classList.toggle('sel', type === 'income');
+  document.getElementById('btnExpense').classList.toggle('sel', type === 'expense');
+  document.getElementById('partyGroup').classList.toggle('hidden', type !== 'income');
+  document.getElementById('categoryGroup').classList.toggle('hidden', type !== 'expense');
+}
+
+// ===== Save entry =====
+// NOTE: All Firebase field names and stored values are intentionally kept in Arabic
+// to remain fully compatible with atwad-finance.html (Arabic finance dashboard).
+// Only the UI labels are in English.
+function saveEntry() {
+  var amount = parseFloat(document.getElementById('f_amount').value);
+  var desc   = document.getElementById('f_desc').value.trim();
+  var date   = document.getElementById('f_date').value;
+  var tech   = document.getElementById('f_tech').value;   // stored in Arabic: أحمد / شعيب / سهيل
+  var method = document.getElementById('f_method').value; // stored in Arabic: كاش / تحويل / مدى
+
+  if(!amount || amount <= 0) { showToast('❌ Please enter a valid amount'); return; }
+  if(!desc)                  { showToast('❌ Please enter a description');  return; }
+  if(!date)                  { showToast('❌ Please select a date');         return; }
+
+  // ===== Firebase transaction — structure matches atwad-finance.html =====
+  var entry = {
+    id:         genId(),
+    type:       currentType,      // 'income' | 'expense'
+    amount:     amount,
+    desc:       desc,
+    date:       date,             // YYYY-MM-DD Gregorian
+    method:     method,           // Arabic value required by finance dashboard
+    status:     'مدفوع',         // Arabic — required by getCollectedAmount() in finance
+    paidAmount: currentType === 'income' ? amount : 0,
+    payments:   currentType === 'income'
+      ? [{id:'P'+Date.now(), amount:amount, date:date, method:method, note:'technician entry'}]
+      : [],
+    source:     'technician',     // identifies entries from this page
+    createdBy:  tech,             // Arabic technician name stored in Firebase
+    createdAt:  new Date().toISOString()
+  };
+
+  if(currentType === 'income') {
+    var party = document.getElementById('f_party').value.trim();
+    if(party) entry.party = party;
+    entry.category = 'خدمة'; // Arabic category — matches finance dashboard
+  }
+
+  if(currentType === 'expense') {
+    entry.category = document.getElementById('f_category').value; // Arabic value
+    entry.party    = '';
+  }
+
+  if(!db) { showToast('❌ Firebase not available'); return; }
+
+  var btn = document.getElementById('btnSave');
+  btn.disabled = true; btn.textContent = '⏳ Saving...';
+
+  db.ref('transactions').push(entry).then(function() {
+    var typeLabel = currentType === 'income' ? 'Income' : 'Expense';
+    document.getElementById('successText').textContent = typeLabel + ' entry saved successfully ✅';
+    document.getElementById('successDetail').textContent =
+      'SAR ' + fmtAmt(amount) + ' — ' + desc + ' — ' + fmtDate(date);
+    document.getElementById('successBanner').classList.add('show');
+    setTimeout(function(){
+      document.getElementById('successBanner').classList.remove('show');
+    }, 4000);
+    resetForm();
+    loadTodayEntries();
+  }).catch(function(e) {
+    showToast('❌ Failed to save entry: ' + e.message);
+  }).finally(function() {
+    btn.disabled = false; btn.textContent = '✅ Save Entry';
+  });
+}
+
+// ===== Reset form =====
+function resetForm() {
+  document.getElementById('f_amount').value = '';
+  document.getElementById('f_desc').value   = '';
+  document.getElementById('f_party').value  = '';
+  document.getElementById('f_date').value   = todayDate();
+  document.getElementById('f_method').value = 'كاش';
+  selType('income');
+  document.getElementById('f_amount').focus();
+}
+
+// ===== Today's entries (only this technician's entries) =====
+function loadTodayEntries() {
+  if(!db) return;
+  var today = todayDate();
+  var tech  = document.getElementById('f_tech').value;
+
+  db.ref('transactions').orderByChild('date').equalTo(today).once('value', function(snap) {
+    var items = [];
+    snap.forEach(function(c) {
+      var v = c.val();
+      if(v.source === 'technician' && v.createdBy === tech) items.push(v);
+    });
+
+    items.sort(function(a, b){ return (b.createdAt||'').localeCompare(a.createdAt||''); });
+
+    var list = document.getElementById('todayList');
+    if(!items.length) {
+      list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--mist);font-size:13px;">No entries recorded today yet.</div>';
+      return;
+    }
+
+    // Method display map (Arabic stored → English displayed)
+    var methodMap = {'كاش':'Cash','تحويل':'Bank Transfer','مدى':'Mada'};
+    // Category display map
+    var catMap = {'قطع غيار':'Spare Parts','وقود':'Fuel','طعام':'Lunch/Dinner',
+      'أدوات':'Tools','صيانة سيارة':'Vehicle Maint.','رواتب':'Salary',
+      'إيجار':'Rent','تأمين':'Insurance','إعلانات':'Advertising',
+      'خدمة':'Service','أخرى':'Other'};
+
+    list.innerHTML = items.map(function(v) {
+      var isIncome = v.type === 'income';
+      var methodDisplay = methodMap[v.method] || v.method || 'Cash';
+      var catDisplay    = catMap[v.category]  || v.category || '';
+      var meta = methodDisplay + (v.party ? ' · ' + v.party : '') + (catDisplay && !isIncome ? ' · ' + catDisplay : '');
+      return '<div class="today-item">' +
+        '<div>' +
+          '<div class="ti-desc">' + (v.desc||'—') + '</div>' +
+          '<div class="ti-meta">' + meta + '</div>' +
+        '</div>' +
+        '<div class="ti-amt ' + (isIncome?'in':'out') + '">' +
+          (isIncome ? '+' : '-') + 'SAR ' + fmtAmt(v.amount) +
+        '</div>' +
+      '</div>';
+    }).join('');
+  });
+}
+
+// ===== Init =====
+document.getElementById('f_date').value = todayDate();
+document.getElementById('f_tech').addEventListener('change', loadTodayEntries);
+loadTodayEntries();
+</script>
+</body>
+</html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
