@@ -1262,18 +1262,44 @@ function saveAppt(){
       }
     }
 
+    // التقاط قيم الموقع قبل الدخول في async — تجنب ReferenceError داخل .then()
+    var _saveToCustomer = !!(document.getElementById('chk_save_to_customer') &&
+                             document.getElementById('chk_save_to_customer').checked &&
+                             _foundCustomerKey);
+    var _mapsLink = (document.getElementById('appointment_maps_link') &&
+                     document.getElementById('appointment_maps_link').value.trim()) || '';
+    var _lat      = Number(document.getElementById('appointment_lat') &&
+                           document.getElementById('appointment_lat').value) || null;
+    var _lng      = Number(document.getElementById('appointment_lng') &&
+                           document.getElementById('appointment_lng').value) || null;
+    var _locSrc   = (document.getElementById('appointment_location_source') &&
+                     document.getElementById('appointment_location_source').value) || '';
+    var _locVerif = !!(document.getElementById('appointment_location_verified') &&
+                       document.getElementById('appointment_location_verified').value === 'true');
+    var _custKey  = _foundCustomerKey || null;
+    var _origDate = editingOriginalDate;
+
     db.ref('appointments/' + editingFirebaseKey).update(
       cancelPrevious ? Object.assign({}, data, {status: 'cancelled'}) : data
-    ).then(() => {
-        if(document.getElementById('chk_save_to_customer').checked && _foundCustomerKey && mapsLink) {
-          saveLocationToCustomer(_foundCustomerKey, {mapsLink, lat, lng, locSrc, locVerified});
+    ).then(function() {
+        // حفظ موقع العميل — داخل try/catch حتى لا يمنع إغلاق النافذة
+        if(_saveToCustomer && _custKey && _mapsLink) {
+          try {
+            saveLocationToCustomer(_custKey, {
+              mapsLink: _mapsLink, lat: _lat, lng: _lng,
+              locSrc: _locSrc, locVerified: _locVerif
+            });
+          } catch(locErr) {
+            console.error('saveLocationToCustomer error:', locErr);
+          }
         }
+
         if(cancelPrevious) {
           // إنشاء موعد جديد بالتاريخ الجديد
           var newData = Object.assign({}, data, {
             status: 'pending',
             createdAt: new Date().toISOString(),
-            rescheduledFrom: editingOriginalDate
+            rescheduledFrom: _origDate
           });
           delete newData.cancelledAt;
           delete newData.cancelReason;
@@ -1286,22 +1312,47 @@ function saveAppt(){
             })
             .catch(function(e){ showToast('❌ خطأ عند إنشاء الموعد الجديد: ' + e.message); });
         } else {
-          showToast('✅ تم تحديث الموعد');
+          showToast('✅ تم تحديث الموعد بنجاح');
           editingOriginalDate = '';
           closeModal();
         }
       })
-      .catch(e => showToast('❌ خطأ: ' + e.message));
+      .catch(function(e){ showToast('❌ خطأ في الحفظ: ' + e.message); });
   } else {
+    // إضافة موعد جديد
+    var _saveToCustomerNew = !!(document.getElementById('chk_save_to_customer') &&
+                                document.getElementById('chk_save_to_customer').checked &&
+                                _foundCustomerKey);
+    var _mapsLinkNew = (document.getElementById('appointment_maps_link') &&
+                        document.getElementById('appointment_maps_link').value.trim()) || '';
+    var _latNew     = Number(document.getElementById('appointment_lat') &&
+                             document.getElementById('appointment_lat').value) || null;
+    var _lngNew     = Number(document.getElementById('appointment_lng') &&
+                             document.getElementById('appointment_lng').value) || null;
+    var _locSrcNew  = (document.getElementById('appointment_location_source') &&
+                       document.getElementById('appointment_location_source').value) || '';
+    var _locVerifNew= !!(document.getElementById('appointment_location_verified') &&
+                         document.getElementById('appointment_location_verified').value === 'true');
+    var _custKeyNew = _foundCustomerKey || null;
+
     data.createdAt = new Date().toISOString();
     db.ref('appointments').push(data)
-      .then(() => {
-        if(document.getElementById('chk_save_to_customer').checked && _foundCustomerKey && mapsLink) {
-          saveLocationToCustomer(_foundCustomerKey, {mapsLink, lat, lng, locSrc, locVerified});
+      .then(function() {
+        if(_saveToCustomerNew && _custKeyNew && _mapsLinkNew) {
+          try {
+            saveLocationToCustomer(_custKeyNew, {
+              mapsLink: _mapsLinkNew, lat: _latNew, lng: _lngNew,
+              locSrc: _locSrcNew, locVerified: _locVerifNew
+            });
+          } catch(locErr) {
+            console.error('saveLocationToCustomer error:', locErr);
+          }
         }
-        showToast('✅ تم إضافة الموعد'); sendAdminNotification(data); closeModal();
+        showToast('✅ تم إضافة الموعد بنجاح');
+        sendAdminNotification(data);
+        closeModal();
       })
-      .catch(e => showToast('❌ خطأ: ' + e.message));
+      .catch(function(e){ showToast('❌ خطأ في الحفظ: ' + e.message); });
   }
 }
 
