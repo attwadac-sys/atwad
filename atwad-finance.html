@@ -1376,6 +1376,9 @@ function saveLegacyConfirm() {
 var _origOpenRecDetail = null; // سيُحدَّث بعد تعريف openRecDetail
 
 function getSourceHtml(e) { return getSourceLabel(e); }
+
+function showAll(type){
+  var filtered=filterByPeriod(entries).filter(function(e){return e.type===type;});
   var total=filtered.reduce(function(s,e){return s+(parseFloat(e.amount)||0);},0);
   showToast((type==='income'?'إيرادات':'مصاريف')+': '+fmt(total)+' ﷼ — '+filtered.length+' قيد');
 }
