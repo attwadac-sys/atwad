@@ -178,6 +178,9 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 .btn-register-pay{background:#D1FAE5;color:#065F46;}
 .btn-wa-collect{background:#25D366;color:#fff;}
 .btn-change-due{background:#EFF6FF;color:#1E40AF;}
+.btn-settle{background:#FEF9C3;color:#92400E;}
+.btn-cancel-rec{background:#FEE2E2;color:#991B1B;}
+.btn-delete-final{background:#7F1D1D;color:#fff;}
 
 /* فلتر إدخالات الفني */
 .tech-filter-bar{display:flex;align-items:center;gap:10px;margin:12px 22px 0;flex-wrap:wrap;}
@@ -324,7 +327,10 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
   <div class="receivables-section" id="receivablesSection">
     <div class="receivables-header">
       <h3>⚠️ المبالغ المستحقة / الذمم المدينة</h3>
-      <span id="recTotalBadge" style="font-size:12px;font-weight:700;color:#92400E;"></span>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button onclick="openLegacyReview()" style="padding:5px 12px;background:#FEF9C3;color:#92400E;border:1px solid #FDE68A;border-radius:8px;font-family:'Tajawal',sans-serif;font-size:11px;font-weight:700;cursor:pointer;">📂 مراجعة القديمة</button>
+        <span id="recTotalBadge" style="font-size:12px;font-weight:700;color:#92400E;"></span>
+      </div>
     </div>
     <div class="rec-kpi-row">
       <div class="rec-kpi overdue-row"><div class="rn" id="recOverdue">0</div><div class="rl">🔴 متأخرة</div></div>
@@ -816,11 +822,12 @@ function renderDueAlert(receivables) {
   var msgs = [];
   if(todayDue.length) {
     var total = todayDue.reduce(function(s,e){ return s + ((parseFloat(e.amount)||0) - getCollectedAmount(e)); }, 0);
-    msgs.push('🔔 لديك '+todayDue.length+' مبلغ مستحق اليوم بإجمالي '+fmt(total)+' ﷼');
+    // نص صريح يفرّق عن عداد الذمم الكلي
+    msgs.push('🔔 ' + todayDue.length + ' مستحقة اليوم بإجمالي ' + fmt(total) + ' ﷼');
   }
   if(overdue.length) {
     var total2 = overdue.reduce(function(s,e){ return s + ((parseFloat(e.amount)||0) - getCollectedAmount(e)); }, 0);
-    msgs.push('⏰ '+overdue.length+' مبلغ متأخر بإجمالي '+fmt(total2)+' ﷼');
+    msgs.push('⏰ ' + overdue.length + ' متأخرة بإجمالي ' + fmt(total2) + ' ﷼');
   }
 
   if(msgs.length) {
@@ -875,6 +882,9 @@ function openRecDetail(fbKey) {
     '<div class="rec-modal-btns">' +
       '<button class="rec-modal-btns btn-register-pay" onclick="openPayModal()">💵 تسجيل سداد</button>' +
       (phone ? '<a class="rec-modal-btns btn-wa-collect" href="'+wa+'" target="_blank" onclick="recordReminderSent(\''+fbKey+'\')">📲 طلب سداد واتساب</a>' : '') +
+      '<button class="rec-modal-btns btn-settle" onclick="settleReceivable(\''+fbKey+'\')">✅ تسوية المستحق</button>' +
+      '<button class="rec-modal-btns btn-cancel-rec" onclick="cancelReceivable(\''+fbKey+'\')">🚫 إلغاء المستحق</button>' +
+      '<button class="rec-modal-btns btn-delete-final" onclick="deleteFinal(\''+fbKey+'\')">🗑️ حذف نهائي</button>' +
     '</div>';
 
   document.getElementById('recDetailModal').classList.add('open');
@@ -1301,9 +1311,12 @@ function renderLegacySection() {
 // ============================================================
 function isReceivable(e) {
   if(e.type !== 'income') return false;
+  // استبعاد الحالات المنتهية: مدفوع، مسوى، ملغي
+  if(e.status === 'مسوى' || e.status === 'ملغي') return false;
   var s = normalizePayStatus(e.status);
+  if(s === 'مدفوع') return false;
   if(s !== 'مؤجل' && s !== 'غير مدفوع' && s !== 'مدفوع جزئياً') return false;
-  // البيانات القديمة بدون نظام استحقاق → تُعرض في قسم "بيانات قديمة" فقط
+  // البيانات القديمة بدون نظام استحقاق → قسم "بيانات قديمة" فقط
   if(isLegacyEntry(e)) return false;
   return true;
 }
@@ -1376,6 +1389,79 @@ function saveLegacyConfirm() {
 var _origOpenRecDetail = null; // سيُحدَّث بعد تعريف openRecDetail
 
 function getSourceHtml(e) { return getSourceLabel(e); }
+
+// ============================================================
+// تسوية المستحق — status: 'مسوى'
+// ============================================================
+function settleReceivable(fbKey) {
+  if(!fbKey || !db) return;
+  var e = entries.find(function(x){ return x._fbKey === fbKey; });
+  if(!e) return;
+  var reason = prompt('سبب التسوية (اختياري):');
+  if(reason === null) return;
+  var updates = { status:'مسوى', settledAt:new Date().toISOString(), settledReason:reason||'تسوية يدوية' };
+  db.ref('transactions/'+fbKey).update(updates).then(function(){
+    showToast('✅ تم تسوية المستحق'); closeRecModal();
+  }).catch(function(err){ showToast('❌ خطأ: '+err.message); });
+}
+
+// ============================================================
+// إلغاء المستحق — status: 'ملغي'
+// ============================================================
+function cancelReceivable(fbKey) {
+  if(!fbKey || !db) return;
+  var reason = prompt('سبب الإلغاء:');
+  if(reason === null) return;
+  if(!reason.trim()){ showToast('⚠️ يرجى إدخال سبب الإلغاء'); return; }
+  var updates = { status:'ملغي', cancelledAt:new Date().toISOString(), cancelReason:reason };
+  db.ref('transactions/'+fbKey).update(updates).then(function(){
+    showToast('✅ تم إلغاء المستحق'); closeRecModal();
+  }).catch(function(err){ showToast('❌ خطأ: '+err.message); });
+}
+
+// ============================================================
+// حذف نهائي — تأكيد مزدوج + فحص وجود دفعات
+// ============================================================
+function deleteFinal(fbKey) {
+  if(!fbKey || !db) return;
+  var e = entries.find(function(x){ return x._fbKey === fbKey; });
+  if(!e) return;
+  var hasPay = Array.isArray(e.payments) && e.payments.length > 0;
+  var msg1 = 'هل أنت متأكد أنك تريد حذف هذا القيد نهائياً؟\n\n' +
+    'العميل: '+(e.party||'—')+'\nالمبلغ: '+fmt(e.amount)+' ﷼\n' +
+    (hasPay ? '⚠️ يحتوي على '+e.payments.length+' دفعة مسجلة.\n' : '') +
+    '\nهذا الإجراء لا يمكن التراجع عنه.';
+  if(!confirm(msg1)) return;
+  if(!confirm('تأكيد أخير: سيتم حذف القيد بشكل دائم من قاعدة البيانات. هل تريد المتابعة؟')) return;
+  db.ref('transactions/'+fbKey).remove().then(function(){
+    showToast('🗑️ تم الحذف النهائي'); closeRecModal();
+  }).catch(function(err){ showToast('❌ خطأ في الحذف: '+err.message); });
+}
+
+// ============================================================
+// مراجعة المستحقات القديمة سجلاً بسجل
+// ============================================================
+function openLegacyReview() {
+  var legacy = entries.filter(isLegacyEntry);
+  if(!legacy.length){ showToast('✅ لا توجد مستحقات قديمة تحتاج مراجعة'); return; }
+  var idx = 0;
+  function reviewNext() {
+    if(idx >= legacy.length){
+      showToast('✅ انتهت مراجعة '+legacy.length+' سجل');
+      return;
+    }
+    var e = legacy[idx];
+    var msg = 'مستحق '+(idx+1)+' من '+legacy.length+'\n\n'+
+      'العميل: '+(e.party||'—')+'\n'+
+      'البيان: '+(e.desc||'—')+'\n'+
+      'المبلغ: '+fmt(e.amount)+' ﷼\n'+
+      'التاريخ: '+fmtDate(e.date)+'\n\n'+
+      'اضغط OK للانتقال للتالي، أو Cancel لإيقاف المراجعة.';
+    idx++;
+    if(confirm(msg)) reviewNext();
+  }
+  reviewNext();
+}
 
 function showAll(type){
   var filtered=filterByPeriod(entries).filter(function(e){return e.type===type;});
