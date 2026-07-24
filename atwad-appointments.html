@@ -1371,6 +1371,15 @@ function saveLocationToCustomer(customerKey, loc) {
     .catch(function(e){ console.error('save to customer error:', e); });
 }
 
+function showToast(msg){
+  var t = document.getElementById('toast');
+  if(!t) return;
+  clearTimeout(t._hideTimer);
+  t.textContent = msg;
+  t.classList.add('show');
+  t._hideTimer = setTimeout(function(){ t.classList.remove('show'); }, 2800);
+}
+
 function closeModal(){ document.getElementById('apptModal').classList.remove('open'); editingId=null; editingFirebaseKey=null; }
 
 // ===== DETAIL =====
