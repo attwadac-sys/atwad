@@ -105,6 +105,15 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 .act-delete{background:#FEE2E2;color:#EF4444;}
 .act-remind{background:#FEF9C3;color:#92400E;}
 .act-cancel{background:#FEE2E2;color:#EF4444;}
+/* Modal ترحيل الموعد — 3 خيارات */
+.reschedule-modal{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:4000;display:none;align-items:center;justify-content:center;}
+.reschedule-modal.open{display:flex;}
+.reschedule-box{background:#fff;border-radius:16px;padding:24px;width:calc(100% - 40px);max-width:400px;box-shadow:0 8px 32px rgba(0,0,0,.2);}
+.reschedule-box h3{font-size:15px;font-weight:800;color:var(--deep);margin-bottom:8px;}
+.reschedule-box p{font-size:13px;color:var(--slate);margin-bottom:18px;line-height:1.6;}
+.reschedule-actions{display:flex;flex-direction:column;gap:9px;}
+.btn-rs-keep{padding:12px;background:#D1FAE5;color:#065F46;border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;text-align:right;}
+.btn-rs-cancel{padding:12px;background:#F1F5F9;color:var(--slate);border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;text-align:right;}
 /* Modal سبب الإلغاء */
 .cancel-modal{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:3000;display:flex;align-items:center;justify-content:center;display:none;}
 .cancel-modal.open{display:flex;}
@@ -549,6 +558,18 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 </div>
 
 <!-- Modal سبب الإلغاء -->
+<!-- Modal ترحيل الموعد — خياران -->
+<div class="reschedule-modal" id="rescheduleModal">
+  <div class="reschedule-box">
+    <h3>🔄 ترحيل الموعد</h3>
+    <p id="rescheduleModalText">تم تغيير تاريخ الموعد.<br>كيف ترغب في التعامل مع الموعد السابق؟</p>
+    <div class="reschedule-actions">
+      <button class="btn-rs-keep" onclick="rescheduleChoice('keep')">🟢 الاحتفاظ بالموعد السابق بحالة (ملغي)</button>
+      <button class="btn-rs-cancel" onclick="rescheduleChoice('cancel')">⚪ إلغاء — الرجوع بدون تغيير</button>
+    </div>
+  </div>
+</div>
+
 <div class="cancel-modal" id="cancelReasonModal">
   <div class="cancel-box">
     <h3>❌ إلغاء الموعد</h3>
@@ -1247,22 +1268,20 @@ function saveAppt(){
   if(!db) { showToast('❌ Firebase غير متاح'); return; }
 
   if(editingFirebaseKey) {
-    // هل تغيّر التاريخ؟ إذا نعم اسأل الموظف عن إلغاء الموعد القديم
     var dateChanged = editingOriginalDate && editingOriginalDate !== date;
-    var cancelPrevious = false;
+
     if(dateChanged) {
-      cancelPrevious = confirm(
-        'تم تغيير تاريخ الموعد من ' + editingOriginalDate + ' إلى ' + date + '.\n\n' +
-        'هل تريد تغيير حالة الموعد القديم إلى «ملغي»؟'
-      );
-      if(cancelPrevious) {
-        data.previousDate   = editingOriginalDate;
-        data.cancelledAt    = new Date().toISOString();
-        data.cancelReason   = 'تم إعادة الجدولة إلى ' + date;
-      }
+      // عرض modal الخيارات الثلاثة بدل confirm()
+      var txt = document.getElementById('rescheduleModalText');
+      if(txt) txt.innerHTML = 'تم تغيير تاريخ الموعد من <strong>' + editingOriginalDate + '</strong> إلى <strong>' + date + '</strong>.<br>ماذا تريد أن تفعل بالموعد السابق؟';
+      // احفظ السياق للاستخدام في rescheduleChoice
+      window._reschedulePending = { data: data, date: date, editingFirebaseKey: editingFirebaseKey };
+      document.getElementById('rescheduleModal').classList.add('open');
+      return; // الاستمرار يتم من rescheduleChoice()
     }
 
-    // التقاط قيم الموقع قبل الدخول في async — تجنب ReferenceError داخل .then()
+    // لم يتغير التاريخ — حفظ مباشر بدون سؤال
+    var cancelPrevious = false;
     var _saveToCustomer = !!(document.getElementById('chk_save_to_customer') &&
                              document.getElementById('chk_save_to_customer').checked &&
                              _foundCustomerKey);
@@ -1306,7 +1325,7 @@ function saveAppt(){
           delete newData.previousDate;
           db.ref('appointments').push(newData)
             .then(function() {
-              showToast('✅ تم إلغاء الموعد القديم وإنشاء موعد جديد بتاريخ ' + date);
+              showToast('✅ تم ترحيل الموعد بنجاح.\nتم إنشاء الموعد الجديد، وتحويل الموعد السابق إلى حالة (ملغي).');
               editingOriginalDate = '';
               closeModal();
             })
@@ -1369,6 +1388,81 @@ function saveLocationToCustomer(customerKey, loc) {
   db.ref('customers/' + customerKey).update(update)
     .then(function(){ console.log('location saved to customer', customerKey); })
     .catch(function(e){ console.error('save to customer error:', e); });
+}
+
+// ============================================================
+// rescheduleChoice — خياران فقط: keep | cancel
+// (خيار delete أُزيل مؤقتاً لأسباب سلامة البيانات)
+// ============================================================
+function rescheduleChoice(choice) {
+  document.getElementById('rescheduleModal').classList.remove('open');
+
+  if(choice === 'cancel') {
+    // أغلق modal الترحيل فقط — أبقِ نافذة التعديل مفتوحة ببياناتها
+    window._reschedulePending = null;
+    return;
+  }
+
+  // choice === 'keep'
+  var ctx = window._reschedulePending;
+  if(!ctx || !db) { window._reschedulePending = null; return; }
+  window._reschedulePending = null; // تصفير فوري لمنع الضغط المزدوج
+
+  var data    = ctx.data;
+  var date    = ctx.date;
+  var fbKey   = ctx.editingFirebaseKey;
+
+  // التقاط قيم الموقع بشكل آمن
+  var _saveToCustomer = !!(document.getElementById('chk_save_to_customer') &&
+                           document.getElementById('chk_save_to_customer').checked &&
+                           _foundCustomerKey);
+  var _mapsLink = (document.getElementById('appointment_maps_link') &&
+                   document.getElementById('appointment_maps_link').value.trim()) || '';
+  var _lat      = Number(document.getElementById('appointment_lat') &&
+                         document.getElementById('appointment_lat').value) || null;
+  var _lng      = Number(document.getElementById('appointment_lng') &&
+                         document.getElementById('appointment_lng').value) || null;
+  var _locSrc   = (document.getElementById('appointment_location_source') &&
+                   document.getElementById('appointment_location_source').value) || '';
+  var _locVerif = !!(document.getElementById('appointment_location_verified') &&
+                     document.getElementById('appointment_location_verified').value === 'true');
+  var _custKey  = _foundCustomerKey || null;
+  var _origDate = editingOriginalDate;
+
+  // العملية ١: تحويل الموعد القديم إلى cancelled
+  var dataWithCancel = Object.assign({}, data, {
+    status:       'cancelled',
+    previousDate: _origDate,
+    cancelledAt:  new Date().toISOString(),
+    cancelReason: 'تم إعادة الجدولة إلى ' + date
+  });
+
+  db.ref('appointments/' + fbKey).update(dataWithCancel)
+    .then(function() {
+      // حفظ الموقع إن طُلب — خطأه لا يوقف العملية
+      if(_saveToCustomer && _custKey && _mapsLink) {
+        try {
+          saveLocationToCustomer(_custKey, {
+            mapsLink:_mapsLink, lat:_lat, lng:_lng,
+            locSrc:_locSrc, locVerified:_locVerif
+          });
+        } catch(locErr){ console.error('saveLocationToCustomer:', locErr); }
+      }
+      // العملية ٢: إنشاء الموعد الجديد
+      var newData = Object.assign({}, data, {
+        status:          'pending',
+        createdAt:       new Date().toISOString(),
+        rescheduledFrom: _origDate
+      });
+      db.ref('appointments').push(newData)
+        .then(function() {
+          showToast('✅ تم ترحيل الموعد بنجاح. تم إنشاء الموعد الجديد، وتحويل الموعد السابق إلى حالة (ملغي).');
+          editingOriginalDate = '';
+          closeModal();
+        })
+        .catch(function(e){ showToast('❌ خطأ عند إنشاء الموعد الجديد: ' + e.message); });
+    })
+    .catch(function(e){ showToast('❌ خطأ في الحفظ: ' + e.message); });
 }
 
 function showToast(msg){
