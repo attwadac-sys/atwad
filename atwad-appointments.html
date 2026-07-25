@@ -830,19 +830,18 @@ function renderWeek(){
 function renderList(){
   let appts = [...appointments];
   if(techFilter!=='all') appts = appts.filter(a=>a.tech===techFilter);
-  // ترتيب تصاعدي: التاريخ أولاً ثم وقت البدء — المواعيد بلا وقت تأتي آخراً داخل يومها
+  // ترتيب تنازلي: التاريخ الأحدث أولاً ثم الوقت المتأخر — المواعيد بلا وقت تأتي آخراً داخل يومها
   appts.sort(function(a, b) {
     var dateA = a.date || '';
     var dateB = b.date || '';
-    if(dateA !== dateB) return dateA.localeCompare(dateB);
-    // استخرج وقت البدء فقط (قبل ' - ') وحوّله لدقائق للمقارنة الصحيحة
+    if(dateA !== dateB) return dateB.localeCompare(dateA);
     function toMinutes(t) {
-      if(!t) return 9999;
-      var part = t.split(' - ')[0].trim(); // أخذ بداية الفترة فقط
+      if(!t) return -1; // بلا وقت → آخر يومها في الترتيب التنازلي
+      var part = t.split(' - ')[0].trim();
       var hm = part.split(':');
       return (parseInt(hm[0])||0) * 60 + (parseInt(hm[1])||0);
     }
-    return toMinutes(a.time) - toMinutes(b.time);
+    return toMinutes(b.time) - toMinutes(a.time);
   });
   const grouped = {};
   appts.forEach(a=>{ if(!grouped[a.date]) grouped[a.date]=[]; grouped[a.date].push(a); });
@@ -853,7 +852,7 @@ function renderList(){
     return;
   }
   let html = '';
-  Object.keys(grouped).sort().forEach(date=>{
+  Object.keys(grouped).sort().reverse().forEach(date=>{
     const list = grouped[date];
     html += `<div class="day-section"><div class="day-section-header"><span class="day-section-date">${formatDate(date)}</span><span class="day-section-badge">${list.length} موعد</span>${date===today()?'<span style="background:var(--sky);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;">اليوم</span>':''}</div>`;
     list.forEach(a=>{
