@@ -830,7 +830,20 @@ function renderWeek(){
 function renderList(){
   let appts = [...appointments];
   if(techFilter!=='all') appts = appts.filter(a=>a.tech===techFilter);
-  appts.sort((a,b)=>((a.date||'')+(a.time||'')).localeCompare((b.date||'')+(b.time||'')));
+  // ترتيب تصاعدي: التاريخ أولاً ثم وقت البدء — المواعيد بلا وقت تأتي آخراً داخل يومها
+  appts.sort(function(a, b) {
+    var dateA = a.date || '';
+    var dateB = b.date || '';
+    if(dateA !== dateB) return dateA.localeCompare(dateB);
+    // استخرج وقت البدء فقط (قبل ' - ') وحوّله لدقائق للمقارنة الصحيحة
+    function toMinutes(t) {
+      if(!t) return 9999;
+      var part = t.split(' - ')[0].trim(); // أخذ بداية الفترة فقط
+      var hm = part.split(':');
+      return (parseInt(hm[0])||0) * 60 + (parseInt(hm[1])||0);
+    }
+    return toMinutes(a.time) - toMinutes(b.time);
+  });
   const grouped = {};
   appts.forEach(a=>{ if(!grouped[a.date]) grouped[a.date]=[]; grouped[a.date].push(a); });
   const bm = { confirmed:'sp-confirmed', pending:'sp-pending', done:'sp-done', cancelled:'sp-cancelled' };
@@ -1870,10 +1883,8 @@ function confirmCancel() {
     var ref = a._source === 'bookings' ? 'bookings/' + a._fbKey : 'appointments/' + a._fbKey;
     db.ref(ref).update(updateData).then(function() {
       showToast('✅ تم إلغاء الموعد — السبب: ' + _cancelReason);
-      // عرض الوقت الحر وإمكانية تعبئته
       showFreeSlot(a);
       closeCancelModal();
-      loadData();
     }).catch(function(e){ showToast('❌ خطأ: ' + e.message); });
   } else {
     showToast('✅ تم إلغاء الموعد محلياً');
