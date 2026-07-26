@@ -482,8 +482,8 @@
               <th data-lang="colPhone">الجوال</th>
               <th data-lang="colCity">المدينة</th>
               <th data-lang="colType">التصنيف</th>
+              <th>آخر عمل</th>
               <th data-lang="colVisits">الزيارات</th>
-              <th data-lang="colLast">آخر خدمة</th>
               <th data-lang="colAct">الإجراءات</th>
             </tr>
           </thead>
@@ -597,12 +597,19 @@ function syncFromFirebase() {
   db.ref('customers').on('value', function(snapC) {
     var fbData = [];
     var phones = {};
+    var fieldSample = null;
     snapC.forEach(function(child) {
       var c = Object.assign({}, child.val(), {_fbKey: child.key, _src: 'customers'});
-      // إضافة id محلي إذا لم يوجد
       if(!c.id) c.id = c._fbKey;
       fbData.push(c);
       if(c.phone) phones[c.phone] = true;
+      // عينة من أسماء الحقول (أول سجل فقط، بدون قيم)
+      if(!fieldSample) fieldSample = Object.keys(c).filter(function(k){ return k !== '_fbKey' && k !== '_src'; });
+    });
+    console.log('[customers] Firebase customers محمّلة:', {
+      عدد_السجلات: fbData.length,
+      مسار_القراءة: 'customers',
+      أسماء_الحقول: fieldSample || []
     });
 
     // إضافة العملاء من الحجوزات الإلكترونية (مرة واحدة فقط)
@@ -633,14 +640,46 @@ function syncFromFirebase() {
         clients = fbData;
         localStorage.setItem('atwad_clients', JSON.stringify(clients));
       }
-      // تحديث فوري للعدادات والجدول
-      updateStats();
-      renderTable();
+
+      // تحميل المواعيد مرة واحدة لتحديد آخر عمل لكل عميل
+      db.ref('appointments').once('value', function(snapA) {
+        window.allAppointments = [];
+        snapA.forEach(function(child){ window.allAppointments.push(child.val()); });
+        // إضافة حجوزات من bookings أيضاً
+        db.ref('bookings').once('value', function(snapB2) {
+          snapB2.forEach(function(child){
+            var b = child.val();
+            if(b.date) window.allAppointments.push({
+              phone: b.phone||'', date: b.date||'', status: b.status||'pending'
+            });
+          });
+          updateStats();
+          renderTable();
+        });
+      });
     });
+  }, function(err) {
+    // Firebase رفض الاتصال أو خطأ في الصلاحيات
+    console.error('[customers] ❌ Firebase error:', err.code, err.message);
+    var errBanner = document.getElementById('fbErrorBanner');
+    if(!errBanner) {
+      errBanner = document.createElement('div');
+      errBanner.id = 'fbErrorBanner';
+      errBanner.style.cssText = 'background:#FEE2E2;border:1.5px solid #FCA5A5;border-radius:12px;padding:12px 18px;margin:16px 22px;font-size:13px;font-weight:700;color:#991B1B;';
+      var mc = document.querySelector('.main-content') || document.body;
+      mc.prepend(errBanner);
+    }
+    errBanner.textContent = '❌ خطأ في الاتصال بقاعدة البيانات: ' + (err.code || err.message) + ' — تحقق من الصلاحيات أو الاتصال.';
+    // عرض ما هو محفوظ في localStorage كبديل مؤقت
+    var cached = JSON.parse(localStorage.getItem('atwad_clients') || '[]');
+    if(cached.length > 0) {
+      clients = cached;
+      renderTable();
+      updateStats();
+    }
   });
 }
 let editingId = null;
-let currentFilter = 'all';
 let selectedType = '';
 
 const avatarColors = ['#0EA5E9','#8B5CF6','#10B981','#F59E0B','#EF4444','#EC4899','#0C3B5E'];
@@ -704,72 +743,152 @@ function badgeHTML(type) {
 
 function renderTable() {
   const search = document.getElementById('searchInput').value.trim().toLowerCase();
-  let list = clients;
-  if (currentFilter !== 'all') list = list.filter(c => c.type === currentFilter);
-  if (search) list = list.filter(c =>
-    c.name.toLowerCase().includes(search) ||
-    c.phone.includes(search) ||
-    (c.city||'').includes(search)
-  );
+  var filter = currentFilter || 'all';
 
-  const tbody = document.getElementById('tableBody');
-  const empty = document.getElementById('emptyState');
-
-  if (list.length === 0) {
-    tbody.innerHTML = '';
-    empty.style.display = 'block';
-    return;
+  // دعم الحقول البديلة للاسم
+  function clientName(c) {
+    return c.name || c.customerName || c.clientName || c.fullName || 'بدون اسم';
   }
-  empty.style.display = 'none';
 
-  tbody.innerHTML = list.map(c => `
-    <tr onclick="openDetail('${c.id}')">
-      <td>
-        <div class="client-name-cell">
-          <div class="avatar" style="background:${getAvatarColor(c.name)}">${getInitials(c.name)}</div>
-          <div>
-            <div class="client-name">${c.name}</div>
-            <div class="client-id">${c.id}</div>
-          </div>
-        </div>
-      </td>
-      <td><a class="phone-link" href="tel:${c.phone}" onclick="event.stopPropagation()">${c.phone}</a></td>
-      <td>${c.city||'—'}</td>
-      <td>${badgeHTML(c.type)}</td>
-      <td><span class="visits-count">${c.visits||0}</span></td>
-      <td><span class="last-visit">${c.lastVisit||'لم تُحدد'}</span></td>
-      <td onclick="event.stopPropagation()">
-        <div style="display:flex;gap:6px;">
-          <button class="action-btn btn-view" onclick="openDetail('${c.id}')">عرض</button>
-          <button class="action-btn btn-book" onclick="quickBook('${c.id}')">📅 حجز</button>
-          <button class="action-btn btn-del"  onclick="deleteClient('${c.id}')">🗑️</button>
-        </div>
-      </td>
-    </tr>
-  `).join('');
-  updateStats();
-}
+  // تصنيف حالة آخر عمل من بيانات allAppointments
+  function getLastWork(c) {
+    var phone = normalizePhone(c.phone || '');
+    // ابحث في المواعيد المحلية
+    var appts = (window.allAppointments || []).filter(function(a) {
+      return normalizePhone(a.phone || '') === phone;
+    });
+    if(!appts.length) return { status: 'none', date: '', group: 5 };
 
-// ========== FILTER ==========
-function setFilter(btn, filter) {
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  var search = document.getElementById('searchInput').value.toLowerCase();
-  var rows = document.querySelectorAll('#clientTable tr[data-id]');
-  rows.forEach(function(row) {
-    var id = row.getAttribute('data-id');
-    var c  = clients.find(function(x){ return x.id === id; });
-    if(!c){ row.style.display='none'; return; }
+    // أحدث موعد بناءً على date (YYYY-MM-DD)
+    appts.sort(function(a,b){ return (b.date||'').localeCompare(a.date||''); });
+    var latest = appts[0];
+    var s = (latest.status || '').toLowerCase();
+    var DONE = ['done','مكتمل','تم','complete','completed','مكتملة'];
+    var CANCEL = ['cancelled','ملغي','ملغى','canceled'];
+    var PENDING = ['pending','في الانتظار','confirmed','مؤكد'];
+
+    if(DONE.indexOf(s) !== -1)    return { status:'done',    date: latest.date||'', label:'مكتمل',      group:1 };
+    if(CANCEL.indexOf(s) !== -1)  return { status:'cancel',  date: latest.date||'', label:'ملغي',        group:5 };
+    if(PENDING.indexOf(s) !== -1) return { status:'pending', date: latest.date||'', label:'موعد قادم',   group:4 };
+    return                               { status:'other',   date: latest.date||'', label:'قيد التنفيذ', group:4 };
+  }
+
+  // مجموعة الترتيب حسب اكتمال العمل + حالة التقييم
+  function sortGroup(c, work) {
+    if(work.status === 'done') {
+      if(!c.reviewCandidate && !c.reviewRequestSent) return 1; // مكتمل، لم يُرسل، غير مرشح
+      if(c.reviewCandidate && !c.reviewRequestSent)  return 2; // مرشح
+      if(c.reviewRequestSent)                         return 3; // تم الإرسال
+    }
+    if(work.group === 4) return 4;
+    return 5;
+  }
+
+  // شارة حالة التقييم
+  function reviewBadge(c, work) {
+    if(c.reviewRequestSent)    return '<span style="font-size:10px;background:#D1FAE5;color:#065F46;padding:2px 7px;border-radius:20px;font-weight:700;">✅ تم الإرسال</span>';
+    if(c.reviewCandidate)      return '<span style="font-size:10px;background:#FEF9C3;color:#92400E;padding:2px 7px;border-radius:20px;font-weight:700;">⭐ مرشح</span>';
+    if(work.status === 'done') return '<span style="font-size:10px;background:#EFF6FF;color:#1E40AF;padding:2px 7px;border-radius:20px;font-weight:700;">💡 جاهز للطلب</span>';
+    return '';
+  }
+
+  // شارة حالة العمل
+  function workBadge(work) {
+    if(work.status === 'none')   return '<span style="color:var(--mist);font-size:12px;">—</span>';
+    var colors = { done:'#D1FAE5;color:#065F46', cancel:'#FEE2E2;color:#991B1B', pending:'#DBEAFE;color:#1E40AF', other:'#F1F5F9;color:#475569' };
+    var col = colors[work.status] || colors.other;
+    var dateStr = work.date ? ' — ' + fmtShortDate(work.date) : '';
+    return '<span style="font-size:11px;background:' + col + ';padding:2px 8px;border-radius:20px;font-weight:700;">' + work.label + dateStr + '</span>';
+  }
+
+  // فلترة
+  var list = clients.filter(function(c) {
+    var name = clientName(c);
     var matchFilter = filter === 'all'
       || (filter === 'reviewCandidate' && c.reviewCandidate === true)
       || (filter === 'reviewSent'      && c.reviewRequestSent === true)
       || c.type === filter;
-    var matchSearch = !search || c.name.toLowerCase().includes(search) || (c.phone||'').includes(search);
-    row.style.display = (matchFilter && matchSearch) ? '' : 'none';
+    var matchSearch = !search
+      || name.toLowerCase().includes(search)
+      || (c.phone||'').includes(search)
+      || (c.city||'').toLowerCase().includes(search);
+    return matchFilter && matchSearch;
   });
+
+  // ترتيب: حسب مجموعة الترتيب ثم آخر تاريخ عمل (تنازلي)
+  list = list.map(function(c) {
+    var work = getLastWork(c);
+    return { c:c, work:work, group: sortGroup(c, work) };
+  }).sort(function(a,b) {
+    if(a.group !== b.group) return a.group - b.group;
+    return (b.work.date||'').localeCompare(a.work.date||'');
+  });
+
+  // تسجيل تشخيصي لأول 3 عملاء
+  if(list.length) {
+    list.slice(0,3).forEach(function(item) {
+      console.log('[customers] ', {
+        name: clientName(item.c), phone: normalizePhone(item.c.phone||''),
+        group: item.group, workStatus: item.work.status, workDate: item.work.date
+      });
+    });
+  }
+
+  const tbody = document.getElementById('tableBody');
+  const empty = document.getElementById('emptyState');
+
+  if(!list.length) { tbody.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display = 'none';
+
+  tbody.innerHTML = list.map(function(item) {
+    var c = item.c;
+    var work = item.work;
+    var name = clientName(c);
+    return '<tr data-id="' + c.id + '" onclick="openDetail(\'' + c.id + '\')">' +
+      '<td><div class="client-name-cell">' +
+        '<div class="avatar" style="background:' + getAvatarColor(name) + '">' + getInitials(name) + '</div>' +
+        '<div><div class="client-name">' + name + '</div>' +
+        '<div class="client-id">' + c.id + '</div>' +
+        '<div style="margin-top:3px">' + reviewBadge(c, work) + '</div></div>' +
+      '</div></td>' +
+      '<td><a class="phone-link" href="tel:' + c.phone + '" onclick="event.stopPropagation()">' + (c.phone||'—') + '</a></td>' +
+      '<td>' + (c.city||'—') + '</td>' +
+      '<td>' + badgeHTML(c.type) + '</td>' +
+      '<td>' + workBadge(work) + '</td>' +
+      '<td><span class="visits-count">' + (c.visits||0) + '</span></td>' +
+      '<td onclick="event.stopPropagation()"><div style="display:flex;gap:6px;">' +
+        '<button class="action-btn btn-view" onclick="openDetail(\'' + c.id + '\')">عرض</button>' +
+        '<button class="action-btn btn-book" onclick="quickBook(\'' + c.id + '\')">📅 حجز</button>' +
+        '<button class="action-btn btn-del"  onclick="deleteClient(\'' + c.id + '\')">🗑️</button>' +
+      '</div></td>' +
+    '</tr>';
+  }).join('');
+  updateStats();
 }
 
-// ========== ADD / EDIT MODAL ==========
+// تطبيع رقم الجوال للمقارنة
+function normalizePhone(p) {
+  p = p.replace(/[\s\-\(\)\+]/g,'');
+  if(p.startsWith('966')) return p;
+  if(p.startsWith('05'))  return '966' + p.slice(1);
+  if(p.startsWith('5') && p.length === 9) return '966' + p;
+  return p;
+}
+
+// تنسيق تاريخ YYYY-MM-DD قصير
+function fmtShortDate(d) {
+  try {
+    return new Date(d + 'T00:00:00').toLocaleDateString('ar-SA-u-ca-gregory', {month:'short', day:'numeric'});
+  } catch(e){ return d; }
+}
+
+// ========== FILTER ==========
+function setFilter(btn, filter) {
+  document.querySelectorAll('.filter-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  currentFilter = filter;
+  renderTable();
+}
 function openAddModal(id) {
   editingId = id || null;
   selectedType = '';
@@ -1038,20 +1157,34 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
 });
 
 // ========== INIT ==========
-// بيانات تجريبية إذا كانت القاعدة فارغة
-if (clients.length === 0) {
-  clients = [
-    { id:'C100001', name:'محمد العتيبي',    phone:'0501234567', city:'الرياض',  type:'دائم',    address:'حي النرجس', company:'', notes:'يفضل الصباح', visits:5, lastVisit:'10/06/2025', createdAt:'01/01/2025' },
-    { id:'C100002', name:'سارة الشمري',     phone:'0551234567', city:'جدة',     type:'جديد',    address:'حي الزهراء', company:'', notes:'', visits:1, lastVisit:'20/06/2025', createdAt:'20/06/2025' },
-    { id:'C100003', name:'شركة الأفق للتطوير', phone:'0561234567', city:'الرياض', type:'شركات', address:'طريق الملك فهد', company:'الأفق للتطوير العقاري', notes:'مبنى إداري - 12 وحدة', visits:3, lastVisit:'01/06/2025', createdAt:'15/03/2025' },
-    { id:'C100004', name:'خالد الدوسري',    phone:'0571234567', city:'الدمام',  type:'دائم',    address:'حي الشاطئ', company:'', notes:'', visits:8, lastVisit:'05/06/2025', createdAt:'10/11/2024' },
-    { id:'C100005', name:'نورة القحطاني',   phone:'0581234567', city:'الرياض',  type:'جديد',    address:'حي الملقا', company:'', notes:'التواصل فقط واتساب', visits:0, lastVisit:'', createdAt:'25/06/2025' },
-  ];
-  saveData();
-}
+// بيانات تجريبية — تظهر فقط إذا فشل الاتصال بـ Firebase
+var _demoClients = [
+  { id:'C100001', name:'محمد العتيبي',       phone:'0501234567', city:'الرياض',  type:'دائم',   visits:5,  lastVisit:'10/06/2025', createdAt:'01/01/2025' },
+  { id:'C100002', name:'سارة الشمري',        phone:'0551234567', city:'جدة',     type:'جديد',   visits:1,  lastVisit:'20/06/2025', createdAt:'20/06/2025' },
+  { id:'C100003', name:'شركة الأفق',         phone:'0561234567', city:'الرياض',  type:'شركات',  visits:3,  lastVisit:'01/06/2025', createdAt:'15/03/2025' },
+  { id:'C100004', name:'خالد الدوسري',       phone:'0571234567', city:'الدمام',  type:'دائم',   visits:8,  lastVisit:'05/06/2025', createdAt:'10/11/2024' },
+  { id:'C100005', name:'نورة القحطاني',      phone:'0581234567', city:'الرياض',  type:'جديد',   visits:0,  lastVisit:'',           createdAt:'25/06/2025' },
+];
 
-renderTable();
-updateStats();
+if(db) {
+  // Firebase متاح — تحميل البيانات الحقيقية
+  console.log('[customers] جاري الاتصال بـ Firebase — المسار: customers');
+  clients = []; // لا تعرض التجريبية أثناء التحميل
+  renderTable(); // جدول فارغ مؤقتاً
+  syncFromFirebase();
+} else {
+  // Firebase غير متاح — عرض تحذير وبيانات تجريبية
+  console.warn('[customers] ⚠️ Firebase غير متاح — عرض بيانات تجريبية');
+  var errBanner = document.createElement('div');
+  errBanner.style.cssText = 'background:#FEE2E2;border:1.5px solid #FCA5A5;border-radius:12px;padding:12px 18px;margin:16px 22px;font-size:13px;font-weight:700;color:#991B1B;';
+  errBanner.textContent = '⚠️ لم يتم الاتصال بقاعدة البيانات. يظهر حالياً بيانات تجريبية فقط. تحقق من الاتصال بالإنترنت.';
+  document.querySelector('.main-content') && document.querySelector('.main-content').prepend(errBanner);
+  if(clients.length === 0) {
+    clients = _demoClients;
+  }
+  renderTable();
+  updateStats();
+}
 </script>
 
 
