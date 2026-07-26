@@ -959,21 +959,25 @@ function editAppt(id){
   document.getElementById('f_time').value=a.time||'09:00';
   document.getElementById('f_notes').value=a.notes||'';
   loadImageInModal(a.locationImage||'');
-  // استعادة حقول الموقع
+  // استعادة حقول الموقع — resetLocFields أولاً ثم نُعيد تعبئة بيانات الموعد
   resetLocFields();
-  if(a.mapsLink) {
-    document.getElementById('appointment_maps_link').value = a.mapsLink;
-    document.getElementById('loc_open_btn').href = a.mapsLink;
+  // دعم حقل mapsLink والحقول القديمة location/mapLink
+  var savedLink = a.mapsLink || a.mapLink || a.location || '';
+  if(savedLink) {
+    document.getElementById('appointment_maps_link').value = savedLink;
+    document.getElementById('loc_open_btn').href = savedLink;
     document.getElementById('loc_open_btn').style.display = 'inline-flex';
   }
-  if(isValidCoordinates(Number(a.lat), Number(a.lng))) {
-    _locLat = Number(a.lat); _locLng = Number(a.lng);
-    document.getElementById('appointment_lat').value = _locLat;
-    document.getElementById('appointment_lng').value = _locLng;
-    showLocPreview(_locLat, _locLng);
+  // استعادة الإحداثيات — سواء كانت صالحة أم لا نحافظ على القيم
+  if(a.lat != null && a.lng != null) {
+    _locLat = Number(a.lat);
+    _locLng = Number(a.lng);
+    document.getElementById('appointment_lat').value = a.lat;
+    document.getElementById('appointment_lng').value = a.lng;
+    if(isValidCoordinates(_locLat, _locLng)) showLocPreview(_locLat, _locLng);
   }
   if(a.locationSource) document.getElementById('appointment_location_source').value = a.locationSource;
-  if(a.locationVerified) {
+  if(a.locationVerified === true || a.locationVerified === 'true') {
     document.getElementById('appointment_location_verified').value = 'true';
     document.getElementById('chk_loc_verified').checked = true;
   }
