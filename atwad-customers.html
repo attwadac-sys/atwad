@@ -637,13 +637,16 @@ function syncFromFirebase() {
       var SUSPECT = ['أحمد محمد','سارة عبدالله','مؤسسة النور','خالد علي','نورة سعيد'];
 
       // فحص مسار customers أولاً
+      var suspiciousRecords = [];
       fbData.forEach(function(c) {
         if(SUSPECT.indexOf(c.name) !== -1) {
-          console.warn('[DIAG] وُجد في customers:', {
+          var rec = {
             name: c.name, source: 'customers',
             firebaseKey: c._fbKey, id: c.id,
             phone_prefix: (c.phone||'').slice(0,4)+'****'
-          });
+          };
+          suspiciousRecords.push(rec);
+          console.warn('[DIAG] وُجد في customers:', rec);
         }
       });
 
@@ -654,12 +657,14 @@ function syncFromFirebase() {
 
         // فحص مسار bookings للأسماء المشبوهة
         if(SUSPECT.indexOf(bName) !== -1) {
-          console.warn('[DIAG] وُجد في bookings:', {
+          var brec = {
             name: bName, source: 'bookings',
             firebaseKey: child.key, id: 'B_'+child.key,
             phone_prefix: (phone).slice(0,4)+'****',
             date: b.date||'', service: b.service||''
-          });
+          };
+          suspiciousRecords.push(brec);
+          console.warn('[DIAG] وُجد في bookings:', brec);
         }
 
         if(phone && !phones[phone] && bName) {
@@ -687,6 +692,12 @@ function syncFromFirebase() {
         من_bookings: bookingsAdded,
         الإجمالي_بعد_إزالة_التكرار: fbData.length
       });
+      if(suspiciousRecords.length) {
+        console.table(suspiciousRecords);
+        console.log('[DIAG JSON]', JSON.stringify(suspiciousRecords));
+      } else {
+        console.log('[DIAG] لم تُعثر على أسماء مشبوهة في customers أو bookings');
+      }
 
       // استبدال clients بالكامل من Firebase — لا دمج مع localStorage
       clients = fbData;
@@ -770,20 +781,21 @@ function getInitials(name) {
 
 // ========== RENDER ==========
 function updateStats() {
-  // إجمالي العملاء = عدد جميع سجلات مصفوفة clients بدون استثناء
-  // مستقل تماماً عن التصنيف — لا يُجمع من البطاقات الأخرى
-  var total = clients.length;
-
-  // البطاقات الأخرى مستقلة، تعتمد على نفس المصدر (clients array)
+  var total     = clients.length;
   var newCount  = clients.filter(function(c){ return c.type === 'جديد'; }).length;
   var regCount  = clients.filter(function(c){ return c.type === 'دائم'; }).length;
   var corpCount = clients.filter(function(c){ return c.type === 'شركات'; }).length;
 
-  document.getElementById('statTotal').textContent = total;
-  document.getElementById('statNew').textContent   = newCount;
-  document.getElementById('statReg').textContent   = regCount;
-  document.getElementById('statCorp').textContent  = corpCount;
-  document.getElementById('navBadge').textContent  = total;
+  // فحص وجود العنصر قبل تحديثه — يمنع TypeError عند الاستدعاء المبكر
+  function setEl(id, val) {
+    var el = document.getElementById(id);
+    if(el) el.textContent = val;
+  }
+  setEl('statTotal', total);
+  setEl('statNew',   newCount);
+  setEl('statReg',   regCount);
+  setEl('statCorp',  corpCount);
+  setEl('navBadge',  total);
 }
 
 function badgeHTML(type) {
