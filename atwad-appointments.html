@@ -759,7 +759,14 @@ function initFirebaseSync() {
           status: 'pending',
           notes: 'حجز من النموذج الإلكتروني',
           duration: b.duration || 60,
-          createdAt: b.createdAt || ''
+          createdAt: b.createdAt || '',
+          // حقول الموقع — تُنسخ من الحجز الأصلي
+          mapsLink:        b.mapsLink || b.mapLink || b.location || b.locationUrl || b.googleMapsUrl || b.locationLink || '',
+          lat:             b.lat  != null ? b.lat  : '',
+          lng:             b.lng  != null ? b.lng  : '',
+          locationImage:   b.locationImage   || '',
+          locationVerified:b.locationVerified || false,
+          locationSource:  b.locationSource  || ''
         });
       });
 
@@ -962,11 +969,29 @@ function editAppt(id){
   // استعادة حقول الموقع — resetLocFields أولاً ثم نُعيد تعبئة بيانات الموعد
   resetLocFields();
   // دعم حقل mapsLink والحقول القديمة location/mapLink
-  var savedLink = a.mapsLink || a.mapLink || a.location || '';
+  var savedLink = a.mapsLink || a.mapLink || a.location || a.locationUrl || a.googleMapsUrl || a.locationLink || '';
+
+  // تسجيل تشخيصي مؤقت
+  console.log('[editAppt] location debug:', {
+    id: a.id || a._fbKey,
+    source: a._source,
+    mapsLink: a.mapsLink,
+    mapLink: a.mapLink,
+    location: a.location,
+    locationUrl: a.locationUrl,
+    googleMapsUrl: a.googleMapsUrl,
+    locationLink: a.locationLink,
+    resolvedLink: savedLink,
+    lat: a.lat, lng: a.lng
+  });
+
   if(savedLink) {
     document.getElementById('appointment_maps_link').value = savedLink;
     document.getElementById('loc_open_btn').href = savedLink;
     document.getElementById('loc_open_btn').style.display = 'inline-flex';
+    console.log('[editAppt] mapsLink set from field →', savedLink);
+  } else {
+    console.warn('[editAppt] no mapsLink found for', a.id || a._fbKey);
   }
   // استعادة الإحداثيات — سواء كانت صالحة أم لا نحافظ على القيم
   if(a.lat != null && a.lng != null) {
