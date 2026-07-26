@@ -585,10 +585,8 @@ try {
 
 // ========== DATA ==========
 let clients = JSON.parse(localStorage.getItem('atwad_clients') || '[]');
-
-// مزامنة Firebase — استخدام on('value') لمراقبة التغييرات مباشرة
-// هذا يضمن تحديث العدادات فور أي إضافة/حذف/تعديل في Firebase
-var _fbSyncing = false; // منع الاستدعاء المتداخل
+let currentFilter = 'all'; // النطاق العام — يُستخدم في renderTable وsetFilter
+var _fbSyncing = false;
 
 function syncFromFirebase() {
   if(!db) return;
