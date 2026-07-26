@@ -588,6 +588,19 @@ let clients = JSON.parse(localStorage.getItem('atwad_clients') || '[]');
 let currentFilter = 'all'; // النطاق العام — يُستخدم في renderTable وsetFilter
 var _fbSyncing = false;
 
+// إزالة أي سجلات تجريبية قد تكون محفوظة في localStorage من جلسات سابقة
+(function cleanDemoFromStorage() {
+  var DEMO_IDS = {'C100001':1,'C100002':1,'C100003':1,'C100004':1,'C100005':1};
+  var stored = JSON.parse(localStorage.getItem('atwad_clients') || '[]');
+  var hadDemo = stored.some(function(c){ return DEMO_IDS[c.id]; });
+  if(hadDemo) {
+    var cleaned = stored.filter(function(c){ return !DEMO_IDS[c.id]; });
+    localStorage.setItem('atwad_clients', JSON.stringify(cleaned));
+    clients = cleaned;
+    console.log('[customers] تم حذف', (stored.length - cleaned.length), 'سجل تجريبي من localStorage');
+  }
+})();
+
 function syncFromFirebase() {
   if(!db) return;
 
@@ -596,12 +609,19 @@ function syncFromFirebase() {
     var fbData = [];
     var phones = {};
     var fieldSample = null;
+    var DEMO_IDS = {'C100001':1,'C100002':1,'C100003':1,'C100004':1,'C100005':1};
     snapC.forEach(function(child) {
       var c = Object.assign({}, child.val(), {_fbKey: child.key, _src: 'customers'});
       if(!c.id) c.id = c._fbKey;
+      // تشخيص: كشف السجلات التجريبية إذا وُجدت في Firebase
+      if(DEMO_IDS[c.id]) {
+        console.warn('[customers] ⚠️ سجل تجريبي في Firebase:', {
+          key: child.key, id: c.id, name: c.name,
+          phone_prefix: (c.phone||'').slice(0,4) + '****'
+        });
+      }
       fbData.push(c);
       if(c.phone) phones[c.phone] = true;
-      // عينة من أسماء الحقول (أول سجل فقط، بدون قيم)
       if(!fieldSample) fieldSample = Object.keys(c).filter(function(k){ return k !== '_fbKey' && k !== '_src'; });
     });
     console.log('[customers] Firebase customers محمّلة:', {
@@ -612,16 +632,44 @@ function syncFromFirebase() {
 
     // إضافة العملاء من الحجوزات الإلكترونية (مرة واحدة فقط)
     db.ref('bookings').once('value', function(snapB) {
+      var bookingsAdded = 0;
+      // الأسماء المشبوهة للتشخيص — بحث بدون حذف
+      var SUSPECT = ['أحمد محمد','سارة عبدالله','مؤسسة النور','خالد علي','نورة سعيد'];
+
+      // فحص مسار customers أولاً
+      fbData.forEach(function(c) {
+        if(SUSPECT.indexOf(c.name) !== -1) {
+          console.warn('[DIAG] وُجد في customers:', {
+            name: c.name, source: 'customers',
+            firebaseKey: c._fbKey, id: c.id,
+            phone_prefix: (c.phone||'').slice(0,4)+'****'
+          });
+        }
+      });
+
       snapB.forEach(function(child) {
         var b = child.val();
         var phone = b.phone || '';
-        if(phone && !phones[phone] && (b.client||b.name)) {
+        var bName = b.client || b.name || '';
+
+        // فحص مسار bookings للأسماء المشبوهة
+        if(SUSPECT.indexOf(bName) !== -1) {
+          console.warn('[DIAG] وُجد في bookings:', {
+            name: bName, source: 'bookings',
+            firebaseKey: child.key, id: 'B_'+child.key,
+            phone_prefix: (phone).slice(0,4)+'****',
+            date: b.date||'', service: b.service||''
+          });
+        }
+
+        if(phone && !phones[phone] && bName) {
           phones[phone] = true;
+          bookingsAdded++;
           fbData.push({
             id: 'B_'+child.key,
             _fbKey: 'B_'+child.key,
             _src: 'booking',
-            name: b.client || b.name || '',
+            name: bName,
             phone: phone,
             city: b.city || 'جدة',
             type: 'أفراد',
@@ -634,10 +682,15 @@ function syncFromFirebase() {
         }
       });
 
-      if(fbData.length > 0) {
-        clients = fbData;
-        localStorage.setItem('atwad_clients', JSON.stringify(clients));
-      }
+      console.log('[customers] ملخص التحميل:', {
+        من_customers: fbData.length - bookingsAdded,
+        من_bookings: bookingsAdded,
+        الإجمالي_بعد_إزالة_التكرار: fbData.length
+      });
+
+      // استبدال clients بالكامل من Firebase — لا دمج مع localStorage
+      clients = fbData;
+      localStorage.setItem('atwad_clients', JSON.stringify(clients));
 
       // تحميل المواعيد مرة واحدة لتحديد آخر عمل لكل عميل
       db.ref('appointments').once('value', function(snapA) {
@@ -1155,31 +1208,18 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
 });
 
 // ========== INIT ==========
-// بيانات تجريبية — تظهر فقط إذا فشل الاتصال بـ Firebase
-var _demoClients = [
-  { id:'C100001', name:'محمد العتيبي',       phone:'0501234567', city:'الرياض',  type:'دائم',   visits:5,  lastVisit:'10/06/2025', createdAt:'01/01/2025' },
-  { id:'C100002', name:'سارة الشمري',        phone:'0551234567', city:'جدة',     type:'جديد',   visits:1,  lastVisit:'20/06/2025', createdAt:'20/06/2025' },
-  { id:'C100003', name:'شركة الأفق',         phone:'0561234567', city:'الرياض',  type:'شركات',  visits:3,  lastVisit:'01/06/2025', createdAt:'15/03/2025' },
-  { id:'C100004', name:'خالد الدوسري',       phone:'0571234567', city:'الدمام',  type:'دائم',   visits:8,  lastVisit:'05/06/2025', createdAt:'10/11/2024' },
-  { id:'C100005', name:'نورة القحطاني',      phone:'0581234567', city:'الرياض',  type:'جديد',   visits:0,  lastVisit:'',           createdAt:'25/06/2025' },
-];
-
 if(db) {
-  // Firebase متاح — تحميل البيانات الحقيقية
   console.log('[customers] جاري الاتصال بـ Firebase — المسار: customers');
-  clients = []; // لا تعرض التجريبية أثناء التحميل
-  renderTable(); // جدول فارغ مؤقتاً
+  clients = [];
+  renderTable();
   syncFromFirebase();
 } else {
-  // Firebase غير متاح — عرض تحذير وبيانات تجريبية
-  console.warn('[customers] ⚠️ Firebase غير متاح — عرض بيانات تجريبية');
+  console.warn('[customers] ⚠️ Firebase غير متاح');
   var errBanner = document.createElement('div');
   errBanner.style.cssText = 'background:#FEE2E2;border:1.5px solid #FCA5A5;border-radius:12px;padding:12px 18px;margin:16px 22px;font-size:13px;font-weight:700;color:#991B1B;';
-  errBanner.textContent = '⚠️ لم يتم الاتصال بقاعدة البيانات. يظهر حالياً بيانات تجريبية فقط. تحقق من الاتصال بالإنترنت.';
-  document.querySelector('.main-content') && document.querySelector('.main-content').prepend(errBanner);
-  if(clients.length === 0) {
-    clients = _demoClients;
-  }
+  errBanner.textContent = '⚠️ لم يتم الاتصال بقاعدة البيانات. تحقق من الاتصال بالإنترنت.';
+  var mc = document.querySelector('.main-content') || document.body;
+  mc.prepend(errBanner);
   renderTable();
   updateStats();
 }
