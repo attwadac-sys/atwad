@@ -162,6 +162,24 @@
   .filter-btn.new-f.active  { border-color:var(--new-cl);color:var(--new-cl);background:#F5F3FF; }
   .filter-btn.reg-f.active  { border-color:var(--reg-cl);color:var(--reg-cl);background:#ECFDF5; }
   .filter-btn.corp-f.active { border-color:var(--corp-cl);color:var(--corp-cl);background:var(--ice); }
+  .filter-btn.rev-f.active  { border-color:#F59E0B;color:#92400E;background:#FEF9C3; }
+  .filter-btn.sent-f.active { border-color:#10B981;color:#065F46;background:#D1FAE5; }
+
+  /* قسم التقييم في تفاصيل العميل */
+  .review-section{background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:12px;padding:14px 16px;margin-top:16px;}
+  .review-section h4{font-size:13px;font-weight:800;color:#92400E;margin-bottom:10px;}
+  .review-toggle-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+  .toggle-label{font-size:13px;font-weight:600;color:var(--slate);}
+  .toggle-switch{position:relative;width:44px;height:24px;cursor:pointer;}
+  .toggle-switch input{opacity:0;width:0;height:0;}
+  .toggle-slider{position:absolute;inset:0;background:#CBD5E1;border-radius:24px;transition:.3s;}
+  .toggle-slider:before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.3s;}
+  .toggle-switch input:checked + .toggle-slider{background:#F59E0B;}
+  .toggle-switch input:checked + .toggle-slider:before{transform:translateX(20px);}
+  .review-status{font-size:12px;color:var(--mist);margin-bottom:10px;}
+  .review-status.sent{color:#065F46;font-weight:700;}
+  .btn-send-review{width:100%;padding:11px;background:linear-gradient(90deg,#F59E0B,#FBBF24);color:#fff;border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;}
+  .btn-send-review:disabled{background:#E2E8F0;color:var(--mist);cursor:not-allowed;}
 
   /* TABLE */
   .table-card {
@@ -450,6 +468,8 @@
       <button class="filter-btn new-f" data-filter="جديد" onclick="setFilter(this,'جديد')">🆕 جدد</button>
       <button class="filter-btn reg-f" data-filter="دائم" onclick="setFilter(this,'دائم')">⭐ دائمون</button>
       <button class="filter-btn corp-f" data-filter="شركات" onclick="setFilter(this,'شركات')">🏢 شركات</button>
+      <button class="filter-btn rev-f" data-filter="reviewCandidate" onclick="setFilter(this,'reviewCandidate')">⭐ مرشحو التقييم</button>
+      <button class="filter-btn sent-f" data-filter="reviewSent" onclick="setFilter(this,'reviewSent')">✅ تم إرسال الطلب</button>
     </div>
 
     <!-- TABLE -->
@@ -734,8 +754,19 @@ function renderTable() {
 function setFilter(btn, filter) {
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  currentFilter = filter;
-  renderTable();
+  var search = document.getElementById('searchInput').value.toLowerCase();
+  var rows = document.querySelectorAll('#clientTable tr[data-id]');
+  rows.forEach(function(row) {
+    var id = row.getAttribute('data-id');
+    var c  = clients.find(function(x){ return x.id === id; });
+    if(!c){ row.style.display='none'; return; }
+    var matchFilter = filter === 'all'
+      || (filter === 'reviewCandidate' && c.reviewCandidate === true)
+      || (filter === 'reviewSent'      && c.reviewRequestSent === true)
+      || c.type === filter;
+    var matchSearch = !search || c.name.toLowerCase().includes(search) || (c.phone||'').includes(search);
+    row.style.display = (matchFilter && matchSearch) ? '' : 'none';
+  });
 }
 
 // ========== ADD / EDIT MODAL ==========
@@ -855,6 +886,30 @@ function openDetail(id) {
       <a href="https://wa.me/966${c.phone.slice(1)}" target="_blank" style="flex:1;text-align:center;padding:10px;background:#25D366;color:#fff;border-radius:10px;font-weight:700;text-decoration:none;font-size:14px;">📲 واتساب</a>
       <a href="tel:${c.phone}" style="flex:1;text-align:center;padding:10px;background:var(--ice);color:var(--sky);border-radius:10px;font-weight:700;text-decoration:none;font-size:14px;">📞 اتصال</a>
     </div>
+
+    <!-- قسم التقييم -->
+    <div class="review-section">
+      <h4>⭐ طلب التقييم</h4>
+      <div class="review-toggle-row">
+        <span class="toggle-label">مرشح لطلب التقييم</span>
+        <label class="toggle-switch">
+          <input type="checkbox" ${c.reviewCandidate === true ? 'checked' : ''}
+            onchange="toggleReviewCandidate('${c.id}', this.checked)">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="review-status ${c.reviewRequestSent ? 'sent' : ''}">
+        ${c.reviewRequestSent
+          ? '✅ تم طلب التقييم — آخر طلب: ' + fmtReviewDate(c.reviewRequestSentAt) +
+            (c.reviewRequestCount > 1 ? ' (أُرسل ' + c.reviewRequestCount + ' مرات)' : '')
+          : '⬜ لم يُطلب منه التقييم بعد'}
+      </div>
+      <button class="btn-send-review"
+        ${c.reviewCandidate !== true ? 'disabled title="فعّل الترشيح أولاً"' : ''}
+        onclick="sendReviewRequest('${c.id}')">
+        ⭐ إرسال طلب التقييم
+      </button>
+    </div>
   `;
   document.getElementById('detailModal').classList.add('open');
 }
@@ -891,6 +946,81 @@ function quickBook(id) {
 // ========== HELPERS ==========
 function closeModal(id) {
   document.getElementById(id).classList.remove('open');
+}
+
+// ========== REVIEW CANDIDATE ==========
+
+/** تنسيق رقم الجوال السعودي للواتساب */
+function normalizePhoneForWA(phone) {
+  var p = (phone || '').replace(/[\s\-\(\)\+]/g, '');
+  if(p.startsWith('966')) return p;
+  if(p.startsWith('05') && p.length === 10) return '966' + p.slice(1);
+  if(p.startsWith('5')  && p.length === 9)  return '966' + p;
+  return '966' + p; // محاولة أفضل جهد
+}
+
+/** تبديل حالة الترشيح للتقييم */
+function toggleReviewCandidate(id, checked) {
+  var c = clients.find(function(x){ return x.id === id; });
+  if(!c || !c._fbKey) return;
+  c.reviewCandidate = checked;
+  db.ref('customers/' + c._fbKey).update({ reviewCandidate: checked }).then(function() {
+    showToast(checked ? '⭐ تم تفعيل الترشيح للتقييم' : '🔕 تم إلغاء الترشيح');
+    openDetail(id); // تحديث التفاصيل
+  }).catch(function(e){ showToast('❌ خطأ: ' + e.message); });
+}
+
+/** إرسال طلب التقييم عبر واتساب */
+function sendReviewRequest(id) {
+  var c = clients.find(function(x){ return x.id === id; });
+  if(!c) return;
+
+  // تحذير عند الإرسال المكرر
+  if(c.reviewRequestSent === true) {
+    if(!confirm('سبق إرسال طلب تقييم لهذا العميل.\n\nهل تريد إرسال الطلب مرة أخرى؟')) return;
+  }
+
+  var waPhone = normalizePhoneForWA(c.phone);
+  var clientName = (c.name && c.name.trim()) ? c.name.trim() : 'عميلنا العزيز';
+  var msg =
+    'السلام عليكم ' + (clientName === 'عميلنا العزيز' ? clientName : 'أستاذ/أستاذة ' + clientName) + ' 🌹\n\n' +
+    'أسأل الله أن تكونوا بخير.\n\n' +
+    'سبق أن تشرفنا بخدمتكم في مؤسسة أطواد لصيانة المكيفات، سواء كانت الزيارة قبل فترة قريبة أو منذ مدة.\n\n' +
+    'إذا كانت تجربتكم معنا مرضية، فسيسعدنا كثيرًا أن تشاركونا تقييمكم عبر الرابط التالي، فتقييمكم يساعدنا على تطوير الخدمة ويمنح العملاء الجدد الثقة في اختيارنا.\n\n' +
+    '⭐ رابط التقييم:\n' +
+    'https://attwadac-sys.github.io/atwad/atwad-reviews.html\n\n' +
+    'شكرًا لكم على ثقتكم، ونسأل الله أن نكون دائمًا عند حسن ظنكم.\n\n' +
+    'مؤسسة أطواد لصيانة المكيفات';
+
+  // فتح واتساب
+  window.open('https://wa.me/' + waPhone + '?text=' + encodeURIComponent(msg), '_blank', 'noopener');
+
+  // تحديث سجل العميل
+  var now = new Date().toISOString();
+  var newCount = (c.reviewRequestCount || 0) + 1;
+  c.reviewRequestSent   = true;
+  c.reviewRequestSentAt = now;
+  c.reviewRequestCount  = newCount;
+
+  if(c._fbKey) {
+    db.ref('customers/' + c._fbKey).update({
+      reviewRequestSent:   true,
+      reviewRequestSentAt: now,
+      reviewRequestCount:  newCount
+    }).then(function(){ openDetail(id); })
+      .catch(function(e){ console.error('review update error:', e); });
+  }
+  showToast('📲 تم فتح واتساب لإرسال طلب التقييم');
+}
+
+/** تنسيق تاريخ ISO لعرض مقروء */
+function fmtReviewDate(iso) {
+  if(!iso) return '—';
+  try {
+    return new Date(iso).toLocaleDateString('ar-SA-u-ca-gregory', {
+      year:'numeric', month:'long', day:'numeric'
+    });
+  } catch(e){ return iso; }
 }
 
 function showToast(msg) {
