@@ -388,9 +388,43 @@
 
 .lang-btn{padding:7px 14px;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);border-radius:8px;color:#fff;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;}
 .lang-btn:hover{background:rgba(255,255,255,.25);}
+  /* ===== IMPORT MODAL ===== */
+  .import-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:5000;display:none;align-items:flex-start;justify-content:center;overflow-y:auto;padding:20px;}
+  .import-overlay.open{display:flex;}
+  .import-box{background:#fff;border-radius:18px;width:100%;max-width:900px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.2);margin:auto;}
+  .import-title{font-size:17px;font-weight:900;color:var(--deep);margin-bottom:20px;display:flex;align-items:center;gap:10px;}
+  .import-stats{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:20px;}
+  .import-stat{background:var(--frost);border-radius:10px;padding:10px;text-align:center;}
+  .import-stat .isn{font-size:20px;font-weight:900;color:var(--deep);}
+  .import-stat .isl{font-size:10px;color:var(--mist);margin-top:2px;}
+  .import-progress{background:#F1F5F9;border-radius:10px;height:8px;margin:12px 0;overflow:hidden;display:none;}
+  .import-progress-bar{height:100%;background:linear-gradient(90deg,var(--sky),var(--deep));transition:width .3s;width:0%;}
+  .import-progress-label{font-size:12px;color:var(--mist);text-align:center;margin-top:4px;}
+  /* معاينة */
+  .preview-filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+  .pf-btn{padding:5px 12px;border:1.5px solid #E2E8F0;border-radius:20px;font-family:'Tajawal',sans-serif;font-size:11px;font-weight:700;cursor:pointer;background:#fff;color:var(--mist);}
+  .pf-btn.active{background:var(--sky);color:#fff;border-color:var(--sky);}
+  .preview-table-wrap{max-height:350px;overflow-y:auto;border:1px solid #E2E8F0;border-radius:10px;}
+  .preview-table{width:100%;border-collapse:collapse;font-size:12px;}
+  .preview-table th{background:var(--frost);padding:8px 10px;text-align:right;position:sticky;top:0;font-weight:700;color:var(--deep);}
+  .preview-table td{padding:7px 10px;border-bottom:1px solid #F8FAFC;}
+  .imp-new{background:#F0FFF4;}.imp-merge{background:#EFF6FF;}.imp-review{background:#FFFBEB;}.imp-skip{background:#FFF5F5;}
+  .status-badge{padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;}
+  .sb-new{background:#D1FAE5;color:#065F46;}.sb-merge{background:#DBEAFE;color:#1E40AF;}
+  .sb-review{background:#FEF9C3;color:#92400E;}.sb-skip{background:#FEE2E2;color:#991B1B;}
+  .import-btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;border-top:1px solid #F1F5F9;padding-top:16px;}
+  .import-btns button,.import-btns label{padding:10px 18px;border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
+  .btn-backup{background:#FEF9C3;color:#92400E;border:1.5px solid #FDE68A;}
+  .btn-preview{background:#DBEAFE;color:#1E40AF;}
+  .btn-start-import{background:linear-gradient(90deg,var(--deep),var(--sky));color:#fff;}
+  .btn-start-import:disabled{opacity:.5;cursor:not-allowed;}
+  .btn-cancel-import{background:#F1F5F9;color:var(--mist);}
+  @media(max-width:700px){.import-stats{grid-template-columns:repeat(3,1fr);}}
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+  <!-- SheetJS لقراءة Excel — للاستيراد فقط -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -428,6 +462,7 @@
     <div class="topbar-actions"><button class="lang-btn" id="langBtn" onclick="toggleLang()">🌐 EN</button>
       <button onclick="importFromFirebase()" id="importBtn" style="background:#fff;border:1.5px solid #0EA5E9;color:#0EA5E9;border-radius:10px;padding:9px 16px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;" data-lang="importBtn">📥 استيراد من الحجوزات</button>
       <button class="btn-add" onclick="openAddModal()" data-lang="addBtn">＋ إضافة عميل</button>
+      <button onclick="openImportModal()" style="padding:9px 14px;background:#FEF9C3;color:#92400E;border:1.5px solid #FDE68A;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">📥 استيراد من Excel</button>
     </div>
   </div>
 
@@ -606,11 +641,11 @@ var _fbSyncing = false;
 // ============================================================
 function isValidCustomer(c) {
   var name  = String(c.name || c.client || c.customerName || c.clientName || '').trim();
-  var phone = String(c.phone || '').replace(/\D/g,'');
+  var phone = normalizePhoneImport(c.phone || '');
   return name.length >= 2 &&
          name !== 'بدون اسم' &&
          name !== 'undefined' &&
-         phone.length >= 9;
+         /^05\d{8}$/.test(phone);
 }
 
 function syncFromFirebase() {
@@ -1277,7 +1312,662 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
   });
 });
 
-// ========== INIT ==========
+// ================================================================
+// محرك استيراد العملاء من Excel — النسخة المحكمة
+// ================================================================
+var _importRows   = [];
+var _importFilter = 'all';
+
+// ١. الرقم المحظور — بجميع صيغه
+var BLOCKED_RAW  = ['0565730008','565730008','966565730008','+966565730008','00966565730008','9660565730008','+966 56 573 0008'];
+var BLOCKED_NORM = null;
+
+// ٢. تطبيع الجوال الصارم — يُرجع 05XXXXXXXX أو '' فقط
+// يعالج: 05X / 5X / 966X / +966X / 00966X / 96605X
+function normalizePhoneImport(value) {
+  var s = String(value == null ? '' : value)
+    .trim()
+    .replace(/[^\d]/g, ''); // إزالة كل شيء غير رقمي (مسافات، +، -)
+  if(s.startsWith('00966')) s = s.slice(5);
+  else if(s.startsWith('966')) s = s.slice(3);
+  // بعد إزالة 966، قد تبدأ بـ 05 (من الصيغة 96605X) أو بـ 5
+  if(s.startsWith('05') && s.length === 10) return s;
+  if(s.startsWith('5')  && s.length === 9)  return '0' + s;
+  return ''; // أي صيغة أخرى → مستبعد
+}
+
+// تحقق هل الرقم محظور
+function isBlockedPhone(phone) {
+  if(!BLOCKED_NORM) {
+    BLOCKED_NORM = new Set(BLOCKED_RAW.map(normalizePhoneImport).filter(Boolean));
+  }
+  return BLOCKED_NORM.has(normalizePhoneImport(phone));
+}
+
+// خريطة أسماء الأعمدة
+var COLUMN_MAP = {
+  'رقم العميل':'customerCode','customer code':'customerCode','كود العميل':'customerCode',
+  'الاسم':'name','الاسم الكامل':'name','name':'name','client':'name','اسم العميل':'name','client name':'name',
+  'الجوال':'phone','رقم الجوال':'phone','phone':'phone','mobile':'phone','رقم الهاتف':'phone','جوال':'phone',
+  'المدينة':'city','city':'city','مدينة':'city',
+  'الحي':'district','district':'district','neighborhood':'district','حي':'district',
+  'التصنيف':'type','type':'type','نوع العميل':'type','تصنيف':'type',
+  'الزيارات':'visits','visits':'visits','عدد الزيارات':'visits',
+  'الإيرادات':'revenue','revenue':'revenue','إجمالي الإيرادات':'revenue','total revenue':'revenue',
+  'آخر زيارة':'lastVisit','last visit':'lastVisit','last service':'lastVisit',
+  'ملاحظات':'notes','notes':'notes'
+};
+
+function normalizeHeader(h) {
+  return String(h||'').trim().toLowerCase().replace(/\s+/g,' ');
+}
+
+function mapHeaders(row0) {
+  var map = {};
+  Object.keys(row0).forEach(function(raw) {
+    var key = normalizeHeader(raw);
+    var field = COLUMN_MAP[key] || COLUMN_MAP[raw.trim()] || null;
+    if(field) map[raw] = field;
+  });
+  return map;
+}
+
+// ٣. تصنيف صف واحد — الجوال هو المفتاح الأساسي
+function classifyRow(row, seenPhonesInFile) {
+  var name  = String(row.name || '').trim();
+  var rawPh = String(row.phone || '').trim();
+  var phone = normalizePhoneImport(rawPh);
+
+  if(!name || name.length < 2)  return { status:'skip', reason:'اسم مفقود', row:row };
+  if(!phone || !/^05\d{8}$/.test(phone))
+    return { status:'skip', reason:'جوال غير صالح: «' + (rawPh||'فارغ') + '»', row:row };
+
+  // ٦. محظور
+  if(isBlockedPhone(phone))      return { status:'blocked', reason:'رقم محظور بموجب السياسة', row:row };
+
+  // ٩. تكرار داخل الملف
+  if(seenPhonesInFile.has(phone)) return { status:'skip', reason:'مكرر داخل ملف Excel', row:row };
+  seenPhonesInFile.add(phone);
+
+  // مقارنة مع Firebase — الجوال فقط (ليس الاسم)
+  var existing = clients.find(function(c) {
+    return normalizePhoneImport(c.phone) === phone;
+  });
+
+  if(existing) {
+    // دمج — اسم مختلف يستدعي مراجعة
+    var existName = String(existing.name||'').trim();
+    if(existName && existName !== name) {
+      // ٨. مراجعة: غير محددة للاستيراد افتراضياً
+      return { status:'review', reason:'جوال مكرر — اسم مختلف («'+existName+'» ← «'+name+'»)',
+               existing:existing, row:row, phone:phone, selected:false };
+    }
+    return { status:'merge', reason:'تحديث بيانات عميل موجود',
+             existing:existing, row:row, phone:phone, selected:true };
+  }
+  return { status:'new', reason:'عميل جديد', row:row, phone:phone, selected:true };
+}
+
+// تحليل ملف Excel
+function onImportFileChange(input) {
+  var file = input.files[0];
+  if(!file) return;
+  document.getElementById('impFileName').textContent = '— ' + file.name;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var wb = XLSX.read(e.target.result, {type:'array'});
+      var sheetName = wb.SheetNames.find(function(n){
+        return n.toLowerCase().replace(/[\s_]/g,'').includes('customermaster');
+      }) || wb.SheetNames[0];
+      var ws   = wb.Sheets[sheetName];
+      var data = XLSX.utils.sheet_to_json(ws, {defval:''});
+      if(!data.length) { showToast('⚠️ الملف فارغ أو غير مدعوم'); return; }
+      var headerMap  = mapHeaders(data[0]);
+      var seenPhones = new Set(); // ٩. كشف تكرار داخل الملف
+
+      _importRows = data.map(function(rawRow) {
+        var mapped = {};
+        Object.keys(rawRow).forEach(function(col){
+          var field = headerMap[col];
+          if(field) mapped[field] = rawRow[col];
+        });
+        // fallback للأسماء الشائعة
+        if(!mapped.name)  mapped.name  = rawRow.name  || rawRow.Name  || rawRow['اسم العميل'] || rawRow['الاسم'] || '';
+        if(!mapped.phone) mapped.phone = rawRow.phone || rawRow.Phone || rawRow['الجوال']     || rawRow['رقم الجوال'] || '';
+        if(!mapped.city)  mapped.city  = rawRow.city  || rawRow.City  || rawRow['المدينة']    || '';
+        return classifyRow(mapped, seenPhones);
+      });
+
+      // ١. لا كتابة Firebase هنا — فقط تحليل
+      document.getElementById('impStats').style.display = 'grid';
+      updateImportStats();
+      document.getElementById('btnPreview').style.display = 'inline-block';
+      // زر الاستيراد ظاهر لكن معطّل حتى يشاهد المعاينة
+      document.getElementById('btnStartImport').style.display = 'inline-block';
+      document.getElementById('btnStartImport').disabled = true;
+      document.getElementById('btnStartImport').title = 'اضغط «معاينة» أولاً ثم أكّد';
+    } catch(err) {
+      showToast('❌ خطأ في قراءة الملف: ' + err.message);
+      console.error('[Import]', err);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function updateImportStats() {
+  var counts = {new:0,merge:0,review:0,skip:0,blocked:0};
+  _importRows.forEach(function(r){ counts[r.status] = (counts[r.status]||0)+1; });
+  document.getElementById('impTotal').textContent   = _importRows.length;
+  document.getElementById('impNew').textContent     = counts.new;
+  document.getElementById('impMerge').textContent   = counts.merge;
+  document.getElementById('impReview').textContent  = counts.review;
+  document.getElementById('impSkip').textContent    = counts.skip;
+  document.getElementById('impBlocked').textContent = counts.blocked;
+}
+
+// فتح المعاينة ثم تفعيل زر الاستيراد
+function showPreview() {
+  document.getElementById('impFilters').style.display     = 'flex';
+  document.getElementById('impPreviewWrap').style.display = 'block';
+  renderPreviewTable(_importFilter);
+  // ١. الاستيراد متاح بعد مشاهدة المعاينة فقط
+  document.getElementById('btnStartImport').disabled = false;
+  document.getElementById('btnStartImport').title = '';
+}
+
+function filterPreview(f, btn) {
+  _importFilter = f;
+  document.querySelectorAll('.pf-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  renderPreviewTable(f);
+}
+
+var STATUS_LABELS = {new:'جديد',merge:'دمج',review:'مراجعة',skip:'مستبعد',blocked:'محظور'};
+var STATUS_CSS    = {new:'sb-new',merge:'sb-merge',review:'sb-review',skip:'sb-skip',blocked:'sb-skip'};
+var ROW_CSS       = {new:'imp-new',merge:'imp-merge',review:'imp-review',skip:'imp-skip',blocked:'imp-skip'};
+
+function renderPreviewTable(filter) {
+  var rows = filter==='all' ? _importRows : _importRows.filter(function(r){ return r.status===filter; });
+  var html = rows.slice(0,200).map(function(r,idx) {
+    var row = r.row || {};
+    var ph  = normalizePhoneImport(row.phone||'');
+    // ٨. checkbox لسجلات مراجعة — غير محددة افتراضياً
+    var chk = '';
+    if(r.status==='review') {
+      chk = '<input type="checkbox" '+(r.selected?'checked':'')
+        +' onchange="_importRows.filter(function(x){return x.status==\"review\";})['+idx+'] && (_importRows.filter(function(x){return x.status==\"review\";})['+idx+'].selected=this.checked)">';
+    } else if(r.status==='new'||r.status==='merge') {
+      chk = '✓';
+    }
+    var existNameHtml = (r.existing && r.status==='review')
+      ? '<br><small style="color:var(--mist);">موجود: '+r.existing.name+'</small>' : '';
+    return '<tr class="' + ROW_CSS[r.status] + '">' +
+      '<td><span class="status-badge '+STATUS_CSS[r.status]+'">'+STATUS_LABELS[r.status]+'</span></td>' +
+      '<td style="text-align:center;">'+chk+'</td>'+
+      '<td>'+(row.customerCode||'—')+'</td>' +
+      '<td>'+(row.name||'—')+existNameHtml+'</td>' +
+      '<td dir="ltr">'+(ph||'—')+'</td>' +
+      '<td>'+(row.district||row.city||'—')+'</td>' +
+      '<td>'+(row.visits||'0')+'</td>' +
+      '<td>'+(row.revenue?Number(row.revenue).toLocaleString('ar-SA-u-ca-gregory')+' ﷼':'—')+'</td>' +
+      '<td style="font-size:11px;color:var(--mist);">'+(r.reason||'')+'</td>' +
+    '</tr>';
+  }).join('');
+  document.getElementById('impPreviewBody').innerHTML = html ||
+    '<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--mist);">لا توجد صفوف بهذه الحالة</td></tr>';
+}
+
+// ٧. تأكيد قبل الاستيراد
+async function startImport() {
+  if(!db) { showToast('❌ Firebase غير متاح'); return; }
+  var toProcess = _importRows.filter(function(r){
+    return (r.status==='new' || r.status==='merge') ||
+           (r.status==='review' && r.selected);
+  });
+  if(!toProcess.length) { showToast('⚠️ لا توجد صفوف محددة للاستيراد'); return; }
+
+  var counts = {new:0, merge:0, review:0};
+  toProcess.forEach(function(r){ counts[r.status]=(counts[r.status]||0)+1; });
+  var summary = 'سيتم:\n'
+    + (counts.new    ? '• إضافة '+counts.new+' عميل جديد\n' : '')
+    + (counts.merge  ? '• تحديث '+counts.merge+' عميل موجود\n' : '')
+    + (counts.review ? '• دمج '+counts.review+' عميل بعد مراجعة\n' : '')
+    + '\nهل تريد المتابعة؟';
+  if(!confirm(summary)) return;
+
+  document.getElementById('btnStartImport').disabled = true;
+  document.getElementById('impProgress').style.display    = 'block';
+  var bar = document.getElementById('impProgressBar');
+  var lbl = document.getElementById('impProgressLabel');
+
+  // ١١. سجل تقرير مفصّل
+  var report = {added:0, merged:0, failed:[], skipped:0, blocked:0};
+  var BATCH = 5;
+
+  for(var i=0; i<toProcess.length; i+=BATCH) {
+    var batch = toProcess.slice(i, i+BATCH);
+    await Promise.all(batch.map(async function(r) {
+      try {
+        var row = r.row;
+        var phone = r.phone;
+
+        if(r.status==='merge' || r.status==='review') {
+          // ٤. لا نستبدل قيمة موجودة بفارغة   ٥. لا نُعدّل id/createdAt/_fbKey
+          if(!r.existing || !r.existing._fbKey) {
+            report.failed.push({name:row.name, phone:phone, reason:'مفتاح Firebase مفقود'});
+            return;
+          }
+          var updates = {};
+          // فقط الحقول ذات قيمة من Excel
+          if(String(row.district||'').trim()) updates.district  = String(row.district).trim();
+          if(String(row.city||'').trim())     updates.city      = String(row.city).trim();
+          if(row.revenue && Number(row.revenue)>0) updates.revenue = Number(row.revenue);
+          if(row.visits  && Number(row.visits)>0)  updates.visits  = Number(row.visits);
+          if(String(row.lastVisit||'').trim()) updates.lastVisit = String(row.lastVisit).trim();
+          if(String(row.notes||'').trim())     updates.notes     = String(row.notes).trim();
+          if(String(row.customerCode||'').trim()) updates.customerCode = String(row.customerCode).trim();
+          if(Object.keys(updates).length) {
+            await db.ref('customers/' + r.existing._fbKey).update(updates);
+          }
+          report.merged++;
+
+        } else if(r.status==='new') {
+          var newC = {
+            name:      String(row.name).trim(),
+            phone:     phone,
+            city:      String(row.city||row.district||'').trim(),
+            district:  String(row.district||'').trim(),
+            type:      String(row.type||'أفراد').trim(),
+            visits:    Number(row.visits)||0,
+            revenue:   Number(row.revenue)||0,
+            lastVisit: String(row.lastVisit||'').trim(),
+            notes:     String(row.notes||'').trim(),
+            createdAt: new Date().toISOString(),
+            importedAt:new Date().toISOString(),
+            source:    'excel_import'
+          };
+          if(String(row.customerCode||'').trim()) newC.customerCode = String(row.customerCode).trim();
+          var ref  = db.ref('customers').push();
+          newC.id  = ref.key;
+          await ref.set(newC);
+          report.added++;
+        }
+      } catch(e) {
+        // ١٠. لا نوقف الدفعة — نسجّل الفشل فقط
+        report.failed.push({name:(r.row&&r.row.name)||'?', phone:r.phone||'?', reason:e.message});
+        console.error('[Import] row failed:', r.row, e);
+      }
+    }));
+
+    var done = Math.min(i+BATCH, toProcess.length);
+    bar.style.width = Math.round(done/toProcess.length*100) + '%';
+    lbl.textContent = 'جاري الاستيراد... ' + done + ' / ' + toProcess.length;
+    await new Promise(function(res){ setTimeout(res, 150); });
+  }
+
+  // ١١. تقرير نهائي
+  bar.style.width = '100%';
+  var rpt = '✅ اكتمل الاستيراد\n'
+    +'• تمت الإضافة: '+report.added+'\n'
+    +'• تم الدمج: '+report.merged+'\n'
+    +(report.failed.length ? '• فشل: '+report.failed.length+'\n' : '')
+    +'• محظور: '+_importRows.filter(function(r){return r.status==='blocked';}).length+'\n'
+    +'• مستبعد: '+_importRows.filter(function(r){return r.status==='skip';}).length;
+  lbl.textContent = rpt.replace(/\n/g,' | ');
+  console.log('[Import] تقرير:\n'+rpt);
+  if(report.failed.length) {
+    console.warn('[Import] فشل:', report.failed);
+  }
+  alert(rpt);
+  document.getElementById('btnStartImport').disabled = false;
+}
+
+// ١٢. نسخة احتياطية شاملة (تشمل _fbKey)
+function downloadBackup() {
+  if(!clients.length) { showToast('⚠️ لا توجد بيانات للحفظ'); return; }
+  if(typeof XLSX === 'undefined') { showToast('❌ مكتبة Excel غير محملة'); return; }
+  var data = clients.map(function(c) {
+    return {
+      '_firebase_key': c._fbKey||'',
+      'id':            c.id||c._fbKey||'',
+      'الاسم':         c.name||'',
+      'الجوال':        c.phone||'',
+      'المدينة':       c.city||'',
+      'الحي':          c.district||'',
+      'التصنيف':       c.type||'',
+      'الزيارات':      c.visits||0,
+      'الإيرادات':     c.revenue||0,
+      'آخر زيارة':     c.lastVisit||'',
+      'ملاحظات':       c.notes||'',
+      'تاريخ الإنشاء': c.createdAt||'',
+      'المصدر':        c.source||'',
+      'reviewCandidate':c.reviewCandidate||false,
+      'reviewRequestSent':c.reviewRequestSent||false
+    };
+  });
+  var ws  = XLSX.utils.json_to_sheet(data);
+  var wb  = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Customer_Master');
+  // ورقة ثانية لإعادة الاستيراد
+  var ws2 = XLSX.utils.json_to_sheet(data.map(function(r){
+    return {
+      'رقم العميل':  r['id'],
+      'الاسم':       r['الاسم'],
+      'الجوال':      r['الجوال'],
+      'المدينة':     r['المدينة'],
+      'الحي':        r['الحي'],
+      'التصنيف':     r['التصنيف'],
+      'الزيارات':    r['الزيارات'],
+      'الإيرادات':   r['الإيرادات'],
+      'آخر زيارة':   r['آخر زيارة'],
+      'ملاحظات':     r['ملاحظات']
+    };
+  }));
+  XLSX.utils.book_append_sheet(wb, ws2, 'Customer_Master_Import');
+  var date = new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb, 'atwad_customers_backup_' + date + '.xlsx');
+  showToast('💾 تم تنزيل النسخة الاحتياطية (' + clients.length + ' عميل)');
+}
+
+function openImportModal() {
+  BLOCKED_NORM = null; // إعادة حساب المحظورين
+  _importRows  = [];
+  document.getElementById('impFileInput').value   = '';
+  document.getElementById('impFileName').textContent = '';
+  document.getElementById('impStats').style.display  = 'none';
+  document.getElementById('impFilters').style.display = 'none';
+  document.getElementById('impPreviewWrap').style.display = 'none';
+  document.getElementById('impProgress').style.display    = 'none';
+  document.getElementById('impProgressBar').style.width   = '0%';
+  document.getElementById('impProgressLabel').textContent = '';
+  document.getElementById('btnPreview').style.display      = 'none';
+  document.getElementById('btnStartImport').style.display  = 'none';
+  document.getElementById('importModal').classList.add('open');
+}
+
+function closeImportModal() {
+  document.getElementById('importModal').classList.remove('open');
+  _importRows = [];
+}
+
+// خريطة أسماء الحقول في Excel → حقول Firebase
+var COLUMN_MAP = {
+  'رقم العميل':'customerCode','customer code':'customerCode','id':'customerCode',
+  'الاسم':'name','الاسم الكامل':'name','name':'name','client name':'name','اسم العميل':'name',
+  'الجوال':'phone','رقم الجوال':'phone','phone':'phone','mobile':'phone','رقم الهاتف':'phone',
+  'المدينة':'city','city':'city','المدينة / المنطقة':'city',
+  'الحي':'district','district':'district','neighborhood':'district',
+  'التصنيف':'type','type':'type','نوع العميل':'type',
+  'الزيارات':'visits','visits':'visits','عدد الزيارات':'visits',
+  'الإيرادات':'revenue','revenue':'revenue','إجمالي الإيرادات':'revenue',
+  'آخر زيارة':'lastVisit','last visit':'lastVisit','last service':'lastVisit',
+  'ملاحظات':'notes','notes':'notes','تعليق':'notes'
+};
+
+function normalizeHeader(h) {
+  return String(h||'').trim().toLowerCase()
+    .replace(/\s+/g,' ').replace(/[_\-]/g,' ');
+}
+
+function mapHeaders(row0) {
+  var map = {};
+  Object.keys(row0).forEach(function(raw) {
+    var key = normalizeHeader(raw);
+    var field = COLUMN_MAP[key] || COLUMN_MAP[raw.trim()] || null;
+    if(field) map[raw] = field;
+  });
+  return map;
+}
+
+function normalizePhoneImport(p) {
+  if(!p) return '';
+  var s = String(p).replace(/\D/g,'');
+  if(s.startsWith('966') && s.length >= 12) return '0' + s.slice(3);
+  if(s.startsWith('05') && s.length === 10) return s;
+  if(s.startsWith('5')  && s.length === 9)  return '0' + s;
+  return s;
+}
+
+function classifyRow(row) {
+  var name  = String(row.name  || '').trim();
+  var phone = normalizePhoneImport(row.phone || '');
+
+  if(!name || name.length < 2 || !phone || phone.replace(/\D/g,'').length < 9) {
+    return { status:'skip', reason:'اسم أو جوال ناقص', row:row };
+  }
+  if(BLOCKED_PHONES.has(phone)) {
+    return { status:'blocked', reason:'رقم محظور', row:row };
+  }
+  // فحص التكرار بالجوال
+  var existing = clients.find(function(c){
+    return normalizePhoneImport(c.phone) === phone;
+  });
+  if(existing) {
+    // فحص اختلاف الاسم
+    var existName = (existing.name||'').trim();
+    if(existName && existName !== name) {
+      return { status:'review', reason:'جوال مكرر — اسم مختلف', existing:existing, row:row, phone:phone };
+    }
+    return { status:'merge', reason:'تحديث بيانات عميل موجود', existing:existing, row:row, phone:phone };
+  }
+  return { status:'new', reason:'عميل جديد', row:row, phone:phone };
+}
+
+function onImportFileChange(input) {
+  var file = input.files[0];
+  if(!file) return;
+  document.getElementById('impFileName').textContent = '— ' + file.name;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var wb = XLSX.read(e.target.result, {type:'array'});
+      // ابحث عن ورقة Customer_Master أولاً
+      var sheetName = wb.SheetNames.find(function(n){
+        return n.toLowerCase().replace(/[\s_]/g,'').includes('customermaster');
+      }) || wb.SheetNames[0];
+      var ws   = wb.Sheets[sheetName];
+      var data = XLSX.utils.sheet_to_json(ws, {defval:''});
+      if(!data.length) { showToast('⚠️ الملف فارغ أو غير مدعوم'); return; }
+      var headerMap = mapHeaders(data[0]);
+      _importRows = data.map(function(rawRow) {
+        var mapped = {};
+        Object.keys(rawRow).forEach(function(col){
+          var field = headerMap[col];
+          if(field) mapped[field] = rawRow[col];
+        });
+        // إذا لم يُعثر على خريطة — حاول مباشرة بالأسماء الإنجليزية
+        if(!mapped.name)  mapped.name  = rawRow.name  || rawRow.Name  || rawRow['اسم العميل'] || '';
+        if(!mapped.phone) mapped.phone = rawRow.phone || rawRow.Phone || rawRow['الجوال']     || '';
+        if(!mapped.city)  mapped.city  = rawRow.city  || rawRow.City  || rawRow['المدينة']    || '';
+        return classifyRow(mapped);
+      });
+      // بناء قائمة الأرقام المحظورة من صف الترويسة إن وجد
+      document.getElementById('impStats').style.display = 'grid';
+      updateImportStats();
+      document.getElementById('btnPreview').style.display = 'inline-block';
+      document.getElementById('btnStartImport').style.display = 'inline-block';
+      document.getElementById('btnStartImport').disabled = false;
+    } catch(err) {
+      showToast('❌ خطأ في قراءة الملف: ' + err.message);
+      console.error('[Import]', err);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function updateImportStats() {
+  var counts = {new:0,merge:0,review:0,skip:0,blocked:0};
+  _importRows.forEach(function(r){ counts[r.status] = (counts[r.status]||0)+1; });
+  document.getElementById('impTotal').textContent   = _importRows.length;
+  document.getElementById('impNew').textContent     = counts.new;
+  document.getElementById('impMerge').textContent   = counts.merge;
+  document.getElementById('impReview').textContent  = counts.review;
+  document.getElementById('impSkip').textContent    = counts.skip;
+  document.getElementById('impBlocked').textContent = counts.blocked;
+}
+
+function showPreview() {
+  document.getElementById('impFilters').style.display     = 'flex';
+  document.getElementById('impPreviewWrap').style.display = 'block';
+  renderPreviewTable('all');
+}
+
+function filterPreview(f, btn) {
+  _importFilter = f;
+  document.querySelectorAll('.pf-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  renderPreviewTable(f);
+}
+
+var STATUS_LABELS = {new:'جديد',merge:'دمج',review:'مراجعة',skip:'مستبعد',blocked:'محظور'};
+var STATUS_CSS    = {new:'sb-new',merge:'sb-merge',review:'sb-review',skip:'sb-skip',blocked:'sb-skip'};
+var ROW_CSS       = {new:'imp-new',merge:'imp-merge',review:'imp-review',skip:'imp-skip',blocked:'imp-skip'};
+
+function renderPreviewTable(filter) {
+  var rows = filter==='all' ? _importRows : _importRows.filter(function(r){ return r.status===filter; });
+  var html = rows.slice(0, 200).map(function(r) {
+    var row = r.row || {};
+    var action = r.status==='new'   ? 'إضافة جديدة'
+               : r.status==='merge' ? 'تحديث بيانات'
+               : r.status==='review'? 'تحتاج مراجعة'
+               : 'تجاهل';
+    return '<tr class="' + ROW_CSS[r.status] + '">' +
+      '<td><span class="status-badge ' + STATUS_CSS[r.status] + '">' + STATUS_LABELS[r.status] + '</span></td>' +
+      '<td>' + (row.customerCode||'—') + '</td>' +
+      '<td>' + (row.name||'—') + '</td>' +
+      '<td dir="ltr">' + (normalizePhoneImport(row.phone||'')||'—') + '</td>' +
+      '<td>' + (row.district||row.city||'—') + '</td>' +
+      '<td>' + (row.visits||'0') + '</td>' +
+      '<td>' + (row.revenue ? Number(row.revenue).toLocaleString('ar-SA-u-ca-gregory')+' ﷼' : '—') + '</td>' +
+      '<td>' + (row.lastVisit||'—') + '</td>' +
+      '<td style="font-size:11px;color:var(--mist);">' + (r.reason||'') + '</td>' +
+    '</tr>';
+  }).join('');
+  document.getElementById('impPreviewBody').innerHTML = html ||
+    '<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--mist);">لا توجد صفوف بهذه الحالة</td></tr>';
+}
+
+async function startImport() {
+  if(!db) { showToast('❌ Firebase غير متاح'); return; }
+  var toProcess = _importRows.filter(function(r){ return r.status==='new'||r.status==='merge'; });
+  if(!toProcess.length) { showToast('⚠️ لا توجد صفوف قابلة للاستيراد'); return; }
+
+  document.getElementById('btnStartImport').disabled = true;
+  document.getElementById('impProgress').style.display = 'block';
+  var bar = document.getElementById('impProgressBar');
+  var lbl = document.getElementById('impProgressLabel');
+
+  var done=0, errors=0;
+  var BATCH = 5;
+
+  for(var i=0; i<toProcess.length; i+=BATCH) {
+    var batch = toProcess.slice(i, i+BATCH);
+    await Promise.all(batch.map(async function(r) {
+      try {
+        var row = r.row;
+        if(r.status === 'merge' && r.existing && r.existing._fbKey) {
+          // تحديث فقط الحقول الجديدة — لا نحذف حقولاً موجودة
+          var updates = {};
+          if(row.district)  updates.district  = String(row.district).trim();
+          if(row.city)      updates.city      = String(row.city).trim();
+          if(row.revenue)   updates.revenue   = Number(row.revenue)||0;
+          if(row.visits)    updates.visits    = Number(row.visits)||0;
+          if(row.lastVisit) updates.lastVisit = String(row.lastVisit).trim();
+          if(row.notes)     updates.notes     = String(row.notes).trim();
+          if(row.customerCode) updates.customerCode = String(row.customerCode).trim();
+          if(Object.keys(updates).length)
+            await db.ref('customers/' + r.existing._fbKey).update(updates);
+        } else if(r.status === 'new') {
+          // إضافة عميل جديد
+          var phone = normalizePhoneImport(row.phone||'');
+          var newC = {
+            name:     String(row.name).trim(),
+            phone:    phone,
+            city:     String(row.city||row.district||'').trim(),
+            district: String(row.district||'').trim(),
+            type:     String(row.type||'أفراد').trim(),
+            visits:   Number(row.visits)||0,
+            revenue:  Number(row.revenue)||0,
+            lastVisit:String(row.lastVisit||'').trim(),
+            notes:    String(row.notes||'').trim(),
+            createdAt:new Date().toISOString(),
+            importedAt:new Date().toISOString(),
+            source:   'excel_import'
+          };
+          if(row.customerCode) newC.customerCode = String(row.customerCode).trim();
+          // توليد id فريد
+          var ref = db.ref('customers').push();
+          newC.id = ref.key;
+          await ref.set(newC);
+        }
+        done++;
+      } catch(e) {
+        errors++;
+        console.error('[Import] row error:', e, r);
+      }
+    }));
+
+    var pct = Math.round((i+batch.length)/toProcess.length*100);
+    bar.style.width = pct + '%';
+    lbl.textContent = 'جاري الاستيراد... ' + Math.min(i+BATCH, toProcess.length) + ' / ' + toProcess.length;
+    // استراحة قصيرة لتجنب ضغط Firebase
+    await new Promise(function(resolve){ setTimeout(resolve, 150); });
+  }
+
+  bar.style.width = '100%';
+  lbl.textContent = '✅ اكتمل الاستيراد: ' + done + ' سجل' + (errors ? ' — ' + errors + ' أخطاء' : '');
+  showToast('✅ تم استيراد ' + done + ' سجل' + (errors?' — '+errors+' أخطاء':''));
+  document.getElementById('btnStartImport').disabled = false;
+}
+
+function downloadBackup() {
+  if(!clients.length) { showToast('⚠️ لا توجد بيانات للحفظ'); return; }
+  if(typeof XLSX === 'undefined') { showToast('❌ مكتبة Excel غير محملة'); return; }
+  var data = clients.map(function(c) {
+    return {
+      'ID': c.id||c._fbKey||'',
+      'الاسم': c.name||'',
+      'الجوال': c.phone||'',
+      'المدينة': c.city||'',
+      'الحي': c.district||'',
+      'التصنيف': c.type||'',
+      'الزيارات': c.visits||0,
+      'الإيرادات': c.revenue||0,
+      'آخر زيارة': c.lastVisit||'',
+      'ملاحظات': c.notes||'',
+      'تاريخ الإنشاء': c.createdAt||''
+    };
+  });
+  var ws  = XLSX.utils.json_to_sheet(data);
+  var wb  = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Customer_Master');
+  var date = new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb, 'atwad_customers_backup_' + date + '.xlsx');
+  showToast('💾 تم تنزيل النسخة الاحتياطية');
+}
+
+function openImportModal() {
+  // بناء قائمة الأرقام المحظورة من العملاء الحاليين (للفلترة لاحقاً)
+  BLOCKED_PHONES.clear();
+  _importRows = [];
+  document.getElementById('impFileInput').value = '';
+  document.getElementById('impFileName').textContent = '';
+  document.getElementById('impStats').style.display = 'none';
+  document.getElementById('impFilters').style.display = 'none';
+  document.getElementById('impPreviewWrap').style.display = 'none';
+  document.getElementById('impProgress').style.display = 'none';
+  document.getElementById('impProgressBar').style.width = '0%';
+  document.getElementById('impProgressLabel').textContent = '';
+  document.getElementById('btnPreview').style.display = 'none';
+  document.getElementById('btnStartImport').style.display = 'none';
+  document.getElementById('importModal').classList.add('open');
+}
+
+function closeImportModal() {
+  document.getElementById('importModal').classList.remove('open');
+  _importRows = [];
+}
 if(db) {
   console.log('[customers] جاري الاتصال بـ Firebase — المسار: customers');
   clients = [];
@@ -1351,5 +2041,70 @@ function applyPageLang(l) {
   });
 }
 </script>
+<!-- ========== IMPORT MODAL ========== -->
+<div class="import-overlay" id="importModal">
+  <div class="import-box">
+    <div class="import-title">📥 استيراد العملاء من Excel
+      <span id="impFileName" style="font-size:13px;color:var(--mist);font-weight:500;"></span>
+    </div>
+
+    <!-- اختيار الملف -->
+    <div id="impFileSection">
+      <label style="display:block;padding:24px;border:2px dashed #CBD5E1;border-radius:12px;text-align:center;cursor:pointer;margin-bottom:16px;">
+        <input type="file" id="impFileInput" accept=".xlsx,.xls" style="display:none;" onchange="onImportFileChange(this)">
+        <div style="font-size:28px;margin-bottom:8px;">📂</div>
+        <div style="font-size:14px;font-weight:700;color:var(--deep);">اختر ملف Excel</div>
+        <div style="font-size:12px;color:var(--mist);margin-top:4px;">.xlsx أو .xls — ورقة Customer_Master</div>
+      </label>
+    </div>
+
+    <!-- إحصاءات -->
+    <div class="import-stats" id="impStats" style="display:none;">
+      <div class="import-stat"><div class="isn" id="impTotal">0</div><div class="isl">إجمالي الصفوف</div></div>
+      <div class="import-stat"><div class="isn" id="impNew" style="color:#10B981;">0</div><div class="isl">جديد</div></div>
+      <div class="import-stat"><div class="isn" id="impMerge" style="color:#0EA5E9;">0</div><div class="isl">دمج</div></div>
+      <div class="import-stat"><div class="isn" id="impReview" style="color:#F59E0B;">0</div><div class="isl">مراجعة</div></div>
+      <div class="import-stat"><div class="isn" id="impSkip" style="color:#EF4444;">0</div><div class="isl">مستبعد</div></div>
+      <div class="import-stat"><div class="isn" id="impBlocked" style="color:#7C3AED;">0</div><div class="isl">محظور</div></div>
+    </div>
+
+    <!-- شريط التقدم -->
+    <div class="import-progress" id="impProgress">
+      <div class="import-progress-bar" id="impProgressBar"></div>
+    </div>
+    <div class="import-progress-label" id="impProgressLabel"></div>
+
+    <!-- فلاتر المعاينة -->
+    <div class="preview-filters" id="impFilters" style="display:none;">
+      <button class="pf-btn active" onclick="filterPreview('all',this)">الكل</button>
+      <button class="pf-btn" onclick="filterPreview('new',this)">🟢 جديد</button>
+      <button class="pf-btn" onclick="filterPreview('merge',this)">🔵 دمج</button>
+      <button class="pf-btn" onclick="filterPreview('review',this)">🟠 مراجعة</button>
+      <button class="pf-btn" onclick="filterPreview('skip',this)">🔴 مستبعد</button>
+    </div>
+
+    <!-- جدول المعاينة -->
+    <div class="preview-table-wrap" id="impPreviewWrap" style="display:none;">
+      <table class="preview-table">
+        <thead>
+          <tr>
+            <th>الحالة</th><th>✓</th><th>رقم العميل</th><th>الاسم</th><th>الجوال</th>
+            <th>الحي</th><th>الزيارات</th><th>الإيرادات</th><th>آخر زيارة</th><th>الإجراء</th>
+          </tr>
+        </thead>
+        <tbody id="impPreviewBody"></tbody>
+      </table>
+    </div>
+
+    <!-- أزرار -->
+    <div class="import-btns">
+      <button class="btn-backup" onclick="downloadBackup()">💾 تنزيل نسخة احتياطية</button>
+      <button class="btn-preview" id="btnPreview" onclick="showPreview()" style="display:none;">👁️ معاينة البيانات</button>
+      <button class="btn-start-import" id="btnStartImport" onclick="startImport()" style="display:none;" disabled>🚀 بدء الاستيراد</button>
+      <button class="btn-cancel-import" onclick="closeImportModal()">✕ إلغاء</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
