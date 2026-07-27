@@ -1383,6 +1383,9 @@ function mapHeaders(row0) {
 
 // ٣. تصنيف صف واحد — الجوال هو المفتاح الأساسي
 function classifyRow(row, seenPhonesInFile) {
+  // حماية التهيئة
+  if(!(seenPhonesInFile instanceof Set)) throw new Error('seenPhonesInFile لم تُهيأ كـ Set');
+  if(!(BLOCKED_NORM instanceof Set))     throw new Error('BLOCKED_NORM لم تُهيأ كـ Set');
   var name  = String(row.name || '').trim();
   var rawPh = String(row.phone || '').trim();
   var phone = normalizePhoneImport(rawPh);
@@ -1457,8 +1460,9 @@ function onImportFileChange(input) {
       document.getElementById('btnStartImport').disabled = true;
       document.getElementById('btnStartImport').title = 'اضغط «معاينة» أولاً ثم أكّد';
     } catch(err) {
-      showToast('❌ خطأ في قراءة الملف: ' + err.message);
-      console.error('[Import]', err);
+      console.error('[Excel Import] full error:', err);
+      console.error('[Excel Import] stack:', err && err.stack);
+      showToast('❌ خطأ في قراءة الملف: ' + (err && err.message ? err.message : String(err)));
     }
   };
   reader.readAsArrayBuffer(file);
@@ -1738,48 +1742,6 @@ function mapHeaders(row0) {
 }
 
 // ======= نهاية محرك الاستيراد =======
-
-function onImportFileChange(input) {
-  var file = input.files[0];
-  if(!file) return;
-  document.getElementById('impFileName').textContent = '— ' + file.name;
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      var wb = XLSX.read(e.target.result, {type:'array'});
-      // ابحث عن ورقة Customer_Master أولاً
-      var sheetName = wb.SheetNames.find(function(n){
-        return n.toLowerCase().replace(/[\s_]/g,'').includes('customermaster');
-      }) || wb.SheetNames[0];
-      var ws   = wb.Sheets[sheetName];
-      var data = XLSX.utils.sheet_to_json(ws, {defval:''});
-      if(!data.length) { showToast('⚠️ الملف فارغ أو غير مدعوم'); return; }
-      var headerMap = mapHeaders(data[0]);
-      _importRows = data.map(function(rawRow) {
-        var mapped = {};
-        Object.keys(rawRow).forEach(function(col){
-          var field = headerMap[col];
-          if(field) mapped[field] = rawRow[col];
-        });
-        // إذا لم يُعثر على خريطة — حاول مباشرة بالأسماء الإنجليزية
-        if(!mapped.name)  mapped.name  = rawRow.name  || rawRow.Name  || rawRow['اسم العميل'] || '';
-        if(!mapped.phone) mapped.phone = rawRow.phone || rawRow.Phone || rawRow['الجوال']     || '';
-        if(!mapped.city)  mapped.city  = rawRow.city  || rawRow.City  || rawRow['المدينة']    || '';
-        return classifyRow(mapped);
-      });
-      // بناء قائمة الأرقام المحظورة من صف الترويسة إن وجد
-      document.getElementById('impStats').style.display = 'grid';
-      updateImportStats();
-      document.getElementById('btnPreview').style.display = 'inline-block';
-      document.getElementById('btnStartImport').style.display = 'inline-block';
-      document.getElementById('btnStartImport').disabled = false;
-    } catch(err) {
-      showToast('❌ خطأ في قراءة الملف: ' + err.message);
-      console.error('[Import]', err);
-    }
-  };
-  reader.readAsArrayBuffer(file);
-}
 
 function updateImportStats() {
   var counts = {new:0,merge:0,review:0,skip:0,blocked:0};
