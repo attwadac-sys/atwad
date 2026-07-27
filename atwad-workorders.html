@@ -534,15 +534,22 @@ function syncFromFirebase() {
   db.ref('workOrders').on('value', function(snap) {
     var fbData = [];
     snap.forEach(function(child) {
-      fbData.push({...child.val(), _fbKey: child.key});
+      var v = child.val();
+      // احذف _fbKey المحفوظ داخل البيانات (من createMissingWO) لتجنب التكرار
+      var clean = Object.assign({}, v);
+      delete clean._fbKey;
+      fbData.push(Object.assign(clean, {_fbKey: child.key}));
     });
-    if(fbData.length > 0) {
-      workOrders = fbData;
-      localStorage.setItem('atwad_workorders', JSON.stringify(workOrders));
-    }
+    // دائماً نُحدِّث من Firebase — حتى لو جاءت قائمة أقل من المحلية
+    // هذا يضمن أن أي أمر محفوظ في Firebase يظهر بعد إعادة التحميل
+    workOrders = fbData;
+    localStorage.setItem('atwad_workorders', JSON.stringify(workOrders));
     updateStats();
     renderWOs();
     document.getElementById('fbDot') && (document.getElementById('fbDot').className='fb-dot connected');
+  }, function(err) {
+    console.error('[workOrders] Firebase error:', err);
+    document.getElementById('fbDot') && (document.getElementById('fbDot').className='fb-dot');
   });
 }
 let clients = []; try { clients = JSON.parse(localStorage.getItem('atwad_clients') || '[]'); } catch {}
@@ -1257,24 +1264,56 @@ function normPhoneForWA(phone) {
 
 // يُستدعى من زر step5 الجديد
 function sendReviewRequestFromStep() {
-  var wo = workOrders[currentWOIndex];
-  if(!wo) { showToast('❌ لا يوجد أمر عمل نشط'); return; }
-  if(!wo.phone) { showToast('❌ لا يوجد رقم جوال مسجّل'); return; }
-  var waPhone = normPhoneForWA(wo.phone);
-  if(!waPhone) { showToast('❌ رقم الجوال غير صالح'); return; }
-  var msg = buildReviewWAMsg(wo);
-  window.open('https://wa.me/' + waPhone + '?text=' + encodeURIComponent(msg), '_blank', 'noopener');
+  console.log('[Review WhatsApp] function started');
+
+  var wo = workOrders.find(function(w){ return w.id === currentWOId; });
+  console.log('[Review WhatsApp] currentWOId:', currentWOId, 'wo:', wo ? wo.client : 'NOT FOUND');
+
+  if(!wo) {
+    alert('❌ لا يوجد أمر عمل نشط (currentWOId=' + currentWOId + ')');
+    return;
+  }
+
+  var rawPhone = wo.phone || wo.clientPhone || wo.customerPhone || wo.mobile || '';
+  console.log('[Review WhatsApp] rawPhone:', rawPhone, '| keys:', Object.keys(wo).join(', '));
+
+  if(!rawPhone) { showToast('❌ لا يوجد رقم جوال مسجّل لهذا العميل'); return; }
+
+  var normalizedPhone = normPhoneForWA(rawPhone);
+  var message        = buildReviewWAMsg(wo);
+  var whatsappUrl    = 'https://wa.me/' + normalizedPhone + '?text=' + encodeURIComponent(message);
+
+  console.log('[Review WhatsApp]', {
+    rawPhone: rawPhone,
+    normalizedPhone: normalizedPhone,
+    message: message.slice(0,80) + '...',
+    whatsappUrl: whatsappUrl.slice(0,120) + '...'
+  });
+
+  // <a> بدل window.open — يعمل على الجوال والكمبيوتر بدون حجب popup
+  var a = document.createElement('a');
+  a.href   = whatsappUrl;
+  a.target = '_blank';
+  a.rel    = 'noopener noreferrer';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+
   showToast('📲 تم فتح واتساب — راجع الرسالة وأرسلها يدوياً');
-  // لا تغيير لحالة أمر العمل ولا لـ currentRating
 }
 
 // يُستدعى من شاشة النجاح (زر ⭐ تقييم الموجود)
 function sendReviewRequest() {
   var wo = workOrders.find(function(w){ return w.id === currentWOId; });
-  if(!wo || !wo.phone) { showToast('❌ لا يوجد رقم جوال'); return; }
-  var waPhone = normPhoneForWA(wo.phone);
-  var msg = buildReviewWAMsg(wo);
-  window.open('https://wa.me/' + waPhone + '?text=' + encodeURIComponent(msg), '_blank', 'noopener');
+  if(!wo) { showToast('❌ لا يوجد أمر عمل'); return; }
+  var rawPhone = wo.phone || wo.clientPhone || wo.customerPhone || wo.mobile || '';
+  if(!rawPhone) { showToast('❌ لا يوجد رقم جوال مسجّل'); return; }
+  var waPhone = normPhoneForWA(rawPhone);
+  var msg     = buildReviewWAMsg(wo);
+  var url     = 'https://wa.me/' + waPhone + '?text=' + encodeURIComponent(msg);
+  var a = document.createElement('a');
+  a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
   showToast('📲 تم فتح واتساب — راجع الرسالة وأرسلها يدوياً');
 }
 
