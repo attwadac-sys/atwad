@@ -462,7 +462,7 @@
     <div class="topbar-actions"><button class="lang-btn" id="langBtn" onclick="toggleLang()">🌐 EN</button>
       <button onclick="importFromFirebase()" id="importBtn" style="background:#fff;border:1.5px solid #0EA5E9;color:#0EA5E9;border-radius:10px;padding:9px 16px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;" data-lang="importBtn">📥 استيراد من الحجوزات</button>
       <button class="btn-add" onclick="openAddModal()" data-lang="addBtn">＋ إضافة عميل</button>
-      <button onclick="openImportModal()" style="padding:9px 14px;background:#FEF9C3;color:#92400E;border:1.5px solid #FDE68A;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">📥 استيراد من Excel</button>
+      <button id="excelImportBtn" type="button" onclick="openImportModal()" style="padding:9px 14px;background:#FEF9C3;color:#92400E;border:1.5px solid #FDE68A;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer;position:relative;z-index:2;">📥 استيراد من Excel</button>
     </div>
   </div>
 
@@ -1671,7 +1671,8 @@ function downloadBackup() {
 }
 
 function openImportModal() {
-  BLOCKED_NORM = null; // إعادة حساب المحظورين
+  console.log('[Excel Import] openImportModal called');
+  BLOCKED_NORM = null;
   _importRows  = [];
   document.getElementById('impFileInput').value   = '';
   document.getElementById('impFileName').textContent = '';
@@ -1683,8 +1684,16 @@ function openImportModal() {
   document.getElementById('impProgressLabel').textContent = '';
   document.getElementById('btnPreview').style.display      = 'none';
   document.getElementById('btnStartImport').style.display  = 'none';
-  document.getElementById('importModal').classList.add('open');
+  var modal = document.getElementById('importModal');
+  if(!modal){ console.error('[Excel Import] importModal not found'); return; }
+  modal.classList.add('open');
 }
+
+// ربط احتياطي — يعمل مع onclick أو بمفرده
+document.addEventListener('DOMContentLoaded', function() {
+  var btn = document.getElementById('excelImportBtn');
+  if(btn && !btn.onclick) btn.addEventListener('click', openImportModal);
+});
 
 function closeImportModal() {
   document.getElementById('importModal').classList.remove('open');
@@ -1736,7 +1745,7 @@ function classifyRow(row) {
   if(!name || name.length < 2 || !phone || phone.replace(/\D/g,'').length < 9) {
     return { status:'skip', reason:'اسم أو جوال ناقص', row:row };
   }
-  if(BLOCKED_PHONES.has(phone)) {
+  if(BLOCKED_PHONES && BLOCKED_PHONES.has && BLOCKED_PHONES.has(phone)) {
     return { status:'blocked', reason:'رقم محظور', row:row };
   }
   // فحص التكرار بالجوال
@@ -1947,27 +1956,6 @@ function downloadBackup() {
   showToast('💾 تم تنزيل النسخة الاحتياطية');
 }
 
-function openImportModal() {
-  // بناء قائمة الأرقام المحظورة من العملاء الحاليين (للفلترة لاحقاً)
-  BLOCKED_PHONES.clear();
-  _importRows = [];
-  document.getElementById('impFileInput').value = '';
-  document.getElementById('impFileName').textContent = '';
-  document.getElementById('impStats').style.display = 'none';
-  document.getElementById('impFilters').style.display = 'none';
-  document.getElementById('impPreviewWrap').style.display = 'none';
-  document.getElementById('impProgress').style.display = 'none';
-  document.getElementById('impProgressBar').style.width = '0%';
-  document.getElementById('impProgressLabel').textContent = '';
-  document.getElementById('btnPreview').style.display = 'none';
-  document.getElementById('btnStartImport').style.display = 'none';
-  document.getElementById('importModal').classList.add('open');
-}
-
-function closeImportModal() {
-  document.getElementById('importModal').classList.remove('open');
-  _importRows = [];
-}
 if(db) {
   console.log('[customers] جاري الاتصال بـ Firebase — المسار: customers');
   clients = [];
