@@ -601,6 +601,18 @@ var _fbSyncing = false;
   }
 })();
 
+// ============================================================
+// التحقق الموحد — يُطبَّق على جميع المصادر
+// ============================================================
+function isValidCustomer(c) {
+  var name  = String(c.name || c.client || c.customerName || c.clientName || '').trim();
+  var phone = String(c.phone || '').replace(/\D/g,'');
+  return name.length >= 2 &&
+         name !== 'بدون اسم' &&
+         name !== 'undefined' &&
+         phone.length >= 9;
+}
+
 function syncFromFirebase() {
   if(!db) return;
 
@@ -613,6 +625,13 @@ function syncFromFirebase() {
     snapC.forEach(function(child) {
       var c = Object.assign({}, child.val(), {_fbKey: child.key, _src: 'customers'});
       if(!c.id) c.id = c._fbKey;
+      if(!isValidCustomer(c)) {
+        console.warn('[DIAG] customers سجل منقوص:', {
+          key: child.key, name: c.name||'(فارغ)',
+          phone: (c.phone||'').slice(0,4)+'****'
+        });
+        return; // تجاهل
+      }
       // تشخيص: كشف السجلات التجريبية إذا وُجدت في Firebase
       if(DEMO_IDS[c.id]) {
         console.warn('[customers] ⚠️ سجل تجريبي في Firebase:', {
@@ -722,8 +741,24 @@ function syncFromFirebase() {
         console.log('[DIAG] لم تُعثر على أسماء مشبوهة في customers أو bookings');
       }
 
-      // استبدال clients بالكامل من Firebase — لا دمج مع localStorage
-      clients = fbData;
+      // تصفية موحدة على جميع المصادر قبل التعيين النهائي
+      var rejectedCustomers = fbData.filter(function(c){ return !isValidCustomer(c); });
+      clients = fbData.filter(isValidCustomer);
+
+      if(rejectedCustomers.length) {
+        console.warn('[INVALID CUSTOMERS] سجلات مرفوضة:', rejectedCustomers.length);
+        console.table(rejectedCustomers.map(function(c){
+          return {
+            source: c._src || 'unknown',
+            firebaseKey: c._fbKey || '',
+            id: c.id || '',
+            name: c.name || c.client || '(فارغ)',
+            phone: (c.phone||'(فارغ)')
+          };
+        }));
+        console.log('[INVALID CUSTOMERS JSON]', JSON.stringify(rejectedCustomers));
+      }
+
       localStorage.setItem('atwad_clients', JSON.stringify(clients));
 
       // تحميل المواعيد مرة واحدة لتحديد آخر عمل لكل عميل
@@ -758,7 +793,7 @@ function syncFromFirebase() {
     // عرض ما هو محفوظ في localStorage كبديل مؤقت
     var cached = JSON.parse(localStorage.getItem('atwad_clients') || '[]');
     if(cached.length > 0) {
-      clients = cached;
+      clients = cached.filter(isValidCustomer);
       renderTable();
       updateStats();
     }
@@ -833,7 +868,7 @@ function renderTable() {
 
   // دعم الحقول البديلة للاسم
   function clientName(c) {
-    return c.name || c.customerName || c.clientName || c.fullName || 'بدون اسم';
+    return (c.name || c.customerName || c.clientName || c.fullName || '').trim();
   }
 
   // تصنيف حالة آخر عمل من بيانات allAppointments
@@ -939,7 +974,7 @@ function renderTable() {
       '</div></td>' +
       '<td><a class="phone-link" href="tel:' + c.phone + '" onclick="event.stopPropagation()">' + (c.phone||'—') + '</a></td>' +
       '<td>' + (c.city||'—') + '</td>' +
-      '<td>' + badgeHTML(c.type) + '</td>' +
+      '<td>' + badgeHTML(c.type || 'أفراد') + '</td>' +
       '<td>' + workBadge(work) + '</td>' +
       '<td><span class="visits-count">' + (c.visits||0) + '</span></td>' +
       '<td onclick="event.stopPropagation()"><div style="display:flex;gap:6px;">' +
