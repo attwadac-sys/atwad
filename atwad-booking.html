@@ -333,12 +333,13 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
     </div>
     <div class="section-lbl">🔧 خدمات أخرى / Other Services</div>
     <div class="service-grid">
-      <div class="svc-card" id="sv1" onclick="selSvc('تنظيف وغسيل المكيفات','AC Cleaning & Washing',120,'sv1')"><div class="s-icon">🚿</div><div class="s-name">تنظيف وغسيل</div><div class="s-price">From 120 SAR</div></div>
-      <div class="svc-card" id="sv2" onclick="selSvc('تعبئة غاز','Gas Refill',150,'sv2')"><div class="s-icon">🧪</div><div class="s-name">تعبئة غاز</div><div class="s-price">From 150 SAR</div></div>
-      <div class="svc-card" id="sv3" onclick="selSvc('كشف وإصلاح أعطال','Diagnosis & Repair',100,'sv3')"><div class="s-icon">🔍</div><div class="s-name">كشف وإصلاح</div><div class="s-price">From 100 SAR</div></div>
-      <div class="svc-card" id="sv4" onclick="selSvc('تركيب مكيف جديد','AC Installation',200,'sv4')"><div class="s-icon">⚙️</div><div class="s-name">تركيب مكيف</div><div class="s-price">From 200 SAR</div></div>
-      <div class="svc-card" id="sv5" onclick="selSvc('باقة صيانة سنوية','Annual Package',400,'sv5')"><div class="s-icon">👑</div><div class="s-name">باقة سنوية</div><div class="s-price">From 400 SAR</div></div>
-      <div class="svc-card" id="sv6" onclick="selSvc('صيانة دورية','Periodic Maintenance',120,'sv6')"><div class="s-icon">🛠️</div><div class="s-name">صيانة دورية</div><div class="s-price">From 120 SAR</div></div>
+      <div class="svc-card" id="sv1" onclick="selSvc('غسيل مكيف','AC Washing',120,'sv1')"><div class="s-icon">🧼</div><div class="s-name">غسيل مكيف</div><div class="s-price">From 120 SAR</div></div>
+      <div class="svc-card" id="sv2" onclick="selSvc('كشف وإصلاح عطل','Diagnosis & Repair',100,'sv2')"><div class="s-icon">🔧</div><div class="s-name">كشف وإصلاح عطل</div><div class="s-price">From 100 SAR</div></div>
+      <div class="svc-card" id="sv3" onclick="selSvc('تعبئة فريون','Freon Refill',150,'sv3')"><div class="s-icon">❄️</div><div class="s-name">تعبئة فريون</div><div class="s-price">From 150 SAR</div></div>
+      <div class="svc-card" id="sv4" onclick="selSvc('صيانة وقائية دورية','Periodic Maintenance',120,'sv4')"><div class="s-icon">🛠️</div><div class="s-name">صيانة وقائية دورية</div><div class="s-price">From 120 SAR</div></div>
+      <div class="svc-card" id="sv5" style="opacity:.45;cursor:not-allowed;" title="غير متوفر حالياً"><div class="s-icon">🚫</div><div class="s-name">تركيب مكيف جديد</div><div class="s-price" style="color:#EF4444">غير متوفر حالياً</div></div>
+      <div class="svc-card" id="sv6" onclick="selSvc('باقة الصيانة السنوية','Annual Package',400,'sv6')"><div class="s-icon">📅</div><div class="s-name">باقة الصيانة السنوية</div><div class="s-price">From 400 SAR</div></div>
+      <div class="svc-card" id="sv7" onclick="selSvcOther('sv7')"><div class="s-icon">📝</div><div class="s-name">أخرى</div><div class="s-price">حدد الخدمة</div></div>
     </div>
     <!-- عدد المكيفات للخدمات الأخرى -->
     <div class="units-box" id="units-box">
@@ -363,6 +364,14 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
       <button class="type-btn" id="tb3" onclick="selType('دائم','tb3')">⭐ دائم</button>
     </div>
     <div class="err-msg" id="e_svc">الرجاء اختيار نوع الخدمة</div>
+    <!-- حقل "أخرى" — يظهر فقط عند اختيار أخرى -->
+    <div id="otherSvcGroup" style="display:none;margin-top:12px;">
+      <label style="font-size:13px;font-weight:700;color:var(--deep);display:block;margin-bottom:6px;">يرجى كتابة نوع الخدمة المطلوبة</label>
+      <input type="text" id="otherSvcInput"
+        placeholder="اكتب الخدمة المطلوبة..."
+        style="width:100%;padding:10px 14px;border:1.5px solid #E2E8F0;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:14px;color:var(--slate);background:var(--frost);outline:none;"
+        oninput="S.service=this.value.trim()||'أخرى'; S.serviceAr=S.service;">
+    </div>
     <div class="err-msg" id="e_type">الرجاء اختيار نوع العميل</div>
 
     <!-- قسم وصف المشكلة — اختياري بالكامل -->
@@ -1223,7 +1232,12 @@ function selClean(u,p){
     var el=document.getElementById(id); if(el) el.className='clean-tile';
   });
   document.getElementById('ct5').className='offer-tile';
-  ['sv1','sv2','sv3','sv4','sv5','sv6'].forEach(function(id){document.getElementById(id).className='svc-card';});
+  ['sv1','sv2','sv3','sv4','sv5','sv6','sv7'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.className='svc-card';
+  });
+  // إخفاء حقل أخرى عند اختيار تنظيف
+  document.getElementById('otherSvcGroup').style.display='none';
+  document.getElementById('otherSvcInput').value='';
 
   if(u===5)     { var el=document.getElementById('ct5u'); if(el) el.className='clean-tile sel'; }
   else if(u===6){ var el=document.getElementById('ct6');  if(el) el.className='clean-tile sel'; }
@@ -1248,14 +1262,39 @@ function selSvc(nameAr,nameEn,price,id){
     var el=document.getElementById(i); if(el) el.className='clean-tile';
   });
   document.getElementById('ct5').className='offer-tile';
-  ['sv1','sv2','sv3','sv4','sv5','sv6'].forEach(function(i){document.getElementById(i).className='svc-card';});
+  ['sv1','sv2','sv3','sv4','sv5','sv6','sv7'].forEach(function(i){
+    var el=document.getElementById(i); if(el) el.className='svc-card';
+  });
   document.getElementById(id).className='svc-card sel';
+  // إخفاء حقل أخرى عند اختيار أي خدمة محددة
+  document.getElementById('otherSvcGroup').style.display='none';
+  document.getElementById('otherSvcInput').value='';
   S.service=nameAr; S.serviceAr=nameAr;
   S.price=price; S.isClean=false;
   S.units=parseInt(document.getElementById('units-display').textContent)||1;
   document.getElementById('units-box').className='units-box show';
   document.getElementById('e_svc').className='err-msg';
   currentServiceFilter = mapServiceToFilter(nameAr);
+  buildProblemChips();
+}
+
+// بطاقة "أخرى" — تُظهر حقل الكتابة
+function selSvcOther(id) {
+  ['ct1','ct2','ct3','ct4','ct5u','ct6','ct7','ct8'].forEach(function(i){
+    var el=document.getElementById(i); if(el) el.className='clean-tile';
+  });
+  document.getElementById('ct5').className='offer-tile';
+  ['sv1','sv2','sv3','sv4','sv5','sv6','sv7'].forEach(function(i){
+    var el=document.getElementById(i); if(el) el.className='svc-card';
+  });
+  document.getElementById(id).className='svc-card sel';
+  // إظهار حقل أخرى
+  document.getElementById('otherSvcGroup').style.display='block';
+  document.getElementById('otherSvcInput').focus();
+  S.service='أخرى'; S.serviceAr='أخرى'; S.isClean=false;
+  document.getElementById('units-box').className='units-box show';
+  document.getElementById('e_svc').className='err-msg';
+  currentServiceFilter='other';
   buildProblemChips();
 }
 
