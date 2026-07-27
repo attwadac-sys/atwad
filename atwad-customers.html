@@ -1318,30 +1318,39 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
 var _importRows   = [];
 var _importFilter = 'all';
 
-// ١. الرقم المحظور — بجميع صيغه
-var BLOCKED_RAW  = ['0565730008','565730008','966565730008','+966565730008','00966565730008','9660565730008','+966 56 573 0008'];
-var BLOCKED_NORM = null;
+// ١. قائمة الحظر — ثابتة تُبنى مرة واحدة عند تحميل الصفحة
+// لا يجوز إعادة تعيينها أو مسحها في أي مكان
+var BLOCKED_NORM = (function() {
+  var raw = ['0565730008','565730008','966565730008','+966565730008',
+             '00966565730008','9660565730008','+966 56 573 0008'];
+  // normalizePhoneImport مُعرّفة في الأسفل لكن hoisting يجعلها متاحة
+  // نُبني Set بعد تعريف الدالة — انظر INIT_BLOCKED_NORM في الأسفل
+  return null; // مؤقت — يُبنى في INIT_BLOCKED_NORM
+})();
 
 // ٢. تطبيع الجوال الصارم — يُرجع 05XXXXXXXX أو '' فقط
-// يعالج: 05X / 5X / 966X / +966X / 00966X / 96605X
 function normalizePhoneImport(value) {
   var s = String(value == null ? '' : value)
     .trim()
-    .replace(/[^\d]/g, ''); // إزالة كل شيء غير رقمي (مسافات، +، -)
+    .replace(/[^\d]/g, '');
   if(s.startsWith('00966')) s = s.slice(5);
   else if(s.startsWith('966')) s = s.slice(3);
-  // بعد إزالة 966، قد تبدأ بـ 05 (من الصيغة 96605X) أو بـ 5
   if(s.startsWith('05') && s.length === 10) return s;
   if(s.startsWith('5')  && s.length === 9)  return '0' + s;
-  return ''; // أي صيغة أخرى → مستبعد
+  return '';
 }
 
-// تحقق هل الرقم محظور
-function isBlockedPhone(phone) {
-  if(!BLOCKED_NORM) {
-    BLOCKED_NORM = new Set(BLOCKED_RAW.map(normalizePhoneImport).filter(Boolean));
-  }
-  return BLOCKED_NORM.has(normalizePhoneImport(phone));
+// بناء Set بعد تعريف normalizePhoneImport
+var INIT_BLOCKED_NORM = (function() {
+  var raw = ['0565730008','565730008','966565730008','+966565730008',
+             '00966565730008','9660565730008','+966 56 573 0008'];
+  BLOCKED_NORM = new Set(raw.map(normalizePhoneImport).filter(Boolean));
+})();
+
+// تحقق هل الرقم محظور — يعتمد على BLOCKED_NORM الثابت
+function isBlockedPhone(value) {
+  var phone = normalizePhoneImport(value);
+  return phone !== '' && BLOCKED_NORM.has(phone);
 }
 
 // خريطة أسماء الأعمدة
@@ -1672,7 +1681,6 @@ function downloadBackup() {
 
 function openImportModal() {
   console.log('[Excel Import] openImportModal called');
-  BLOCKED_NORM = null;
   _importRows  = [];
   document.getElementById('impFileInput').value   = '';
   document.getElementById('impFileName').textContent = '';
@@ -1729,39 +1737,7 @@ function mapHeaders(row0) {
   return map;
 }
 
-function normalizePhoneImport(p) {
-  if(!p) return '';
-  var s = String(p).replace(/\D/g,'');
-  if(s.startsWith('966') && s.length >= 12) return '0' + s.slice(3);
-  if(s.startsWith('05') && s.length === 10) return s;
-  if(s.startsWith('5')  && s.length === 9)  return '0' + s;
-  return s;
-}
-
-function classifyRow(row) {
-  var name  = String(row.name  || '').trim();
-  var phone = normalizePhoneImport(row.phone || '');
-
-  if(!name || name.length < 2 || !phone || phone.replace(/\D/g,'').length < 9) {
-    return { status:'skip', reason:'اسم أو جوال ناقص', row:row };
-  }
-  if(BLOCKED_PHONES && BLOCKED_PHONES.has && BLOCKED_PHONES.has(phone)) {
-    return { status:'blocked', reason:'رقم محظور', row:row };
-  }
-  // فحص التكرار بالجوال
-  var existing = clients.find(function(c){
-    return normalizePhoneImport(c.phone) === phone;
-  });
-  if(existing) {
-    // فحص اختلاف الاسم
-    var existName = (existing.name||'').trim();
-    if(existName && existName !== name) {
-      return { status:'review', reason:'جوال مكرر — اسم مختلف', existing:existing, row:row, phone:phone };
-    }
-    return { status:'merge', reason:'تحديث بيانات عميل موجود', existing:existing, row:row, phone:phone };
-  }
-  return { status:'new', reason:'عميل جديد', row:row, phone:phone };
-}
+// ======= نهاية محرك الاستيراد =======
 
 function onImportFileChange(input) {
   var file = input.files[0];
