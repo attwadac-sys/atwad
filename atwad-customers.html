@@ -650,6 +650,7 @@ function syncFromFirebase() {
         }
       });
 
+      var emptyBookings = []; // سجلات bookings فارغة — للتشخيص فقط، لا تُضاف كعملاء
       snapB.forEach(function(child) {
         var b = child.val();
         var phone = b.phone || '';
@@ -667,14 +668,31 @@ function syncFromFirebase() {
           console.warn('[DIAG] وُجد في bookings:', brec);
         }
 
-        if(phone && !phones[phone] && bName) {
+        // تشخيص السجلات الفارغة قبل الاستيراد
+        var hasValidName  = bName  && bName.trim().length > 1;
+        var hasValidPhone = phone  && phone.replace(/\D/g,'').length >= 9;
+
+        if(!hasValidName || !hasValidPhone) {
+          emptyBookings.push({
+            source: 'bookings',
+            firebaseKey: child.key,
+            id: 'B_'+child.key,
+            name: bName || '(فارغ)',
+            phone: phone ? phone.slice(0,4)+'****' : '(فارغ)',
+            bookingDate: b.date || '',
+            status: b.status || ''
+          });
+          return; // تجاهل — لا تنشئ عميلاً فارغاً
+        }
+
+        if(!phones[phone]) {
           phones[phone] = true;
           bookingsAdded++;
           fbData.push({
             id: 'B_'+child.key,
             _fbKey: 'B_'+child.key,
             _src: 'booking',
-            name: bName,
+            name: bName.trim(),
             phone: phone,
             city: b.city || 'جدة',
             type: 'أفراد',
@@ -687,6 +705,11 @@ function syncFromFirebase() {
         }
       });
 
+      if(emptyBookings.length) {
+        console.warn('[DIAG] حجوزات فارغة تم تجاهلها (' + emptyBookings.length + ' سجل):');
+        console.table(emptyBookings);
+        console.log('[DIAG EMPTY JSON]', JSON.stringify(emptyBookings));
+      }
       console.log('[customers] ملخص التحميل:', {
         من_customers: fbData.length - bookingsAdded,
         من_bookings: bookingsAdded,
