@@ -884,6 +884,7 @@ function renderList(){
           <button class="act-btn act-whatsapp" onclick="sendWhatsapp('${aId}')">📲</button>
           <button class="act-btn act-edit" onclick="editAppt('${aId}')">✏️</button>
           ${a.status!=='done'&&a.status!=='cancelled'?`<button class="act-btn act-done" onclick="markDone('${aId}')">✓</button>`:''}
+          ${a.status==='done'?`<button class="act-btn" style="background:#DBEAFE;color:#1E40AF;font-size:10px;" onclick="createMissingWO('${aId}')" title="إنشاء أمر عمل إذا كان مفقوداً">📋 أمر عمل</button>`:''}
           ${a.status!=='cancelled'?`<button class="act-btn act-cancel" onclick="openCancelModal('${aId}')" title="إلغاء الموعد">✕ إلغاء</button>`:''}
           ${a.tech
             ? `<button class="act-btn act-send-tech" onclick="sendToTechnician('${aId}')" title="إرسال المهمة للفني عبر واتساب">📤 إرسال للفني</button>
@@ -1560,6 +1561,50 @@ function markDone(id){
   db.ref(ref).update({status:'done'})
     .then(() => showToast('🎉 تم إتمام الموعد'))
     .catch(e => showToast('❌ خطأ: ' + e.message));
+}
+
+// ============================================================
+// إنشاء أمر عمل لموعد مكتمل لا يوجد له أمر عمل
+// ============================================================
+function createMissingWO(apptId) {
+  var a = findAppt(apptId);
+  if(!a || !db) return;
+  var apptKey = a._fbKey;
+
+  // فحص عدم وجود أمر عمل مرتبط بنفس المفتاح
+  db.ref('workOrders').orderByChild('sourceApptKey').equalTo(apptKey).once('value', function(snap) {
+    if(snap.numChildren() > 0) {
+      showToast('⚠️ يوجد أمر عمل مرتبط بهذا الموعد بالفعل');
+      return;
+    }
+    // إنشاء أمر عمل جديد
+    var woId = 'WO-' + Date.now().toString().slice(-6);
+    var wo = {
+      id:             woId,
+      sourceApptKey:  apptKey,         // ربط بمفتاح الموعد
+      sourceApptSrc:  a._source || 'appointments',
+      status:         'open',
+      client:         a.client || '—',
+      phone:          (a.phone||'').replace(/[^0-9]/g,'').replace(/^966/,'0'),
+      address:        a.address || a.city || 'جدة',
+      service:        a.service || '—',
+      units:          a.units || 1,
+      tech:           a.tech || '',
+      date:           a.date || '',
+      time:           (a.time||'').split(' - ')[0] || a.time || '',
+      problem:        a.notes || 'من الموعد',
+      parts:          '',
+      price:          0, partsCost: 0, discount: 0, total: 0,
+      payment:        'كاش', rating: 0,
+      createdAt:      new Date().toISOString()
+    };
+
+    var ref = db.ref('workOrders').push();
+    wo._fbKey = ref.key;
+    ref.set(wo).then(function() {
+      showToast('✅ تم إنشاء أمر العمل: ' + woId);
+    }).catch(function(e){ showToast('❌ خطأ: ' + e.message); });
+  });
 }
 
 function deleteAppt(id, e){

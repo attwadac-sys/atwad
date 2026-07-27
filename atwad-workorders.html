@@ -427,43 +427,88 @@ function importWOFromFirebase() {
   if(!db){ showToast('⚠️ Firebase غير متاح'); return; }
   var btn = document.getElementById('importWOBtn');
   btn.textContent = '⏳ جاري الاستيراد...'; btn.disabled = true;
-  db.ref('bookings').once('value', function(snap) {
-    var added = 0, skip = 0;
-    var existRefs = new Set(workOrders.map(function(w){ return w.firebaseRef||''; }));
-    snap.forEach(function(child) {
+
+  // مفاتيح موجودة (bookings أو appointments)
+  var existRefs     = new Set(workOrders.map(function(w){ return w.firebaseRef||''; }));
+  var existApptKeys = new Set(workOrders.map(function(w){ return w.sourceApptKey||''; }));
+  var added = 0, skip = 0;
+
+  function finish() {
+    saveData(); updateStats(); renderWOs();
+    btn.textContent = '📥 استيراد من الحجوزات'; btn.disabled = false;
+    if(added>0) showToast('✅ تم استيراد '+added+' أمر عمل جديد');
+    else showToast('ℹ️ لا أوامر جديدة — تم تخطي '+skip);
+  }
+
+  // ١. استيراد من bookings
+  db.ref('bookings').once('value', function(snapB) {
+    snapB.forEach(function(child) {
       var b = child.val(); var key = child.key;
       if(existRefs.has(key)){ skip++; return; }
-      if(!b.date || !b.time) return;
+      if(!b.date) return;
       workOrders.unshift({
         id: 'WO-' + String(workOrders.length+1001).padStart(5,'0'),
-        firebaseRef: key,
+        firebaseRef:   key,
+        sourceApptKey: '',
         status: 'open',
-        client: b.client||b.name||'—',
-        phone: (b.phone||'').replace(/[^0-9]/g,'').replace(/^966/,'0'),
-        address: b.city||'جدة',
-        service: b.service||'تنظيف مكيف',
-        actype: 'سبليت',
-        units: b.units||1,
-        tech: 'Abrar',
-        date: b.date,
-        time: (b.time||'').split(' - ')[0]||b.time,
-        problem: 'من نموذج الحجز الإلكتروني',
-        parts: '',
-        price: safeInvoiceNumber(b.servicePrice || b.price || 0),
-        servicePrice: safeInvoiceNumber(b.servicePrice || b.price || 0),
+        client:  b.client||b.name||'—',
+        phone:   (b.phone||'').replace(/[^0-9]/g,'').replace(/^966/,'0'),
+        address: b.city||'جدة', service: b.service||'تنظيف مكيف',
+        actype:  'سبليت', units: b.units||1, tech: 'Abrar',
+        date: b.date, time: (b.time||'').split(' - ')[0]||b.time||'',
+        problem: 'من نموذج الحجز الإلكتروني', parts: '',
+        price: safeInvoiceNumber(b.servicePrice||b.price||0),
+        servicePrice: safeInvoiceNumber(b.servicePrice||b.price||0),
         partsCost: 0, discount: 0,
-        total: safeInvoiceNumber(b.servicePrice || b.price || 0),
+        total: safeInvoiceNumber(b.servicePrice||b.price||0),
         payment: 'كاش', rating: 0,
         booking: {servicePrice: safeInvoiceNumber(b.servicePrice||0)},
         createdAt: b.createdAt||new Date().toISOString()
       });
       existRefs.add(key); added++;
     });
-    saveData(); updateStats(); renderWOs();
-    btn.textContent = '📥 استيراد من الحجوزات'; btn.disabled = false;
-    if(added>0) showToast('✅ تم استيراد '+added+' أمر عمل جديد');
-    else showToast('ℹ️ لا أوامر جديدة — تم تخطي '+skip);
-  }, function(){ btn.textContent='📥 استيراد من الحجوزات'; btn.disabled=false; showToast('❌ خطأ في الاتصال'); });
+
+    // ٢. استيراد من appointments (المواعيد التي أُنشئت مباشرة)
+    db.ref('appointments').once('value', function(snapA) {
+      snapA.forEach(function(child) {
+        var a = child.val(); var key = child.key;
+        // تخطي إذا مرتبط بـ booking موجود أو له أمر عمل بالفعل
+        if(existApptKeys.has(key)){ skip++; return; }
+        if(!a.date || !a.client) return;
+        workOrders.unshift({
+          id: 'WO-' + String(workOrders.length+1001).padStart(5,'0'),
+          firebaseRef:   '',
+          sourceApptKey: key,       // الربط بمفتاح الموعد
+          sourceApptSrc: 'appointments',
+          status: a.status==='done' ? 'done' : 'open',
+          client:  a.client||'—',
+          phone:   (a.phone||'').replace(/[^0-9]/g,'').replace(/^966/,'0'),
+          address: a.address||a.city||'جدة',
+          service: a.service||'—',
+          actype:  'سبليت', units: a.units||1, tech: a.tech||'',
+          date: a.date, time: (a.time||'').split(' - ')[0]||a.time||'',
+          problem: a.notes||'من صفحة المواعيد', parts: '',
+          price: 0, servicePrice: 0, partsCost: 0, discount: 0, total: 0,
+          payment: 'كاش', rating: 0,
+          createdAt: a.createdAt||new Date().toISOString()
+        });
+        existApptKeys.add(key); added++;
+      });
+
+      // أيضاً: workOrders المنشأة من createMissingWO لها sourceApptKey
+      db.ref('workOrders').once('value', function(snapWO) {
+        var existFromWO = new Set();
+        snapWO.forEach(function(c){ var k=c.val().sourceApptKey; if(k) existFromWO.add(k); });
+        workOrders = workOrders.filter(function(w){
+          return !(w.sourceApptKey && existFromWO.has(w.sourceApptKey) && !w._fbKey);
+        });
+        finish();
+      }, function(){ finish(); });
+    }, function(){ finish(); });
+  }, function(){
+    btn.textContent='📥 استيراد من الحجوزات'; btn.disabled=false;
+    showToast('❌ خطأ في الاتصال');
+  });
 }
 // ===== STATE =====
 let workOrders = JSON.parse(localStorage.getItem('atwad_workorders') || '[]');
@@ -576,7 +621,12 @@ function setFilter(f, btn){
 function renderWOs(search=''){
   let list = [...workOrders];
   if(currentFilter !== 'all') list = list.filter(w=>w.status===currentFilter);
-  if(search) list = list.filter(w=>(w.client||'').toLowerCase().includes(search.toLowerCase())||(w.id||'').includes(search));
+  if(search) list = list.filter(function(w){
+    var s = search.toLowerCase();
+    return (w.client||'').toLowerCase().includes(s)
+        || (w.id||'').includes(s)
+        || (w.phone||'').includes(search);
+  });
   list.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''));
 
   const sMap = { open:'ws-open', inprogress:'ws-inprogress', done:'ws-done', invoiced:'ws-invoiced' };
