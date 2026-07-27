@@ -1206,8 +1206,9 @@ if(db) db.ref('settings/fridayClosed').once('value',function(s){if(s.val()!==nul
 // بناء chips الأوصاف
 buildProblemChips();
 
-var tom=new Date(); tom.setDate(tom.getDate()+1);
-document.getElementById('f_date').min=tom.toISOString().split('T')[0];
+// الحد الأدنى لاختيار التاريخ هو اليوم — اليوم مسموح إذا بقي وقت شاغر بعد ساعتين
+// لا نستخدم toISOString() لأنه UTC وقد يُنتج تاريخًا مختلفًا في السعودية
+document.getElementById('f_date').min = todaySaudiDate();
 
 // ===== خانة العدد =====
 function changeUnits(dir){
