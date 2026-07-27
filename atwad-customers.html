@@ -420,6 +420,13 @@
   .btn-start-import:disabled{opacity:.5;cursor:not-allowed;}
   .btn-cancel-import{background:#F1F5F9;color:var(--mist);}
   @media(max-width:700px){.import-stats{grid-template-columns:repeat(3,1fr);}}
+  .review-decision{padding:5px 8px;border:1.5px solid #FDE68A;border-radius:7px;font-family:'Tajawal',sans-serif;font-size:11px;background:#FFFBEB;color:#92400E;cursor:pointer;width:100%;}
+  .review-decision.decided{border-color:#10B981;background:#D1FAE5;color:#065F46;}
+  .review-phone-edit{margin-top:5px;padding:5px 8px;border:1.5px solid #CBD5E1;border-radius:7px;font-family:'Tajawal',sans-serif;font-size:11px;width:100%;display:none;}
+  .review-compare{font-size:10px;color:var(--mist);margin-top:4px;line-height:1.5;}
+  .imp-undecided{background:#FFF5E6;}
+  .sb-undecided{background:#FBBF24;color:#fff;}
+  .warn-banner{background:#FEF3C7;border:1.5px solid #FDE68A;border-radius:10px;padding:10px 14px;font-size:12px;font-weight:700;color:#92400E;margin-bottom:10px;display:none;}
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
@@ -1468,25 +1475,56 @@ function onImportFileChange(input) {
   reader.readAsArrayBuffer(file);
 }
 
-function updateImportStats() {
-  var counts = {new:0,merge:0,review:0,skip:0,blocked:0};
-  _importRows.forEach(function(r){ counts[r.status] = (counts[r.status]||0)+1; });
-  document.getElementById('impTotal').textContent   = _importRows.length;
-  document.getElementById('impNew').textContent     = counts.new;
-  document.getElementById('impMerge').textContent   = counts.merge;
-  document.getElementById('impReview').textContent  = counts.review;
-  document.getElementById('impSkip').textContent    = counts.skip;
-  document.getElementById('impBlocked').textContent = counts.blocked;
+// تعيين قرار سجل مراجعة
+function setReviewDecision(idx, sel) {
+  var r = _importRows[idx];
+  if(!r) return;
+  r.decision = sel.value;
+  // تحديث CSS الـ select
+  sel.className = 'review-decision' + (sel.value !== 'undecided' ? ' decided' : '');
+  // إظهار/إخفاء حقل الرقم الجديد
+  var phoneInput = document.getElementById('rv-phone-'+idx);
+  if(phoneInput) phoneInput.style.display = sel.value==='independent' ? 'block' : 'none';
+  // تحديث CSS الصف
+  var row = document.getElementById('rv-row-'+idx);
+  if(row) row.className = sel.value==='undecided' ? 'imp-undecided' : 'imp-review';
+  // تحديث الإحصاءات (يُعيد التحقق من undecided)
+  updateImportStats();
 }
 
-// فتح المعاينة ثم تفعيل زر الاستيراد
+// تعيين رقم مستقل لسجل مراجعة مع تحقق فوري
+function setReviewPhone(idx, val) {
+  var r = _importRows[idx];
+  if(!r) return;
+  var errEl = document.getElementById('rv-err-'+idx);
+  var phone = normalizePhoneImport(val);
+  if(!phone || !/^05\d{8}$/.test(phone)) {
+    r.newPhone = val;
+    if(errEl) errEl.textContent = '❌ رقم غير صالح';
+    return;
+  }
+  if(isBlockedPhone(phone)) {
+    r.newPhone = val;
+    if(errEl) errEl.textContent = '❌ رقم محظور';
+    return;
+  }
+  // تحقق من التكرار
+  var dupInFile = _importRows.some(function(x, i){ return i!==idx && normalizePhoneImport((x.row||{}).phone||'')===phone; });
+  var dupInFb   = clients.some(function(c){ return normalizePhoneImport(c.phone||'')===phone; });
+  if(dupInFile) { if(errEl) errEl.textContent = '❌ مكرر داخل الملف'; r.newPhone=val; return; }
+  if(dupInFb)   { if(errEl) errEl.textContent = '❌ موجود في Firebase'; r.newPhone=val; return; }
+  r.newPhone = phone;
+  if(errEl) errEl.textContent = '✅ رقم صالح';
+}
+
+// فتح المعاينة وتفعيل زر الاستيراد
 function showPreview() {
   document.getElementById('impFilters').style.display     = 'flex';
   document.getElementById('impPreviewWrap').style.display = 'block';
   renderPreviewTable(_importFilter);
-  // ١. الاستيراد متاح بعد مشاهدة المعاينة فقط
-  document.getElementById('btnStartImport').disabled = false;
-  document.getElementById('btnStartImport').title = '';
+  var btn = document.getElementById('btnStartImport');
+  if(btn){ btn.setAttribute('data-ready','1'); }
+  updateImportStats(); // يُطبّق حماية undecided
 }
 
 function filterPreview(f, btn) {
@@ -1502,139 +1540,67 @@ var ROW_CSS       = {new:'imp-new',merge:'imp-merge',review:'imp-review',skip:'i
 
 function renderPreviewTable(filter) {
   var rows = filter==='all' ? _importRows : _importRows.filter(function(r){ return r.status===filter; });
-  var html = rows.slice(0,200).map(function(r,idx) {
+  var html = rows.slice(0,200).map(function(r) {
+    var realIdx = _importRows.indexOf(r);
     var row = r.row || {};
-    var ph  = normalizePhoneImport(row.phone||'');
-    // ٨. checkbox لسجلات مراجعة — غير محددة افتراضياً
-    var chk = '';
-    if(r.status==='review') {
-      chk = '<input type="checkbox" '+(r.selected?'checked':'')
-        +' onchange="_importRows.filter(function(x){return x.status==\"review\";})['+idx+'] && (_importRows.filter(function(x){return x.status==\"review\";})['+idx+'].selected=this.checked)">';
-    } else if(r.status==='new'||r.status==='merge') {
-      chk = '✓';
+    var phone = normalizePhoneImport(row.phone||'');
+
+    if(r.status !== 'review') {
+      return '<tr class="' + ROW_CSS[r.status] + '">' +
+        '<td><span class="status-badge '+STATUS_CSS[r.status]+'">'+STATUS_LABELS[r.status]+'</span></td>' +
+        '<td>'+(row.customerCode||'—')+'</td>' +
+        '<td>'+(row.name||'—')+'</td>' +
+        '<td dir="ltr">'+(phone||'—')+'</td>' +
+        '<td>'+(row.district||row.city||'—')+'</td>' +
+        '<td>'+(row.visits||'0')+'</td>' +
+        '<td>'+(row.revenue?Number(row.revenue).toLocaleString('ar-SA-u-ca-gregory')+' ﷼':'—')+'</td>' +
+        '<td>'+(row.lastVisit||'—')+'</td>' +
+        '<td style="font-size:11px;color:var(--mist);">'+(r.reason||'')+'</td>' +
+      '</tr>';
     }
-    var existNameHtml = (r.existing && r.status==='review')
-      ? '<br><small style="color:var(--mist);">موجود: '+r.existing.name+'</small>' : '';
-    return '<tr class="' + ROW_CSS[r.status] + '">' +
-      '<td><span class="status-badge '+STATUS_CSS[r.status]+'">'+STATUS_LABELS[r.status]+'</span></td>' +
-      '<td style="text-align:center;">'+chk+'</td>'+
+
+    var ex = r.existing || {};
+    var dec = r.decision || 'undecided';
+    var phoneEditDisp = dec==='independent' ? 'block' : 'none';
+    var rowCss = dec==='undecided' ? 'imp-undecided' : 'imp-review';
+    var badge = dec==='undecided'
+      ? '<span class=\"status-badge sb-undecided\">لم يُحسم</span>'
+      : '<span class=\"status-badge sb-review\">مراجعة</span>';
+    var compare =
+      '<div class=\"review-compare\">' +
+        '<b style=\"color:#0EA5E9\">Excel:</b> '+(row.name||'—')+' | '+(row.district||row.city||'—')+'<br>' +
+        '<b style=\"color:#10B981\">Firebase:</b> '+(ex.name||'—')+' | '+(ex.city||ex.district||'—')+
+        (ex.visits?' | '+ex.visits+' زيارة':'') +
+      '</div>';
+    return '<tr class=\"'+rowCss+'\" id=\"rv-row-'+realIdx+'\">' +
+      '<td>'+badge+'</td>' +
       '<td>'+(row.customerCode||'—')+'</td>' +
-      '<td>'+(row.name||'—')+existNameHtml+'</td>' +
-      '<td dir="ltr">'+(ph||'—')+'</td>' +
+      '<td><b>'+(row.name||'—')+'</b>'+compare+'</td>' +
+      '<td dir=\"ltr\">'+(phone||'—')+'</td>' +
       '<td>'+(row.district||row.city||'—')+'</td>' +
       '<td>'+(row.visits||'0')+'</td>' +
       '<td>'+(row.revenue?Number(row.revenue).toLocaleString('ar-SA-u-ca-gregory')+' ﷼':'—')+'</td>' +
-      '<td style="font-size:11px;color:var(--mist);">'+(r.reason||'')+'</td>' +
+      '<td>'+(row.lastVisit||'—')+'</td>' +
+      '<td>' +
+        '<select class=\"review-decision'+(dec!=='undecided'?' decided':'')+'\" onchange=\"setReviewDecision('+realIdx+',this)\">' +
+          '<option value=\"undecided\"'+(dec==='undecided'?' selected':'')+'>⬜ لم يُتخذ قرار</option>' +
+          '<option value=\"merge\"'+(dec==='merge'?' selected':'')+'>🔵 دمج مع الموجود</option>' +
+          '<option value=\"independent\"'+(dec==='independent'?' selected':'')+'>🟢 مستقل (برقم جديد)</option>' +
+          '<option value=\"skip\"'+(dec==='skip'?' selected':'')+'>🔴 استبعاد</option>' +
+        '</select>' +
+        '<input type=\"tel\" id=\"rv-phone-'+realIdx+'\" class=\"review-phone-edit\" placeholder=\"05XXXXXXXX\"' +
+          ' style=\"display:'+phoneEditDisp+';\" value=\"'+(r.newPhone||'')+'\"' +
+          ' oninput=\"setReviewPhone('+realIdx+',this.value)\">' +
+        '<div id=\"rv-err-'+realIdx+'\" style=\"font-size:10px;color:#EF4444;margin-top:2px;\"></div>' +
+      '</td>' +
     '</tr>';
   }).join('');
   document.getElementById('impPreviewBody').innerHTML = html ||
-    '<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--mist);">لا توجد صفوف بهذه الحالة</td></tr>';
+    '<tr><td colspan=\"9\" style=\"text-align:center;padding:20px;color:var(--mist)\">لا توجد صفوف</td></tr>';
 }
+
 
 // ٧. تأكيد قبل الاستيراد
-async function startImport() {
-  if(!db) { showToast('❌ Firebase غير متاح'); return; }
-  var toProcess = _importRows.filter(function(r){
-    return (r.status==='new' || r.status==='merge') ||
-           (r.status==='review' && r.selected);
-  });
-  if(!toProcess.length) { showToast('⚠️ لا توجد صفوف محددة للاستيراد'); return; }
-
-  var counts = {new:0, merge:0, review:0};
-  toProcess.forEach(function(r){ counts[r.status]=(counts[r.status]||0)+1; });
-  var summary = 'سيتم:\n'
-    + (counts.new    ? '• إضافة '+counts.new+' عميل جديد\n' : '')
-    + (counts.merge  ? '• تحديث '+counts.merge+' عميل موجود\n' : '')
-    + (counts.review ? '• دمج '+counts.review+' عميل بعد مراجعة\n' : '')
-    + '\nهل تريد المتابعة؟';
-  if(!confirm(summary)) return;
-
-  document.getElementById('btnStartImport').disabled = true;
-  document.getElementById('impProgress').style.display    = 'block';
-  var bar = document.getElementById('impProgressBar');
-  var lbl = document.getElementById('impProgressLabel');
-
-  // ١١. سجل تقرير مفصّل
-  var report = {added:0, merged:0, failed:[], skipped:0, blocked:0};
-  var BATCH = 5;
-
-  for(var i=0; i<toProcess.length; i+=BATCH) {
-    var batch = toProcess.slice(i, i+BATCH);
-    await Promise.all(batch.map(async function(r) {
-      try {
-        var row = r.row;
-        var phone = r.phone;
-
-        if(r.status==='merge' || r.status==='review') {
-          // ٤. لا نستبدل قيمة موجودة بفارغة   ٥. لا نُعدّل id/createdAt/_fbKey
-          if(!r.existing || !r.existing._fbKey) {
-            report.failed.push({name:row.name, phone:phone, reason:'مفتاح Firebase مفقود'});
-            return;
-          }
-          var updates = {};
-          // فقط الحقول ذات قيمة من Excel
-          if(String(row.district||'').trim()) updates.district  = String(row.district).trim();
-          if(String(row.city||'').trim())     updates.city      = String(row.city).trim();
-          if(row.revenue && Number(row.revenue)>0) updates.revenue = Number(row.revenue);
-          if(row.visits  && Number(row.visits)>0)  updates.visits  = Number(row.visits);
-          if(String(row.lastVisit||'').trim()) updates.lastVisit = String(row.lastVisit).trim();
-          if(String(row.notes||'').trim())     updates.notes     = String(row.notes).trim();
-          if(String(row.customerCode||'').trim()) updates.customerCode = String(row.customerCode).trim();
-          if(Object.keys(updates).length) {
-            await db.ref('customers/' + r.existing._fbKey).update(updates);
-          }
-          report.merged++;
-
-        } else if(r.status==='new') {
-          var newC = {
-            name:      String(row.name).trim(),
-            phone:     phone,
-            city:      String(row.city||row.district||'').trim(),
-            district:  String(row.district||'').trim(),
-            type:      String(row.type||'أفراد').trim(),
-            visits:    Number(row.visits)||0,
-            revenue:   Number(row.revenue)||0,
-            lastVisit: String(row.lastVisit||'').trim(),
-            notes:     String(row.notes||'').trim(),
-            createdAt: new Date().toISOString(),
-            importedAt:new Date().toISOString(),
-            source:    'excel_import'
-          };
-          if(String(row.customerCode||'').trim()) newC.customerCode = String(row.customerCode).trim();
-          var ref  = db.ref('customers').push();
-          newC.id  = ref.key;
-          await ref.set(newC);
-          report.added++;
-        }
-      } catch(e) {
-        // ١٠. لا نوقف الدفعة — نسجّل الفشل فقط
-        report.failed.push({name:(r.row&&r.row.name)||'?', phone:r.phone||'?', reason:e.message});
-        console.error('[Import] row failed:', r.row, e);
-      }
-    }));
-
-    var done = Math.min(i+BATCH, toProcess.length);
-    bar.style.width = Math.round(done/toProcess.length*100) + '%';
-    lbl.textContent = 'جاري الاستيراد... ' + done + ' / ' + toProcess.length;
-    await new Promise(function(res){ setTimeout(res, 150); });
-  }
-
-  // ١١. تقرير نهائي
-  bar.style.width = '100%';
-  var rpt = '✅ اكتمل الاستيراد\n'
-    +'• تمت الإضافة: '+report.added+'\n'
-    +'• تم الدمج: '+report.merged+'\n'
-    +(report.failed.length ? '• فشل: '+report.failed.length+'\n' : '')
-    +'• محظور: '+_importRows.filter(function(r){return r.status==='blocked';}).length+'\n'
-    +'• مستبعد: '+_importRows.filter(function(r){return r.status==='skip';}).length;
-  lbl.textContent = rpt.replace(/\n/g,' | ');
-  console.log('[Import] تقرير:\n'+rpt);
-  if(report.failed.length) {
-    console.warn('[Import] فشل:', report.failed);
-  }
-  alert(rpt);
-  document.getElementById('btnStartImport').disabled = false;
-}
 
 // ١٢. نسخة احتياطية شاملة (تشمل _fbKey)
 function downloadBackup() {
@@ -1744,20 +1710,28 @@ function mapHeaders(row0) {
 // ======= نهاية محرك الاستيراد =======
 
 function updateImportStats() {
-  var counts = {new:0,merge:0,review:0,skip:0,blocked:0};
-  _importRows.forEach(function(r){ counts[r.status] = (counts[r.status]||0)+1; });
+  var counts = {new:0, merge:0, review:0, skip:0, blocked:0};
+  var undecided = 0;
+  _importRows.forEach(function(r) {
+    counts[r.status] = (counts[r.status]||0) + 1;
+    if(r.status==='review' && (!r.decision || r.decision==='undecided')) undecided++;
+  });
   document.getElementById('impTotal').textContent   = _importRows.length;
   document.getElementById('impNew').textContent     = counts.new;
   document.getElementById('impMerge').textContent   = counts.merge;
   document.getElementById('impReview').textContent  = counts.review;
   document.getElementById('impSkip').textContent    = counts.skip;
   document.getElementById('impBlocked').textContent = counts.blocked;
-}
-
-function showPreview() {
-  document.getElementById('impFilters').style.display     = 'flex';
-  document.getElementById('impPreviewWrap').style.display = 'block';
-  renderPreviewTable('all');
+  // تحذير undecided
+  var warn = document.getElementById('impReviewWarn');
+  var btn  = document.getElementById('btnStartImport');
+  if(undecided > 0) {
+    if(warn){ warn.style.display='block'; warn.textContent='⚠️ يجب تحديد قرار لـ '+undecided+' سجل مراجعة قبل بدء الاستيراد.'; }
+    if(btn) btn.disabled = true;
+  } else {
+    if(warn) warn.style.display = 'none';
+    if(btn && btn.getAttribute('data-ready')==='1') btn.disabled = false;
+  }
 }
 
 function filterPreview(f, btn) {
@@ -1765,34 +1739,6 @@ function filterPreview(f, btn) {
   document.querySelectorAll('.pf-btn').forEach(function(b){ b.classList.remove('active'); });
   btn.classList.add('active');
   renderPreviewTable(f);
-}
-
-var STATUS_LABELS = {new:'جديد',merge:'دمج',review:'مراجعة',skip:'مستبعد',blocked:'محظور'};
-var STATUS_CSS    = {new:'sb-new',merge:'sb-merge',review:'sb-review',skip:'sb-skip',blocked:'sb-skip'};
-var ROW_CSS       = {new:'imp-new',merge:'imp-merge',review:'imp-review',skip:'imp-skip',blocked:'imp-skip'};
-
-function renderPreviewTable(filter) {
-  var rows = filter==='all' ? _importRows : _importRows.filter(function(r){ return r.status===filter; });
-  var html = rows.slice(0, 200).map(function(r) {
-    var row = r.row || {};
-    var action = r.status==='new'   ? 'إضافة جديدة'
-               : r.status==='merge' ? 'تحديث بيانات'
-               : r.status==='review'? 'تحتاج مراجعة'
-               : 'تجاهل';
-    return '<tr class="' + ROW_CSS[r.status] + '">' +
-      '<td><span class="status-badge ' + STATUS_CSS[r.status] + '">' + STATUS_LABELS[r.status] + '</span></td>' +
-      '<td>' + (row.customerCode||'—') + '</td>' +
-      '<td>' + (row.name||'—') + '</td>' +
-      '<td dir="ltr">' + (normalizePhoneImport(row.phone||'')||'—') + '</td>' +
-      '<td>' + (row.district||row.city||'—') + '</td>' +
-      '<td>' + (row.visits||'0') + '</td>' +
-      '<td>' + (row.revenue ? Number(row.revenue).toLocaleString('ar-SA-u-ca-gregory')+' ﷼' : '—') + '</td>' +
-      '<td>' + (row.lastVisit||'—') + '</td>' +
-      '<td style="font-size:11px;color:var(--mist);">' + (r.reason||'') + '</td>' +
-    '</tr>';
-  }).join('');
-  document.getElementById('impPreviewBody').innerHTML = html ||
-    '<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--mist);">لا توجد صفوف بهذه الحالة</td></tr>';
 }
 
 async function startImport() {
@@ -2023,10 +1969,11 @@ function applyPageLang(l) {
     </div>
 
     <!-- أزرار -->
+    <div class="warn-banner" id="impReviewWarn"></div>
     <div class="import-btns">
       <button class="btn-backup" onclick="downloadBackup()">💾 تنزيل نسخة احتياطية</button>
       <button class="btn-preview" id="btnPreview" onclick="showPreview()" style="display:none;">👁️ معاينة البيانات</button>
-      <button class="btn-start-import" id="btnStartImport" onclick="startImport()" style="display:none;" disabled>🚀 بدء الاستيراد</button>
+      <button class="btn-start-import" id="btnStartImport" data-ready="0" onclick="startImport()" style="display:none;" disabled>🚀 بدء الاستيراد</button>
       <button class="btn-cancel-import" onclick="closeImportModal()">✕ إلغاء</button>
     </div>
   </div>
