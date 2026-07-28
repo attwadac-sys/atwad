@@ -98,6 +98,8 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+  <script src="atwad-auth.js"></script>
 </head>
 <body>
 
@@ -481,6 +483,7 @@ function applyPageLang(l) {
     if(t[key]) el.placeholder = t[key];
   });
 }
+
+window.__atwadInitPage = function(user) { console.log("[reports] مسجّل:", user.email); if(typeof loadAllReports==="function") loadAllReports(); else if(typeof syncFromFirebase==="function") syncFromFirebase(); };
+
 </script>
-</body>
-</html>

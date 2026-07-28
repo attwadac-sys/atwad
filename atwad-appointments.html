@@ -272,6 +272,8 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+  <script src="atwad-auth.js"></script>
 </head>
 <body>
 
@@ -1570,18 +1572,28 @@ function createMissingWO(apptId) {
   var a = findAppt(apptId);
   if(!a || !db) return;
   var apptKey = a._fbKey;
+  console.log('[createMissingWO] الموعد:', {
+    id: apptId, fbKey: apptKey, source: a._source,
+    client: a.client, phone: a.phone, date: a.date, time: a.time, status: a.status
+  });
 
-  // فحص عدم وجود أمر عمل مرتبط بنفس المفتاح
+  // فحص عدم وجود أمر عمل مرتبط بنفس المفتاح — يبحث في Firebase مباشرة
   db.ref('workOrders').orderByChild('sourceApptKey').equalTo(apptKey).once('value', function(snap) {
+    console.log('[createMissingWO] فحص sourceApptKey:', apptKey,
+      '— نتائج:', snap.numChildren(),
+      snap.val() ? JSON.stringify(snap.val()) : '(لا شيء)');
     if(snap.numChildren() > 0) {
-      showToast('⚠️ يوجد أمر عمل مرتبط بهذا الموعد بالفعل');
+      // أمر موجود في Firebase — اعرض مفتاحه
+      var keys = Object.keys(snap.val());
+      showToast('⚠️ أمر موجود في Firebase بمفتاح: ' + keys.join(', '));
+      console.warn('[createMissingWO] أمر موجود:', snap.val());
       return;
     }
     // إنشاء أمر عمل جديد
     var woId = 'WO-' + Date.now().toString().slice(-6);
     var wo = {
       id:             woId,
-      sourceApptKey:  apptKey,         // ربط بمفتاح الموعد
+      sourceApptKey:  apptKey,
       sourceApptSrc:  a._source || 'appointments',
       status:         'open',
       client:         a.client || '—',
@@ -1599,11 +1611,37 @@ function createMissingWO(apptId) {
       createdAt:      new Date().toISOString()
     };
 
-    var ref = db.ref('workOrders').push();
-    wo._fbKey = ref.key;
-    ref.set(wo).then(function() {
-      showToast('✅ تم إنشاء أمر العمل: ' + woId);
-    }).catch(function(e){ showToast('❌ خطأ: ' + e.message); });
+    // _fbKey لا يُرسَل لـ Firebase — يُضاف محلياً بعد التحقق
+    var firebaseData = Object.assign({}, wo);
+    var newRef = db.ref('workOrders').push();
+
+    newRef.set(firebaseData)
+      .then(function() {
+        // التحقق المباشر: اقرأ السجل فور حفظه
+        return db.ref('workOrders/' + newRef.key).once('value');
+      })
+      .then(function(verifySnap) {
+        console.log('[createMissingWO] verify saved:',
+          newRef.key, verifySnap.exists(), verifySnap.val());
+
+        if(!verifySnap.exists()) {
+          showToast('❌ تعذر التحقق من حفظ أمر العمل في Firebase');
+          console.error('[createMissingWO] verify FAILED — سجل غير موجود بعد set()');
+          return;
+        }
+        // الحفظ مؤكد — أضف _fbKey محلياً
+        wo._fbKey = newRef.key;
+        showToast('✅ تم إنشاء أمر العمل: ' + woId + '\nمفتاح Firebase: ' + newRef.key);
+        console.log('[createMissingWO] ✅ حُفظ بنجاح:', {
+          path:    'workOrders/' + newRef.key,
+          woId:    woId,
+          apptKey: apptKey
+        });
+      })
+      .catch(function(e){
+        showToast('❌ فشل الحفظ: ' + e.message);
+        console.error('[createMissingWO] error:', e);
+      });
   });
 }
 
@@ -2319,7 +2357,11 @@ function markNotifRead(key) {
 
 // تشغيل مراقبة الإشعارات
 watchNotifications();
-</script>
 
-</body>
-</html>
+window.__atwadInitPage = function(user) {
+  console.log("[appointments] مسجّل:", user.email);
+  if(typeof initFirebaseSync==="function") initFirebaseSync();
+  else if(typeof syncFromFirebase==="function") syncFromFirebase();
+};
+
+</script>

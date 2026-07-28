@@ -6,6 +6,7 @@
 <title>أطواد - صفحة الفني</title>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
 :root{
@@ -108,6 +109,7 @@ body{font-family:'Cairo',sans-serif;background:#F1F5F9;color:var(--slate);min-he
 .day-count{background:var(--ice);color:var(--sky);padding:2px 8px;border-radius:10px;font-size:11px;}
 .today-tag{background:var(--sky);color:#fff;padding:2px 8px;border-radius:10px;font-size:11px;}
 </style>
+  <script src="atwad-auth.js"></script>
 </head>
 <body>
 
@@ -409,6 +411,7 @@ function showToast(msg) {
 
 // تهيئة
 updateDate();
+
+window.__atwadInitPage = function(user) { console.log("[technician] مسجّل:", user.email); if(typeof syncFromFirebase==="function") syncFromFirebase(); else if(typeof loadData==="function") loadData(); };
+
 </script>
-</body>
-</html>

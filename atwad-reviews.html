@@ -422,25 +422,6 @@
   </div>
 </header>
 
-<div class="stats-row">
-  <div class="stat-card">
-    <span class="num" id="totalReviews">0</span>
-    <div class="lbl">إجمالي الآراء</div>
-  </div>
-  <div class="stat-card gold">
-    <span class="num" id="avgRating">--</span>
-    <div class="lbl">متوسط التقييم</div>
-  </div>
-  <div class="stat-card teal">
-    <span class="num" id="fiveStars">0</span>
-    <div class="lbl">تقييم 5 نجوم</div>
-  </div>
-  <div class="stat-card">
-    <span class="num" id="recommendPct">--%</span>
-    <div class="lbl">يوصون بالخدمة</div>
-  </div>
-</div>
-
 <main>
 
   <!-- FORM -->
@@ -492,25 +473,6 @@
     <button class="submit-btn" onclick="addReview()">💾 حفظ الرأي</button>
   </div>
 
-  <!-- REVIEWS LIST -->
-  <div class="reviews-section">
-    <h2>
-      <span>آراء العملاء</span>
-      <span id="reviewCount" style="font-size:13px;color:var(--muted);font-weight:500"></span>
-    </h2>
-
-    <div class="filter-bar">
-      <button class="filter-btn active" onclick="filterReviews('all',this)">الكل</button>
-      <button class="filter-btn" onclick="filterReviews(5,this)">⭐⭐⭐⭐⭐</button>
-      <button class="filter-btn" onclick="filterReviews(4,this)">⭐⭐⭐⭐</button>
-      <button class="filter-btn" onclick="filterReviews(3,this)">⭐⭐⭐</button>
-      <button class="filter-btn" onclick="filterReviews(2,this)">⭐⭐</button>
-      <button class="filter-btn" onclick="filterReviews(1,this)">⭐</button>
-    </div>
-
-    <div id="reviewsList"></div>
-  </div>
-
 </main>
 
 <footer>
@@ -523,7 +485,7 @@
   firebase.initializeApp({ databaseURL: "https://atwad-booking-default-rtdb.firebaseio.com" });
   const db = firebase.database();
 
-  let allReviews = [];
+  // الصفحة العامة لا تحتفظ بقائمة تقييمات محلية
   let selectedService = '';
 
   // Service tags
@@ -535,101 +497,10 @@
     });
   });
 
-  // Load customers
-  function loadCustomers() {
-    db.ref('customers').once('value').then(snap => {
-      const data = snap.val();
-      if (!data) return;
-      const dl = document.getElementById('customersList');
-      Object.values(data).forEach(c => {
-        const opt = document.createElement('option');
-        opt.value = c.name || c.customerName || '';
-        dl.appendChild(opt);
-      });
-    }).catch(() => {
-      try {
-        const customers = JSON.parse(localStorage.getItem('customers') || '[]');
-        const dl = document.getElementById('customersList');
-        customers.forEach(c => {
-          const opt = document.createElement('option');
-          opt.value = c.name || c.customerName || '';
-          dl.appendChild(opt);
-        });
-      } catch(e) {}
-    });
-  }
+  // ملاحظة: صفحة التقييم العامة لا تقرأ بيانات العملاء من Firebase
 
-  // Load reviews
-  function loadReviews() {
-    db.ref('reviews').on('value', snap => {
-      const data = snap.val();
-      allReviews = [];
-      if (data) {
-        Object.entries(data).forEach(([id, r]) => allReviews.push({ id, ...r }));
-        allReviews.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-      }
-      renderReviews(allReviews);
-      updateStats();
-    });
-  }
-
-  function renderReviews(reviews) {
-    const container = document.getElementById('reviewsList');
-    document.getElementById('reviewCount').textContent = `(${reviews.length})`;
-
-    if (reviews.length === 0) {
-      container.innerHTML = `<div class="empty-state"><div class="icon">💬</div><p>لا توجد آراء حتى الآن<br>أضف أول رأي عميل من النموذج</p></div>`;
-      return;
-    }
-
-    container.innerHTML = reviews.map(r => {
-      const stars   = '★'.repeat(r.rating || 5) + '☆'.repeat(5 - (r.rating || 5));
-      const initial = (r.customerName || 'ع')[0];
-      const date    = r.timestamp ? new Date(r.timestamp).toLocaleDateString('ar-SA') : '';
-      const labels  = ['','سيء','مقبول','جيد','جيد جداً','ممتاز'];
-
-      return `
-      <div class="review-card">
-        <div class="review-header">
-          <div class="reviewer-info">
-            <div class="reviewer-avatar">${initial}</div>
-            <div>
-              <div class="reviewer-name">${r.customerName || 'عميل'}</div>
-              <div class="reviewer-date">${date}</div>
-            </div>
-          </div>
-          <div class="stars-display">${stars}</div>
-        </div>
-        ${r.service ? `<span class="review-service">${r.service}</span>` : ''}
-        ${r.text    ? `<div class="review-text">${r.text}</div>` : ''}
-        <div class="review-footer">
-          <span class="rating-badge badge-${r.rating||5}">${labels[r.rating||5]}</span>
-          <div style="display:flex;gap:10px;align-items:center">
-            ${r.recommend==='yes'
-              ? '<span style="font-size:12px;color:#0096c7">✅ يوصي بالخدمة</span>'
-              : '<span style="font-size:12px;color:#c0392b">❌ لا يوصي</span>'}
-            <button class="delete-btn" onclick="deleteReview('${r.id}')">🗑️ حذف</button>
-          </div>
-        </div>
-      </div>`;
-    }).join('');
-  }
-
-  function updateStats() {
-    document.getElementById('totalReviews').textContent = allReviews.length;
-    if (!allReviews.length) return;
-    const avg = allReviews.reduce((s,r) => s+(r.rating||5), 0) / allReviews.length;
-    document.getElementById('avgRating').textContent = avg.toFixed(1) + ' ★';
-    document.getElementById('fiveStars').textContent = allReviews.filter(r=>r.rating===5).length;
-    const rec = allReviews.filter(r=>r.recommend==='yes').length;
-    document.getElementById('recommendPct').textContent = Math.round(rec/allReviews.length*100) + '%';
-  }
-
-  function filterReviews(val, btn) {
-    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    renderReviews(val==='all' ? allReviews : allReviews.filter(r=>r.rating===val));
-  }
+  // الصفحة العامة لا تقرأ ولا تعرض ولا تحذف التقييمات —
+  // renderReviews / updateStats / filterReviews / deleteReview محذوفة بالكامل
 
   function addReview() {
     const name   = document.getElementById('customerName').value.trim();
@@ -664,13 +535,6 @@
     });
   }
 
-  function deleteReview(id) {
-    if (!confirm('هل تريدين حذف هذا الرأي؟')) return;
-    db.ref('reviews/'+id).remove()
-      .then(()  => showToast('🗑️ تم الحذف', 'success'))
-      .catch(()  => showToast('❌ خطأ في الحذف', 'error'));
-  }
-
   function showToast(msg, type='') {
     const t = document.getElementById('toast');
     t.textContent = msg;
@@ -679,8 +543,8 @@
     setTimeout(() => t.classList.remove('show'), 3000);
   }
 
-  loadCustomers();
-  loadReviews();
+  // ملاحظة: صفحة التقييم العامة لا تُشغّل loadCustomers
+  // إدارة التقييمات تتطلب تسجيل الدخول الإداري في صفحة مستقلة
 </script>
 </body>
 </html>
