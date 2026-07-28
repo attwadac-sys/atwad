@@ -1,0 +1,2648 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مؤسسة أطواد - إدارة العملاء</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap');
+
+  :root {
+    --deep:    #0C3B5E;
+    --steel:   #1E5F8A;
+    --sky:     #0EA5E9;
+    --ice:     #E8F4FD;
+    --frost:   #F0F9FF;
+    --slate:   #334155;
+    --mist:    #94A3B8;
+    --white:   #FFFFFF;
+    --success: #10B981;
+    --warning: #F59E0B;
+    --danger:  #EF4444;
+    --new-cl:  #8B5CF6;
+    --corp-cl: #0EA5E9;
+    --reg-cl:  #10B981;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family:'Tajawal',sans-serif;
+    background:#F1F5F9;
+    min-height:100vh;
+    color:var(--slate);
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    position:fixed; right:0; top:0; bottom:0;
+    width:230px;
+    background:linear-gradient(180deg,var(--deep) 0%,var(--steel) 100%);
+    z-index:200;
+    display:flex; flex-direction:column;
+    box-shadow:4px 0 24px rgba(12,59,94,0.18);
+  }
+  .sidebar-logo {
+    padding:24px 20px 20px;
+    border-bottom:1px solid rgba(255,255,255,0.1);
+    display:flex; align-items:center; gap:12px;
+  }
+  .sidebar-logo .icon {
+    width:44px;height:44px;
+    background:linear-gradient(135deg,var(--sky),#38BDF8);
+    border-radius:12px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:22px;
+  }
+  .sidebar-logo h1 { color:#fff;font-size:17px;font-weight:800; }
+  .sidebar-logo p  { color:rgba(255,255,255,0.55);font-size:11px; }
+
+  .nav-section { padding:16px 12px 8px; }
+  .nav-label   { color:rgba(255,255,255,0.35);font-size:10px;font-weight:700;padding:0 8px 6px;letter-spacing:1px; }
+  .nav-item {
+    display:flex;align-items:center;gap:10px;
+    padding:11px 12px;
+    border-radius:10px;
+    color:rgba(255,255,255,0.7);
+    font-size:14px;font-weight:500;
+    cursor:pointer;
+    transition:all 0.2s;
+    margin-bottom:2px;
+  }
+  .nav-item:hover  { background:rgba(255,255,255,0.08);color:#fff; }
+  .nav-item.active { background:rgba(14,165,233,0.22);color:var(--sky);font-weight:700; }
+  .nav-item .nav-icon { font-size:17px;width:22px;text-align:center; }
+  .nav-badge {
+    margin-right:auto;
+    background:var(--sky);color:#fff;
+    font-size:10px;font-weight:700;
+    padding:2px 7px;border-radius:20px;
+  }
+
+  /* MAIN */
+  .main { margin-right:230px; padding:0; }
+
+  /* TOPBAR */
+  .topbar {
+    background:#fff;
+    padding:16px 28px;
+    display:flex;align-items:center;justify-content:space-between;
+    border-bottom:1.5px solid #E2E8F0;
+    position:sticky;top:0;z-index:100;
+    box-shadow:0 2px 8px rgba(0,0,0,0.04);
+  }
+  .topbar-title { font-size:20px;font-weight:800;color:var(--deep); }
+  .topbar-sub   { font-size:13px;color:var(--mist);margin-top:2px; }
+  .topbar-actions { display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end; }
+  .btn-add {
+    background:linear-gradient(90deg,var(--deep),var(--sky));
+    color:#fff;border:none;border-radius:10px;
+    padding:10px 20px;font-family:'Tajawal',sans-serif;
+    font-size:14px;font-weight:700;cursor:pointer;
+    display:flex;align-items:center;gap:6px;
+    box-shadow:0 4px 12px rgba(14,165,233,0.3);
+    transition:all 0.2s;
+  }
+  .btn-add:hover { transform:translateY(-1px);box-shadow:0 6px 16px rgba(14,165,233,0.4); }
+
+  /* STATS ROW */
+  .stats-row {
+    display:grid;grid-template-columns:repeat(4,1fr);gap:16px;
+    padding:20px 28px;
+  }
+  .stat-card {
+    background:#fff;border-radius:16px;padding:18px 20px;
+    box-shadow:0 2px 12px rgba(0,0,0,0.05);
+    border-right:4px solid transparent;
+    transition:all 0.2s;
+  }
+  .stat-card:hover { transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.09); }
+  .stat-card.total  { border-color:var(--sky); }
+  .stat-card.new-c  { border-color:var(--new-cl); }
+  .stat-card.reg    { border-color:var(--reg-cl); }
+  .stat-card.corp   { border-color:var(--corp-cl); }
+  .stat-icon { font-size:26px;margin-bottom:8px; }
+  .stat-num  { font-size:28px;font-weight:800;color:var(--deep); }
+  .stat-lbl  { font-size:12px;color:var(--mist);font-weight:500;margin-top:2px; }
+
+  /* CONTENT */
+  .content { padding:0 28px 40px; }
+
+  /* SEARCH & FILTER */
+  .toolbar {
+    display:flex;align-items:center;gap:12px;
+    margin-bottom:18px;
+    flex-wrap:wrap;
+  }
+  .search-wrap {
+    flex:1;min-width:200px;
+    position:relative;
+  }
+  .search-wrap input {
+    width:100%;padding:10px 16px 10px 40px;
+    border:1.5px solid #E2E8F0;border-radius:10px;
+    font-family:'Tajawal',sans-serif;font-size:14px;
+    background:var(--frost);outline:none;
+    transition:all 0.2s;
+  }
+  .search-wrap input:focus { border-color:var(--sky);background:#fff; }
+  .search-icon {
+    position:absolute;left:12px;top:50%;transform:translateY(-50%);
+    color:var(--mist);font-size:16px;
+  }
+  .filter-btn {
+    padding:10px 16px;
+    border:1.5px solid #E2E8F0;border-radius:10px;
+    background:#fff;font-family:'Tajawal',sans-serif;
+    font-size:13px;font-weight:600;color:var(--slate);
+    cursor:pointer;transition:all 0.2s;
+    display:flex;align-items:center;gap:6px;
+  }
+  .filter-btn:hover,.filter-btn.active { border-color:var(--sky);color:var(--sky);background:var(--ice); }
+  .filter-btn.new-f.active  { border-color:var(--new-cl);color:var(--new-cl);background:#F5F3FF; }
+  .filter-btn.reg-f.active  { border-color:var(--reg-cl);color:var(--reg-cl);background:#ECFDF5; }
+  .filter-btn.corp-f.active { border-color:var(--corp-cl);color:var(--corp-cl);background:var(--ice); }
+  .filter-btn.rev-f.active  { border-color:#F59E0B;color:#92400E;background:#FEF9C3; }
+  .filter-btn.sent-f.active { border-color:#10B981;color:#065F46;background:#D1FAE5; }
+
+  /* قسم التقييم في تفاصيل العميل */
+  .review-section{background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:12px;padding:14px 16px;margin-top:16px;}
+  .review-section h4{font-size:13px;font-weight:800;color:#92400E;margin-bottom:10px;}
+  .review-toggle-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+  .toggle-label{font-size:13px;font-weight:600;color:var(--slate);}
+  .toggle-switch{position:relative;width:44px;height:24px;cursor:pointer;}
+  .toggle-switch input{opacity:0;width:0;height:0;}
+  .toggle-slider{position:absolute;inset:0;background:#CBD5E1;border-radius:24px;transition:.3s;}
+  .toggle-slider:before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.3s;}
+  .toggle-switch input:checked + .toggle-slider{background:#F59E0B;}
+  .toggle-switch input:checked + .toggle-slider:before{transform:translateX(20px);}
+  .review-status{font-size:12px;color:var(--mist);margin-bottom:10px;}
+  .review-status.sent{color:#065F46;font-weight:700;}
+  .btn-send-review{width:100%;padding:11px;background:linear-gradient(90deg,#F59E0B,#FBBF24);color:#fff;border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;}
+  .btn-send-review:disabled{background:#E2E8F0;color:var(--mist);cursor:not-allowed;}
+
+  /* حملة طلب التقييم — اختيار يدوي وإرسال متتابع */
+  .btn-review-campaign{
+    padding:9px 14px;background:#FFFBEB;color:#92400E;border:1.5px solid #F59E0B;
+    border-radius:10px;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:800;
+    cursor:pointer;white-space:nowrap;
+  }
+  .btn-review-campaign:hover{background:#FEF3C7;}
+  .campaign-overlay{
+    position:fixed;inset:0;background:rgba(12,59,94,.55);z-index:6000;
+    display:none;align-items:flex-start;justify-content:center;overflow-y:auto;padding:20px;
+    backdrop-filter:blur(2px);
+  }
+  .campaign-overlay.open{display:flex;}
+  .campaign-box{
+    background:#fff;border-radius:18px;width:100%;max-width:980px;overflow:hidden;
+    box-shadow:0 20px 60px rgba(12,59,94,.28);margin:auto;
+  }
+  .campaign-header{
+    padding:18px 22px;background:linear-gradient(90deg,#FFFBEB,#FEF3C7);
+    border-bottom:1.5px solid #FDE68A;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  }
+  .campaign-header h3{font-size:18px;font-weight:900;color:#92400E;}
+  .campaign-body{padding:20px 22px;}
+  .campaign-note{
+    background:#EFF6FF;border:1.5px solid #BFDBFE;color:#1E40AF;border-radius:11px;
+    padding:11px 14px;font-size:12px;font-weight:700;line-height:1.7;margin-bottom:14px;
+  }
+  .campaign-toolbar{display:grid;grid-template-columns:minmax(220px,1fr) 180px auto;gap:10px;margin-bottom:12px;}
+  .campaign-toolbar input,.campaign-toolbar select{
+    width:100%;padding:10px 12px;border:1.5px solid #E2E8F0;border-radius:9px;
+    font-family:'Tajawal',sans-serif;font-size:13px;background:var(--frost);outline:none;
+  }
+  .campaign-toolbar input:focus,.campaign-toolbar select:focus{border-color:var(--sky);background:#fff;}
+  .campaign-counter{
+    display:flex;align-items:center;justify-content:center;background:#FFFBEB;color:#92400E;
+    border:1.5px solid #FDE68A;border-radius:9px;padding:8px 12px;font-size:13px;font-weight:900;
+  }
+  .campaign-table-wrap{max-height:390px;overflow:auto;border:1px solid #E2E8F0;border-radius:11px;}
+  .campaign-table{width:100%;border-collapse:collapse;font-size:12px;}
+  .campaign-table th{
+    position:sticky;top:0;background:var(--frost);color:var(--deep);padding:10px;
+    text-align:right;border-bottom:1px solid #E2E8F0;z-index:1;
+  }
+  .campaign-table td{padding:9px 10px;border-bottom:1px solid #F1F5F9;font-size:12px;}
+  .campaign-table tr:last-child td{border-bottom:none;}
+  .campaign-table tr.review-disabled{background:#F8FAFC;color:var(--mist);}
+  .campaign-table input[type="checkbox"]{width:17px;height:17px;accent-color:#F59E0B;cursor:pointer;}
+  .campaign-status{
+    display:inline-flex;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:800;white-space:nowrap;
+  }
+  .campaign-status.not-sent{background:#DBEAFE;color:#1E40AF;}
+  .campaign-status.sent{background:#D1FAE5;color:#065F46;}
+  .campaign-status.blocked{background:#FEE2E2;color:#991B1B;}
+  .campaign-footer{
+    padding:15px 22px;border-top:1px solid #F1F5F9;display:flex;gap:10px;
+    justify-content:space-between;align-items:center;flex-wrap:wrap;
+  }
+  .campaign-actions{display:flex;gap:8px;flex-wrap:wrap;}
+  .campaign-btn{
+    padding:10px 17px;border:none;border-radius:9px;font-family:'Tajawal',sans-serif;
+    font-size:13px;font-weight:800;cursor:pointer;
+  }
+  .campaign-btn:disabled{opacity:.5;cursor:not-allowed;}
+  .campaign-btn.primary{background:linear-gradient(90deg,var(--deep),var(--sky));color:#fff;}
+  .campaign-btn.whatsapp{background:#25D366;color:#fff;}
+  .campaign-btn.sent{background:#10B981;color:#fff;}
+  .campaign-btn.skip{background:#E2E8F0;color:#475569;}
+  .campaign-btn.exclude{background:#FEE2E2;color:#991B1B;}
+  .campaign-progress-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;}
+  .campaign-progress-track{height:9px;background:#E2E8F0;border-radius:20px;overflow:hidden;margin-bottom:16px;}
+  .campaign-progress-bar{height:100%;width:0;background:linear-gradient(90deg,#F59E0B,#10B981);transition:width .25s;}
+  .campaign-current{
+    background:var(--frost);border:1.5px solid var(--ice);border-radius:13px;padding:14px 16px;margin-bottom:12px;
+  }
+  .campaign-current-name{font-size:18px;font-weight:900;color:var(--deep);}
+  .campaign-current-meta{font-size:12px;color:var(--mist);margin-top:4px;}
+  .campaign-message{
+    width:100%;min-height:245px;white-space:pre-wrap;direction:rtl;text-align:right;
+    background:#F8FAFC;border:1.5px solid #E2E8F0;border-radius:12px;padding:15px;
+    color:var(--slate);font-family:'Tajawal',sans-serif;font-size:13px;line-height:1.75;resize:vertical;
+  }
+  .campaign-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:18px 0;}
+  .campaign-summary-card{background:var(--frost);border-radius:11px;padding:14px;text-align:center;}
+  .campaign-summary-card strong{display:block;font-size:24px;color:var(--deep);}
+  .campaign-summary-card span{font-size:11px;color:var(--mist);}
+
+  /* TABLE */
+  .table-card {
+    background:#fff;border-radius:16px;
+    box-shadow:0 2px 12px rgba(0,0,0,0.05);
+    overflow:hidden;
+  }
+  .table-wrap { overflow-x:auto; }
+  table { width:100%;border-collapse:collapse; }
+  thead tr { background:linear-gradient(90deg,var(--frost),var(--ice)); }
+  thead th {
+    padding:14px 16px;text-align:right;
+    font-size:12px;font-weight:700;color:var(--steel);
+    border-bottom:2px solid var(--ice);
+    white-space:nowrap;
+  }
+  tbody tr {
+    border-bottom:1px solid #F1F5F9;
+    transition:background 0.15s;
+    cursor:pointer;
+  }
+  tbody tr:hover { background:var(--frost); }
+  tbody tr:last-child { border-bottom:none; }
+  td { padding:13px 16px;font-size:14px;color:var(--slate);vertical-align:middle; }
+
+  .client-name-cell { display:flex;align-items:center;gap:10px; }
+  .avatar {
+    width:38px;height:38px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:16px;font-weight:700;color:#fff;flex-shrink:0;
+  }
+  .client-name { font-weight:700;color:var(--deep); }
+  .client-id   { font-size:11px;color:var(--mist); }
+
+  .badge {
+    display:inline-flex;align-items:center;gap:4px;
+    padding:4px 10px;border-radius:20px;
+    font-size:12px;font-weight:700;
+  }
+  .badge-new  { background:#EDE9FE;color:var(--new-cl); }
+  .badge-reg  { background:#D1FAE5;color:var(--reg-cl); }
+  .badge-corp { background:#E0F2FE;color:var(--corp-cl); }
+
+  .action-btn {
+    padding:6px 12px;border-radius:8px;border:none;
+    font-family:'Tajawal',sans-serif;font-size:12px;font-weight:600;
+    cursor:pointer;transition:all 0.15s;
+  }
+  .btn-view { background:var(--ice);color:var(--sky); }
+  .btn-view:hover { background:var(--sky);color:#fff; }
+  .btn-book { background:#D1FAE5;color:var(--reg-cl); }
+  .btn-book:hover { background:var(--reg-cl);color:#fff; }
+  .btn-del  { background:#FEE2E2;color:var(--danger); }
+  .btn-del:hover { background:var(--danger);color:#fff; }
+
+  .phone-link { color:var(--sky);text-decoration:none;font-weight:600; }
+  .phone-link:hover { text-decoration:underline; }
+
+  .visits-count { font-weight:700;color:var(--deep); }
+  .last-visit   { font-size:12px;color:var(--mist); }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align:center;padding:60px 20px;
+    color:var(--mist);
+  }
+  .empty-state .empty-icon { font-size:48px;margin-bottom:12px; }
+  .empty-state p { font-size:15px; }
+
+  /* MODAL OVERLAY */
+  .modal-overlay {
+    position:fixed;inset:0;
+    background:rgba(12,59,94,0.45);
+    z-index:500;
+    display:none;align-items:center;justify-content:center;
+    backdrop-filter:blur(2px);
+  }
+  .modal-overlay.open { display:flex; }
+  .modal {
+    background:#fff;border-radius:20px;
+    width:100%;max-width:540px;
+    max-height:90vh;overflow-y:auto;
+    box-shadow:0 20px 60px rgba(12,59,94,0.25);
+    animation:slideUp 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes slideUp {
+    from{transform:translateY(40px);opacity:0}
+    to{transform:translateY(0);opacity:1}
+  }
+  .modal-header {
+    padding:22px 26px 18px;
+    background:linear-gradient(90deg,var(--frost),var(--ice));
+    border-bottom:1.5px solid rgba(14,165,233,0.12);
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .modal-header h3 { font-size:18px;font-weight:800;color:var(--deep); }
+  .modal-close {
+    width:32px;height:32px;border-radius:50%;
+    border:none;background:#E2E8F0;color:var(--slate);
+    font-size:18px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    transition:all 0.2s;
+  }
+  .modal-close:hover { background:var(--danger);color:#fff; }
+  .modal-body { padding:24px 26px; }
+
+  .form-row { display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px; }
+  .form-group { margin-bottom:16px; }
+  .form-group label {
+    display:block;font-size:13px;font-weight:600;
+    color:var(--slate);margin-bottom:6px;
+  }
+  .req { color:var(--danger); }
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    width:100%;padding:10px 14px;
+    border:1.5px solid #E2E8F0;border-radius:10px;
+    font-family:'Tajawal',sans-serif;font-size:14px;
+    color:var(--slate);background:var(--frost);
+    outline:none;transition:all 0.2s;direction:rtl;
+  }
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus {
+    border-color:var(--sky);background:#fff;
+    box-shadow:0 0 0 3px rgba(14,165,233,0.1);
+  }
+  .type-row { display:flex;gap:8px; }
+  .type-chip {
+    flex:1;padding:10px 6px;text-align:center;
+    border:2px solid #E2E8F0;border-radius:10px;
+    font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;
+    cursor:pointer;transition:all 0.2s;background:var(--frost);
+    color:var(--slate);
+  }
+  .type-chip.sel-new  { border-color:var(--new-cl);background:#EDE9FE;color:var(--new-cl); }
+  .type-chip.sel-reg  { border-color:var(--reg-cl);background:#D1FAE5;color:var(--reg-cl); }
+  .type-chip.sel-corp { border-color:var(--corp-cl);background:#E0F2FE;color:var(--corp-cl); }
+
+  .modal-footer {
+    padding:16px 26px;border-top:1px solid #F1F5F9;
+    display:flex;gap:10px;justify-content:flex-end;
+  }
+  .btn-cancel {
+    padding:10px 20px;border:1.5px solid #E2E8F0;border-radius:10px;
+    background:#fff;font-family:'Tajawal',sans-serif;font-size:14px;
+    font-weight:600;color:var(--slate);cursor:pointer;transition:all 0.2s;
+  }
+  .btn-cancel:hover { border-color:var(--danger);color:var(--danger); }
+  .btn-save {
+    padding:10px 28px;border:none;border-radius:10px;
+    background:linear-gradient(90deg,var(--deep),var(--sky));
+    color:#fff;font-family:'Tajawal',sans-serif;font-size:14px;
+    font-weight:700;cursor:pointer;
+    box-shadow:0 4px 12px rgba(14,165,233,0.3);transition:all 0.2s;
+  }
+  .btn-save:hover { transform:translateY(-1px);box-shadow:0 6px 16px rgba(14,165,233,0.4); }
+
+  /* DETAIL MODAL */
+  .detail-section { margin-bottom:20px; }
+  .detail-section h4 {
+    font-size:13px;font-weight:700;color:var(--mist);
+    margin-bottom:10px;padding-bottom:6px;
+    border-bottom:1px dashed #E2E8F0;
+  }
+  .detail-row {
+    display:flex;justify-content:space-between;align-items:center;
+    padding:7px 0;font-size:14px;
+  }
+  .detail-row .d-label { color:var(--mist); }
+  .detail-row .d-val   { font-weight:700;color:var(--deep); }
+  .history-item {
+    background:var(--frost);border-radius:10px;
+    padding:10px 14px;margin-bottom:8px;
+    display:flex;justify-content:space-between;align-items:center;
+    font-size:13px;
+  }
+  .history-item .h-service { font-weight:600;color:var(--deep); }
+  .history-item .h-date    { color:var(--mist); }
+  .history-item .h-price   { color:var(--sky);font-weight:700; }
+
+  /* TOAST */
+  .toast {
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+    background:var(--deep);color:#fff;
+    padding:12px 24px;border-radius:12px;
+    font-size:14px;font-weight:600;
+    box-shadow:0 8px 24px rgba(0,0,0,0.2);
+    transition:transform 0.3s;z-index:999;
+    display:flex;align-items:center;gap:8px;
+  }
+  .toast.show { transform:translateX(-50%) translateY(0); }
+
+  /* RESPONSIVE */
+  @media(max-width:900px){
+    .sidebar{display:none;}
+    .main{margin-right:0;}
+    .stats-row{grid-template-columns:1fr 1fr;}
+    .content,.stats-row,.topbar{padding-right:16px;padding-left:16px;}
+  }
+  @media(max-width:540px){
+    .stats-row{grid-template-columns:1fr 1fr;}
+    .form-row{grid-template-columns:1fr;}
+    .campaign-toolbar{grid-template-columns:1fr;}
+    .campaign-summary{grid-template-columns:1fr 1fr;}
+    .campaign-overlay{padding:8px;}
+    .campaign-body{padding:15px;}
+  }
+
+.lang-btn{padding:7px 14px;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);border-radius:8px;color:#fff;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;}
+.lang-btn:hover{background:rgba(255,255,255,.25);}
+  /* ===== IMPORT MODAL ===== */
+  .import-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:5000;display:none;align-items:flex-start;justify-content:center;overflow-y:auto;padding:20px;}
+  .import-overlay.open{display:flex;}
+  .import-box{background:#fff;border-radius:18px;width:100%;max-width:900px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.2);margin:auto;}
+  .import-title{font-size:17px;font-weight:900;color:var(--deep);margin-bottom:20px;display:flex;align-items:center;gap:10px;}
+  .import-stats{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:20px;}
+  .import-stat{background:var(--frost);border-radius:10px;padding:10px;text-align:center;}
+  .import-stat .isn{font-size:20px;font-weight:900;color:var(--deep);}
+  .import-stat .isl{font-size:10px;color:var(--mist);margin-top:2px;}
+  .import-progress{background:#F1F5F9;border-radius:10px;height:8px;margin:12px 0;overflow:hidden;display:none;}
+  .import-progress-bar{height:100%;background:linear-gradient(90deg,var(--sky),var(--deep));transition:width .3s;width:0%;}
+  .import-progress-label{font-size:12px;color:var(--mist);text-align:center;margin-top:4px;}
+  /* معاينة */
+  .preview-filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+  .pf-btn{padding:5px 12px;border:1.5px solid #E2E8F0;border-radius:20px;font-family:'Tajawal',sans-serif;font-size:11px;font-weight:700;cursor:pointer;background:#fff;color:var(--mist);}
+  .pf-btn.active{background:var(--sky);color:#fff;border-color:var(--sky);}
+  .preview-table-wrap{max-height:350px;overflow-y:auto;border:1px solid #E2E8F0;border-radius:10px;}
+  .preview-table{width:100%;border-collapse:collapse;font-size:12px;}
+  .preview-table th{background:var(--frost);padding:8px 10px;text-align:right;position:sticky;top:0;font-weight:700;color:var(--deep);}
+  .preview-table td{padding:7px 10px;border-bottom:1px solid #F8FAFC;}
+  .imp-new{background:#F0FFF4;}.imp-merge{background:#EFF6FF;}.imp-review{background:#FFFBEB;}.imp-skip{background:#FFF5F5;}
+  .status-badge{padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;}
+  .sb-new{background:#D1FAE5;color:#065F46;}.sb-merge{background:#DBEAFE;color:#1E40AF;}
+  .sb-review{background:#FEF9C3;color:#92400E;}.sb-skip{background:#FEE2E2;color:#991B1B;}
+  .import-btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;border-top:1px solid #F1F5F9;padding-top:16px;}
+  .import-btns button,.import-btns label{padding:10px 18px;border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
+  .btn-backup{background:#FEF9C3;color:#92400E;border:1.5px solid #FDE68A;}
+  .btn-preview{background:#DBEAFE;color:#1E40AF;}
+  .btn-start-import{background:linear-gradient(90deg,var(--deep),var(--sky));color:#fff;}
+  .btn-start-import:disabled{opacity:.5;cursor:not-allowed;}
+  .btn-cancel-import{background:#F1F5F9;color:var(--mist);}
+  @media(max-width:700px){.import-stats{grid-template-columns:repeat(3,1fr);}}
+  .review-decision{padding:5px 8px;border:1.5px solid #FDE68A;border-radius:7px;font-family:'Tajawal',sans-serif;font-size:11px;background:#FFFBEB;color:#92400E;cursor:pointer;width:100%;}
+  .review-decision.decided{border-color:#10B981;background:#D1FAE5;color:#065F46;}
+  .review-phone-edit{margin-top:5px;padding:5px 8px;border:1.5px solid #CBD5E1;border-radius:7px;font-family:'Tajawal',sans-serif;font-size:11px;width:100%;display:none;}
+  .review-compare{font-size:10px;color:var(--mist);margin-top:4px;line-height:1.5;}
+  .imp-undecided{background:#FFF5E6;}
+  .sb-undecided{background:#FBBF24;color:#fff;}
+  .warn-banner{background:#FEF3C7;border:1.5px solid #FDE68A;border-radius:10px;padding:10px 14px;font-size:12px;font-weight:700;color:#92400E;margin-bottom:10px;display:none;}
+</style>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+  <!-- SheetJS لقراءة Excel — للاستيراد فقط -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="icon">❄️</div>
+    <div>
+      <h1 id="nav-brand">أطواد</h1>
+      <p id="nav-brandsub">لصيانة المكيفات</p>
+    </div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">القائمة الرئيسية</div>
+    <div class="nav-item active" id="nav-clients" id="nav-clients" id="nav-clients" onclick="location.href='atwad-customers.html'"><span class="nav-icon">👥</span> العملاء <span class="nav-badge" id="navBadge">0</span></div>
+    <div class="nav-item" id="nav-appts" id="nav-appts" id="nav-appts" onclick="location.href='atwad-appointments.html'"><span class="nav-icon">📅</span> المواعيد</div>
+    <div class="nav-item" id="nav-wo" id="nav-wo" id="nav-wo" onclick="location.href='atwad-workorders.html'"><span class="nav-icon">🔧</span> أوامر العمل</div>
+    <div class="nav-item" id="nav-finance" id="nav-finance" id="nav-finance" onclick="location.href='atwad-finance.html'"><span class="nav-icon">💰</span> الإدارة المالية</div>
+    <div class="nav-item" id="nav-reports" id="nav-reports" id="nav-reports" onclick="location.href='atwad-reports.html'"><span class="nav-icon">📊</span> التقارير</div>
+  </div>
+  <div class="nav-section" style="margin-top:auto;border-top:1px solid rgba(255,255,255,0.08);padding-top:12px;">
+    <div class="nav-item" id="nav-settings" onclick="alert('Settings — Coming Soon / قريباً ✨')"><span class="nav-icon">⚙️</span> الإعدادات</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">👥 إدارة العملاء</div>
+      <div class="topbar-sub" data-lang="sub">تسجيل وتصنيف وإدارة قاعدة البيانات</div>
+    </div>
+    <div class="topbar-actions"><button class="lang-btn" id="langBtn" onclick="toggleLang()">🌐 EN</button>
+      <button onclick="importFromFirebase()" id="importBtn" style="background:#fff;border:1.5px solid #0EA5E9;color:#0EA5E9;border-radius:10px;padding:9px 16px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;" data-lang="importBtn">📥 استيراد من الحجوزات</button>
+      <button class="btn-review-campaign" type="button" onclick="openReviewCampaign()">⭐ حملة طلب التقييم</button>
+      <button class="btn-add" onclick="openAddModal()" data-lang="addBtn">＋ إضافة عميل</button>
+      <button id="excelImportBtn" type="button" onclick="openImportModal()" style="padding:9px 14px;background:#FEF9C3;color:#92400E;border:1.5px solid #FDE68A;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer;position:relative;z-index:2;">📥 استيراد من Excel</button>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-row">
+    <div class="stat-card total">
+      <div class="stat-icon">👥</div>
+      <div class="stat-num" id="statTotal">0</div>
+      <div class="stat-lbl" data-lang="statTotal">إجمالي العملاء</div>
+    </div>
+    <div class="stat-card new-c">
+      <div class="stat-icon">🆕</div>
+      <div class="stat-num" id="statNew">0</div>
+      <div class="stat-lbl" data-lang="statNew">عملاء جدد</div>
+    </div>
+    <div class="stat-card reg">
+      <div class="stat-icon">⭐</div>
+      <div class="stat-num" id="statReg">0</div>
+      <div class="stat-lbl" data-lang="statReg">عملاء دائمون</div>
+    </div>
+    <div class="stat-card corp">
+      <div class="stat-icon">🏢</div>
+      <div class="stat-num" id="statCorp">0</div>
+      <div class="stat-lbl" data-lang="statCorp">شركات</div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="ابحث بالاسم أو الجوال أو المدينة..." oninput="renderTable()">
+      </div>
+      <button class="filter-btn active" data-filter="all" onclick="setFilter(this,'all')" data-lang="filterAll">الكل</button>
+      <button class="filter-btn new-f" data-filter="جديد" onclick="setFilter(this,'جديد')">🆕 جدد</button>
+      <button class="filter-btn reg-f" data-filter="دائم" onclick="setFilter(this,'دائم')">⭐ دائمون</button>
+      <button class="filter-btn corp-f" data-filter="شركات" onclick="setFilter(this,'شركات')">🏢 شركات</button>
+      <button class="filter-btn rev-f" data-filter="reviewCandidate" onclick="setFilter(this,'reviewCandidate')">⭐ مرشحو التقييم</button>
+      <button class="filter-btn sent-f" data-filter="reviewSent" onclick="setFilter(this,'reviewSent')">✅ تم إرسال الطلب</button>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-card">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th data-lang="colClient">العميل</th>
+              <th data-lang="colPhone">الجوال</th>
+              <th data-lang="colCity">المدينة</th>
+              <th data-lang="colType">التصنيف</th>
+              <th>آخر عمل</th>
+              <th data-lang="colVisits">الزيارات</th>
+              <th data-lang="colAct">الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+        <div class="empty-state" id="emptyState" style="display:none;">
+          <div class="empty-icon">👤</div>
+          <p>لا يوجد عملاء مسجلون بعد<br><small>اضغط "إضافة عميل" لبدء قاعدة البيانات</small></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD / EDIT MODAL -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">➕ إضافة عميل جديد</h3>
+      <button class="modal-close" onclick="closeModal('addModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>الاسم الكريم <span class="req">*</span></label>
+          <input type="text" id="f_name" placeholder="اسم العميل">
+        </div>
+        <div class="form-group">
+          <label>رقم الجوال <span class="req">*</span></label>
+          <input type="tel" id="f_phone" placeholder="05xxxxxxxx" maxlength="10">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>المدينة <span class="req">*</span></label>
+          <select id="f_city">
+            <option value="">-- اختر --</option>
+            <option>الرياض</option><option>جدة</option>
+            <option>مكة المكرمة</option><option>المدينة المنورة</option>
+            <option>الدمام</option><option>الخبر</option>
+            <option>الطائف</option><option>تبوك</option><option>أخرى</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>نوع العميل <span class="req">*</span></label>
+          <div class="type-row">
+            <div class="type-chip" data-type="جديد" onclick="selectType(this)">🆕 جديد</div>
+            <div class="type-chip" data-type="دائم" onclick="selectType(this)">⭐ دائم</div>
+            <div class="type-chip" data-type="شركات" onclick="selectType(this)">🏢 شركة</div>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>العنوان التفصيلي</label>
+        <input type="text" id="f_address" placeholder="الحي، الشارع...">
+      </div>
+      <div class="form-group">
+        <label>اسم الشركة / الجهة</label>
+        <input type="text" id="f_company" placeholder="اختياري للشركات">
+      </div>
+      <div class="form-group">
+        <label>ملاحظات</label>
+        <textarea id="f_notes" rows="2" placeholder="أي معلومات إضافية..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('addModal')">إلغاء</button>
+      <button class="btn-save" onclick="saveClient()">💾 حفظ العميل</button>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="detailTitle">📋 ملف العميل</h3>
+      <button class="modal-close" onclick="closeModal('detailModal')">×</button>
+    </div>
+    <div class="modal-body" id="detailBody"></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('detailModal')">إغلاق</button>
+      <button class="btn-save" id="detailEditBtn">✏️ تعديل</button>
+    </div>
+  </div>
+</div>
+
+<!-- REVIEW CAMPAIGN MODAL -->
+<div class="campaign-overlay" id="reviewCampaignModal">
+  <div class="campaign-box">
+    <div class="campaign-header">
+      <h3>⭐ حملة طلب التقييم</h3>
+      <button class="modal-close" type="button" onclick="closeReviewCampaign()">×</button>
+    </div>
+
+    <div id="reviewCampaignSelectStep">
+      <div class="campaign-body">
+        <div class="campaign-note">
+          تظهر هنا قائمة العملاء المؤهلين لطلب التقييم. يمكنك اختيار العملاء داخل الحملة مباشرة، والإرسال يدوي وعميل واحد في كل مرة،
+          ولن يُسجَّل الطلب إلا بعد الضغط على «تم الإرسال».
+          <span id="reviewCampaignVersion" style="display:inline-block;margin-right:8px;padding:2px 8px;border-radius:20px;background:#DCFCE7;color:#166534;font-size:11px;font-weight:900;">الإصدار 2 — جميع العملاء المؤهلين</span>
+          <span id="reviewCampaignLoadedCount" style="display:inline-block;margin-right:8px;font-size:11px;font-weight:800;color:#475569;"></span>
+        </div>
+        <div class="campaign-toolbar">
+          <input id="reviewCampaignSearch" type="search" placeholder="ابحث بالاسم أو الجوال أو المدينة..." oninput="renderReviewCampaignList()">
+          <select id="reviewCampaignFilter" onchange="renderReviewCampaignList()">
+            <option value="all">كل العملاء المؤهلين</option>
+            <option value="not_sent">لم يُرسل لهم</option>
+            <option value="sent">سبق الإرسال لهم</option>
+          </select>
+          <div class="campaign-counter" id="reviewCampaignCounter">تم تحديد 0 من 30</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:9px;margin-bottom:10px;font-size:12px;font-weight:700;color:var(--slate);">
+          <input id="reviewCampaignSelectVisible" type="checkbox" onchange="selectVisibleReviewClients(this.checked)">
+          <label for="reviewCampaignSelectVisible" style="cursor:pointer;">تحديد أول 10 من الظاهر غير المرسل لهم</label>
+        </div>
+        <div class="campaign-table-wrap">
+          <table class="campaign-table">
+            <thead>
+              <tr>
+                <th style="width:42px;">✓</th><th>العميل</th><th>الجوال</th><th>المدينة / الحي</th>
+                <th>الحالة</th><th>آخر إرسال</th><th>المرات</th>
+              </tr>
+            </thead>
+            <tbody id="reviewCampaignBody"></tbody>
+          </table>
+        </div>
+        <div id="reviewCampaignEmpty" class="empty-state" style="display:none;padding:35px 15px;">
+          <div class="empty-icon">⭐</div>
+          <p>لا يوجد عملاء مرشحون يطابقون البحث.</p>
+        </div>
+      </div>
+      <div class="campaign-footer">
+        <span style="font-size:12px;color:var(--mist);">الحد الآمن للدفعة الواحدة: 30 عميلًا</span>
+        <div class="campaign-actions">
+          <button class="campaign-btn skip" type="button" onclick="closeReviewCampaign()">إلغاء</button>
+          <button class="campaign-btn primary" id="reviewCampaignStartBtn" type="button" onclick="startReviewCampaign()" disabled>بدء الإرسال اليدوي</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="reviewCampaignSendStep" style="display:none;">
+      <div class="campaign-body">
+        <div class="campaign-progress-head">
+          <strong id="reviewCampaignPosition" style="color:var(--deep);">العميل 1 من 1</strong>
+          <span id="reviewCampaignProgressCounts" style="font-size:12px;color:var(--mist);"></span>
+        </div>
+        <div class="campaign-progress-track"><div class="campaign-progress-bar" id="reviewCampaignProgressBar"></div></div>
+        <div class="campaign-current">
+          <div class="campaign-current-name" id="reviewCampaignCurrentName">—</div>
+          <div class="campaign-current-meta" id="reviewCampaignCurrentMeta">—</div>
+        </div>
+        <textarea class="campaign-message" id="reviewCampaignMessage" readonly></textarea>
+        <div class="campaign-note" style="margin-top:12px;margin-bottom:0;background:#FFFBEB;border-color:#FDE68A;color:#92400E;">
+          فتح واتساب لا يعني أن الرسالة أُرسلت. بعد إرسالها فعليًا من واتساب ارجع إلى هذه الصفحة واضغط «تم الإرسال».
+        </div>
+      </div>
+      <div class="campaign-footer">
+        <button class="campaign-btn whatsapp" id="reviewOpenWhatsAppBtn" type="button" onclick="openCurrentReviewWhatsApp()">📲 فتح في واتساب</button>
+        <div class="campaign-actions">
+          <button class="campaign-btn exclude" id="reviewExcludeBtn" type="button" onclick="excludeCurrentReviewClient()">استبعاد العميل</button>
+          <button class="campaign-btn skip" id="reviewSkipBtn" type="button" onclick="skipCurrentReviewClient()">تخطي الآن</button>
+          <button class="campaign-btn sent" id="reviewConfirmSentBtn" type="button" onclick="confirmCurrentReviewSent()" disabled>✅ تم الإرسال</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="reviewCampaignDoneStep" style="display:none;">
+      <div class="campaign-body" style="text-align:center;">
+        <div style="font-size:54px;margin-top:8px;">✅</div>
+        <h3 style="color:var(--deep);margin-top:8px;">اكتملت دفعة طلب التقييم</h3>
+        <div class="campaign-summary">
+          <div class="campaign-summary-card"><strong id="reviewDoneSelected">0</strong><span>المحددون</span></div>
+          <div class="campaign-summary-card"><strong id="reviewDoneSent">0</strong><span>تم الإرسال</span></div>
+          <div class="campaign-summary-card"><strong id="reviewDoneSkipped">0</strong><span>تم التخطي</span></div>
+          <div class="campaign-summary-card"><strong id="reviewDoneExcluded">0</strong><span>تم الاستبعاد</span></div>
+        </div>
+      </div>
+      <div class="campaign-footer" style="justify-content:flex-end;">
+        <button class="campaign-btn primary" type="button" onclick="closeReviewCampaign(true)">إغلاق</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+var db = null;
+try {
+  if(typeof firebase !== 'undefined' && !firebase.apps.length) {
+    firebase.initializeApp({databaseURL:"https://atwad-booking-default-rtdb.firebaseio.com"});
+  }
+  db = firebase.database();
+} catch(e){ console.log('Firebase:', e); }
+
+// ========== DATA ==========
+let clients = JSON.parse(localStorage.getItem('atwad_clients') || '[]');
+let currentFilter = 'all'; // النطاق العام — يُستخدم في renderTable وsetFilter
+var _fbSyncing = false;
+
+// إزالة أي سجلات تجريبية قد تكون محفوظة في localStorage من جلسات سابقة
+(function cleanDemoFromStorage() {
+  var DEMO_IDS = {'C100001':1,'C100002':1,'C100003':1,'C100004':1,'C100005':1};
+  var stored = JSON.parse(localStorage.getItem('atwad_clients') || '[]');
+  var hadDemo = stored.some(function(c){ return DEMO_IDS[c.id]; });
+  if(hadDemo) {
+    var cleaned = stored.filter(function(c){ return !DEMO_IDS[c.id]; });
+    localStorage.setItem('atwad_clients', JSON.stringify(cleaned));
+    clients = cleaned;
+    console.log('[customers] تم حذف', (stored.length - cleaned.length), 'سجل تجريبي من localStorage');
+  }
+})();
+
+// ============================================================
+// التحقق الموحد — يُطبَّق على جميع المصادر
+// ============================================================
+function isValidCustomer(c) {
+  var name  = String(c.name || c.client || c.customerName || c.clientName || '').trim();
+  var phone = normalizePhoneImport(c.phone || '');
+  return name.length >= 2 &&
+         name !== 'بدون اسم' &&
+         name !== 'undefined' &&
+         /^05\d{8}$/.test(phone);
+}
+
+function syncFromFirebase() {
+  if(!db) return;
+
+  // on('value') على customers — يُطلق عند كل تغيير في الوقت الفعلي
+  db.ref('customers').on('value', function(snapC) {
+    var fbData = [];
+    var phones = {};
+    var fieldSample = null;
+    var DEMO_IDS = {'C100001':1,'C100002':1,'C100003':1,'C100004':1,'C100005':1};
+    snapC.forEach(function(child) {
+      var c = Object.assign({}, child.val(), {_fbKey: child.key, _src: 'customers'});
+      if(!c.id) c.id = c._fbKey;
+      if(!isValidCustomer(c)) {
+        console.warn('[DIAG] customers سجل منقوص:', {
+          key: child.key, name: c.name||'(فارغ)',
+          phone: (c.phone||'').slice(0,4)+'****'
+        });
+        return; // تجاهل
+      }
+      // تشخيص: كشف السجلات التجريبية إذا وُجدت في Firebase
+      if(DEMO_IDS[c.id]) {
+        console.warn('[customers] ⚠️ سجل تجريبي في Firebase:', {
+          key: child.key, id: c.id, name: c.name,
+          phone_prefix: (c.phone||'').slice(0,4) + '****'
+        });
+      }
+      fbData.push(c);
+      if(c.phone) phones[c.phone] = true;
+      if(!fieldSample) fieldSample = Object.keys(c).filter(function(k){ return k !== '_fbKey' && k !== '_src'; });
+    });
+    console.log('[customers] Firebase customers محمّلة:', {
+      عدد_السجلات: fbData.length,
+      مسار_القراءة: 'customers',
+      أسماء_الحقول: fieldSample || []
+    });
+
+    // إضافة العملاء من الحجوزات الإلكترونية (مرة واحدة فقط)
+    db.ref('bookings').once('value', function(snapB) {
+      var bookingsAdded = 0;
+      // الأسماء المشبوهة للتشخيص — بحث بدون حذف
+      var SUSPECT = ['أحمد محمد','سارة عبدالله','مؤسسة النور','خالد علي','نورة سعيد'];
+
+      // فحص مسار customers أولاً
+      var suspiciousRecords = [];
+      fbData.forEach(function(c) {
+        if(SUSPECT.indexOf(c.name) !== -1) {
+          var rec = {
+            name: c.name, source: 'customers',
+            firebaseKey: c._fbKey, id: c.id,
+            phone_prefix: (c.phone||'').slice(0,4)+'****'
+          };
+          suspiciousRecords.push(rec);
+          console.warn('[DIAG] وُجد في customers:', rec);
+        }
+      });
+
+      var emptyBookings = []; // سجلات bookings فارغة — للتشخيص فقط، لا تُضاف كعملاء
+      snapB.forEach(function(child) {
+        var b = child.val();
+        var phone = b.phone || '';
+        var bName = b.client || b.name || '';
+
+        // فحص مسار bookings للأسماء المشبوهة
+        if(SUSPECT.indexOf(bName) !== -1) {
+          var brec = {
+            name: bName, source: 'bookings',
+            firebaseKey: child.key, id: 'B_'+child.key,
+            phone_prefix: (phone).slice(0,4)+'****',
+            date: b.date||'', service: b.service||''
+          };
+          suspiciousRecords.push(brec);
+          console.warn('[DIAG] وُجد في bookings:', brec);
+        }
+
+        // تشخيص السجلات الفارغة قبل الاستيراد
+        var hasValidName  = bName  && bName.trim().length > 1;
+        var hasValidPhone = phone  && phone.replace(/\D/g,'').length >= 9;
+
+        if(!hasValidName || !hasValidPhone) {
+          emptyBookings.push({
+            source: 'bookings',
+            firebaseKey: child.key,
+            id: 'B_'+child.key,
+            name: bName || '(فارغ)',
+            phone: phone ? phone.slice(0,4)+'****' : '(فارغ)',
+            bookingDate: b.date || '',
+            status: b.status || ''
+          });
+          return; // تجاهل — لا تنشئ عميلاً فارغاً
+        }
+
+        if(!phones[phone]) {
+          phones[phone] = true;
+          bookingsAdded++;
+          fbData.push({
+            id: 'B_'+child.key,
+            _fbKey: 'B_'+child.key,
+            _src: 'booking',
+            name: bName.trim(),
+            phone: phone,
+            city: b.city || 'جدة',
+            type: 'أفراد',
+            notes: 'حجز إلكتروني',
+            createdAt: b.createdAt || new Date().toISOString(),
+            visits: 1,
+            lastService: b.service || '',
+            lastVisit: b.date || ''
+          });
+        }
+      });
+
+      if(emptyBookings.length) {
+        console.warn('[DIAG] حجوزات فارغة تم تجاهلها (' + emptyBookings.length + ' سجل):');
+        console.table(emptyBookings);
+        console.log('[DIAG EMPTY JSON]', JSON.stringify(emptyBookings));
+      }
+      console.log('[customers] ملخص التحميل:', {
+        من_customers: fbData.length - bookingsAdded,
+        من_bookings: bookingsAdded,
+        الإجمالي_بعد_إزالة_التكرار: fbData.length
+      });
+      if(suspiciousRecords.length) {
+        console.table(suspiciousRecords);
+        console.log('[DIAG JSON]', JSON.stringify(suspiciousRecords));
+      } else {
+        console.log('[DIAG] لم تُعثر على أسماء مشبوهة في customers أو bookings');
+      }
+
+      // تصفية موحدة على جميع المصادر قبل التعيين النهائي
+      var rejectedCustomers = fbData.filter(function(c){ return !isValidCustomer(c); });
+      clients = fbData.filter(isValidCustomer);
+
+      if(rejectedCustomers.length) {
+        console.warn('[INVALID CUSTOMERS] سجلات مرفوضة:', rejectedCustomers.length);
+        console.table(rejectedCustomers.map(function(c){
+          return {
+            source: c._src || 'unknown',
+            firebaseKey: c._fbKey || '',
+            id: c.id || '',
+            name: c.name || c.client || '(فارغ)',
+            phone: (c.phone||'(فارغ)')
+          };
+        }));
+        console.log('[INVALID CUSTOMERS JSON]', JSON.stringify(rejectedCustomers));
+      }
+
+      localStorage.setItem('atwad_clients', JSON.stringify(clients));
+
+      // تحميل المواعيد مرة واحدة لتحديد آخر عمل لكل عميل
+      db.ref('appointments').once('value', function(snapA) {
+        window.allAppointments = [];
+        snapA.forEach(function(child){ window.allAppointments.push(child.val()); });
+        // إضافة حجوزات من bookings أيضاً
+        db.ref('bookings').once('value', function(snapB2) {
+          snapB2.forEach(function(child){
+            var b = child.val();
+            if(b.date) window.allAppointments.push({
+              phone: b.phone||'', date: b.date||'', status: b.status||'pending'
+            });
+          });
+          updateStats();
+          renderTable();
+        });
+      });
+    });
+  }, function(err) {
+    // Firebase رفض الاتصال أو خطأ في الصلاحيات
+    console.error('[customers] ❌ Firebase error:', err.code, err.message);
+    var errBanner = document.getElementById('fbErrorBanner');
+    if(!errBanner) {
+      errBanner = document.createElement('div');
+      errBanner.id = 'fbErrorBanner';
+      errBanner.style.cssText = 'background:#FEE2E2;border:1.5px solid #FCA5A5;border-radius:12px;padding:12px 18px;margin:16px 22px;font-size:13px;font-weight:700;color:#991B1B;';
+      var mc = document.querySelector('.main-content') || document.body;
+      mc.prepend(errBanner);
+    }
+    errBanner.textContent = '❌ خطأ في الاتصال بقاعدة البيانات: ' + (err.code || err.message) + ' — تحقق من الصلاحيات أو الاتصال.';
+    // عرض ما هو محفوظ في localStorage كبديل مؤقت
+    var cached = JSON.parse(localStorage.getItem('atwad_clients') || '[]');
+    if(cached.length > 0) {
+      clients = cached.filter(isValidCustomer);
+      renderTable();
+      updateStats();
+    }
+  });
+}
+let editingId = null;
+let selectedType = '';
+
+const avatarColors = ['#0EA5E9','#8B5CF6','#10B981','#F59E0B','#EF4444','#EC4899','#0C3B5E'];
+
+function saveData() {
+  localStorage.setItem('atwad_clients', JSON.stringify(clients));
+
+  // حفظ في Firebase
+  if(db) {
+    clients.forEach(function(c) {
+      if(c._fbKey) {
+        var copy = {...c}; delete copy._fbKey;
+        db.ref('customers/' + c._fbKey).set(copy);
+      } else {
+        var ref = db.ref('customers').push();
+        c._fbKey = ref.key;
+        ref.set(c);
+      }
+    });
+  }
+}
+
+function genId() {
+  return 'C' + Date.now().toString().slice(-6);
+}
+
+function getAvatarColor(name) {
+  let sum = 0;
+  for (let c of name) sum += c.charCodeAt(0);
+  return avatarColors[sum % avatarColors.length];
+}
+
+function getInitials(name) {
+  const parts = name.trim().split(' ');
+  return parts.length >= 2 ? parts[0][0] + parts[1][0] : parts[0].slice(0,2);
+}
+
+// ========== RENDER ==========
+function updateStats() {
+  var total     = clients.length;
+  var newCount  = clients.filter(function(c){ return c.type === 'جديد'; }).length;
+  var regCount  = clients.filter(function(c){ return c.type === 'دائم'; }).length;
+  var corpCount = clients.filter(function(c){ return c.type === 'شركات'; }).length;
+
+  // فحص وجود العنصر قبل تحديثه — يمنع TypeError عند الاستدعاء المبكر
+  function setEl(id, val) {
+    var el = document.getElementById(id);
+    if(el) el.textContent = val;
+  }
+  setEl('statTotal', total);
+  setEl('statNew',   newCount);
+  setEl('statReg',   regCount);
+  setEl('statCorp',  corpCount);
+  setEl('navBadge',  total);
+}
+
+function badgeHTML(type) {
+  const map = { جديد:'badge-new', دائم:'badge-reg', شركات:'badge-corp' };
+  const icon = { جديد:'🆕', دائم:'⭐', شركات:'🏢' };
+  return `<span class="badge ${map[type]||'badge-new'}">${icon[type]||''} ${type}</span>`;
+}
+
+function renderTable() {
+  const search = document.getElementById('searchInput').value.trim().toLowerCase();
+  var filter = currentFilter || 'all';
+
+  // دعم الحقول البديلة للاسم
+  function clientName(c) {
+    return (c.name || c.customerName || c.clientName || c.fullName || '').trim();
+  }
+
+  // تصنيف حالة آخر عمل من بيانات allAppointments
+  function getLastWork(c) {
+    var phone = normalizePhone(c.phone || '');
+    // ابحث في المواعيد المحلية
+    var appts = (window.allAppointments || []).filter(function(a) {
+      return normalizePhone(a.phone || '') === phone;
+    });
+    if(!appts.length) return { status: 'none', date: '', group: 5 };
+
+    // أحدث موعد بناءً على date (YYYY-MM-DD)
+    appts.sort(function(a,b){ return (b.date||'').localeCompare(a.date||''); });
+    var latest = appts[0];
+    var s = (latest.status || '').toLowerCase();
+    var DONE = ['done','مكتمل','تم','complete','completed','مكتملة'];
+    var CANCEL = ['cancelled','ملغي','ملغى','canceled'];
+    var PENDING = ['pending','في الانتظار','confirmed','مؤكد'];
+
+    if(DONE.indexOf(s) !== -1)    return { status:'done',    date: latest.date||'', label:'مكتمل',      group:1 };
+    if(CANCEL.indexOf(s) !== -1)  return { status:'cancel',  date: latest.date||'', label:'ملغي',        group:5 };
+    if(PENDING.indexOf(s) !== -1) return { status:'pending', date: latest.date||'', label:'موعد قادم',   group:4 };
+    return                               { status:'other',   date: latest.date||'', label:'قيد التنفيذ', group:4 };
+  }
+
+  // مجموعة الترتيب حسب اكتمال العمل + حالة التقييم
+  function sortGroup(c, work) {
+    if(work.status === 'done') {
+      if(!c.reviewCandidate && !c.reviewRequestSent) return 1; // مكتمل، لم يُرسل، غير مرشح
+      if(c.reviewCandidate && !c.reviewRequestSent)  return 2; // مرشح
+      if(c.reviewRequestSent)                         return 3; // تم الإرسال
+    }
+    if(work.group === 4) return 4;
+    return 5;
+  }
+
+  // شارة حالة التقييم
+  function reviewBadge(c, work) {
+    if(c.reviewRequestStatus === 'reviewed' || c.reviewed === true || c.hasReviewed === true)
+                               return '<span style="font-size:10px;background:#EDE9FE;color:#6D28D9;padding:2px 7px;border-radius:20px;font-weight:700;">⭐ قيّم المؤسسة</span>';
+    if(c.reviewRequestExcluded === true || c.reviewRequestStatus === 'excluded')
+                               return '<span style="font-size:10px;background:#FEE2E2;color:#991B1B;padding:2px 7px;border-radius:20px;font-weight:700;">🚫 مستبعد</span>';
+    if(c.reviewRequestSent)    return '<span style="font-size:10px;background:#D1FAE5;color:#065F46;padding:2px 7px;border-radius:20px;font-weight:700;">✅ تم الإرسال</span>';
+    if(c.reviewCandidate)      return '<span style="font-size:10px;background:#FEF9C3;color:#92400E;padding:2px 7px;border-radius:20px;font-weight:700;">⭐ مرشح</span>';
+    if(work.status === 'done') return '<span style="font-size:10px;background:#EFF6FF;color:#1E40AF;padding:2px 7px;border-radius:20px;font-weight:700;">💡 جاهز للطلب</span>';
+    return '';
+  }
+
+  // شارة حالة العمل
+  function workBadge(work) {
+    if(work.status === 'none')   return '<span style="color:var(--mist);font-size:12px;">—</span>';
+    var colors = { done:'#D1FAE5;color:#065F46', cancel:'#FEE2E2;color:#991B1B', pending:'#DBEAFE;color:#1E40AF', other:'#F1F5F9;color:#475569' };
+    var col = colors[work.status] || colors.other;
+    var dateStr = work.date ? ' — ' + fmtShortDate(work.date) : '';
+    return '<span style="font-size:11px;background:' + col + ';padding:2px 8px;border-radius:20px;font-weight:700;">' + work.label + dateStr + '</span>';
+  }
+
+  // فلترة
+  var list = clients.filter(function(c) {
+    var name = clientName(c);
+    var matchFilter = filter === 'all'
+      || (filter === 'reviewCandidate' && c.reviewCandidate === true)
+      || (filter === 'reviewSent'      && c.reviewRequestSent === true)
+      || c.type === filter;
+    var matchSearch = !search
+      || name.toLowerCase().includes(search)
+      || (c.phone||'').includes(search)
+      || (c.city||'').toLowerCase().includes(search);
+    return matchFilter && matchSearch;
+  });
+
+  // ترتيب: حسب مجموعة الترتيب ثم آخر تاريخ عمل (تنازلي)
+  list = list.map(function(c) {
+    var work = getLastWork(c);
+    return { c:c, work:work, group: sortGroup(c, work) };
+  }).sort(function(a,b) {
+    if(a.group !== b.group) return a.group - b.group;
+    return (b.work.date||'').localeCompare(a.work.date||'');
+  });
+
+  // تسجيل تشخيصي لأول 3 عملاء
+  if(list.length) {
+    list.slice(0,3).forEach(function(item) {
+      console.log('[customers] ', {
+        name: clientName(item.c), phone: normalizePhone(item.c.phone||''),
+        group: item.group, workStatus: item.work.status, workDate: item.work.date
+      });
+    });
+  }
+
+  const tbody = document.getElementById('tableBody');
+  const empty = document.getElementById('emptyState');
+
+  if(!list.length) { tbody.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display = 'none';
+
+  tbody.innerHTML = list.map(function(item) {
+    var c = item.c;
+    var work = item.work;
+    var name = clientName(c);
+    return '<tr data-id="' + c.id + '" onclick="openDetail(\'' + c.id + '\')">' +
+      '<td><div class="client-name-cell">' +
+        '<div class="avatar" style="background:' + getAvatarColor(name) + '">' + getInitials(name) + '</div>' +
+        '<div><div class="client-name">' + name + '</div>' +
+        '<div class="client-id">' + c.id + '</div>' +
+        '<div style="margin-top:3px">' + reviewBadge(c, work) + '</div></div>' +
+      '</div></td>' +
+      '<td><a class="phone-link" href="tel:' + c.phone + '" onclick="event.stopPropagation()">' + (c.phone||'—') + '</a></td>' +
+      '<td>' + (c.city||'—') + '</td>' +
+      '<td>' + badgeHTML(c.type || 'أفراد') + '</td>' +
+      '<td>' + workBadge(work) + '</td>' +
+      '<td><span class="visits-count">' + (c.visits||0) + '</span></td>' +
+      '<td onclick="event.stopPropagation()"><div style="display:flex;gap:6px;">' +
+        '<button class="action-btn btn-view" onclick="openDetail(\'' + c.id + '\')">عرض</button>' +
+        '<button class="action-btn btn-book" onclick="quickBook(\'' + c.id + '\')">📅 حجز</button>' +
+        '<button class="action-btn btn-del"  onclick="deleteClient(\'' + c.id + '\')">🗑️</button>' +
+      '</div></td>' +
+    '</tr>';
+  }).join('');
+  updateStats();
+}
+
+// تطبيع رقم الجوال للمقارنة
+function normalizePhone(p) {
+  p = p.replace(/[\s\-\(\)\+]/g,'');
+  if(p.startsWith('966')) return p;
+  if(p.startsWith('05'))  return '966' + p.slice(1);
+  if(p.startsWith('5') && p.length === 9) return '966' + p;
+  return p;
+}
+
+// تنسيق تاريخ YYYY-MM-DD قصير
+function fmtShortDate(d) {
+  try {
+    return new Date(d + 'T00:00:00').toLocaleDateString('ar-SA-u-ca-gregory', {month:'short', day:'numeric'});
+  } catch(e){ return d; }
+}
+
+// ========== FILTER ==========
+function setFilter(btn, filter) {
+  document.querySelectorAll('.filter-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  currentFilter = filter;
+  renderTable();
+}
+function openAddModal(id) {
+  editingId = id || null;
+  selectedType = '';
+  document.querySelectorAll('.type-chip').forEach(c => c.className = 'type-chip');
+  document.getElementById('modalTitle').textContent = id ? '✏️ تعديل بيانات العميل' : '➕ إضافة عميل جديد';
+
+  if (id) {
+    const c = clients.find(x => x.id === id);
+    document.getElementById('f_name').value    = c.name;
+    document.getElementById('f_phone').value   = c.phone;
+    document.getElementById('f_city').value    = c.city||'';
+    document.getElementById('f_address').value = c.address||'';
+    document.getElementById('f_company').value = c.company||'';
+    document.getElementById('f_notes').value   = c.notes||'';
+    selectedType = c.type;
+    document.querySelectorAll('.type-chip').forEach(chip => {
+      if (chip.dataset.type === c.type) selectType(chip);
+    });
+  } else {
+    ['f_name','f_phone','f_address','f_company','f_notes'].forEach(id => document.getElementById(id).value='');
+    document.getElementById('f_city').value='';
+  }
+
+  document.getElementById('addModal').classList.add('open');
+}
+
+function selectType(chip) {
+  document.querySelectorAll('.type-chip').forEach(c => c.className='type-chip');
+  selectedType = chip.dataset.type;
+  const clsMap = { جديد:'sel-new', دائم:'sel-reg', شركات:'sel-corp' };
+  chip.classList.add(clsMap[selectedType]||'sel-new');
+}
+
+function saveClient() {
+  const name  = document.getElementById('f_name').value.trim();
+  const phone = document.getElementById('f_phone').value.trim();
+  const city  = document.getElementById('f_city').value;
+
+  if (!name)         return showToast('❌ أدخل اسم العميل');
+  if (!/^05\d{8}$/.test(phone)) return showToast('❌ رقم الجوال غير صحيح');
+  if (!city)         return showToast('❌ اختر المدينة');
+  if (!selectedType) return showToast('❌ اختر نوع العميل');
+
+  const data = {
+    name, phone, city,
+    type:    selectedType,
+    address: document.getElementById('f_address').value.trim(),
+    company: document.getElementById('f_company').value.trim(),
+    notes:   document.getElementById('f_notes').value.trim(),
+  };
+
+  if (editingId) {
+    const idx = clients.findIndex(c => c.id === editingId);
+    clients[idx] = Object.assign({}, clients[idx], data);
+    showToast('✅ تم تحديث بيانات العميل');
+  } else {
+    clients.unshift(Object.assign({ id: genId(), visits:0, lastVisit:'', createdAt: new Date().toLocaleDateString('ar-SA-u-ca-gregory') }, data));
+    showToast('✅ تم إضافة العميل بنجاح');
+  }
+
+  // تحديث فوري للعدادات قبل حفظ البيانات
+  updateStats();
+  saveData();
+  closeModal('addModal');
+  renderTable();
+}
+
+// ========== DETAIL MODAL ==========
+function openDetail(id) {
+  const c = clients.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('detailTitle').textContent = '📋 ' + c.name;
+  document.getElementById('detailEditBtn').onclick = () => { closeModal('detailModal'); openAddModal(id); };
+
+  const sampleHistory = [
+    { service:'تنظيف مكيف (2 وحدة)', date:'15/06/2025', price:'180 ريال' },
+    { service:'تعبئة غاز', date:'10/03/2025', price:'150 ريال' },
+  ];
+
+  document.getElementById('detailBody').innerHTML = `
+    <div style="display:flex;align-items:center;gap:16px;padding:16px;background:var(--frost);border-radius:14px;margin-bottom:20px;">
+      <div class="avatar" style="width:56px;height:56px;font-size:22px;background:${getAvatarColor(c.name)}">${getInitials(c.name)}</div>
+      <div>
+        <div style="font-size:20px;font-weight:800;color:var(--deep)">${c.name}</div>
+        <div style="margin-top:4px">${badgeHTML(c.type)}</div>
+        <div style="font-size:12px;color:var(--mist);margin-top:4px">رقم العميل: ${c.id} · تاريخ التسجيل: ${c.createdAt||'—'}</div>
+      </div>
+    </div>
+    <div class="detail-section">
+      <h4>معلومات التواصل</h4>
+      <div class="detail-row"><span class="d-label">📱 الجوال</span><span class="d-val"><a class="phone-link" href="tel:${c.phone}">${c.phone}</a></span></div>
+      <div class="detail-row"><span class="d-label">📍 المدينة</span><span class="d-val">${c.city||'—'}</span></div>
+      <div class="detail-row"><span class="d-label">🏠 العنوان</span><span class="d-val">${c.address||'—'}</span></div>
+      ${c.company ? `<div class="detail-row"><span class="d-label">🏢 الشركة</span><span class="d-val">${c.company}</span></div>` : ''}
+    </div>
+    <div class="detail-section">
+      <h4>إحصائيات الخدمة</h4>
+      <div class="detail-row"><span class="d-label">🔢 عدد الزيارات</span><span class="d-val">${c.visits||0} زيارة</span></div>
+      <div class="detail-row"><span class="d-label">📅 آخر زيارة</span><span class="d-val">${c.lastVisit||'لم تُسجَّل بعد'}</span></div>
+    </div>
+    ${c.notes ? `<div class="detail-section"><h4>ملاحظات</h4><div style="background:var(--frost);padding:12px;border-radius:10px;font-size:14px;color:var(--slate)">${c.notes}</div></div>` : ''}
+    <div class="detail-section">
+      <h4>سجل الخدمات (آخر الزيارات)</h4>
+      ${c.visits > 0 ? sampleHistory.map(h=>`
+        <div class="history-item">
+          <div>
+            <div class="h-service">${h.service}</div>
+            <div class="h-date">${h.date}</div>
+          </div>
+          <div class="h-price">${h.price}</div>
+        </div>`).join('') : '<div style="color:var(--mist);font-size:13px;text-align:center;padding:12px">لا توجد زيارات مسجلة بعد</div>'}
+    </div>
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <a href="https://wa.me/966${c.phone.slice(1)}" target="_blank" style="flex:1;text-align:center;padding:10px;background:#25D366;color:#fff;border-radius:10px;font-weight:700;text-decoration:none;font-size:14px;">📲 واتساب</a>
+      <a href="tel:${c.phone}" style="flex:1;text-align:center;padding:10px;background:var(--ice);color:var(--sky);border-radius:10px;font-weight:700;text-decoration:none;font-size:14px;">📞 اتصال</a>
+    </div>
+
+    <!-- قسم التقييم -->
+    <div class="review-section">
+      <h4>⭐ طلب التقييم</h4>
+      <div class="review-toggle-row">
+        <span class="toggle-label">مرشح لطلب التقييم</span>
+        <label class="toggle-switch">
+          <input type="checkbox" ${c.reviewCandidate === true ? 'checked' : ''}
+            onchange="toggleReviewCandidate('${c.id}', this.checked)">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="review-status ${c.reviewRequestSent ? 'sent' : ''}">${getReviewDetailStatus(c)}</div>
+      <button class="btn-send-review"
+        ${getReviewBlockReason(c) ? 'disabled title="' + escapeReviewHtml(getReviewBlockReason(c)) + '"' : ''}
+        onclick="sendReviewRequest('${c.id}')">
+        ⭐ إرسال طلب التقييم
+      </button>
+    </div>
+  `;
+  document.getElementById('detailModal').classList.add('open');
+}
+
+// ========== DELETE ==========
+function deleteClient(id) {
+  if (!confirm('هل أنت متأكد من حذف هذا العميل؟')) return;
+
+  // حذف من Firebase أولاً إذا كان له مفتاح
+  var c = clients.find(function(x){ return x.id === id; });
+  if(c && c._fbKey && db && !c._fbKey.startsWith('B_')) {
+    db.ref('customers/' + c._fbKey).remove().catch(function(e){
+      console.error('Firebase delete error:', e);
+    });
+  }
+
+  clients = clients.filter(function(c){ return c.id !== id; });
+  localStorage.setItem('atwad_clients', JSON.stringify(clients));
+
+  // تحديث فوري للعدادات
+  updateStats();
+  renderTable();
+  showToast('🗑️ تم حذف العميل');
+}
+
+// ========== QUICK BOOK ==========
+function quickBook(id) {
+  const c = clients.find(x => x.id === id);
+  showToast(`📅 جاري فتح نموذج الحجز لـ ${c.name}`);
+  // يمكن ربطه بصفحة الحجز
+  setTimeout(()=> window.open('atwad-booking.html','_blank'), 800);
+}
+
+// ========== HELPERS ==========
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+// ========== REVIEW CANDIDATE ==========
+
+/** تنسيق رقم الجوال السعودي للواتساب */
+function normalizePhoneForWA(phone) {
+  var p = (phone || '').replace(/[\s\-\(\)\+]/g, '');
+  if(p.startsWith('00966')) p = p.slice(2);
+  if(p.startsWith('05') && p.length === 10) p = '966' + p.slice(1);
+  if(p.startsWith('5')  && p.length === 9)  p = '966' + p;
+  return /^9665\d{8}$/.test(p) ? p : '';
+}
+
+/** تبديل حالة الترشيح للتقييم */
+function toggleReviewCandidate(id, checked) {
+  var c = clients.find(function(x){ return x.id === id; });
+  if(!c || !c._fbKey || !db) return;
+  c.reviewCandidate = checked;
+  db.ref('customers/' + c._fbKey).update({ reviewCandidate: checked }).then(function() {
+    showToast(checked ? '⭐ تم تفعيل الترشيح للتقييم' : '🔕 تم إلغاء الترشيح');
+    openDetail(id); // تحديث التفاصيل
+  }).catch(function(e){ showToast('❌ خطأ: ' + e.message); });
+}
+
+// ========== REVIEW CAMPAIGN ==========
+var REVIEW_BATCH_DEFAULT = 10;
+var REVIEW_BATCH_MAX = 30;
+var REVIEW_BLOCKED_PHONES = {'966565730008': true};
+var REVIEW_CAMPAIGN_SESSION_KEY = 'atwad_review_campaign_session';
+var _reviewCampaignSelected = {};
+var _reviewCampaign = null;
+var _reviewWhatsAppOpenedFor = '';
+var _reviewCampaignBusy = false;
+
+function escapeReviewHtml(value) {
+  return String(value == null ? '' : value)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function reviewClientKey(c) {
+  return c && c._fbKey && !String(c._fbKey).startsWith('B_') ? String(c._fbKey) : '';
+}
+
+function getReviewClientByKey(key) {
+  return clients.find(function(c){ return reviewClientKey(c) === key; });
+}
+
+function hasReviewComplaint(c) {
+  var satisfaction = String(c.satisfaction || c.customerSatisfaction || '').toLowerCase();
+  var complaintStatus = String(c.complaintStatus || '').toLowerCase();
+  return c.hasComplaint === true ||
+    c.isUnsatisfied === true ||
+    ['unhappy','dissatisfied','غير راض','غير راضي'].indexOf(satisfaction) !== -1 ||
+    ['open','active','مفتوحة','قائمة'].indexOf(complaintStatus) !== -1;
+}
+
+function getReviewBlockReason(c) {
+  if(!c) return 'بيانات العميل غير متاحة';
+  if(!reviewClientKey(c)) return 'يجب حفظ العميل في سجل العملاء أولًا';
+  var waPhone = normalizePhoneForWA(c.phone);
+  if(!waPhone) return 'رقم الجوال غير صالح';
+  if(REVIEW_BLOCKED_PHONES[waPhone]) return 'رقم مستبعد من التواصل';
+  if(c.reviewRequestExcluded === true || c.reviewRequestStatus === 'excluded') return 'العميل مستبعد من الحملات';
+  if(c.reviewRequestStatus === 'reviewed' || c.reviewed === true || c.hasReviewed === true) return 'سبق أن قيّم المؤسسة';
+  if(hasReviewComplaint(c)) return 'لدى العميل شكوى أو عدم رضا مسجل';
+  return '';
+}
+
+function getReviewDetailStatus(c) {
+  if(c.reviewRequestExcluded === true || c.reviewRequestStatus === 'excluded') {
+    return '🚫 مستبعد من حملات التقييم' +
+      (c.reviewRequestExcludedReason ? ' — ' + escapeReviewHtml(c.reviewRequestExcludedReason) : '');
+  }
+  if(c.reviewRequestStatus === 'reviewed' || c.reviewed === true || c.hasReviewed === true) {
+    return '⭐ قيّم المؤسسة';
+  }
+  if(c.reviewRequestSent) {
+    return '✅ تم طلب التقييم — آخر طلب: ' + fmtReviewDate(c.reviewRequestSentAt) +
+      ((Number(c.reviewRequestCount) || 0) > 1 ? ' (أُرسل ' + c.reviewRequestCount + ' مرات)' : '');
+  }
+  return '⬜ لم يُطلب منه التقييم بعد';
+}
+
+function buildReviewRequestMessage(c) {
+  var clientName = String((c && c.name) || '').trim();
+  var greeting = clientName ? 'السلام عليكم أستاذ/ة ' + clientName : 'السلام عليكم';
+  return greeting + '\n\n' +
+    'سبق أن تشرفنا بخدمتكم في مؤسسة أطواد لصيانة المكيفات، سواء كان ذلك مؤخرًا أو منذ مدة.\n\n' +
+    'يسعدنا معرفة رأيكم في تجربتكم معنا، فتقييمكم يساعدنا على تحسين الخدمة والمحافظة على جودة العمل.\n\n' +
+    'رابط التقييم:\n' +
+    'https://attwadac-sys.github.io/atwad/atwad-reviews.html\n\n' +
+    'شاكرين لكم ثقتكم وتقديركم 🌹';
+}
+
+function getReviewCampaignVisibleClients() {
+  var searchEl = document.getElementById('reviewCampaignSearch');
+  var filterEl = document.getElementById('reviewCampaignFilter');
+  var search = searchEl ? searchEl.value.trim().toLowerCase() : '';
+  var filter = filterEl ? filterEl.value : 'all';
+  return clients.filter(function(c) {
+    if(filter === 'not_sent' && c.reviewRequestSent === true) return false;
+    if(filter === 'sent' && c.reviewRequestSent !== true) return false;
+    var haystack = [
+      c.name, c.phone, c.city, c.address, c.district, c.neighborhood
+    ].join(' ').toLowerCase();
+    return !search || haystack.indexOf(search) !== -1;
+  });
+}
+
+function openReviewCampaign() {
+  var modal = document.getElementById('reviewCampaignModal');
+  if(!modal) return;
+
+  var saved = null;
+  try { saved = JSON.parse(localStorage.getItem(REVIEW_CAMPAIGN_SESSION_KEY) || 'null'); }
+  catch(e) { localStorage.removeItem(REVIEW_CAMPAIGN_SESSION_KEY); }
+
+  if(saved && saved.campaignId && Array.isArray(saved.queue) &&
+     Number(saved.index || 0) < saved.queue.length &&
+     confirm('توجد حملة طلب تقييم غير مكتملة.\n\nهل تريد استئنافها الآن؟')) {
+    _reviewCampaign = saved;
+    _reviewCampaignSelected = {};
+    modal.classList.add('open');
+    showReviewCampaignStep('send');
+    renderCurrentReviewCampaignClient();
+    return;
+  }
+
+  _reviewCampaign = null;
+  _reviewCampaignSelected = {};
+  _reviewWhatsAppOpenedFor = '';
+  var searchEl = document.getElementById('reviewCampaignSearch');
+  var filterEl = document.getElementById('reviewCampaignFilter');
+  var selectVisible = document.getElementById('reviewCampaignSelectVisible');
+  if(searchEl) searchEl.value = '';
+  if(filterEl) filterEl.value = 'all';
+  if(selectVisible) selectVisible.checked = false;
+  showReviewCampaignStep('select');
+  renderReviewCampaignList();
+  modal.classList.add('open');
+}
+
+function showReviewCampaignStep(step) {
+  var selectStep = document.getElementById('reviewCampaignSelectStep');
+  var sendStep = document.getElementById('reviewCampaignSendStep');
+  var doneStep = document.getElementById('reviewCampaignDoneStep');
+  if(selectStep) selectStep.style.display = step === 'select' ? '' : 'none';
+  if(sendStep) sendStep.style.display = step === 'send' ? '' : 'none';
+  if(doneStep) doneStep.style.display = step === 'done' ? '' : 'none';
+}
+
+function closeReviewCampaign(force) {
+  if(!force && _reviewCampaign && Number(_reviewCampaign.index || 0) < _reviewCampaign.queue.length) {
+    if(!confirm('الحملة لم تكتمل بعد.\n\nيمكنك إغلاقها واستئنافها لاحقًا. هل تريد الإغلاق؟')) return;
+  }
+  var modal = document.getElementById('reviewCampaignModal');
+  if(modal) modal.classList.remove('open');
+  if(force) {
+    _reviewCampaign = null;
+    _reviewCampaignSelected = {};
+    _reviewWhatsAppOpenedFor = '';
+  }
+}
+
+function renderReviewCampaignList() {
+  var body = document.getElementById('reviewCampaignBody');
+  var empty = document.getElementById('reviewCampaignEmpty');
+  var loadedCount = document.getElementById('reviewCampaignLoadedCount');
+  if(!body) return;
+  var list = getReviewCampaignVisibleClients();
+  if(loadedCount) loadedCount.textContent = 'العملاء المحمّلون: ' + clients.length + ' — الظاهرون: ' + list.length;
+
+  if(!list.length) {
+    body.innerHTML = '';
+    if(empty) empty.style.display = 'block';
+    updateReviewCampaignSelectionUI();
+    return;
+  }
+  if(empty) empty.style.display = 'none';
+
+  body.innerHTML = list.map(function(c) {
+    var key = reviewClientKey(c);
+    var reason = getReviewBlockReason(c);
+    var checked = key && _reviewCampaignSelected[key] ? 'checked' : '';
+    var disabled = reason ? 'disabled' : '';
+    var statusClass = reason ? 'blocked' : (c.reviewRequestSent ? 'sent' : 'not-sent');
+    var statusText = reason || (c.reviewRequestSent ? 'تم الإرسال' : 'لم يُرسل');
+    var place = [c.city || '', c.district || c.neighborhood || c.address || ''].filter(Boolean).join(' — ') || '—';
+    return '<tr class="' + (reason ? 'review-disabled' : '') + '">' +
+      '<td><input type="checkbox" value="' + escapeReviewHtml(key) + '" ' + checked + ' ' + disabled +
+        ' onchange="toggleReviewCampaignSelection(this.value,this.checked,this)"></td>' +
+      '<td><strong style="color:var(--deep);">' + escapeReviewHtml(c.name || '—') + '</strong></td>' +
+      '<td dir="ltr">' + escapeReviewHtml(c.phone || '—') + '</td>' +
+      '<td>' + escapeReviewHtml(place) + '</td>' +
+      '<td><span class="campaign-status ' + statusClass + '">' + escapeReviewHtml(statusText) + '</span></td>' +
+      '<td>' + (c.reviewRequestSentAt ? escapeReviewHtml(fmtReviewDate(c.reviewRequestSentAt)) : '—') + '</td>' +
+      '<td>' + (Number(c.reviewRequestCount) || 0) + '</td>' +
+    '</tr>';
+  }).join('');
+  updateReviewCampaignSelectionUI();
+}
+
+function toggleReviewCampaignSelection(key, checked, checkbox) {
+  var c = getReviewClientByKey(key);
+  var reason = getReviewBlockReason(c);
+  if(checked && reason) {
+    if(checkbox) checkbox.checked = false;
+    showToast('⚠️ ' + reason);
+    return;
+  }
+  if(checked && Object.keys(_reviewCampaignSelected).length >= REVIEW_BATCH_MAX) {
+    if(checkbox) checkbox.checked = false;
+    showToast('حفاظًا على سلامة حساب واتساب، الحد الأقصى للدفعة الواحدة هو 30 عميلًا.');
+    return;
+  }
+  if(checked && c && c.reviewRequestSent === true) {
+    var repeatText = 'سبق إرسال طلب تقييم لهذا العميل بتاريخ ' + fmtReviewDate(c.reviewRequestSentAt) +
+      '، وعدد مرات الإرسال ' + (Number(c.reviewRequestCount) || 1) + '.\n\nهل تريد إضافته للحملة مرة أخرى؟';
+    if(!confirm(repeatText)) {
+      if(checkbox) checkbox.checked = false;
+      return;
+    }
+  }
+  if(checked) _reviewCampaignSelected[key] = true;
+  else delete _reviewCampaignSelected[key];
+  updateReviewCampaignSelectionUI();
+}
+
+function selectVisibleReviewClients(checked) {
+  var visible = getReviewCampaignVisibleClients();
+  if(!checked) {
+    visible.forEach(function(c){ delete _reviewCampaignSelected[reviewClientKey(c)]; });
+    renderReviewCampaignList();
+    return;
+  }
+
+  var limitReached = false;
+  var addedThisTime = 0;
+  visible.forEach(function(c) {
+    var key = reviewClientKey(c);
+    // «تحديد الظاهر» يتجنب إعادة الإرسال؛ يمكن اختيار المرسل له يدويًا مع تأكيد.
+    if(c.reviewRequestSent === true || getReviewBlockReason(c)) return;
+    if(addedThisTime >= REVIEW_BATCH_DEFAULT ||
+       Object.keys(_reviewCampaignSelected).length >= REVIEW_BATCH_MAX) {
+      limitReached = true;
+      return;
+    }
+    if(!_reviewCampaignSelected[key]) {
+      _reviewCampaignSelected[key] = true;
+      addedThisTime++;
+    }
+  });
+  if(limitReached) showToast('تم تحديد أول 10 عملاء. يمكنك إضافة المزيد يدويًا حتى 30 عميلًا.');
+  renderReviewCampaignList();
+}
+
+function updateReviewCampaignSelectionUI() {
+  var count = Object.keys(_reviewCampaignSelected).length;
+  var counter = document.getElementById('reviewCampaignCounter');
+  var startBtn = document.getElementById('reviewCampaignStartBtn');
+  if(counter) counter.textContent = 'تم تحديد ' + count + ' من ' + REVIEW_BATCH_MAX;
+  if(startBtn) startBtn.disabled = count === 0 || _reviewCampaignBusy;
+}
+
+function createReviewCampaignId() {
+  if(db) {
+    var key = db.ref('reviewCampaigns').push().key;
+    if(key) return key;
+  }
+  return 'RC_' + Date.now();
+}
+
+function saveReviewCampaignSession() {
+  if(!_reviewCampaign) return;
+  localStorage.setItem(REVIEW_CAMPAIGN_SESSION_KEY, JSON.stringify(_reviewCampaign));
+}
+
+async function startReviewCampaign(optionalKeys, isSingle) {
+  if(_reviewCampaignBusy) return;
+  if(!db) {
+    showToast('❌ لا يمكن بدء الحملة دون اتصال بقاعدة البيانات');
+    return;
+  }
+
+  var keys = Array.isArray(optionalKeys) ? optionalKeys.slice() : Object.keys(_reviewCampaignSelected);
+  keys = keys.filter(function(key) {
+    var c = getReviewClientByKey(key);
+    return c && !getReviewBlockReason(c);
+  }).slice(0, REVIEW_BATCH_MAX);
+  if(!keys.length) {
+    showToast('⚠️ اختر عميلًا واحدًا على الأقل');
+    return;
+  }
+
+  _reviewCampaignBusy = true;
+  updateReviewCampaignSelectionUI();
+  var startBtn = document.getElementById('reviewCampaignStartBtn');
+  if(startBtn) startBtn.textContent = 'جاري تجهيز الحملة...';
+
+  var campaignId = createReviewCampaignId();
+  var customerStates = {};
+  keys.forEach(function(key){ customerStates[key] = 'pending'; });
+  var campaignData = {
+    createdAt: firebase.database.ServerValue.TIMESTAMP,
+    updatedAt: firebase.database.ServerValue.TIMESTAMP,
+    status: 'active',
+    selectedCount: keys.length,
+    sentCount: 0,
+    skippedCount: 0,
+    excludedCount: 0,
+    manualWhatsApp: true,
+    customers: customerStates
+  };
+
+  try {
+    await db.ref('reviewCampaigns/' + campaignId).set(campaignData);
+    _reviewCampaign = {
+      campaignId: campaignId,
+      queue: keys,
+      index: 0,
+      selectedCount: keys.length,
+      sentCount: 0,
+      skippedCount: 0,
+      excludedCount: 0,
+      isSingle: isSingle === true
+    };
+    _reviewWhatsAppOpenedFor = '';
+    saveReviewCampaignSession();
+    var modal = document.getElementById('reviewCampaignModal');
+    if(modal) modal.classList.add('open');
+    closeModal('detailModal');
+    showReviewCampaignStep('send');
+    renderCurrentReviewCampaignClient();
+  } catch(e) {
+    console.error('review campaign create error:', e);
+    showToast('❌ تعذر إنشاء الحملة: ' + (e.message || e));
+  } finally {
+    _reviewCampaignBusy = false;
+    if(startBtn) startBtn.textContent = 'بدء الإرسال اليدوي';
+    updateReviewCampaignSelectionUI();
+  }
+}
+
+function getCurrentReviewCampaignClient() {
+  if(!_reviewCampaign || !Array.isArray(_reviewCampaign.queue)) return null;
+  return getReviewClientByKey(_reviewCampaign.queue[Number(_reviewCampaign.index) || 0]);
+}
+
+function renderCurrentReviewCampaignClient() {
+  if(!_reviewCampaign) return;
+  var total = _reviewCampaign.queue.length;
+  var index = Number(_reviewCampaign.index) || 0;
+  if(index >= total) {
+    finishReviewCampaign();
+    return;
+  }
+
+  var c = getCurrentReviewCampaignClient();
+  if(!c) {
+    showToast('⚠️ تعذر العثور على العميل الحالي. اختر «تخطي الآن».');
+    return;
+  }
+
+  var processed = index;
+  var place = [c.city || '', c.district || c.neighborhood || c.address || ''].filter(Boolean).join(' — ');
+  document.getElementById('reviewCampaignPosition').textContent = 'العميل ' + (index + 1) + ' من ' + total;
+  document.getElementById('reviewCampaignProgressCounts').textContent =
+    'أُرسل: ' + _reviewCampaign.sentCount + ' | تخطي: ' + _reviewCampaign.skippedCount +
+    ' | استبعاد: ' + _reviewCampaign.excludedCount + ' | المتبقي: ' + (total - processed);
+  document.getElementById('reviewCampaignProgressBar').style.width = Math.round((processed / total) * 100) + '%';
+  document.getElementById('reviewCampaignCurrentName').textContent = c.name || 'بدون اسم';
+  document.getElementById('reviewCampaignCurrentMeta').textContent =
+    (c.phone || '—') + (place ? ' — ' + place : '') +
+    (c.reviewRequestSent ? ' — سبق الإرسال ' + (Number(c.reviewRequestCount) || 1) + ' مرة' : '');
+  document.getElementById('reviewCampaignMessage').value = buildReviewRequestMessage(c);
+
+  _reviewWhatsAppOpenedFor = '';
+  setReviewCampaignBusy(false);
+  var openBtn = document.getElementById('reviewOpenWhatsAppBtn');
+  if(openBtn) openBtn.textContent = '📲 فتح في واتساب';
+  var sentBtn = document.getElementById('reviewConfirmSentBtn');
+  if(sentBtn) sentBtn.disabled = true;
+}
+
+function setReviewCampaignBusy(busy) {
+  _reviewCampaignBusy = busy;
+  ['reviewOpenWhatsAppBtn','reviewExcludeBtn','reviewSkipBtn','reviewConfirmSentBtn'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if(el) el.disabled = busy || (id === 'reviewConfirmSentBtn' && !_reviewWhatsAppOpenedFor);
+  });
+}
+
+function openCurrentReviewWhatsApp() {
+  if(_reviewCampaignBusy) return;
+  var c = getCurrentReviewCampaignClient();
+  if(!c) return;
+  var key = reviewClientKey(c);
+  var waPhone = normalizePhoneForWA(c.phone);
+  if(!waPhone) {
+    showToast('❌ رقم الجوال غير صالح');
+    return;
+  }
+  if(_reviewWhatsAppOpenedFor === key &&
+     !confirm('سبق فتح رسالة هذا العميل في واتساب.\n\nهل تريد فتحها مرة أخرى؟')) return;
+
+  window.open('https://wa.me/' + waPhone + '?text=' + encodeURIComponent(buildReviewRequestMessage(c)), '_blank', 'noopener');
+  _reviewWhatsAppOpenedFor = key;
+  var sentBtn = document.getElementById('reviewConfirmSentBtn');
+  var openBtn = document.getElementById('reviewOpenWhatsAppBtn');
+  if(sentBtn) sentBtn.disabled = false;
+  if(openBtn) openBtn.textContent = '📲 إعادة فتح واتساب';
+  showToast('📲 تم فتح واتساب — لن يُسجَّل الإرسال حتى تؤكده');
+}
+
+async function recordCurrentReviewDecision(decision, extra) {
+  if(_reviewCampaignBusy || !_reviewCampaign || !db) return;
+  var c = getCurrentReviewCampaignClient();
+  if(!c) return;
+  var key = reviewClientKey(c);
+  var campaignId = _reviewCampaign.campaignId;
+  var nextSent = Number(_reviewCampaign.sentCount) || 0;
+  var nextSkipped = Number(_reviewCampaign.skippedCount) || 0;
+  var nextExcluded = Number(_reviewCampaign.excludedCount) || 0;
+  if(decision === 'sent') nextSent++;
+  if(decision === 'skipped') nextSkipped++;
+  if(decision === 'excluded') nextExcluded++;
+
+  var nextIndex = (Number(_reviewCampaign.index) || 0) + 1;
+  var isDone = nextIndex >= _reviewCampaign.queue.length;
+  var nowLocal = Date.now();
+  var serverTime = firebase.database.ServerValue.TIMESTAMP;
+  var updates = {};
+
+  updates['reviewCampaigns/' + campaignId + '/customers/' + key] = decision;
+  updates['reviewCampaigns/' + campaignId + '/sentCount'] = nextSent;
+  updates['reviewCampaigns/' + campaignId + '/skippedCount'] = nextSkipped;
+  updates['reviewCampaigns/' + campaignId + '/excludedCount'] = nextExcluded;
+  updates['reviewCampaigns/' + campaignId + '/updatedAt'] = serverTime;
+  updates['reviewCampaigns/' + campaignId + '/status'] = isDone ? 'completed' : 'active';
+  if(isDone) updates['reviewCampaigns/' + campaignId + '/completedAt'] = serverTime;
+
+  if(decision === 'sent') {
+    var newCount = (Number(c.reviewRequestCount) || 0) + 1;
+    updates['customers/' + key + '/reviewRequestSent'] = true;
+    updates['customers/' + key + '/reviewRequestSentAt'] = serverTime;
+    updates['customers/' + key + '/reviewRequestCount'] = newCount;
+    updates['customers/' + key + '/reviewRequestStatus'] = 'sent';
+    updates['customers/' + key + '/reviewRequestLastCampaignId'] = campaignId;
+    updates['customers/' + key + '/reviewRequestUpdatedAt'] = serverTime;
+  }
+
+  if(decision === 'excluded') {
+    updates['customers/' + key + '/reviewCandidate'] = false;
+    updates['customers/' + key + '/reviewRequestExcluded'] = true;
+    updates['customers/' + key + '/reviewRequestStatus'] = 'excluded';
+    updates['customers/' + key + '/reviewRequestExcludedReason'] = (extra && extra.reason) || '';
+    updates['customers/' + key + '/reviewRequestExcludedAt'] = serverTime;
+    updates['customers/' + key + '/reviewRequestUpdatedAt'] = serverTime;
+  }
+
+  setReviewCampaignBusy(true);
+  try {
+    await db.ref().update(updates);
+    if(decision === 'sent') {
+      c.reviewRequestSent = true;
+      c.reviewRequestSentAt = nowLocal;
+      c.reviewRequestCount = (Number(c.reviewRequestCount) || 0) + 1;
+      c.reviewRequestStatus = 'sent';
+      c.reviewRequestLastCampaignId = campaignId;
+    }
+    if(decision === 'excluded') {
+      c.reviewCandidate = false;
+      c.reviewRequestExcluded = true;
+      c.reviewRequestStatus = 'excluded';
+      c.reviewRequestExcludedReason = (extra && extra.reason) || '';
+      c.reviewRequestExcludedAt = nowLocal;
+    }
+
+    _reviewCampaign.sentCount = nextSent;
+    _reviewCampaign.skippedCount = nextSkipped;
+    _reviewCampaign.excludedCount = nextExcluded;
+    _reviewCampaign.index = nextIndex;
+    _reviewWhatsAppOpenedFor = '';
+    localStorage.setItem('atwad_clients', JSON.stringify(clients));
+    if(isDone) localStorage.removeItem(REVIEW_CAMPAIGN_SESSION_KEY);
+    else saveReviewCampaignSession();
+    renderCurrentReviewCampaignClient();
+  } catch(e) {
+    console.error('review campaign decision error:', e);
+    showToast('❌ لم يتم حفظ القرار. حاول مرة أخرى: ' + (e.message || e));
+    setReviewCampaignBusy(false);
+  }
+}
+
+function confirmCurrentReviewSent() {
+  var c = getCurrentReviewCampaignClient();
+  if(!c || _reviewWhatsAppOpenedFor !== reviewClientKey(c)) {
+    showToast('⚠️ افتح رسالة العميل في واتساب أولًا');
+    return;
+  }
+  recordCurrentReviewDecision('sent');
+}
+
+function skipCurrentReviewClient() {
+  recordCurrentReviewDecision('skipped');
+}
+
+function excludeCurrentReviewClient() {
+  var c = getCurrentReviewCampaignClient();
+  if(!c) return;
+  if(!confirm('هل تريد استبعاد ' + (c.name || 'هذا العميل') + ' من حملات طلب التقييم القادمة؟')) return;
+  var reason = prompt('سبب الاستبعاد (اختياري):', '') || '';
+  recordCurrentReviewDecision('excluded', {reason: reason.trim()});
+}
+
+function finishReviewCampaign() {
+  if(!_reviewCampaign) return;
+  showReviewCampaignStep('done');
+  document.getElementById('reviewDoneSelected').textContent = _reviewCampaign.selectedCount || _reviewCampaign.queue.length;
+  document.getElementById('reviewDoneSent').textContent = _reviewCampaign.sentCount || 0;
+  document.getElementById('reviewDoneSkipped').textContent = _reviewCampaign.skippedCount || 0;
+  document.getElementById('reviewDoneExcluded').textContent = _reviewCampaign.excludedCount || 0;
+  localStorage.removeItem(REVIEW_CAMPAIGN_SESSION_KEY);
+  renderTable();
+}
+
+/** فتح طلب تقييم فردي بالطريقة اليدوية نفسها، دون تسجيل تلقائي */
+function sendReviewRequest(id) {
+  var c = clients.find(function(x){ return x.id === id; });
+  if(!c) return;
+  var reason = getReviewBlockReason(c);
+  if(reason) {
+    showToast('⚠️ ' + reason);
+    return;
+  }
+  if(c.reviewRequestSent === true) {
+    var repeatText = 'سبق إرسال طلب تقييم لهذا العميل بتاريخ ' + fmtReviewDate(c.reviewRequestSentAt) +
+      '، وعدد مرات الإرسال ' + (Number(c.reviewRequestCount) || 1) + '.\n\nهل تريد إرسال الطلب مرة أخرى؟';
+    if(!confirm(repeatText)) return;
+  }
+  startReviewCampaign([reviewClientKey(c)], true);
+}
+
+/** تنسيق تاريخ ISO لعرض مقروء */
+function fmtReviewDate(iso) {
+  if(!iso) return '—';
+  try {
+    return new Date(iso).toLocaleDateString('ar-SA-u-ca-gregory', {
+      year:'numeric', month:'long', day:'numeric'
+    });
+  } catch(e){ return iso; }
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2800);
+}
+
+// إغلاق بالنقر خارج
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) overlay.classList.remove('open');
+  });
+});
+
+// ================================================================
+// محرك استيراد العملاء من Excel — النسخة المحكمة
+// ================================================================
+var _importRows   = [];
+var _importFilter = 'all';
+
+// ١. قائمة الحظر — ثابتة تُبنى مرة واحدة عند تحميل الصفحة
+// لا يجوز إعادة تعيينها أو مسحها في أي مكان
+var BLOCKED_NORM = (function() {
+  var raw = ['0565730008','565730008','966565730008','+966565730008',
+             '00966565730008','9660565730008','+966 56 573 0008'];
+  // normalizePhoneImport مُعرّفة في الأسفل لكن hoisting يجعلها متاحة
+  // نُبني Set بعد تعريف الدالة — انظر INIT_BLOCKED_NORM في الأسفل
+  return null; // مؤقت — يُبنى في INIT_BLOCKED_NORM
+})();
+
+// ٢. تطبيع الجوال الصارم — يُرجع 05XXXXXXXX أو '' فقط
+function normalizePhoneImport(value) {
+  var s = String(value == null ? '' : value)
+    .trim()
+    .replace(/[^\d]/g, '');
+  if(s.startsWith('00966')) s = s.slice(5);
+  else if(s.startsWith('966')) s = s.slice(3);
+  if(s.startsWith('05') && s.length === 10) return s;
+  if(s.startsWith('5')  && s.length === 9)  return '0' + s;
+  return '';
+}
+
+// بناء Set بعد تعريف normalizePhoneImport
+var INIT_BLOCKED_NORM = (function() {
+  var raw = ['0565730008','565730008','966565730008','+966565730008',
+             '00966565730008','9660565730008','+966 56 573 0008'];
+  BLOCKED_NORM = new Set(raw.map(normalizePhoneImport).filter(Boolean));
+})();
+
+// تحقق هل الرقم محظور — يعتمد على BLOCKED_NORM الثابت
+function isBlockedPhone(value) {
+  var phone = normalizePhoneImport(value);
+  return phone !== '' && BLOCKED_NORM.has(phone);
+}
+
+// خريطة أسماء الأعمدة
+var COLUMN_MAP = {
+  'رقم العميل':'customerCode','customer code':'customerCode','كود العميل':'customerCode',
+  'الاسم':'name','الاسم الكامل':'name','name':'name','client':'name','اسم العميل':'name','client name':'name',
+  'الجوال':'phone','رقم الجوال':'phone','phone':'phone','mobile':'phone','رقم الهاتف':'phone','جوال':'phone',
+  'المدينة':'city','city':'city','مدينة':'city',
+  'الحي':'district','district':'district','neighborhood':'district','حي':'district',
+  'التصنيف':'type','type':'type','نوع العميل':'type','تصنيف':'type',
+  'الزيارات':'visits','visits':'visits','عدد الزيارات':'visits',
+  'الإيرادات':'revenue','revenue':'revenue','إجمالي الإيرادات':'revenue','total revenue':'revenue',
+  'آخر زيارة':'lastVisit','last visit':'lastVisit','last service':'lastVisit',
+  'ملاحظات':'notes','notes':'notes'
+};
+
+function normalizeHeader(h) {
+  return String(h||'').trim().toLowerCase().replace(/\s+/g,' ');
+}
+
+function mapHeaders(row0) {
+  var map = {};
+  Object.keys(row0).forEach(function(raw) {
+    var key = normalizeHeader(raw);
+    var field = COLUMN_MAP[key] || COLUMN_MAP[raw.trim()] || null;
+    if(field) map[raw] = field;
+  });
+  return map;
+}
+
+// ٣. تصنيف صف واحد — الجوال هو المفتاح الأساسي
+function classifyRow(row, seenPhonesInFile) {
+  // حماية التهيئة
+  if(!(seenPhonesInFile instanceof Set)) throw new Error('seenPhonesInFile لم تُهيأ كـ Set');
+  if(!(BLOCKED_NORM instanceof Set))     throw new Error('BLOCKED_NORM لم تُهيأ كـ Set');
+  var name  = String(row.name || '').trim();
+  var rawPh = String(row.phone || '').trim();
+  var phone = normalizePhoneImport(rawPh);
+
+  if(!name || name.length < 2)  return { status:'skip', reason:'اسم مفقود', row:row };
+  if(!phone || !/^05\d{8}$/.test(phone))
+    return { status:'skip', reason:'جوال غير صالح: «' + (rawPh||'فارغ') + '»', row:row };
+
+  // ٦. محظور
+  if(isBlockedPhone(phone))      return { status:'blocked', reason:'رقم محظور بموجب السياسة', row:row };
+
+  // ٩. تكرار داخل الملف
+  if(seenPhonesInFile.has(phone)) return { status:'skip', reason:'مكرر داخل ملف Excel', row:row };
+  seenPhonesInFile.add(phone);
+
+  // مقارنة مع Firebase — الجوال فقط (ليس الاسم)
+  var existing = clients.find(function(c) {
+    return normalizePhoneImport(c.phone) === phone;
+  });
+
+  if(existing) {
+    // دمج — اسم مختلف يستدعي مراجعة
+    var existName = String(existing.name||'').trim();
+    if(existName && existName !== name) {
+      // ٨. مراجعة: غير محددة للاستيراد افتراضياً
+      return { status:'review', reason:'جوال مكرر — اسم مختلف («'+existName+'» ← «'+name+'»)',
+               existing:existing, row:row, phone:phone, selected:false };
+    }
+    return { status:'merge', reason:'تحديث بيانات عميل موجود',
+             existing:existing, row:row, phone:phone, selected:true };
+  }
+  return { status:'new', reason:'عميل جديد', row:row, phone:phone, selected:true };
+}
+
+// تحليل ملف Excel
+function onImportFileChange(input) {
+  var file = input.files[0];
+  if(!file) return;
+  document.getElementById('impFileName').textContent = '— ' + file.name;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var wb = XLSX.read(e.target.result, {type:'array'});
+      var sheetName = wb.SheetNames.find(function(n){
+        return n.toLowerCase().replace(/[\s_]/g,'').includes('customermaster');
+      }) || wb.SheetNames[0];
+      var ws   = wb.Sheets[sheetName];
+      var data = XLSX.utils.sheet_to_json(ws, {defval:''});
+      if(!data.length) { showToast('⚠️ الملف فارغ أو غير مدعوم'); return; }
+      var headerMap  = mapHeaders(data[0]);
+      var seenPhones = new Set(); // ٩. كشف تكرار داخل الملف
+
+      _importRows = data.map(function(rawRow) {
+        var mapped = {};
+        Object.keys(rawRow).forEach(function(col){
+          var field = headerMap[col];
+          if(field) mapped[field] = rawRow[col];
+        });
+        // fallback للأسماء الشائعة
+        if(!mapped.name)  mapped.name  = rawRow.name  || rawRow.Name  || rawRow['اسم العميل'] || rawRow['الاسم'] || '';
+        if(!mapped.phone) mapped.phone = rawRow.phone || rawRow.Phone || rawRow['الجوال']     || rawRow['رقم الجوال'] || '';
+        if(!mapped.city)  mapped.city  = rawRow.city  || rawRow.City  || rawRow['المدينة']    || '';
+        return classifyRow(mapped, seenPhones);
+      });
+
+      // ١. لا كتابة Firebase هنا — فقط تحليل
+      document.getElementById('impStats').style.display = 'grid';
+      updateImportStats();
+      document.getElementById('btnPreview').style.display = 'inline-block';
+      // زر الاستيراد ظاهر لكن معطّل حتى يشاهد المعاينة
+      document.getElementById('btnStartImport').style.display = 'inline-block';
+      document.getElementById('btnStartImport').disabled = true;
+      document.getElementById('btnStartImport').title = 'اضغط «معاينة» أولاً ثم أكّد';
+    } catch(err) {
+      console.error('[Excel Import] full error:', err);
+      console.error('[Excel Import] stack:', err && err.stack);
+      showToast('❌ خطأ في قراءة الملف: ' + (err && err.message ? err.message : String(err)));
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// تعيين قرار سجل مراجعة
+function setReviewDecision(idx, sel) {
+  var r = _importRows[idx];
+  if(!r) return;
+  r.decision = sel.value;
+  // تحديث CSS الـ select
+  sel.className = 'review-decision' + (sel.value !== 'undecided' ? ' decided' : '');
+  // إظهار/إخفاء حقل الرقم الجديد
+  var phoneInput = document.getElementById('rv-phone-'+idx);
+  if(phoneInput) phoneInput.style.display = sel.value==='independent' ? 'block' : 'none';
+  // تحديث CSS الصف
+  var row = document.getElementById('rv-row-'+idx);
+  if(row) row.className = sel.value==='undecided' ? 'imp-undecided' : 'imp-review';
+  // تحديث الإحصاءات (يُعيد التحقق من undecided)
+  updateImportStats();
+}
+
+// تعيين رقم مستقل لسجل مراجعة مع تحقق فوري
+function setReviewPhone(idx, val) {
+  var r = _importRows[idx];
+  if(!r) return;
+  var errEl = document.getElementById('rv-err-'+idx);
+  var phone = normalizePhoneImport(val);
+  if(!phone || !/^05\d{8}$/.test(phone)) {
+    r.newPhone = val;
+    if(errEl) errEl.textContent = '❌ رقم غير صالح';
+    return;
+  }
+  if(isBlockedPhone(phone)) {
+    r.newPhone = val;
+    if(errEl) errEl.textContent = '❌ رقم محظور';
+    return;
+  }
+  // تحقق من التكرار
+  var dupInFile = _importRows.some(function(x, i){ return i!==idx && normalizePhoneImport((x.row||{}).phone||'')===phone; });
+  var dupInFb   = clients.some(function(c){ return normalizePhoneImport(c.phone||'')===phone; });
+  if(dupInFile) { if(errEl) errEl.textContent = '❌ مكرر داخل الملف'; r.newPhone=val; return; }
+  if(dupInFb)   { if(errEl) errEl.textContent = '❌ موجود في Firebase'; r.newPhone=val; return; }
+  r.newPhone = phone;
+  if(errEl) errEl.textContent = '✅ رقم صالح';
+}
+
+// فتح المعاينة وتفعيل زر الاستيراد
+function showPreview() {
+  document.getElementById('impFilters').style.display     = 'flex';
+  document.getElementById('impPreviewWrap').style.display = 'block';
+  renderPreviewTable(_importFilter);
+  var btn = document.getElementById('btnStartImport');
+  if(btn){ btn.setAttribute('data-ready','1'); }
+  updateImportStats(); // يُطبّق حماية undecided
+}
+
+function filterPreview(f, btn) {
+  _importFilter = f;
+  document.querySelectorAll('.pf-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  renderPreviewTable(f);
+}
+
+var STATUS_LABELS = {new:'جديد',merge:'دمج',review:'مراجعة',skip:'مستبعد',blocked:'محظور'};
+var STATUS_CSS    = {new:'sb-new',merge:'sb-merge',review:'sb-review',skip:'sb-skip',blocked:'sb-skip'};
+var ROW_CSS       = {new:'imp-new',merge:'imp-merge',review:'imp-review',skip:'imp-skip',blocked:'imp-skip'};
+
+function renderPreviewTable(filter) {
+  var rows = filter==='all' ? _importRows : _importRows.filter(function(r){ return r.status===filter; });
+  var html = rows.slice(0,200).map(function(r) {
+    var realIdx = _importRows.indexOf(r);
+    var row = r.row || {};
+    var phone = normalizePhoneImport(row.phone||'');
+
+    if(r.status !== 'review') {
+      return '<tr class="' + ROW_CSS[r.status] + '">' +
+        '<td><span class="status-badge '+STATUS_CSS[r.status]+'">'+STATUS_LABELS[r.status]+'</span></td>' +
+        '<td>'+(row.customerCode||'—')+'</td>' +
+        '<td>'+(row.name||'—')+'</td>' +
+        '<td dir="ltr">'+(phone||'—')+'</td>' +
+        '<td>'+(row.district||row.city||'—')+'</td>' +
+        '<td>'+(row.visits||'0')+'</td>' +
+        '<td>'+(row.revenue?Number(row.revenue).toLocaleString('ar-SA-u-ca-gregory')+' ﷼':'—')+'</td>' +
+        '<td>'+(row.lastVisit||'—')+'</td>' +
+        '<td style="font-size:11px;color:var(--mist);">'+(r.reason||'')+'</td>' +
+      '</tr>';
+    }
+
+    var ex = r.existing || {};
+    var dec = r.decision || 'undecided';
+    var phoneEditDisp = dec==='independent' ? 'block' : 'none';
+    var rowCss = dec==='undecided' ? 'imp-undecided' : 'imp-review';
+    var badge = dec==='undecided'
+      ? '<span class=\"status-badge sb-undecided\">لم يُحسم</span>'
+      : '<span class=\"status-badge sb-review\">مراجعة</span>';
+    var compare =
+      '<div class=\"review-compare\">' +
+        '<b style=\"color:#0EA5E9\">Excel:</b> '+(row.name||'—')+' | '+(row.district||row.city||'—')+'<br>' +
+        '<b style=\"color:#10B981\">Firebase:</b> '+(ex.name||'—')+' | '+(ex.city||ex.district||'—')+
+        (ex.visits?' | '+ex.visits+' زيارة':'') +
+      '</div>';
+    return '<tr class=\"'+rowCss+'\" id=\"rv-row-'+realIdx+'\">' +
+      '<td>'+badge+'</td>' +
+      '<td>'+(row.customerCode||'—')+'</td>' +
+      '<td><b>'+(row.name||'—')+'</b>'+compare+'</td>' +
+      '<td dir=\"ltr\">'+(phone||'—')+'</td>' +
+      '<td>'+(row.district||row.city||'—')+'</td>' +
+      '<td>'+(row.visits||'0')+'</td>' +
+      '<td>'+(row.revenue?Number(row.revenue).toLocaleString('ar-SA-u-ca-gregory')+' ﷼':'—')+'</td>' +
+      '<td>'+(row.lastVisit||'—')+'</td>' +
+      '<td>' +
+        '<select class=\"review-decision'+(dec!=='undecided'?' decided':'')+'\" onchange=\"setReviewDecision('+realIdx+',this)\">' +
+          '<option value=\"undecided\"'+(dec==='undecided'?' selected':'')+'>⬜ لم يُتخذ قرار</option>' +
+          '<option value=\"merge\"'+(dec==='merge'?' selected':'')+'>🔵 دمج مع الموجود</option>' +
+          '<option value=\"independent\"'+(dec==='independent'?' selected':'')+'>🟢 مستقل (برقم جديد)</option>' +
+          '<option value=\"skip\"'+(dec==='skip'?' selected':'')+'>🔴 استبعاد</option>' +
+        '</select>' +
+        '<input type=\"tel\" id=\"rv-phone-'+realIdx+'\" class=\"review-phone-edit\" placeholder=\"05XXXXXXXX\"' +
+          ' style=\"display:'+phoneEditDisp+';\" value=\"'+(r.newPhone||'')+'\"' +
+          ' oninput=\"setReviewPhone('+realIdx+',this.value)\">' +
+        '<div id=\"rv-err-'+realIdx+'\" style=\"font-size:10px;color:#EF4444;margin-top:2px;\"></div>' +
+      '</td>' +
+    '</tr>';
+  }).join('');
+  document.getElementById('impPreviewBody').innerHTML = html ||
+    '<tr><td colspan=\"9\" style=\"text-align:center;padding:20px;color:var(--mist)\">لا توجد صفوف</td></tr>';
+}
+
+
+// ٧. تأكيد قبل الاستيراد
+
+// ١٢. نسخة احتياطية شاملة (تشمل _fbKey)
+function downloadBackup() {
+  if(!clients.length) { showToast('⚠️ لا توجد بيانات للحفظ'); return; }
+  if(typeof XLSX === 'undefined') { showToast('❌ مكتبة Excel غير محملة'); return; }
+  var data = clients.map(function(c) {
+    return {
+      '_firebase_key': c._fbKey||'',
+      'id':            c.id||c._fbKey||'',
+      'الاسم':         c.name||'',
+      'الجوال':        c.phone||'',
+      'المدينة':       c.city||'',
+      'الحي':          c.district||'',
+      'التصنيف':       c.type||'',
+      'الزيارات':      c.visits||0,
+      'الإيرادات':     c.revenue||0,
+      'آخر زيارة':     c.lastVisit||'',
+      'ملاحظات':       c.notes||'',
+      'تاريخ الإنشاء': c.createdAt||'',
+      'المصدر':        c.source||'',
+      'reviewCandidate':c.reviewCandidate||false,
+      'reviewRequestSent':c.reviewRequestSent||false
+    };
+  });
+  var ws  = XLSX.utils.json_to_sheet(data);
+  var wb  = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Customer_Master');
+  // ورقة ثانية لإعادة الاستيراد
+  var ws2 = XLSX.utils.json_to_sheet(data.map(function(r){
+    return {
+      'رقم العميل':  r['id'],
+      'الاسم':       r['الاسم'],
+      'الجوال':      r['الجوال'],
+      'المدينة':     r['المدينة'],
+      'الحي':        r['الحي'],
+      'التصنيف':     r['التصنيف'],
+      'الزيارات':    r['الزيارات'],
+      'الإيرادات':   r['الإيرادات'],
+      'آخر زيارة':   r['آخر زيارة'],
+      'ملاحظات':     r['ملاحظات']
+    };
+  }));
+  XLSX.utils.book_append_sheet(wb, ws2, 'Customer_Master_Import');
+  var date = new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb, 'atwad_customers_backup_' + date + '.xlsx');
+  showToast('💾 تم تنزيل النسخة الاحتياطية (' + clients.length + ' عميل)');
+}
+
+function openImportModal() {
+  console.log('[Excel Import] openImportModal called');
+  _importRows  = [];
+  document.getElementById('impFileInput').value   = '';
+  document.getElementById('impFileName').textContent = '';
+  document.getElementById('impStats').style.display  = 'none';
+  document.getElementById('impFilters').style.display = 'none';
+  document.getElementById('impPreviewWrap').style.display = 'none';
+  document.getElementById('impProgress').style.display    = 'none';
+  document.getElementById('impProgressBar').style.width   = '0%';
+  document.getElementById('impProgressLabel').textContent = '';
+  document.getElementById('btnPreview').style.display      = 'none';
+  document.getElementById('btnStartImport').style.display  = 'none';
+  var modal = document.getElementById('importModal');
+  if(!modal){ console.error('[Excel Import] importModal not found'); return; }
+  modal.classList.add('open');
+}
+
+// ربط احتياطي — يعمل مع onclick أو بمفرده
+document.addEventListener('DOMContentLoaded', function() {
+  var btn = document.getElementById('excelImportBtn');
+  if(btn && !btn.onclick) btn.addEventListener('click', openImportModal);
+});
+
+function closeImportModal() {
+  document.getElementById('importModal').classList.remove('open');
+  _importRows = [];
+}
+
+// خريطة أسماء الحقول في Excel → حقول Firebase
+var COLUMN_MAP = {
+  'رقم العميل':'customerCode','customer code':'customerCode','id':'customerCode',
+  'الاسم':'name','الاسم الكامل':'name','name':'name','client name':'name','اسم العميل':'name',
+  'الجوال':'phone','رقم الجوال':'phone','phone':'phone','mobile':'phone','رقم الهاتف':'phone',
+  'المدينة':'city','city':'city','المدينة / المنطقة':'city',
+  'الحي':'district','district':'district','neighborhood':'district',
+  'التصنيف':'type','type':'type','نوع العميل':'type',
+  'الزيارات':'visits','visits':'visits','عدد الزيارات':'visits',
+  'الإيرادات':'revenue','revenue':'revenue','إجمالي الإيرادات':'revenue',
+  'آخر زيارة':'lastVisit','last visit':'lastVisit','last service':'lastVisit',
+  'ملاحظات':'notes','notes':'notes','تعليق':'notes'
+};
+
+function normalizeHeader(h) {
+  return String(h||'').trim().toLowerCase()
+    .replace(/\s+/g,' ').replace(/[_\-]/g,' ');
+}
+
+function mapHeaders(row0) {
+  var map = {};
+  Object.keys(row0).forEach(function(raw) {
+    var key = normalizeHeader(raw);
+    var field = COLUMN_MAP[key] || COLUMN_MAP[raw.trim()] || null;
+    if(field) map[raw] = field;
+  });
+  return map;
+}
+
+// ======= نهاية محرك الاستيراد =======
+
+function updateImportStats() {
+  var counts = {new:0, merge:0, review:0, skip:0, blocked:0};
+  var undecided = 0;
+  _importRows.forEach(function(r) {
+    counts[r.status] = (counts[r.status]||0) + 1;
+    if(r.status==='review' && (!r.decision || r.decision==='undecided')) undecided++;
+  });
+  document.getElementById('impTotal').textContent   = _importRows.length;
+  document.getElementById('impNew').textContent     = counts.new;
+  document.getElementById('impMerge').textContent   = counts.merge;
+  document.getElementById('impReview').textContent  = counts.review;
+  document.getElementById('impSkip').textContent    = counts.skip;
+  document.getElementById('impBlocked').textContent = counts.blocked;
+  // تحذير undecided
+  var warn = document.getElementById('impReviewWarn');
+  var btn  = document.getElementById('btnStartImport');
+  if(undecided > 0) {
+    if(warn){ warn.style.display='block'; warn.textContent='⚠️ يجب تحديد قرار لـ '+undecided+' سجل مراجعة قبل بدء الاستيراد.'; }
+    if(btn) btn.disabled = true;
+  } else {
+    if(warn) warn.style.display = 'none';
+    if(btn && btn.getAttribute('data-ready')==='1') btn.disabled = false;
+  }
+}
+
+function filterPreview(f, btn) {
+  _importFilter = f;
+  document.querySelectorAll('.pf-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  renderPreviewTable(f);
+}
+
+async function startImport() {
+  if(!db) { showToast('❌ Firebase غير متاح'); return; }
+  var toProcess = _importRows.filter(function(r){ return r.status==='new'||r.status==='merge'; });
+  if(!toProcess.length) { showToast('⚠️ لا توجد صفوف قابلة للاستيراد'); return; }
+
+  document.getElementById('btnStartImport').disabled = true;
+  document.getElementById('impProgress').style.display = 'block';
+  var bar = document.getElementById('impProgressBar');
+  var lbl = document.getElementById('impProgressLabel');
+
+  var done=0, errors=0;
+  var BATCH = 5;
+
+  for(var i=0; i<toProcess.length; i+=BATCH) {
+    var batch = toProcess.slice(i, i+BATCH);
+    await Promise.all(batch.map(async function(r) {
+      try {
+        var row = r.row;
+        if(r.status === 'merge' && r.existing && r.existing._fbKey) {
+          // تحديث فقط الحقول الجديدة — لا نحذف حقولاً موجودة
+          var updates = {};
+          if(row.district)  updates.district  = String(row.district).trim();
+          if(row.city)      updates.city      = String(row.city).trim();
+          if(row.revenue)   updates.revenue   = Number(row.revenue)||0;
+          if(row.visits)    updates.visits    = Number(row.visits)||0;
+          if(row.lastVisit) updates.lastVisit = String(row.lastVisit).trim();
+          if(row.notes)     updates.notes     = String(row.notes).trim();
+          if(row.customerCode) updates.customerCode = String(row.customerCode).trim();
+          if(Object.keys(updates).length)
+            await db.ref('customers/' + r.existing._fbKey).update(updates);
+        } else if(r.status === 'new') {
+          // إضافة عميل جديد
+          var phone = normalizePhoneImport(row.phone||'');
+          var newC = {
+            name:     String(row.name).trim(),
+            phone:    phone,
+            city:     String(row.city||row.district||'').trim(),
+            district: String(row.district||'').trim(),
+            type:     String(row.type||'أفراد').trim(),
+            visits:   Number(row.visits)||0,
+            revenue:  Number(row.revenue)||0,
+            lastVisit:String(row.lastVisit||'').trim(),
+            notes:    String(row.notes||'').trim(),
+            createdAt:new Date().toISOString(),
+            importedAt:new Date().toISOString(),
+            source:   'excel_import'
+          };
+          if(row.customerCode) newC.customerCode = String(row.customerCode).trim();
+          // توليد id فريد
+          var ref = db.ref('customers').push();
+          newC.id = ref.key;
+          await ref.set(newC);
+        }
+        done++;
+      } catch(e) {
+        errors++;
+        console.error('[Import] row error:', e, r);
+      }
+    }));
+
+    var pct = Math.round((i+batch.length)/toProcess.length*100);
+    bar.style.width = pct + '%';
+    lbl.textContent = 'جاري الاستيراد... ' + Math.min(i+BATCH, toProcess.length) + ' / ' + toProcess.length;
+    // استراحة قصيرة لتجنب ضغط Firebase
+    await new Promise(function(resolve){ setTimeout(resolve, 150); });
+  }
+
+  bar.style.width = '100%';
+  lbl.textContent = '✅ اكتمل الاستيراد: ' + done + ' سجل' + (errors ? ' — ' + errors + ' أخطاء' : '');
+  showToast('✅ تم استيراد ' + done + ' سجل' + (errors?' — '+errors+' أخطاء':''));
+  document.getElementById('btnStartImport').disabled = false;
+}
+
+function downloadBackup() {
+  if(!clients.length) { showToast('⚠️ لا توجد بيانات للحفظ'); return; }
+  if(typeof XLSX === 'undefined') { showToast('❌ مكتبة Excel غير محملة'); return; }
+  var data = clients.map(function(c) {
+    return {
+      'ID': c.id||c._fbKey||'',
+      'الاسم': c.name||'',
+      'الجوال': c.phone||'',
+      'المدينة': c.city||'',
+      'الحي': c.district||'',
+      'التصنيف': c.type||'',
+      'الزيارات': c.visits||0,
+      'الإيرادات': c.revenue||0,
+      'آخر زيارة': c.lastVisit||'',
+      'ملاحظات': c.notes||'',
+      'تاريخ الإنشاء': c.createdAt||''
+    };
+  });
+  var ws  = XLSX.utils.json_to_sheet(data);
+  var wb  = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Customer_Master');
+  var date = new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb, 'atwad_customers_backup_' + date + '.xlsx');
+  showToast('💾 تم تنزيل النسخة الاحتياطية');
+}
+
+if(db) {
+  console.log('[customers] جاري الاتصال بـ Firebase — المسار: customers');
+  clients = [];
+  renderTable();
+  syncFromFirebase();
+} else {
+  console.warn('[customers] ⚠️ Firebase غير متاح');
+  var errBanner = document.createElement('div');
+  errBanner.style.cssText = 'background:#FEE2E2;border:1.5px solid #FCA5A5;border-radius:12px;padding:12px 18px;margin:16px 22px;font-size:13px;font-weight:700;color:#991B1B;';
+  errBanner.textContent = '⚠️ لم يتم الاتصال بقاعدة البيانات. تحقق من الاتصال بالإنترنت.';
+  var mc = document.querySelector('.main-content') || document.body;
+  mc.prepend(errBanner);
+  renderTable();
+  updateStats();
+}
+</script>
+
+
+<script>
+var LANG = localStorage.getItem('atwad_lang') || 'ar';
+
+var NAV_TEXT = {
+  ar: {clients:'العملاء', appts:'المواعيد', wo:'أوامر العمل', finance:'الإدارة المالية', reports:'التقارير', settings:'الإعدادات', brand:'أطواد', brandSub:'لصيانة المكيفات'},
+  en: {clients:'Clients', appts:'Appointments', wo:'Work Orders', finance:'Finance', reports:'Reports', settings:'Settings', brand:'Atwad', brandSub:'AC Maintenance'}
+};
+
+function applySharedLang() {
+  var l = LANG;
+  document.documentElement.lang = l;
+  document.documentElement.dir = l==='ar'?'rtl':'ltr';
+  var btn = document.getElementById('langBtn');
+  if(btn) btn.textContent = l==='ar'?'🌐 EN':'🌐 عر';
+  // Sidebar
+  var t = NAV_TEXT[l];
+  setTxt('nav-brand', t.brand);
+  setTxt('nav-brandsub', t.brandSub);
+  setTxt('nav-clients', t.clients);
+  setTxt('nav-appts', t.appts);
+  setTxt('nav-wo', t.wo);
+  setTxt('nav-finance', t.finance);
+  setTxt('nav-reports', t.reports);
+  setTxt('nav-settings', t.settings);
+  // page specific
+  if(typeof applyPageLang === 'function') applyPageLang(l);
+}
+
+function setTxt(id, txt) { var el=document.getElementById(id); if(el) el.textContent=txt; }
+function setHTML(id, txt) { var el=document.getElementById(id); if(el) el.innerHTML=txt; }
+function setPlh(id, txt) { var el=document.getElementById(id); if(el) el.placeholder=txt; }
+
+function toggleLang() {
+  LANG = LANG==='ar'?'en':'ar';
+  localStorage.setItem('atwad_lang', LANG);
+  applySharedLang();
+}
+
+document.addEventListener('DOMContentLoaded', applySharedLang);
+
+
+function applyPageLang(l) {
+  var P = { ar: {'title':'إدارة العملاء', 'sub':'تسجيل وتصنيف وإدارة قاعدة البيانات', 'statTotal':'إجمالي العملاء', 'statNew':'عملاء جدد', 'statReg':'عملاء دائمون', 'statCorp':'شركات', 'addBtn':'＋ إضافة عميل', 'importBtn':'📥 استيراد من الحجوزات', 'filterAll':'الكل', 'filterNew':'🆕 جدد', 'filterReg':'⭐ دائمون', 'filterCorp':'🏢 شركات', 'colClient':'العميل', 'colPhone':'الجوال', 'colCity':'المدينة', 'colType':'التصنيف', 'colVisits':'الزيارات', 'colLast':'آخر خدمة', 'colAct':'الإجراءات', 'search':'ابحث بالاسم أو الجوال أو المدينة...', 'modalAdd':'➕ إضافة عميل جديد', 'modalEdit':'✏️ تعديل بيانات العميل', 'saveBtn':'💾 حفظ العميل', 'cancelBtn':'إلغاء'}, en: {'title':'Client Management', 'sub':'Register, classify and manage database', 'statTotal':'Total Clients', 'statNew':'New Clients', 'statReg':'Regular Clients', 'statCorp':'Corporate', 'addBtn':'＋ Add Client', 'importBtn':'📥 Import from Bookings', 'filterAll':'All', 'filterNew':'🆕 New', 'filterReg':'⭐ Regular', 'filterCorp':'🏢 Corporate', 'colClient':'Client', 'colPhone':'Mobile', 'colCity':'City', 'colType':'Type', 'colVisits':'Visits', 'colLast':'Last Service', 'colAct':'Actions', 'search':'Search by name, mobile or city...', 'modalAdd':'➕ Add New Client', 'modalEdit':'✏️ Edit Client', 'saveBtn':'💾 Save Client', 'cancelBtn':'Cancel'} };
+  var t = P[l] || P['ar'];
+  // تطبيق على العناصر بـ data-lang
+  document.querySelectorAll('[data-lang]').forEach(function(el) {
+    var key = el.dataset.lang;
+    if(t[key]) el.textContent = t[key];
+  });
+  document.querySelectorAll('[data-lang-ph]').forEach(function(el) {
+    var key = el.dataset.langPh;
+    if(t[key]) el.placeholder = t[key];
+  });
+}
+</script>
+<!-- ========== IMPORT MODAL ========== -->
+<div class="import-overlay" id="importModal">
+  <div class="import-box">
+    <div class="import-title">📥 استيراد العملاء من Excel
+      <span id="impFileName" style="font-size:13px;color:var(--mist);font-weight:500;"></span>
+    </div>
+
+    <!-- اختيار الملف -->
+    <div id="impFileSection">
+      <label style="display:block;padding:24px;border:2px dashed #CBD5E1;border-radius:12px;text-align:center;cursor:pointer;margin-bottom:16px;">
+        <input type="file" id="impFileInput" accept=".xlsx,.xls" style="display:none;" onchange="onImportFileChange(this)">
+        <div style="font-size:28px;margin-bottom:8px;">📂</div>
+        <div style="font-size:14px;font-weight:700;color:var(--deep);">اختر ملف Excel</div>
+        <div style="font-size:12px;color:var(--mist);margin-top:4px;">.xlsx أو .xls — ورقة Customer_Master</div>
+      </label>
+    </div>
+
+    <!-- إحصاءات -->
+    <div class="import-stats" id="impStats" style="display:none;">
+      <div class="import-stat"><div class="isn" id="impTotal">0</div><div class="isl">إجمالي الصفوف</div></div>
+      <div class="import-stat"><div class="isn" id="impNew" style="color:#10B981;">0</div><div class="isl">جديد</div></div>
+      <div class="import-stat"><div class="isn" id="impMerge" style="color:#0EA5E9;">0</div><div class="isl">دمج</div></div>
+      <div class="import-stat"><div class="isn" id="impReview" style="color:#F59E0B;">0</div><div class="isl">مراجعة</div></div>
+      <div class="import-stat"><div class="isn" id="impSkip" style="color:#EF4444;">0</div><div class="isl">مستبعد</div></div>
+      <div class="import-stat"><div class="isn" id="impBlocked" style="color:#7C3AED;">0</div><div class="isl">محظور</div></div>
+    </div>
+
+    <!-- شريط التقدم -->
+    <div class="import-progress" id="impProgress">
+      <div class="import-progress-bar" id="impProgressBar"></div>
+    </div>
+    <div class="import-progress-label" id="impProgressLabel"></div>
+
+    <!-- فلاتر المعاينة -->
+    <div class="preview-filters" id="impFilters" style="display:none;">
+      <button class="pf-btn active" onclick="filterPreview('all',this)">الكل</button>
+      <button class="pf-btn" onclick="filterPreview('new',this)">🟢 جديد</button>
+      <button class="pf-btn" onclick="filterPreview('merge',this)">🔵 دمج</button>
+      <button class="pf-btn" onclick="filterPreview('review',this)">🟠 مراجعة</button>
+      <button class="pf-btn" onclick="filterPreview('skip',this)">🔴 مستبعد</button>
+    </div>
+
+    <!-- جدول المعاينة -->
+    <div class="preview-table-wrap" id="impPreviewWrap" style="display:none;">
+      <table class="preview-table">
+        <thead>
+          <tr>
+            <th>الحالة</th><th>✓</th><th>رقم العميل</th><th>الاسم</th><th>الجوال</th>
+            <th>الحي</th><th>الزيارات</th><th>الإيرادات</th><th>آخر زيارة</th><th>الإجراء</th>
+          </tr>
+        </thead>
+        <tbody id="impPreviewBody"></tbody>
+      </table>
+    </div>
+
+    <!-- أزرار -->
+    <div class="warn-banner" id="impReviewWarn"></div>
+    <div class="import-btns">
+      <button class="btn-backup" onclick="downloadBackup()">💾 تنزيل نسخة احتياطية</button>
+      <button class="btn-preview" id="btnPreview" onclick="showPreview()" style="display:none;">👁️ معاينة البيانات</button>
+      <button class="btn-start-import" id="btnStartImport" data-ready="0" onclick="startImport()" style="display:none;" disabled>🚀 بدء الاستيراد</button>
+      <button class="btn-cancel-import" onclick="closeImportModal()">✕ إلغاء</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
