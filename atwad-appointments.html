@@ -269,11 +269,11 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 .btn-use-old{background:#FEF3C7;color:#92400E;}
 .btn-use-new{background:#DBEAFE;color:#1E40AF;}
 .btn-save-new{background:#D1FAE5;color:#065F46;}
-</style>
-<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
-  <script src="atwad-auth.js"></script>
+</style><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="atwad-firebase.js"></script>
+<script src="atwad-auth.js"></script>
 </head>
 <body>
 
@@ -593,11 +593,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 
 <script>
 // ===== FIREBASE =====
-var db = null;
-try {
-  firebase.initializeApp({databaseURL:"https://atwad-booking-default-rtdb.firebaseio.com"});
-  db = firebase.database();
-} catch(e){ console.log('Firebase:', e); }
+var db = window.db; // من atwad-firebase.js — لا تهيئة محلية
 
 // ===== STATE =====
 let appointments = []; // كل البيانات من Firebase

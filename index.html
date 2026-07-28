@@ -269,8 +269,11 @@
     .stats-inner { flex-wrap: wrap; }
     .stat-item { min-width: 45%; border-left: none; border-bottom: 1px solid rgba(255,255,255,0.1); }
   }
-</style>
-  <script src="atwad-auth.js"></script>
+</style><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="atwad-firebase.js"></script>
+<script src="atwad-auth.js"></script>
 </head>
 <body>
 
@@ -415,21 +418,12 @@
 </div>
 
   <p>مؤسسة <strong>أطواد</strong> للتكييف والتنظيف — جدة &copy; 2026</p>
-</footer>
-
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
-<script>
+</footer><script>
   const now = new Date();
   const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
   document.getElementById('currentDate').textContent = now.toLocaleDateString('ar-SA', options);
 
-  const firebaseConfig = {
-    databaseURL: "https://atwad-booking-default-rtdb.firebaseio.com"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
+  var db = window.db; // من atwad-firebase.js — لا تهيئة محلية
 
   function loadStat(ref, elementId) {
     db.ref(ref).once('value').then(snap => {

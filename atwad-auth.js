@@ -1,13 +1,12 @@
 // ================================================================
 // atwad-auth.js — حماية مشتركة لصفحات الإدارة
-// ملاحظة أمنية: auth != null مؤقتة لمستخدم واحد.
-// بعد الاستقرار، قيّد الوصول بـ UID محدد أو Custom Claim:
-// "auth != null && auth.token.admin == true"
+// يعتمد على window.auth المُهيَّأ مسبقًا في atwad-firebase.js
+// ملاحظة أمنية: التحقق من الصلاحية الإدارية يتم في قواعد Firebase
+// عبر auth.uid — لا تضع بريدًا أو كلمة مرور هنا.
 // ================================================================
 (function() {
   'use strict';
 
-  // دالة تنظيف HTML لمنع XSS
   window.escapeHTML = function(s) {
     if(s == null) return '';
     return String(s)
@@ -17,6 +16,21 @@
       .replace(/"/g,'&quot;')
       .replace(/'/g,'&#39;');
   };
+
+  // تحقق من توفر window.auth قبل أي شيء
+  if(!window.auth) {
+    document.addEventListener('DOMContentLoaded', function() {
+      document.body.insertAdjacentHTML('afterbegin',
+        '<div style="position:fixed;inset:0;background:#0C3B5E;z-index:99999;'
+        +'display:flex;align-items:center;justify-content:center;font-family:Tajawal,sans-serif;">'
+        +'<div style="background:#fff;border-radius:14px;padding:28px;max-width:320px;text-align:center;">'
+        +'<div style="font-size:28px;margin-bottom:10px">⚠️</div>'
+        +'<p style="font-size:14px;color:#EF4444;font-weight:700;">تعذر تهيئة نظام تسجيل الدخول. تحقق من إعدادات Firebase.</p>'
+        +'</div></div>');
+    });
+    console.error('[atwad-auth] window.auth غير موجود — تأكد أن atwad-firebase.js حُمِّل قبل atwad-auth.js');
+    return;
+  }
 
   var LOGIN_HTML = '<div id="authOverlay" style="position:fixed;inset:0;background:#0C3B5E;z-index:99999;'
     +'display:flex;align-items:center;justify-content:center;font-family:Tajawal,sans-serif;">'
@@ -52,33 +66,40 @@
     var btn   = document.getElementById('authBtn');
     var err   = document.getElementById('authErr');
     if(!email || !pass) { err.textContent = 'أدخل البريد وكلمة المرور'; return; }
-    btn.disabled = true; btn.textContent = 'جاري التحقق...'; err.textContent = '';
-    firebase.auth().signInWithEmailAndPassword(email, pass).catch(function(e) {
-      btn.disabled = false; btn.textContent = 'دخول';
-      var msgs = {
-        'auth/user-not-found':'البريد غير مسجل',
-        'auth/wrong-password':'كلمة المرور خاطئة',
-        'auth/invalid-email':'بريد غير صالح',
-        'auth/too-many-requests':'محاولات كثيرة — انتظر'
-      };
-      err.textContent = msgs[e.code] || 'خطأ: ' + e.message;
-    });
-  }
-  window.__atwadLogin = doLogin; // للتوافق
 
-  firebase.auth().onAuthStateChanged(function(user) {
+    btn.disabled = true; btn.textContent = 'جاري التحقق...'; err.textContent = '';
+
+    window.auth.signInWithEmailAndPassword(email, pass)
+      .catch(function(e) {
+        var msgs = {
+          'auth/user-not-found':'البريد غير مسجل',
+          'auth/wrong-password':'كلمة المرور خاطئة',
+          'auth/invalid-email':'بريد غير صالح',
+          'auth/invalid-api-key':'خطأ في إعدادات Firebase',
+          'auth/too-many-requests':'محاولات كثيرة — انتظر'
+        };
+        err.textContent = msgs[e.code] || 'خطأ: ' + e.message;
+      })
+      .finally(function() {
+        // إعادة الزر لحالته الطبيعية دائمًا — سواء نجح أو فشل
+        // (عند النجاح onAuthStateChanged سيُخفي الـ overlay بالكامل)
+        btn.disabled = false;
+        btn.textContent = 'دخول';
+      });
+  }
+  window.__atwadLogin = doLogin;
+
+  window.auth.onAuthStateChanged(function(user) {
     var overlay = document.getElementById('authOverlay');
-    var btn = document.getElementById('authBtn');
     if(user) {
-      // مسجّل
       if(overlay) overlay.style.display = 'none';
       document.body.style.overflow = '';
-      // تفعيل صفحة مرة واحدة فقط — منع التكرار
+
       if(!window.__atwadPageInitialized) {
         window.__atwadPageInitialized = true;
         if(typeof window.__atwadInitPage === 'function') window.__atwadInitPage(user);
       }
-      // زر الخروج
+
       if(!document.getElementById('authSignOutBtn')) {
         var b = document.createElement('button');
         b.id = 'authSignOutBtn';
@@ -88,10 +109,8 @@
           +'font-family:Tajawal,sans-serif;font-size:12px;font-weight:700;cursor:pointer;';
         b.onclick = function() {
           if(confirm('تسجيل الخروج؟')) {
-            // فصل مستمعات Firebase
             if(typeof window.__atwadCleanup === 'function') window.__atwadCleanup();
-            firebase.auth().signOut().then(function() {
-              // إعادة تحميل الصفحة لمسح جميع البيانات من DOM
+            window.auth.signOut().then(function() {
               window.location.reload();
             });
           }
@@ -99,10 +118,8 @@
         document.body.appendChild(b);
       }
     } else {
-      // غير مسجّل — أظهر overlay وأخفِ المحتوى
       if(overlay) {
         overlay.style.display = 'flex';
-        // مسح الحقول
         var e = document.getElementById('authEmail');
         var p = document.getElementById('authPass');
         if(e) e.value = ''; if(p) p.value = '';
@@ -110,12 +127,10 @@
         if(b2){ b2.disabled = false; b2.textContent = 'دخول'; }
       }
       document.body.style.overflow = 'hidden';
-      // إخفاء المحتوى الإداري بشكل كامل
       document.querySelectorAll('main, .main-content, .container, .page-body, nav, header')
         .forEach(function(el){ el.style.visibility = 'hidden'; });
       var signOut = document.getElementById('authSignOutBtn');
       if(signOut) signOut.remove();
-      // window.__atwadPageInitialized = false; لو أردنا إعادة init عند عودة الدخول
     }
   });
 })();

@@ -3,12 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>أطواد — تسجيل العمليات المالية</title>
-<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
-<script src="atwad-auth.js"></script>
-<style>
+<title>أطواد — تسجيل العمليات المالية</title><style>
 @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
 :root{
   --deep:#0C3B5E;--sky:#0EA5E9;--ice:#E8F4FD;--frost:#F0F9FF;
@@ -96,6 +91,11 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);min-
   .two-col{grid-template-columns:1fr;}
 }
 </style>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="atwad-firebase.js"></script>
+<script src="atwad-auth.js"></script>
 </head>
 <body>
 
@@ -196,11 +196,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);min-
 
 <script>
 // ===== Firebase =====
-var db = null;
-try {
-  if(!firebase.apps.length) firebase.initializeApp({databaseURL:'https://atwad-booking-default-rtdb.firebaseio.com'});
-  db = firebase.database();
-} catch(e){ console.error('Firebase:', e); }
+var db = window.db; // من atwad-firebase.js — لا تهيئة محلية
 
 // ===== مساعدات =====
 function todayDate() {
