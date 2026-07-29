@@ -400,6 +400,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
   <div class="modal">
     <div class="modal-hdr">
       <h3 id="modalTitle">➕ موعد جديد</h3>
+      <span style="font-size:10px;font-weight:700;color:#0369A1;background:#E0F2FE;border:1px solid #BAE6FD;border-radius:20px;padding:3px 8px;margin-inline-start:auto;">تحديث وقت الانتهاء 29/7</span>
       <button class="modal-close" onclick="closeModal()">×</button>
     </div>
     <div class="modal-body">
@@ -1015,11 +1016,13 @@ function initFirebaseSync() {
           client: b.client || b.name || '—',
           phone: b.phone || '',
           address: b.city || 'جدة',
-          service: b.service || 'تنظيف مكيف',
+          // دعم أسماء حقل الخدمة في الحجوزات القديمة والجديدة.
+          service: b.service || b.serviceAr || b.serviceType || b.serviceName || '—',
           units: b.units || 1,
           date: b.date,
           time: b.time.includes(' - ') ? b.time.split(' - ')[0] : b.time,
-          endTime: b.endTime || '',
+          // بعض الحجوزات القديمة تحفظ البداية والنهاية داخل time بصيغة "16:00 - 18:30".
+          endTime: b.endTime || (b.time.includes(' - ') ? b.time.split(' - ')[1].trim() : ''),
           tech: b.tech || autoAssignTech(b.date),
           status: bookingStatus,
           notes: 'حجز من النموذج الإلكتروني',
