@@ -615,7 +615,7 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
     </div>
     <div class="btn-row">
       <button class="btn-back" onclick="goStep(3)">← تعديل</button>
-      <button class="btn-next" onclick="submitBooking()">✅ إرسال الحجز</button>
+      <button class="btn-next" id="submitBookingBtn" onclick="submitBooking()">✅ إرسال الحجز</button>
     </div>
   </div>
 </div>
@@ -1608,6 +1608,9 @@ function next2(){
 var FRIDAY_VAR=true;
 var DUR_MAP={'تنظيف وغسيل المكيفات':30,'صيانة دورية':45,'تعبئة غاز':40,'كشف وإصلاح أعطال':60,'تركيب مكيف جديد':90,'باقة صيانة سنوية':45};
 var SLOTS=[{t:'8:00 - 10:00',start:480,ar:'8-10 ص'},{t:'10:00 - 12:00',start:600,ar:'10-12 ص'},{t:'12:00 - 14:00',start:720,ar:'12-2 م'},{t:'14:00 - 16:00',start:840,ar:'2-4 م'},{t:'16:00 - 18:00',start:960,ar:'4-6 م'},{t:'18:00 - 20:00',start:1080,ar:'6-8 م'}];
+var slotCheckSeq=0;
+var slotsCheckReady=false;
+var lastCheckedDate='';
 
 // ============================================================
 // nowSaudiMinutes — الوقت الحالي بتوقيت السعودية بالدقائق من منتصف الليل
@@ -1636,6 +1639,9 @@ function fmtDur(m){return m<60?m+' دقيقة':Math.floor(m/60)+' ساعة'+(m%6
 
 function checkDateAndSlots(date){
   if(!date) return;
+  S.time='';
+  slotsCheckReady=false;
+  lastCheckedDate='';
   document.getElementById('fridayClosed').style.display='none';
   document.getElementById('e_date').className='err-msg';
   var d=new Date(date+'T00:00:00');
@@ -1649,21 +1655,24 @@ function checkDateAndSlots(date){
 }
 
 function checkSlots(date){
+  var requestSeq=++slotCheckSeq;
   var dur=calcDur(); S.duration=dur;
+  S.time='';
+  slotsCheckReady=false;
+  lastCheckedDate='';
   var dn=document.getElementById('durNote');
   dn.style.display='block';
   dn.textContent='المدة التقديرية: '+fmtDur(dur)+' ('+S.units+' × '+(dur/S.units)+' د)';
-  document.getElementById('slotsGrid').innerHTML='<div style="text-align:center;color:var(--mist);padding:10px;font-size:12px">⏳ جاري التحقق...</div>';
-  if(db){
-    db.ref('bookings').once('value',function(snap){
-      var booked=[];
-      snap.forEach(function(c){var b=c.val();if(b.date&&b.date===date&&b.time)booked.push({time:b.time,dur:b.duration||90});});
-      renderSlots(booked,dur,date);
-    });
-  } else { renderSlots([],dur,date); }
+  // صفحة الحجز عامة، لذلك لا تقرأ bookings أو أي مسار إداري محمي.
+  // الوقت هنا "مفضل" ويُراجع من الإدارة بعد استلام الطلب.
+  if(requestSeq!==slotCheckSeq) return;
+  slotsCheckReady=true;
+  lastCheckedDate=date;
+  console.info('[ATWAD BOOKING] protected availability mode 2026-07-29-v2');
+  renderSlots([],dur,date,'سيتم مراجعة توفر الموعد وتأكيده من الإدارة.');
 }
 
-function renderSlots(booked,dur,selectedDate){
+function renderSlots(booked,dur,selectedDate,availabilityNotice){
   var grid=document.getElementById('slotsGrid'); grid.innerHTML='';
   var icons=['🌅','☀️','🕛','🕑','🌤️','🌙'];
 
@@ -1706,6 +1715,14 @@ function renderSlots(booked,dur,selectedDate){
   if(isToday && !hasAvailable) {
     grid.innerHTML = '<div style="text-align:center;padding:16px;color:#92400E;background:#FEF9C3;border-radius:10px;font-size:13px;font-weight:700;">⚠️ لا توجد مواعيد متاحة للحجز اليوم، يرجى اختيار يوم آخر.</div>';
     S.time = '';
+    return;
+  }
+
+  if(availabilityNotice) {
+    var notice=document.createElement('div');
+    notice.style.cssText='grid-column:1/-1;text-align:center;padding:10px 12px;margin-top:4px;color:#1E40AF;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:10px;font-size:12px;font-weight:700;line-height:1.7;';
+    notice.textContent='ℹ️ '+availabilityNotice;
+    grid.appendChild(notice);
   }
 }
 
@@ -1719,6 +1736,12 @@ function next3(){
   var date=document.getElementById('f_date').value;
   var ok=true;
   if(!date){document.getElementById('e_date').className='err-msg show';ok=false;}else{S.date=date;}
+  if(date&&(!slotsCheckReady||lastCheckedDate!==date)){
+    showToast('⚠️ يجب التحقق من المواعيد المتاحة أولًا.');
+    document.getElementById('e_time').className='err-msg show';
+    if(!document.querySelector('#slotsGrid button')) checkSlots(date);
+    ok=false;
+  }
   if(!S.time){document.getElementById('e_time').className='err-msg show';ok=false;}
 
   // تحقق ثانٍ: إذا اختار العميل موعد اليوم — تأكد أن الوقت لا يزال صالحاً
@@ -1800,6 +1823,7 @@ function buildSum(){
 }
 
 function submitBooking(){
+  if(bookingSubmitting) return;
   if(!document.getElementById('chk-units').checked){
     alert('يرجى الموافقة على شرط العدد الملزم');
     return;
@@ -1809,12 +1833,23 @@ function submitBooking(){
     alert('يرجى الموافقة على سياسة رسوم الكشف');
     return;
   }
+  if(!db){
+    showToast('❌ تعذر الاتصال الآن. لم يتم تسجيل الحجز؛ حاول مرة أخرى.');
+    return;
+  }
+
+  bookingSubmitting=true;
+  var submitBtn=document.getElementById('submitBookingBtn');
+  if(submitBtn){
+    submitBtn.disabled=true;
+    submitBtn.textContent='⏳ جاري إرسال الحجز...';
+  }
+
   var ref='ATW-'+Math.floor(10000+Math.random()*90000);
-  document.getElementById('refNum').textContent=ref;
   var msg=encodeURIComponent('مرحباً مؤسسة أطواد 👋\nرقم الحجز: '+ref+'\nالخدمة: '+S.serviceAr+'\nعدد المكيفات: '+S.units+'\nالاسم: '+S.name+'\nالجوال: '+S.phone+'\nالتاريخ: '+fmtDate(S.date)+'\nالوقت: '+S.time+'\nالمدينة: '+S.city+'\nالموقع: '+S.addr);
   var waUrl='https://wa.me/966509720382?text='+msg;
-  document.getElementById('waLink').href=waUrl;
-  if(db){try{
+
+  try{
     var bookingData = {ref:ref,date:S.date,time:S.time,duration:calcDur(),client:S.name,phone:S.phone,service:S.serviceAr,units:S.units,city:S.city,mapsLink:S.addr,locationImage:bookImageBase64||'',createdAt:new Date().toISOString()};
 
     // السعر التقديري — اختياري، يُحفظ فقط إذا أُدخل
@@ -1888,22 +1923,45 @@ function submitBooking(){
       bookingData.locationSource = selectedLocationSource;
     }
 
-    db.ref('bookings').push(bookingData);
-    // إشعار فوري للمشرف
-    db.ref('notifications').push({
-      title: '?? حجز جديد من الموقع',
-      body: 'عميل: '+S.name+' | '+S.serviceAr+' | '+S.date+' '+S.time,
-      ref: ref,
-      phone: S.phone,
-      createdAt: new Date().toISOString(),
-      read: false
+    db.ref('bookings').push(bookingData).then(function(){
+      // فشل الإشعار لا يلغي الحجز الذي تم حفظه بنجاح.
+      return db.ref('notifications').push({
+        title: '📅 حجز جديد من الموقع',
+        body: 'عميل: '+S.name+' | '+S.serviceAr+' | '+S.date+' '+S.time,
+        ref: ref,
+        phone: S.phone,
+        createdAt: new Date().toISOString(),
+        read: false
+      }).catch(function(notificationError){
+        console.warn('[booking] notification write failed:',notificationError);
+      });
+    }).then(function(){
+      document.getElementById('refNum').textContent=ref;
+      document.getElementById('waLink').href=waUrl;
+      goStep('OK');
+      resetProblemSection();
+      var spEl=document.getElementById('servicePrice');
+      if(spEl) spEl.value='';
+      setTimeout(function(){window.open(waUrl,'_blank');},800);
+    }).catch(function(err){
+      console.error('[booking] submit failed:',err);
+      showToast('❌ تعذر إرسال الحجز. لم يتم تسجيل الطلب؛ حاول مرة أخرى أو تواصل معنا عبر واتساب.');
+    }).then(function(){
+      bookingSubmitting=false;
+      if(submitBtn){
+        submitBtn.disabled=false;
+        submitBtn.textContent='✅ إرسال الحجز';
+      }
     });
-  }catch(e){}}
-  goStep('OK');
-  resetProblemSection();
-  var spEl = document.getElementById('servicePrice');
-  if(spEl) spEl.value = '';
-  setTimeout(function(){window.open(waUrl,'_blank');},800);
+  }catch(err){
+    console.error('[booking] submit preparation failed:',err);
+    bookingSubmitting=false;
+    if(submitBtn){
+      submitBtn.disabled=false;
+      submitBtn.textContent='✅ إرسال الحجز';
+    }
+    showToast('❌ تعذر تجهيز الحجز. لم يتم تسجيل الطلب؛ حاول مرة أخرى.');
+  }
 }
 
 function goStep(n){
