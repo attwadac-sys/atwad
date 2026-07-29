@@ -415,10 +415,13 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
         <div class="form-group"><label>نوع الخدمة <span class="req">*</span></label>
           <select id="f_service">
             <option value="">-- اختر --</option>
-            <option>تنظيف مكيف</option><option>غسيل مكيفات</option>
-            <option>صيانة دورية</option><option>تعبئة غاز</option>
-            <option>كشف وإصلاح أعطال</option><option>تركيب مكيف جديد</option>
-            <option>باقة صيانة سنوية</option>
+            <option>غسيل مكيف</option><option>غسيل مكيفات</option>
+            <option>تنظيف مكيف</option><option>تنظيف وغسيل المكيفات</option>
+            <option>صيانة دورية</option><option>صيانة وقائية دورية</option>
+            <option>تعبئة غاز</option><option>تعبئة فريون</option>
+            <option>كشف وإصلاح أعطال</option><option>كشف وإصلاح (عطل)</option>
+            <option>تركيب مكيف جديد</option><option>باقة صيانة سنوية</option>
+            <option>أخرى</option>
           </select>
         </div>
         <div class="form-group"><label>عدد المكيفات</label><input type="number" id="f_units" value="1" min="1" max="30"></div>
@@ -426,6 +429,14 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
       <div class="form-row">
         <div class="form-group"><label>تاريخ الزيارة <span class="req">*</span></label><input type="date" id="f_date"></div>
         <div class="form-group"><label>وقت البداية <span class="req">*</span></label><input type="time" id="f_time" value="09:00"></div>
+      </div>
+      <div class="form-group">
+        <label>وقت انتهاء الموعد <span class="req">*</span></label>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="time" id="f_end_time" style="flex:1;">
+          <button type="button" onclick="suggestEndTimeFromForm(true)" style="border:1.5px solid var(--sky);background:var(--ice);color:var(--sky);border-radius:9px;padding:10px 12px;font-family:'Tajawal',sans-serif;font-weight:700;cursor:pointer;white-space:nowrap;">⏱️ حساب تلقائي</button>
+        </div>
+        <small style="color:var(--mist);margin-top:5px;">يُحسب تلقائيًا حسب نوع الخدمة وعدد المكيفات، ويمكن تعديله عند الحاجة.</small>
       </div>
       <div class="form-row">
         <div class="form-group"><label>الفني المسؤول <span class="req">*</span></label>
@@ -723,6 +734,67 @@ const TECH_COLORS = { Abrar:'#0EA5E9', Shoib:'#10B981', Suhail:'#8B5CF6' };
 function today(){ return new Date().toISOString().split('T')[0]; }
 function formatDate(d){ try{ return new Date(d+'T00:00:00').toLocaleDateString('ar-SA-u-ca-gregory',{weekday:'long',year:'numeric',month:'long',day:'numeric'}); } catch{ return d; } }
 function formatDateShort(d){ try{ return new Date(d+'T00:00:00').toLocaleDateString('ar-SA-u-ca-gregory',{month:'short',day:'numeric'}); } catch{ return d; } }
+function fmtTime12(t24) {
+  if(!t24) return '';
+  var parts=String(t24).split(':');
+  var h=parseInt(parts[0],10),m=parts[1]||'00';
+  if(!Number.isFinite(h)) return t24;
+  return String(h%12||12).padStart(2,'0')+':'+m+' '+(h<12?'ص':'م');
+}
+function fmtTimeRange(start,end) {
+  return end ? fmtTime12(start)+' ← '+fmtTime12(end) : fmtTime12(start);
+}
+function minutesToTime(total) {
+  total=Math.max(0,Math.min(1439,Math.round(Number(total)||0)));
+  return String(Math.floor(total/60)).padStart(2,'0')+':'+String(total%60).padStart(2,'0');
+}
+function estimatedAppointmentDuration(service,units) {
+  var s=String(service||'');
+  var count=Math.max(1,parseInt(units,10)||1);
+  var perUnit=30;
+  if(/كشف|إصلاح|عطل/.test(s)) perUnit=60;
+  else if(/صيانة دورية|باقة صيانة/.test(s)) perUnit=45;
+  else if(/فريون|تعبئة غاز/.test(s)) perUnit=40;
+  else if(/تركيب/.test(s)) perUnit=90;
+  return Math.min(perUnit*count,480);
+}
+function appointmentDuration(appt) {
+  var start=appointmentStartMinutes(appt&&appt.time);
+  var end=appointmentStartMinutes(appt&&appt.endTime);
+  if(start!==null&&end!==null&&end>start) return end-start;
+  var stored=Math.max(0,parseInt(appt&&appt.duration,10)||0);
+  var estimated=estimatedAppointmentDuration(appt&&appt.service,appt&&appt.units);
+  // تصحيح المواعيد القديمة التي حُفظت بمدة 90 دقيقة ثابتة رغم تعدد المكيفات.
+  return Math.max(stored,estimated,30);
+}
+function appointmentEndTime(appt) {
+  if(appt&&appt.endTime) return appt.endTime;
+  var start=appointmentStartMinutes(appt&&appt.time);
+  return start===null ? '' : minutesToTime(start+appointmentDuration(appt));
+}
+function suggestEndTimeFromForm(force) {
+  var endInput=document.getElementById('f_end_time');
+  if(!endInput||(!force&&endInput.value)) return;
+  var start=appointmentStartMinutes(document.getElementById('f_time').value);
+  if(start===null) return;
+  var duration=estimatedAppointmentDuration(
+    document.getElementById('f_service').value,
+    document.getElementById('f_units').value
+  );
+  endInput.value=minutesToTime(start+duration);
+}
+function setServiceSelectValue(value) {
+  var select=document.getElementById('f_service');
+  var service=String(value||'').trim();
+  if(!select) return;
+  if(service&&!Array.from(select.options).some(function(option){return option.value===service;})) {
+    var legacyOption=document.createElement('option');
+    legacyOption.value=service;
+    legacyOption.textContent=service+' (خدمة محفوظة سابقًا)';
+    select.appendChild(legacyOption);
+  }
+  select.value=service;
+}
 function getWeekDates(offset=0){
   const d = new Date(); d.setDate(d.getDate() - d.getDay() + offset*7);
   return Array.from({length:7},(_,i)=>{ const dd=new Date(d); dd.setDate(d.getDate()+i); return dd.toISOString().split('T')[0]; });
@@ -854,7 +926,12 @@ function finishAppointmentsLoading() {
 }
 
 function applyLoadedAppointments(fbAppts, bookingWarning) {
-  appointments = fbAppts;
+  appointments = fbAppts.map(function(a) {
+    var normalized=Object.assign({},a);
+    normalized.duration=appointmentDuration(normalized);
+    normalized.endTime=appointmentEndTime(normalized);
+    return normalized;
+  });
   updateStats();
   renderWeek();
   renderList();
@@ -942,10 +1019,11 @@ function initFirebaseSync() {
           units: b.units || 1,
           date: b.date,
           time: b.time.includes(' - ') ? b.time.split(' - ')[0] : b.time,
+          endTime: b.endTime || '',
           tech: b.tech || autoAssignTech(b.date),
           status: bookingStatus,
           notes: 'حجز من النموذج الإلكتروني',
-          duration: b.duration || 60,
+          duration: b.duration || 0,
           createdAt: b.createdAt || '',
           // حقول الموقع — تُنسخ من الحجز الأصلي
           mapsLink:        b.mapsLink || b.mapLink || b.location || b.locationUrl || b.googleMapsUrl || b.locationLink || '',
@@ -1017,10 +1095,10 @@ function renderWeek(){
     appointments.filter(a=>a.date===date&&(techFilter==='all'||a.tech===techFilter)).forEach(a=>{
       const [hh,mm] = (a.time||'09:00').split(':').map(Number);
       const top = (hh - 7) * 60 + mm;
-      const dur = (a.duration||60);
+      const dur = appointmentDuration(a);
       const tc = TECH_COLORS[a.tech]||'#0EA5E9';
       html += `<div class="appt-block status-${a.status||'pending'}" style="top:${top}px;height:${Math.max(dur-4,20)}px;" onclick="openDetail('${a.id||a._fbKey}')">
-        <div class="appt-time">${a.time}</div>
+        <div class="appt-time">${fmtTimeRange(a.time,appointmentEndTime(a))}</div>
         <div class="appt-name">${a.client}</div>
         <div class="appt-tech" style="color:${tc}">▪ ${TECHS[a.tech]||a.tech||'—'}</div>
       </div>`;
@@ -1063,8 +1141,10 @@ function renderList(){
       const aId = a.id || a._fbKey;
       const tc = TECH_COLORS[a.tech]||'#0EA5E9';
       const isBooking = a._source === 'bookings';
+      const endTime = appointmentEndTime(a);
+      const duration = appointmentDuration(a);
       html += `<div class="appt-card ${cc[a.status||'pending']}" onclick="openDetail('${aId}')">
-        <div class="appt-time-block"><div class="t-start">${a.time||'--:--'}</div><div class="t-dur">${a.duration||60} دق</div></div>
+        <div class="appt-time-block"><div class="t-start">${a.time||'--:--'}</div><div class="t-dur">ينتهي ${endTime||'—'}</div><div class="t-dur">${duration} دق</div></div>
         <div class="appt-divider"></div>
         <div class="appt-info">
           <div class="appt-client">${a.client}</div>
@@ -1218,12 +1298,13 @@ function openNewApptForm(){
   editingId=null; editingFirebaseKey=null;
   document.getElementById('modalTitle').textContent='➕ موعد جديد';
   ['f_client','f_phone','f_address','f_notes'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('f_service').value='';
+  setServiceSelectValue('');
   document.getElementById('f_tech').value='';
   document.getElementById('f_status').value='pending';
   document.getElementById('f_units').value='1';
   document.getElementById('f_date').value=today();
   document.getElementById('f_time').value='09:00';
+  document.getElementById('f_end_time').value='';
   resetImageField();
   resetLocFields();
   document.getElementById('f_address').value = manualAreaDistrict;
@@ -1233,7 +1314,7 @@ function openNewApptForm(){
   if(prefill) {
     if(prefill.client) document.getElementById('f_client').value = prefill.client;
     if(prefill.phone) document.getElementById('f_phone').value = prefill.phone;
-    if(prefill.service) document.getElementById('f_service').value = prefill.service;
+    if(prefill.service) setServiceSelectValue(prefill.service);
     if(prefill.tech) document.getElementById('f_tech').value = prefill.tech;
     if(prefill.date) document.getElementById('f_date').value = prefill.date;
     if(prefill.time) document.getElementById('f_time').value = prefill.time;
@@ -1257,12 +1338,13 @@ function editAppt(id){
   document.getElementById('f_client').value=a.client||'';
   document.getElementById('f_phone').value=a.phone||'';
   document.getElementById('f_address').value=a.address||'';
-  document.getElementById('f_service').value=a.service||'';
+  setServiceSelectValue(a.service||a.serviceAr||'');
   document.getElementById('f_tech').value=a.tech||'';
   document.getElementById('f_status').value=a.status||'pending';
   document.getElementById('f_units').value=a.units||1;
   document.getElementById('f_date').value=a.date||today();
   document.getElementById('f_time').value=a.time||'09:00';
+  document.getElementById('f_end_time').value=appointmentEndTime(a);
   document.getElementById('f_notes').value=a.notes||'';
   document.getElementById('areaApprovedBanner').style.display = 'none';
   loadImageInModal(a.locationImage||'');
@@ -1584,14 +1666,14 @@ function findAppointmentTimeConflict(candidate,excludeKey){
   if(!candidate||!candidate.date||!candidate.time||!appointmentIsActive(candidate)) return null;
   var start=appointmentStartMinutes(candidate.time);
   if(start===null) return null;
-  var end=start+(parseInt(candidate.duration,10)||90);
+  var end=start+appointmentDuration(candidate);
 
   return appointments.find(function(existing){
     if(!existing||existing.date!==candidate.date||!appointmentIsActive(existing)) return false;
     if(excludeKey&&existing._fbKey===excludeKey) return false;
     var existingStart=appointmentStartMinutes(existing.time);
     if(existingStart===null) return false;
-    var existingEnd=existingStart+(parseInt(existing.duration,10)||90);
+    var existingEnd=existingStart+appointmentDuration(existing);
     return start<existingEnd&&end>existingStart;
   })||null;
 }
@@ -1626,6 +1708,14 @@ function saveAppt(){
   const tech=document.getElementById('f_tech').value;
   const date=document.getElementById('f_date').value;
   if(!client||!phone||!service||!tech||!date) return showToast('❌ أكمل الحقول المطلوبة');
+  const startTime=document.getElementById('f_time').value;
+  const endTime=document.getElementById('f_end_time').value;
+  if(!startTime||!endTime) return showToast('❌ حدد وقت بداية الموعد ووقت انتهائه');
+  const startMinutes=appointmentStartMinutes(startTime);
+  const endMinutes=appointmentStartMinutes(endTime);
+  if(startMinutes===null||endMinutes===null||endMinutes<=startMinutes) {
+    return showToast('❌ وقت انتهاء الموعد يجب أن يكون بعد وقت البداية');
+  }
   if(!editingFirebaseKey) {
     if(!manualAreaApproved || !manualAreaDistrict) {
       return showToast('❌ يجب التحقق من نطاق الخدمة قبل حفظ الموعد');
@@ -1641,10 +1731,11 @@ function saveAppt(){
     client, phone, address, service, tech,
     status: document.getElementById('f_status').value,
     units: parseInt(document.getElementById('f_units').value)||1,
-    date, time: document.getElementById('f_time').value,
+    date, time: startTime,
+    endTime: endTime,
     notes: document.getElementById('f_notes').value.trim(),
     locationImage: currentImageBase64 || '',
-    duration: 90,
+    duration: endMinutes-startMinutes,
     updatedAt: new Date().toISOString()
   };
 
@@ -1918,7 +2009,7 @@ function openDetail(id){
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
       <div style="background:#fff;border:1.5px solid var(--ice);border-radius:10px;padding:12px;"><div style="font-size:11px;color:var(--mist);margin-bottom:4px;">🛠️ الخدمة</div><div style="font-weight:700;color:var(--deep)">${a.service||'—'}</div><div style="font-size:12px;color:var(--mist)">${a.units||1} وحدة</div></div>
-      <div style="background:#fff;border:1.5px solid var(--ice);border-radius:10px;padding:12px;"><div style="font-size:11px;color:var(--mist);margin-bottom:4px;">📅 الموعد</div><div style="font-weight:700;color:var(--deep)">${formatDateShort(a.date)}</div><div style="font-size:12px;color:var(--mist)">⏰ ${a.time||'—'}</div></div>
+      <div style="background:#fff;border:1.5px solid var(--ice);border-radius:10px;padding:12px;"><div style="font-size:11px;color:var(--mist);margin-bottom:4px;">📅 الموعد</div><div style="font-weight:700;color:var(--deep)">${formatDateShort(a.date)}</div><div style="font-size:12px;color:var(--mist)">⏰ ${fmtTimeRange(a.time,appointmentEndTime(a))}</div></div>
       <div style="background:#fff;border:1.5px solid var(--ice);border-radius:10px;padding:12px;"><div style="font-size:11px;color:var(--mist);margin-bottom:4px;">👷 الفني</div><div style="font-weight:700;color:${tc}">${TECHS[a.tech]||a.tech||'—'}</div></div>
       <div style="background:#fff;border:1.5px solid var(--ice);border-radius:10px;padding:12px;"><div style="font-size:11px;color:var(--mist);margin-bottom:4px;">📍 الموقع</div><div style="font-weight:700;color:var(--deep);font-size:12px">${a.address||'—'}</div></div>
     </div>
