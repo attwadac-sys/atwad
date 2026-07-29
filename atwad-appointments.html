@@ -858,12 +858,16 @@ function applyLoadedAppointments(fbAppts, bookingWarning) {
   updateStats();
   renderWeek();
   renderList();
+  var electronicBookingsCount = appointments.filter(function(a) {
+    return a._source === 'bookings';
+  }).length;
   document.getElementById('fbDot').className = 'fb-dot connected';
   document.getElementById('fbStatusText').textContent =
-    (bookingWarning ? 'متصل جزئياً • ' : 'متصل • ') + appointments.length + ' موعد';
+    (bookingWarning ? 'متصل جزئياً • ' : 'متصل • ') +
+    appointments.length + ' موعد • ' + electronicBookingsCount + ' حجز إلكتروني';
   finishAppointmentsLoading();
   if(bookingWarning) {
-    showToast('⚠️ عُرضت المواعيد الداخلية، وتعذر مؤقتاً تحميل الحجوزات الإلكترونية');
+    showToast('⚠️ عُرضت المواعيد الداخلية، وجارٍ انتظار الحجوزات الإلكترونية');
   }
 }
 
@@ -908,9 +912,12 @@ function initFirebaseSync() {
 
     // مزامنة حجوزات العملاء من صفحة الحجز
     var bookingsFinished = false;
+    var partialAppointmentsShown = false;
     var bookingsTimer = setTimeout(function() {
       if(bookingsFinished || thisAttempt !== firebaseSyncAttempt) return;
-      bookingsFinished = true;
+      // اعرض مواعيد الإدارة مؤقتاً، لكن لا تُلغِ طلب الحجوزات.
+      // عند وصول bookings لاحقاً سيُعاد الدمج والعرض تلقائياً.
+      partialAppointmentsShown = true;
       applyLoadedAppointments(fbAppts, true);
     }, 8000);
 
@@ -921,6 +928,8 @@ function initFirebaseSync() {
       bookSnap.forEach(function(child) {
         const b = child.val();
         if(!b.date || !b.time) return;
+        var bookingStatus = String(b.status || 'pending').toLowerCase();
+        if(bookingStatus === 'canceled') bookingStatus = 'cancelled';
         // تحويل الحجز إلى موعد تلقائياً
         fbAppts.push({
           _fbKey: child.key,
@@ -933,8 +942,8 @@ function initFirebaseSync() {
           units: b.units || 1,
           date: b.date,
           time: b.time.includes(' - ') ? b.time.split(' - ')[0] : b.time,
-          tech: autoAssignTech(b.date),
-          status: 'pending',
+          tech: b.tech || autoAssignTech(b.date),
+          status: bookingStatus,
           notes: 'حجز من النموذج الإلكتروني',
           duration: b.duration || 60,
           createdAt: b.createdAt || '',
@@ -948,6 +957,9 @@ function initFirebaseSync() {
         });
       });
       applyLoadedAppointments(fbAppts, false);
+      if(partialAppointmentsShown) {
+        showToast('✅ اكتمل تحميل الحجوزات الإلكترونية وإضافتها إلى المواعيد');
+      }
     }).catch(function(err) {
       if(bookingsFinished || thisAttempt !== firebaseSyncAttempt) return;
       bookingsFinished = true;
