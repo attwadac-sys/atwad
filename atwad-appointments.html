@@ -114,6 +114,14 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 .reschedule-actions{display:flex;flex-direction:column;gap:9px;}
 .btn-rs-keep{padding:12px;background:#D1FAE5;color:#065F46;border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;text-align:right;}
 .btn-rs-cancel{padding:12px;background:#F1F5F9;color:var(--slate);border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;text-align:right;}
+/* فحص نطاق الخدمة قبل الحجز اليدوي */
+.area-check-note{padding:11px 13px;background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:10px;color:#1E40AF;font-size:12px;line-height:1.7;margin-bottom:14px;}
+.area-check-alert{display:none;padding:11px 13px;background:#FEF2F2;border:1.5px solid #FECACA;border-radius:10px;color:#991B1B;font-size:12px;font-weight:700;line-height:1.7;margin-top:10px;}
+.area-approved-banner{display:none;align-items:center;gap:8px;padding:9px 12px;background:#F0FDF4;border:1.5px solid #86EFAC;border-radius:10px;color:#166534;font-size:12px;font-weight:700;margin-bottom:14px;}
+.area-check-actions{display:flex;gap:9px;margin-top:4px;}
+.area-check-actions button{flex:1;padding:11px;border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
+.btn-area-continue{background:linear-gradient(90deg,var(--deep),var(--sky));color:#fff;}
+.btn-area-cancel{background:#F1F5F9;color:var(--slate);}
 /* Modal سبب الإلغاء */
 .cancel-modal{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:3000;display:flex;align-items:center;justify-content:center;display:none;}
 .cancel-modal.open{display:flex;}
@@ -269,18 +277,17 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 .btn-use-old{background:#FEF3C7;color:#92400E;}
 .btn-use-new{background:#DBEAFE;color:#1E40AF;}
 .btn-save-new{background:#D1FAE5;color:#065F46;}
-</style><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-<script src="atwad-firebase.js"></script>
-<script src="atwad-auth.js"></script>
+</style>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
 </head>
 <body>
 
 <!-- Loading -->
 <div class="loading-overlay" id="loadingOverlay">
-  <div class="loading-spinner"></div>
-  <div style="font-family:'Tajawal',sans-serif;font-size:15px;font-weight:700;color:var(--deep);">جاري تحميل المواعيد...</div>
+  <div class="loading-spinner" id="loadingSpinner"></div>
+  <div id="loadingMessage" style="font-family:'Tajawal',sans-serif;font-size:15px;font-weight:700;color:var(--deep);">جاري تحميل المواعيد...</div>
+  <button id="loadingRetryBtn" type="button" onclick="initFirebaseSync()" style="display:none;border:0;border-radius:10px;background:var(--sky);color:#fff;padding:10px 18px;font-family:'Tajawal',sans-serif;font-weight:700;cursor:pointer;">إعادة المحاولة</button>
 </div>
 
 <div class="sidebar">
@@ -353,6 +360,39 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
   <div class="list-view" id="listView"></div>
 </div>
 
+<!-- فحص نطاق الخدمة قبل فتح نموذج الموعد اليدوي -->
+<div class="modal-overlay" id="areaCheckModal">
+  <div class="modal" style="max-width:460px;width:calc(100% - 24px);">
+    <div class="modal-hdr">
+      <h3>📍 التحقق من نطاق الخدمة أولًا</h3>
+      <button class="modal-close" onclick="cancelManualAreaCheck()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="area-check-note">
+        يجب تحديد موقع العميل قبل إدخال بيانات الحجز، حتى لا يُنشأ موعد في جنوب جدة أو خارج نطاق الخدمة الحالي.
+      </div>
+      <div class="form-group">
+        <label>اسم الحي <span class="req">*</span></label>
+        <input type="text" id="area_check_district" placeholder="مثال: أبحر الشمالية">
+      </div>
+      <div class="form-group">
+        <label>نطاق الموقع <span class="req">*</span></label>
+        <select id="area_check_zone" onchange="updateAreaCheckMessage()">
+          <option value="">-- اختر نطاق الموقع --</option>
+          <option value="approved">✅ داخل نطاق الخدمة الحالي</option>
+          <option value="south">⛔ جنوب جدة</option>
+          <option value="outside">⛔ خارج نطاق الخدمة الحالي</option>
+        </select>
+      </div>
+      <div class="area-check-alert" id="area_check_alert"></div>
+      <div class="area-check-actions">
+        <button class="btn-area-continue" id="area_check_continue" onclick="continueManualBooking()">متابعة إلى الحجز</button>
+        <button class="btn-area-cancel" onclick="cancelManualAreaCheck()">إلغاء</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- APPOINTMENT MODAL -->
 <div class="modal-overlay" id="apptModal">
   <div class="modal">
@@ -361,6 +401,9 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
       <button class="modal-close" onclick="closeModal()">×</button>
     </div>
     <div class="modal-body">
+      <div class="area-approved-banner" id="areaApprovedBanner">
+        ✅ تم التحقق من نطاق الخدمة: <span id="areaApprovedDistrict">—</span>
+      </div>
       <div class="form-row">
         <div class="form-group"><label>اسم العميل <span class="req">*</span></label><input type="text" id="f_client" placeholder="اسم العميل" list="clientsList"><datalist id="clientsList"></datalist></div>
         <div class="form-group"><label>جوال العميل <span class="req">*</span></label><input type="tel" id="f_phone" placeholder="05xxxxxxxx" oninput="if(this.value.length>=10) lookupCustomerByPhone(this.value.trim())"></div>
@@ -460,7 +503,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
     </div>
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeModal()">إلغاء</button>
-      <button class="btn-save" onclick="saveAppt()">💾 حفظ الموعد</button>
+      <button class="btn-save" id="saveApptBtn" onclick="saveAppt()">💾 حفظ الموعد</button>
     </div>
   </div>
 </div>
@@ -593,7 +636,11 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 
 <script>
 // ===== FIREBASE =====
-var db = window.db; // من atwad-firebase.js — لا تهيئة محلية
+var db = null;
+try {
+  firebase.initializeApp({databaseURL:"https://atwad-booking-default-rtdb.firebaseio.com"});
+  db = firebase.database();
+} catch(e){ console.log('Firebase:', e); }
 
 // ===== STATE =====
 let appointments = []; // كل البيانات من Firebase
@@ -603,6 +650,10 @@ let techFilter = 'all';
 let editingId = null;
 let editingFirebaseKey = null;
 let editingOriginalDate = ''; // التاريخ الأصلي للموعد قبل التعديل
+let manualAreaApproved = false;
+let manualAreaDistrict = '';
+let pendingNewApptPrefill = null;
+let pendingNewApptApprovedCallback = null;
 
 const TECHS = { Abrar:'أحمد', 'أبرار':'أحمد', 'Abrar':'أحمد', Shoib:'شعيب', Suhail:'سهيل' };
 const STATUS_LABELS = { confirmed:'مؤكد', pending:'في الانتظار', done:'مكتمل', cancelled:'ملغي' };
@@ -717,27 +768,96 @@ function toggleFriday() {
 }
 
 // ===== FIREBASE REALTIME SYNC =====
+var appointmentsValueHandler = null;
+var appointmentsErrorHandler = null;
+var firebaseSyncAttempt = 0;
+var firebaseInitialLoadTimer = null;
+
+function setAppointmentsLoadingState(message, allowRetry) {
+  var overlay = document.getElementById('loadingOverlay');
+  var spinner = document.getElementById('loadingSpinner');
+  var messageEl = document.getElementById('loadingMessage');
+  var retryBtn = document.getElementById('loadingRetryBtn');
+  if(overlay) overlay.style.display = 'flex';
+  if(spinner) spinner.style.display = allowRetry ? 'none' : 'block';
+  if(messageEl) messageEl.textContent = message;
+  if(retryBtn) retryBtn.style.display = allowRetry ? 'inline-block' : 'none';
+}
+
+function finishAppointmentsLoading() {
+  if(firebaseInitialLoadTimer) {
+    clearTimeout(firebaseInitialLoadTimer);
+    firebaseInitialLoadTimer = null;
+  }
+  var overlay = document.getElementById('loadingOverlay');
+  if(overlay) overlay.style.display = 'none';
+}
+
+function applyLoadedAppointments(fbAppts, bookingWarning) {
+  appointments = fbAppts;
+  updateStats();
+  renderWeek();
+  renderList();
+  document.getElementById('fbDot').className = 'fb-dot connected';
+  document.getElementById('fbStatusText').textContent =
+    (bookingWarning ? 'متصل جزئياً • ' : 'متصل • ') + appointments.length + ' موعد';
+  finishAppointmentsLoading();
+  if(bookingWarning) {
+    showToast('⚠️ عُرضت المواعيد الداخلية، وتعذر مؤقتاً تحميل الحجوزات الإلكترونية');
+  }
+}
+
 function initFirebaseSync() {
   if(!db) {
     document.getElementById('fbDot').className = 'fb-dot';
     document.getElementById('fbStatusText').textContent = 'غير متصل';
-    document.getElementById('loadingOverlay').style.display = 'none';
+    setAppointmentsLoadingState('تعذر تشغيل الاتصال بقاعدة البيانات', true);
     return;
   }
 
+  firebaseSyncAttempt += 1;
+  var thisAttempt = firebaseSyncAttempt;
+  var initialResponseReceived = false;
+
+  // منع تكرار المستمع عند الضغط على «إعادة المحاولة».
+  if(appointmentsValueHandler) {
+    db.ref('appointments').off('value', appointmentsValueHandler);
+  }
+
+  if(firebaseInitialLoadTimer) clearTimeout(firebaseInitialLoadTimer);
+  setAppointmentsLoadingState('جاري تحميل المواعيد...', false);
   document.getElementById('fbDot').className = 'fb-dot loading';
   document.getElementById('fbStatusText').textContent = 'جاري الاتصال...';
 
+  // لا تبقى الصفحة محجوبة إلى ما لا نهاية عند انقطاع الشبكة.
+  firebaseInitialLoadTimer = setTimeout(function() {
+    if(thisAttempt !== firebaseSyncAttempt || initialResponseReceived) return;
+    document.getElementById('fbDot').className = 'fb-dot';
+    document.getElementById('fbStatusText').textContent = 'تعذر الاتصال';
+    setAppointmentsLoadingState('تعذر تحميل المواعيد. تحقق من الإنترنت ثم أعد المحاولة.', true);
+  }, 15000);
+
   // مزامنة مواعيد النظام الداخلي
-  db.ref('appointments').on('value', function(snap) {
+  appointmentsValueHandler = function(snap) {
+    if(thisAttempt !== firebaseSyncAttempt) return;
+    initialResponseReceived = true;
     const fbAppts = [];
     snap.forEach(function(child) {
       fbAppts.push({ ...child.val(), _fbKey: child.key, _source: 'appointments' });
     });
 
     // مزامنة حجوزات العملاء من صفحة الحجز
-    db.ref('bookings').once('value', function(bookSnap) {
-      const existingRefs = fbAppts.map(a => a._fbKey);
+    var bookingsFinished = false;
+    var bookingsTimer = setTimeout(function() {
+      if(bookingsFinished || thisAttempt !== firebaseSyncAttempt) return;
+      bookingsFinished = true;
+      applyLoadedAppointments(fbAppts, true);
+    }, 8000);
+
+    db.ref('bookings').once('value').then(function(bookSnap) {
+      if(bookingsFinished || thisAttempt !== firebaseSyncAttempt) return;
+      bookingsFinished = true;
+      clearTimeout(bookingsTimer);
       bookSnap.forEach(function(child) {
         const b = child.val();
         if(!b.date || !b.time) return;
@@ -767,23 +887,30 @@ function initFirebaseSync() {
           locationSource:  b.locationSource  || ''
         });
       });
-
-      appointments = fbAppts;
-      updateStats();
-      renderWeek();
-      renderList();
-
-      // تحديث مؤشر الاتصال
-      document.getElementById('fbDot').className = 'fb-dot connected';
-      document.getElementById('fbStatusText').textContent = 'متصل • ' + appointments.length + ' موعد';
-      document.getElementById('loadingOverlay').style.display = 'none';
+      applyLoadedAppointments(fbAppts, false);
+    }).catch(function(err) {
+      if(bookingsFinished || thisAttempt !== firebaseSyncAttempt) return;
+      bookingsFinished = true;
+      clearTimeout(bookingsTimer);
+      console.error('bookings load:', err);
+      applyLoadedAppointments(fbAppts, true);
     });
-  }, function(err) {
+  };
+
+  appointmentsErrorHandler = function(err) {
+    if(thisAttempt !== firebaseSyncAttempt) return;
+    initialResponseReceived = true;
+    if(firebaseInitialLoadTimer) {
+      clearTimeout(firebaseInitialLoadTimer);
+      firebaseInitialLoadTimer = null;
+    }
     document.getElementById('fbDot').className = 'fb-dot';
     document.getElementById('fbStatusText').textContent = 'خطأ في الاتصال';
-    document.getElementById('loadingOverlay').style.display = 'none';
+    setAppointmentsLoadingState('تعذر تحميل المواعيد: ' + (err.message || 'خطأ في الاتصال'), true);
     showToast('❌ خطأ في الاتصال: ' + err.message);
-  });
+  };
+
+  db.ref('appointments').on('value', appointmentsValueHandler, appointmentsErrorHandler);
 }
 
 // ===== STATS =====
@@ -931,7 +1058,91 @@ function populateClients(){
   }
 }
 
-function openNewAppt(){
+function normalizeArabicArea(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[إأآ]/g, 'ا')
+    .replace(/ة/g, 'ه')
+    .replace(/ى/g, 'ي')
+    .replace(/[^\u0600-\u06FF0-9]+/g, '');
+}
+
+function updateAreaCheckMessage() {
+  var zone = document.getElementById('area_check_zone').value;
+  var alertBox = document.getElementById('area_check_alert');
+  var continueBtn = document.getElementById('area_check_continue');
+  if(zone === 'south' || zone === 'outside') {
+    alertBox.textContent = 'هذا الموقع خارج نطاق الخدمة الحالي لمؤسسة أطواد، ولا يمكن إنشاء حجز له.';
+    alertBox.style.display = 'block';
+    continueBtn.disabled = true;
+    continueBtn.style.opacity = '.45';
+    continueBtn.style.cursor = 'not-allowed';
+  } else {
+    alertBox.style.display = 'none';
+    continueBtn.disabled = false;
+    continueBtn.style.opacity = '1';
+    continueBtn.style.cursor = 'pointer';
+  }
+}
+
+function cancelManualAreaCheck() {
+  document.getElementById('areaCheckModal').classList.remove('open');
+  pendingNewApptPrefill = null;
+  pendingNewApptApprovedCallback = null;
+  manualAreaApproved = false;
+  manualAreaDistrict = '';
+}
+
+function openNewAppt(prefill, onApproved){
+  pendingNewApptPrefill = prefill || null;
+  pendingNewApptApprovedCallback = typeof onApproved === 'function' ? onApproved : null;
+  manualAreaApproved = false;
+  manualAreaDistrict = '';
+
+  var suggestedDistrict = '';
+  if(prefill) suggestedDistrict = prefill.address || prefill.district || '';
+  document.getElementById('area_check_district').value = suggestedDistrict;
+  document.getElementById('area_check_zone').value = '';
+  document.getElementById('area_check_alert').style.display = 'none';
+  var continueBtn = document.getElementById('area_check_continue');
+  continueBtn.disabled = false;
+  continueBtn.style.opacity = '1';
+  continueBtn.style.cursor = 'pointer';
+  document.getElementById('areaCheckModal').classList.add('open');
+  setTimeout(function(){ document.getElementById('area_check_district').focus(); }, 100);
+}
+
+function continueManualBooking() {
+  var district = document.getElementById('area_check_district').value.trim();
+  var zone = document.getElementById('area_check_zone').value;
+  if(!district) {
+    document.getElementById('area_check_alert').textContent = 'اكتب اسم الحي أولًا.';
+    document.getElementById('area_check_alert').style.display = 'block';
+    return;
+  }
+  if(!zone) {
+    document.getElementById('area_check_alert').textContent = 'حدد نطاق الموقع قبل المتابعة.';
+    document.getElementById('area_check_alert').style.display = 'block';
+    return;
+  }
+  if(zone !== 'approved') {
+    updateAreaCheckMessage();
+    return;
+  }
+
+  manualAreaApproved = true;
+  manualAreaDistrict = district;
+  document.getElementById('areaCheckModal').classList.remove('open');
+  openNewApptForm();
+}
+
+function openNewApptForm(){
+  var prefill = pendingNewApptPrefill;
+  var approvedCallback = pendingNewApptApprovedCallback;
+  pendingNewApptPrefill = null;
+  pendingNewApptApprovedCallback = null;
+
   editingId=null; editingFirebaseKey=null;
   document.getElementById('modalTitle').textContent='➕ موعد جديد';
   ['f_client','f_phone','f_address','f_notes'].forEach(id=>document.getElementById(id).value='');
@@ -943,8 +1154,23 @@ function openNewAppt(){
   document.getElementById('f_time').value='09:00';
   resetImageField();
   resetLocFields();
+  document.getElementById('f_address').value = manualAreaDistrict;
+  document.getElementById('areaApprovedDistrict').textContent = manualAreaDistrict;
+  document.getElementById('areaApprovedBanner').style.display = 'flex';
+
+  if(prefill) {
+    if(prefill.client) document.getElementById('f_client').value = prefill.client;
+    if(prefill.phone) document.getElementById('f_phone').value = prefill.phone;
+    if(prefill.service) document.getElementById('f_service').value = prefill.service;
+    if(prefill.tech) document.getElementById('f_tech').value = prefill.tech;
+    if(prefill.date) document.getElementById('f_date').value = prefill.date;
+    if(prefill.time) document.getElementById('f_time').value = prefill.time;
+    if(prefill.notes) document.getElementById('f_notes').value = prefill.notes;
+  }
+
   document.getElementById('apptModal').classList.add('open');
   populateClients();
+  if(approvedCallback) approvedCallback();
 }
 
 function editAppt(id){
@@ -952,6 +1178,8 @@ function editAppt(id){
   if(!a) return;
   editingId = id;
   editingFirebaseKey = a._fbKey;
+  manualAreaApproved = false;
+  manualAreaDistrict = '';
   editingOriginalDate = a.date || ''; // حفظ التاريخ الأصلي للمقارنة لاحقاً
   document.getElementById('modalTitle').textContent='✏️ تعديل الموعد';
   document.getElementById('f_client').value=a.client||'';
@@ -964,6 +1192,7 @@ function editAppt(id){
   document.getElementById('f_date').value=a.date||today();
   document.getElementById('f_time').value=a.time||'09:00';
   document.getElementById('f_notes').value=a.notes||'';
+  document.getElementById('areaApprovedBanner').style.display = 'none';
   loadImageInModal(a.locationImage||'');
   // استعادة حقول الموقع — resetLocFields أولاً ثم نُعيد تعبئة بيانات الموعد
   resetLocFields();
@@ -1266,7 +1495,58 @@ function resetLocFields() {
   document.getElementById('clientFoundMsg').style.display = 'none';
 }
 
+function appointmentStartMinutes(time){
+  var match=String(time||'').match(/(\d{1,2}):(\d{2})/);
+  if(!match) return null;
+  var hour=parseInt(match[1],10),minute=parseInt(match[2],10);
+  if(hour<0||hour>23||minute<0||minute>59) return null;
+  return hour*60+minute;
+}
+
+function appointmentIsActive(appt){
+  var status=String((appt&&appt.status)||'').toLowerCase();
+  return status!=='cancelled'&&status!=='canceled'&&status!=='ملغي';
+}
+
+function findAppointmentTimeConflict(candidate,excludeKey){
+  if(!candidate||!candidate.date||!candidate.time||!appointmentIsActive(candidate)) return null;
+  var start=appointmentStartMinutes(candidate.time);
+  if(start===null) return null;
+  var end=start+(parseInt(candidate.duration,10)||90);
+
+  return appointments.find(function(existing){
+    if(!existing||existing.date!==candidate.date||!appointmentIsActive(existing)) return false;
+    if(excludeKey&&existing._fbKey===excludeKey) return false;
+    var existingStart=appointmentStartMinutes(existing.time);
+    if(existingStart===null) return false;
+    var existingEnd=existingStart+(parseInt(existing.duration,10)||90);
+    return start<existingEnd&&end>existingStart;
+  })||null;
+}
+
+function describeAppointmentConflict(conflict){
+  var name=conflict.client||conflict.name||'عميل آخر';
+  var time=conflict.time||'وقت غير محدد';
+  return name+' — '+time;
+}
+
+var manualSaveInProgress=false;
+function beginManualSave(){
+  if(manualSaveInProgress) return false;
+  manualSaveInProgress=true;
+  var btn=document.getElementById('saveApptBtn');
+  if(btn){btn.disabled=true;btn.textContent='⏳ جاري الحفظ...';}
+  return true;
+}
+
+function endManualSave(){
+  manualSaveInProgress=false;
+  var btn=document.getElementById('saveApptBtn');
+  if(btn){btn.disabled=false;btn.textContent='💾 حفظ الموعد';}
+}
+
 function saveAppt(){
+  if(manualSaveInProgress) return;
   const client=document.getElementById('f_client').value.trim();
   const phone=document.getElementById('f_phone').value.trim();
   const address=document.getElementById('f_address').value.trim();
@@ -1274,6 +1554,16 @@ function saveAppt(){
   const tech=document.getElementById('f_tech').value;
   const date=document.getElementById('f_date').value;
   if(!client||!phone||!service||!tech||!date) return showToast('❌ أكمل الحقول المطلوبة');
+  if(!editingFirebaseKey) {
+    if(!manualAreaApproved || !manualAreaDistrict) {
+      return showToast('❌ يجب التحقق من نطاق الخدمة قبل حفظ الموعد');
+    }
+    var checkedDistrict = normalizeArabicArea(manualAreaDistrict);
+    var currentAddress = normalizeArabicArea(address);
+    if(!address || !currentAddress.includes(checkedDistrict)) {
+      return showToast('❌ تم تغيير الحي بعد التحقق. ألغِ الموعد وابدأ الحجز من جديد للتحقق من النطاق');
+    }
+  }
 
   const data = {
     client, phone, address, service, tech,
@@ -1285,6 +1575,16 @@ function saveAppt(){
     duration: 90,
     updatedAt: new Date().toISOString()
   };
+
+  var timeConflict=findAppointmentTimeConflict(data,editingFirebaseKey||null);
+  if(timeConflict){
+    return showToast('❌ لا يمكن حفظ الموعد: الوقت متداخل مع موعد '+describeAppointmentConflict(timeConflict));
+  }
+  if(!editingFirebaseKey) {
+    data.serviceAreaChecked = true;
+    data.serviceAreaDistrict = manualAreaDistrict;
+    data.serviceAreaCheckedAt = new Date().toISOString();
+  }
 
   // موقع العميل — حقول اختيارية
   var mapsLink = document.getElementById('appointment_maps_link').value.trim();
@@ -1321,6 +1621,7 @@ function saveAppt(){
     }
 
     // لم يتغير التاريخ — حفظ مباشر بدون سؤال
+    if(!beginManualSave()) return;
     var cancelPrevious = false;
     var _saveToCustomer = !!(document.getElementById('chk_save_to_customer') &&
                              document.getElementById('chk_save_to_customer').checked &&
@@ -1375,10 +1676,12 @@ function saveAppt(){
           editingOriginalDate = '';
           closeModal();
         }
+        endManualSave();
       })
-      .catch(function(e){ showToast('❌ خطأ في الحفظ: ' + e.message); });
+      .catch(function(e){ endManualSave(); showToast('❌ خطأ في الحفظ: ' + e.message); });
   } else {
     // إضافة موعد جديد
+    if(!beginManualSave()) return;
     var _saveToCustomerNew = !!(document.getElementById('chk_save_to_customer') &&
                                 document.getElementById('chk_save_to_customer').checked &&
                                 _foundCustomerKey);
@@ -1410,8 +1713,9 @@ function saveAppt(){
         showToast('✅ تم إضافة الموعد بنجاح');
         sendAdminNotification(data);
         closeModal();
+        endManualSave();
       })
-      .catch(function(e){ showToast('❌ خطأ في الحفظ: ' + e.message); });
+      .catch(function(e){ endManualSave(); showToast('❌ خطأ في الحفظ: ' + e.message); });
   }
 }
 
@@ -1468,6 +1772,7 @@ function rescheduleChoice(choice) {
                      document.getElementById('appointment_location_verified').value === 'true');
   var _custKey  = _foundCustomerKey || null;
   var _origDate = editingOriginalDate;
+  if(!beginManualSave()) return;
 
   // العملية ١: تحويل الموعد القديم إلى cancelled
   var dataWithCancel = Object.assign({}, data, {
@@ -1499,10 +1804,11 @@ function rescheduleChoice(choice) {
           showToast('✅ تم ترحيل الموعد بنجاح. تم إنشاء الموعد الجديد، وتحويل الموعد السابق إلى حالة (ملغي).');
           editingOriginalDate = '';
           closeModal();
+          endManualSave();
         })
-        .catch(function(e){ showToast('❌ خطأ عند إنشاء الموعد الجديد: ' + e.message); });
+        .catch(function(e){ endManualSave(); showToast('❌ خطأ عند إنشاء الموعد الجديد: ' + e.message); });
     })
-    .catch(function(e){ showToast('❌ خطأ في الحفظ: ' + e.message); });
+    .catch(function(e){ endManualSave(); showToast('❌ خطأ في الحفظ: ' + e.message); });
 }
 
 function showToast(msg){
@@ -1514,7 +1820,15 @@ function showToast(msg){
   t._hideTimer = setTimeout(function(){ t.classList.remove('show'); }, 2800);
 }
 
-function closeModal(){ document.getElementById('apptModal').classList.remove('open'); editingId=null; editingFirebaseKey=null; }
+function closeModal(){
+  document.getElementById('apptModal').classList.remove('open');
+  editingId=null;
+  editingFirebaseKey=null;
+  manualAreaApproved=false;
+  manualAreaDistrict='';
+  document.getElementById('areaApprovedBanner').style.display='none';
+  endManualSave();
+}
 
 // ===== DETAIL =====
 function openDetail(id){
@@ -1568,28 +1882,18 @@ function createMissingWO(apptId) {
   var a = findAppt(apptId);
   if(!a || !db) return;
   var apptKey = a._fbKey;
-  console.log('[createMissingWO] الموعد:', {
-    id: apptId, fbKey: apptKey, source: a._source,
-    client: a.client, phone: a.phone, date: a.date, time: a.time, status: a.status
-  });
 
-  // فحص عدم وجود أمر عمل مرتبط بنفس المفتاح — يبحث في Firebase مباشرة
+  // فحص عدم وجود أمر عمل مرتبط بنفس المفتاح
   db.ref('workOrders').orderByChild('sourceApptKey').equalTo(apptKey).once('value', function(snap) {
-    console.log('[createMissingWO] فحص sourceApptKey:', apptKey,
-      '— نتائج:', snap.numChildren(),
-      snap.val() ? JSON.stringify(snap.val()) : '(لا شيء)');
     if(snap.numChildren() > 0) {
-      // أمر موجود في Firebase — اعرض مفتاحه
-      var keys = Object.keys(snap.val());
-      showToast('⚠️ أمر موجود في Firebase بمفتاح: ' + keys.join(', '));
-      console.warn('[createMissingWO] أمر موجود:', snap.val());
+      showToast('⚠️ يوجد أمر عمل مرتبط بهذا الموعد بالفعل');
       return;
     }
     // إنشاء أمر عمل جديد
     var woId = 'WO-' + Date.now().toString().slice(-6);
     var wo = {
       id:             woId,
-      sourceApptKey:  apptKey,
+      sourceApptKey:  apptKey,         // ربط بمفتاح الموعد
       sourceApptSrc:  a._source || 'appointments',
       status:         'open',
       client:         a.client || '—',
@@ -1607,37 +1911,11 @@ function createMissingWO(apptId) {
       createdAt:      new Date().toISOString()
     };
 
-    // _fbKey لا يُرسَل لـ Firebase — يُضاف محلياً بعد التحقق
-    var firebaseData = Object.assign({}, wo);
-    var newRef = db.ref('workOrders').push();
-
-    newRef.set(firebaseData)
-      .then(function() {
-        // التحقق المباشر: اقرأ السجل فور حفظه
-        return db.ref('workOrders/' + newRef.key).once('value');
-      })
-      .then(function(verifySnap) {
-        console.log('[createMissingWO] verify saved:',
-          newRef.key, verifySnap.exists(), verifySnap.val());
-
-        if(!verifySnap.exists()) {
-          showToast('❌ تعذر التحقق من حفظ أمر العمل في Firebase');
-          console.error('[createMissingWO] verify FAILED — سجل غير موجود بعد set()');
-          return;
-        }
-        // الحفظ مؤكد — أضف _fbKey محلياً
-        wo._fbKey = newRef.key;
-        showToast('✅ تم إنشاء أمر العمل: ' + woId + '\nمفتاح Firebase: ' + newRef.key);
-        console.log('[createMissingWO] ✅ حُفظ بنجاح:', {
-          path:    'workOrders/' + newRef.key,
-          woId:    woId,
-          apptKey: apptKey
-        });
-      })
-      .catch(function(e){
-        showToast('❌ فشل الحفظ: ' + e.message);
-        console.error('[createMissingWO] error:', e);
-      });
+    var ref = db.ref('workOrders').push();
+    wo._fbKey = ref.key;
+    ref.set(wo).then(function() {
+      showToast('✅ تم إنشاء أمر العمل: ' + woId);
+    }).catch(function(e){ showToast('❌ خطأ: ' + e.message); });
   });
 }
 
@@ -2159,24 +2437,21 @@ function agreeFromWaiting(key) {
   if(!w) return;
   var freeAppt = _freeSlotForWaiting;
 
-  // فتح نموذج موعد جديد مملوءاً
-  openNewAppt();
-  setTimeout(function(){
-    document.getElementById('f_client').value = w.name;
-    document.getElementById('f_phone').value  = w.phone;
-    document.getElementById('f_address').value= w.district || '';
-    if(w.service)       document.getElementById('f_service').value = w.service;
-    if(w.preferredTech) document.getElementById('f_tech').value    = w.preferredTech;
-    if(freeAppt && freeAppt.date) document.getElementById('f_date').value = freeAppt.date;
-    if(freeAppt && freeAppt.time) document.getElementById('f_time').value = freeAppt.time;
-    if(freeAppt && freeAppt.tech && !w.preferredTech) document.getElementById('f_tech').value = freeAppt.tech;
-  }, 300);
-
-  // تعليم كـ محجوز في Firebase
-  if(db) db.ref('waitingList/' + key).update({booked: true, bookedAt: new Date().toISOString()});
-
-  document.getElementById('waitingListModal').classList.remove('open');
-  showToast('✅ تم فتح نموذج الموعد لـ ' + w.name + ' — أكمل البيانات واحفظ');
+  // فحص النطاق أولاً، ثم فتح نموذج موعد جديد مملوءاً
+  openNewAppt({
+    client: w.name,
+    phone: w.phone,
+    address: w.district || '',
+    service: w.service || '',
+    tech: w.preferredTech || (freeAppt && freeAppt.tech) || '',
+    date: (freeAppt && freeAppt.date) || '',
+    time: (freeAppt && freeAppt.time) || ''
+  }, function(){
+    // تعليم كـ محجوز فقط بعد اجتياز فحص النطاق وفتح نموذج الموعد
+    if(db) db.ref('waitingList/' + key).update({booked: true, bookedAt: new Date().toISOString()});
+    document.getElementById('waitingListModal').classList.remove('open');
+    showToast('✅ تم التحقق من النطاق وفتح نموذج الموعد لـ ' + w.name);
+  });
 }
 
 /** إزالة من قائمة الانتظار */
@@ -2353,11 +2628,7 @@ function markNotifRead(key) {
 
 // تشغيل مراقبة الإشعارات
 watchNotifications();
-
-window.__atwadInitPage = function(user) {
-  console.log("[appointments] مسجّل:", user.email);
-  if(typeof initFirebaseSync==="function") initFirebaseSync();
-  else if(typeof syncFromFirebase==="function") syncFromFirebase();
-};
-
 </script>
+
+</body>
+</html>
