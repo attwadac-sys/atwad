@@ -93,7 +93,7 @@
   }
   .topbar-title { font-size:20px;font-weight:800;color:var(--deep); }
   .topbar-sub   { font-size:13px;color:var(--mist);margin-top:2px; }
-  .topbar-actions { display:flex;gap:10px;align-items:center; }
+  .topbar-actions { display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end; }
   .btn-add {
     background:linear-gradient(90deg,var(--deep),var(--sky));
     color:#fff;border:none;border-radius:10px;
@@ -180,6 +180,92 @@
   .review-status.sent{color:#065F46;font-weight:700;}
   .btn-send-review{width:100%;padding:11px;background:linear-gradient(90deg,#F59E0B,#FBBF24);color:#fff;border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;}
   .btn-send-review:disabled{background:#E2E8F0;color:var(--mist);cursor:not-allowed;}
+
+  /* حملة طلب التقييم — اختيار يدوي وإرسال متتابع */
+  .btn-review-campaign{
+    padding:9px 14px;background:#FFFBEB;color:#92400E;border:1.5px solid #F59E0B;
+    border-radius:10px;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:800;
+    cursor:pointer;white-space:nowrap;
+  }
+  .btn-review-campaign:hover{background:#FEF3C7;}
+  .campaign-overlay{
+    position:fixed;inset:0;background:rgba(12,59,94,.55);z-index:6000;
+    display:none;align-items:flex-start;justify-content:center;overflow-y:auto;padding:20px;
+    backdrop-filter:blur(2px);
+  }
+  .campaign-overlay.open{display:flex;}
+  .campaign-box{
+    background:#fff;border-radius:18px;width:100%;max-width:980px;overflow:hidden;
+    box-shadow:0 20px 60px rgba(12,59,94,.28);margin:auto;
+  }
+  .campaign-header{
+    padding:18px 22px;background:linear-gradient(90deg,#FFFBEB,#FEF3C7);
+    border-bottom:1.5px solid #FDE68A;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  }
+  .campaign-header h3{font-size:18px;font-weight:900;color:#92400E;}
+  .campaign-body{padding:20px 22px;}
+  .campaign-note{
+    background:#EFF6FF;border:1.5px solid #BFDBFE;color:#1E40AF;border-radius:11px;
+    padding:11px 14px;font-size:12px;font-weight:700;line-height:1.7;margin-bottom:14px;
+  }
+  .campaign-toolbar{display:grid;grid-template-columns:minmax(220px,1fr) 180px auto;gap:10px;margin-bottom:12px;}
+  .campaign-toolbar input,.campaign-toolbar select{
+    width:100%;padding:10px 12px;border:1.5px solid #E2E8F0;border-radius:9px;
+    font-family:'Tajawal',sans-serif;font-size:13px;background:var(--frost);outline:none;
+  }
+  .campaign-toolbar input:focus,.campaign-toolbar select:focus{border-color:var(--sky);background:#fff;}
+  .campaign-counter{
+    display:flex;align-items:center;justify-content:center;background:#FFFBEB;color:#92400E;
+    border:1.5px solid #FDE68A;border-radius:9px;padding:8px 12px;font-size:13px;font-weight:900;
+  }
+  .campaign-table-wrap{max-height:390px;overflow:auto;border:1px solid #E2E8F0;border-radius:11px;}
+  .campaign-table{width:100%;border-collapse:collapse;font-size:12px;}
+  .campaign-table th{
+    position:sticky;top:0;background:var(--frost);color:var(--deep);padding:10px;
+    text-align:right;border-bottom:1px solid #E2E8F0;z-index:1;
+  }
+  .campaign-table td{padding:9px 10px;border-bottom:1px solid #F1F5F9;font-size:12px;}
+  .campaign-table tr:last-child td{border-bottom:none;}
+  .campaign-table tr.review-disabled{background:#F8FAFC;color:var(--mist);}
+  .campaign-table input[type="checkbox"]{width:17px;height:17px;accent-color:#F59E0B;cursor:pointer;}
+  .campaign-status{
+    display:inline-flex;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:800;white-space:nowrap;
+  }
+  .campaign-status.not-sent{background:#DBEAFE;color:#1E40AF;}
+  .campaign-status.sent{background:#D1FAE5;color:#065F46;}
+  .campaign-status.blocked{background:#FEE2E2;color:#991B1B;}
+  .campaign-footer{
+    padding:15px 22px;border-top:1px solid #F1F5F9;display:flex;gap:10px;
+    justify-content:space-between;align-items:center;flex-wrap:wrap;
+  }
+  .campaign-actions{display:flex;gap:8px;flex-wrap:wrap;}
+  .campaign-btn{
+    padding:10px 17px;border:none;border-radius:9px;font-family:'Tajawal',sans-serif;
+    font-size:13px;font-weight:800;cursor:pointer;
+  }
+  .campaign-btn:disabled{opacity:.5;cursor:not-allowed;}
+  .campaign-btn.primary{background:linear-gradient(90deg,var(--deep),var(--sky));color:#fff;}
+  .campaign-btn.whatsapp{background:#25D366;color:#fff;}
+  .campaign-btn.sent{background:#10B981;color:#fff;}
+  .campaign-btn.skip{background:#E2E8F0;color:#475569;}
+  .campaign-btn.exclude{background:#FEE2E2;color:#991B1B;}
+  .campaign-progress-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;}
+  .campaign-progress-track{height:9px;background:#E2E8F0;border-radius:20px;overflow:hidden;margin-bottom:16px;}
+  .campaign-progress-bar{height:100%;width:0;background:linear-gradient(90deg,#F59E0B,#10B981);transition:width .25s;}
+  .campaign-current{
+    background:var(--frost);border:1.5px solid var(--ice);border-radius:13px;padding:14px 16px;margin-bottom:12px;
+  }
+  .campaign-current-name{font-size:18px;font-weight:900;color:var(--deep);}
+  .campaign-current-meta{font-size:12px;color:var(--mist);margin-top:4px;}
+  .campaign-message{
+    width:100%;min-height:245px;white-space:pre-wrap;direction:rtl;text-align:right;
+    background:#F8FAFC;border:1.5px solid #E2E8F0;border-radius:12px;padding:15px;
+    color:var(--slate);font-family:'Tajawal',sans-serif;font-size:13px;line-height:1.75;resize:vertical;
+  }
+  .campaign-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:18px 0;}
+  .campaign-summary-card{background:var(--frost);border-radius:11px;padding:14px;text-align:center;}
+  .campaign-summary-card strong{display:block;font-size:24px;color:var(--deep);}
+  .campaign-summary-card span{font-size:11px;color:var(--mist);}
 
   /* TABLE */
   .table-card {
@@ -384,6 +470,10 @@
   @media(max-width:540px){
     .stats-row{grid-template-columns:1fr 1fr;}
     .form-row{grid-template-columns:1fr;}
+    .campaign-toolbar{grid-template-columns:1fr;}
+    .campaign-summary{grid-template-columns:1fr 1fr;}
+    .campaign-overlay{padding:8px;}
+    .campaign-body{padding:15px;}
   }
 
 .lang-btn{padding:7px 14px;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);border-radius:8px;color:#fff;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;}
@@ -427,51 +517,13 @@
   .imp-undecided{background:#FFF5E6;}
   .sb-undecided{background:#FBBF24;color:#fff;}
   .warn-banner{background:#FEF3C7;border:1.5px solid #FDE68A;border-radius:10px;padding:10px 14px;font-size:12px;font-weight:700;color:#92400E;margin-bottom:10px;display:none;}
-  /* ===== حملة التقييم ===== */
-  .camp-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:6000;display:none;align-items:flex-start;justify-content:center;overflow-y:auto;padding:20px;}
-  .camp-overlay.open{display:flex;}
-  .camp-box{background:#fff;border-radius:18px;width:100%;max-width:920px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.2);margin:auto;}
-  .camp-title{font-size:16px;font-weight:900;color:var(--deep);margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;}
-  .camp-counter{background:linear-gradient(90deg,var(--deep),var(--sky));color:#fff;padding:5px 14px;border-radius:20px;font-size:13px;font-weight:800;}
-  .camp-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
-  .camp-search{flex:1;min-width:180px;padding:8px 12px;border:1.5px solid #E2E8F0;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;}
-  .camp-select{padding:8px 10px;border:1.5px solid #E2E8F0;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:12px;background:#fff;}
-  .camp-table-wrap{max-height:320px;overflow-y:auto;border:1px solid #E2E8F0;border-radius:10px;margin-bottom:14px;}
-  .camp-table{width:100%;border-collapse:collapse;font-size:12px;}
-  .camp-table th{background:var(--frost);padding:8px 10px;text-align:right;position:sticky;top:0;font-weight:700;color:var(--deep);}
-  .camp-table td{padding:7px 10px;border-bottom:1px solid #F8FAFC;vertical-align:middle;}
-  .camp-table tr.excluded-row{opacity:.45;}
-  .camp-btns{display:flex;gap:10px;flex-wrap:wrap;border-top:1px solid #F1F5F9;padding-top:14px;margin-top:4px;}
-  .camp-btns button{padding:10px 18px;border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
-  .btn-start-camp{background:linear-gradient(90deg,#F59E0B,#FBBF24);color:#fff;}
-  .btn-start-camp:disabled{opacity:.5;cursor:not-allowed;}
-  .btn-close-camp{background:#F1F5F9;color:var(--mist);}
-  /* نافذة الإرسال المتتابع */
-  .send-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:7000;display:none;align-items:center;justify-content:center;}
-  .send-overlay.open{display:flex;}
-  .send-box{background:#fff;border-radius:18px;width:100%;max-width:480px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.3);}
-  .send-progress{font-size:12px;color:var(--mist);margin-bottom:16px;text-align:center;}
-  .send-client-name{font-size:18px;font-weight:900;color:var(--deep);margin-bottom:4px;}
-  .send-phone{font-size:13px;color:var(--mist);margin-bottom:14px;direction:ltr;text-align:right;}
-  .send-msg-preview{background:#F1F5F9;border-radius:10px;padding:12px;font-size:12px;line-height:1.7;color:var(--slate);max-height:160px;overflow-y:auto;margin-bottom:16px;white-space:pre-wrap;}
-  .send-actions{display:flex;flex-direction:column;gap:8px;}
-  .btn-open-wa{background:#25D366;color:#fff;padding:13px;border:none;border-radius:11px;font-family:'Tajawal',sans-serif;font-size:14px;font-weight:800;cursor:pointer;width:100%;}
-  .btn-open-wa:disabled{background:#CBD5E1;cursor:not-allowed;}
-  .send-decisions{display:flex;gap:8px;margin-top:4px;}
-  .btn-mark-sent{flex:1;background:#D1FAE5;color:#065F46;padding:11px;border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
-  .btn-mark-sent:disabled{opacity:.5;cursor:not-allowed;}
-  .btn-skip{flex:1;background:#EFF6FF;color:#1E40AF;padding:11px;border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
-  .btn-exclude{flex:1;background:#FEE2E2;color:#991B1B;padding:11px;border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
-  .send-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:14px;}
-  .send-stat{background:var(--frost);border-radius:8px;padding:8px;text-align:center;}
-  .send-stat .sn{font-size:18px;font-weight:900;color:var(--deep);}
-  .send-stat .sl{font-size:10px;color:var(--mist);}
-</style>  <!-- SheetJS لقراءة Excel — للاستيراد فقط -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-<script src="atwad-firebase.js"></script>
-<script src="atwad-auth.js"></script>
+</style>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+<script src="atwad-admin-auth.js"></script>
+  <!-- SheetJS لقراءة Excel — للاستيراد فقط -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -508,9 +560,9 @@
     </div>
     <div class="topbar-actions"><button class="lang-btn" id="langBtn" onclick="toggleLang()">🌐 EN</button>
       <button onclick="importFromFirebase()" id="importBtn" style="background:#fff;border:1.5px solid #0EA5E9;color:#0EA5E9;border-radius:10px;padding:9px 16px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;" data-lang="importBtn">📥 استيراد من الحجوزات</button>
+      <button class="btn-review-campaign" type="button" onclick="openReviewCampaign()">⭐ حملة طلب التقييم</button>
       <button class="btn-add" onclick="openAddModal()" data-lang="addBtn">＋ إضافة عميل</button>
       <button id="excelImportBtn" type="button" onclick="openImportModal()" style="padding:9px 14px;background:#FEF9C3;color:#92400E;border:1.5px solid #FDE68A;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer;position:relative;z-index:2;">📥 استيراد من Excel</button>
-      <button type="button" onclick="openCampaignModal()" style="padding:9px 14px;background:linear-gradient(90deg,#F59E0B,#FBBF24);color:#fff;border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:800;cursor:pointer;">⭐ حملة طلب التقييم</button>
     </div>
   </div>
 
@@ -654,11 +706,115 @@
   </div>
 </div>
 
+<!-- REVIEW CAMPAIGN MODAL -->
+<div class="campaign-overlay" id="reviewCampaignModal">
+  <div class="campaign-box">
+    <div class="campaign-header">
+      <h3>⭐ حملة طلب التقييم</h3>
+      <button class="modal-close" type="button" onclick="closeReviewCampaign()">×</button>
+    </div>
+
+    <div id="reviewCampaignSelectStep">
+      <div class="campaign-body">
+        <div class="campaign-note">
+          تظهر هنا قائمة العملاء المؤهلين لطلب التقييم. يمكنك اختيار العملاء داخل الحملة مباشرة، والإرسال يدوي وعميل واحد في كل مرة،
+          ولن يُسجَّل الطلب إلا بعد الضغط على «تم الإرسال».
+          <span id="reviewCampaignVersion" style="display:inline-block;margin-right:8px;padding:2px 8px;border-radius:20px;background:#DCFCE7;color:#166534;font-size:11px;font-weight:900;">الإصدار 2 — جميع العملاء المؤهلين</span>
+          <span id="reviewCampaignLoadedCount" style="display:inline-block;margin-right:8px;font-size:11px;font-weight:800;color:#475569;"></span>
+        </div>
+        <div class="campaign-toolbar">
+          <input id="reviewCampaignSearch" type="search" placeholder="ابحث بالاسم أو الجوال أو المدينة..." oninput="renderReviewCampaignList()">
+          <select id="reviewCampaignFilter" onchange="renderReviewCampaignList()">
+            <option value="all">كل العملاء المؤهلين</option>
+            <option value="not_sent">لم يُرسل لهم</option>
+            <option value="sent">سبق الإرسال لهم</option>
+          </select>
+          <div class="campaign-counter" id="reviewCampaignCounter">تم تحديد 0 من 30</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:9px;margin-bottom:10px;font-size:12px;font-weight:700;color:var(--slate);">
+          <input id="reviewCampaignSelectVisible" type="checkbox" onchange="selectVisibleReviewClients(this.checked)">
+          <label for="reviewCampaignSelectVisible" style="cursor:pointer;">تحديد أول 10 من الظاهر غير المرسل لهم</label>
+        </div>
+        <div class="campaign-table-wrap">
+          <table class="campaign-table">
+            <thead>
+              <tr>
+                <th style="width:42px;">✓</th><th>العميل</th><th>الجوال</th><th>المدينة / الحي</th>
+                <th>الحالة</th><th>آخر إرسال</th><th>المرات</th>
+              </tr>
+            </thead>
+            <tbody id="reviewCampaignBody"></tbody>
+          </table>
+        </div>
+        <div id="reviewCampaignEmpty" class="empty-state" style="display:none;padding:35px 15px;">
+          <div class="empty-icon">⭐</div>
+          <p>لا يوجد عملاء مرشحون يطابقون البحث.</p>
+        </div>
+      </div>
+      <div class="campaign-footer">
+        <span style="font-size:12px;color:var(--mist);">الحد الآمن للدفعة الواحدة: 30 عميلًا</span>
+        <div class="campaign-actions">
+          <button class="campaign-btn skip" type="button" onclick="closeReviewCampaign()">إلغاء</button>
+          <button class="campaign-btn primary" id="reviewCampaignStartBtn" type="button" onclick="startReviewCampaign()" disabled>بدء الإرسال اليدوي</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="reviewCampaignSendStep" style="display:none;">
+      <div class="campaign-body">
+        <div class="campaign-progress-head">
+          <strong id="reviewCampaignPosition" style="color:var(--deep);">العميل 1 من 1</strong>
+          <span id="reviewCampaignProgressCounts" style="font-size:12px;color:var(--mist);"></span>
+        </div>
+        <div class="campaign-progress-track"><div class="campaign-progress-bar" id="reviewCampaignProgressBar"></div></div>
+        <div class="campaign-current">
+          <div class="campaign-current-name" id="reviewCampaignCurrentName">—</div>
+          <div class="campaign-current-meta" id="reviewCampaignCurrentMeta">—</div>
+        </div>
+        <textarea class="campaign-message" id="reviewCampaignMessage" readonly></textarea>
+        <div class="campaign-note" style="margin-top:12px;margin-bottom:0;background:#FFFBEB;border-color:#FDE68A;color:#92400E;">
+          فتح واتساب لا يعني أن الرسالة أُرسلت. بعد إرسالها فعليًا من واتساب ارجع إلى هذه الصفحة واضغط «تم الإرسال».
+        </div>
+      </div>
+      <div class="campaign-footer">
+        <button class="campaign-btn whatsapp" id="reviewOpenWhatsAppBtn" type="button" onclick="openCurrentReviewWhatsApp()">📲 فتح في واتساب</button>
+        <div class="campaign-actions">
+          <button class="campaign-btn exclude" id="reviewExcludeBtn" type="button" onclick="excludeCurrentReviewClient()">استبعاد العميل</button>
+          <button class="campaign-btn skip" id="reviewSkipBtn" type="button" onclick="skipCurrentReviewClient()">تخطي الآن</button>
+          <button class="campaign-btn sent" id="reviewConfirmSentBtn" type="button" onclick="confirmCurrentReviewSent()" disabled>✅ تم الإرسال</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="reviewCampaignDoneStep" style="display:none;">
+      <div class="campaign-body" style="text-align:center;">
+        <div style="font-size:54px;margin-top:8px;">✅</div>
+        <h3 style="color:var(--deep);margin-top:8px;">اكتملت دفعة طلب التقييم</h3>
+        <div class="campaign-summary">
+          <div class="campaign-summary-card"><strong id="reviewDoneSelected">0</strong><span>المحددون</span></div>
+          <div class="campaign-summary-card"><strong id="reviewDoneSent">0</strong><span>تم الإرسال</span></div>
+          <div class="campaign-summary-card"><strong id="reviewDoneSkipped">0</strong><span>تم التخطي</span></div>
+          <div class="campaign-summary-card"><strong id="reviewDoneExcluded">0</strong><span>تم الاستبعاد</span></div>
+        </div>
+      </div>
+      <div class="campaign-footer" style="justify-content:flex-end;">
+        <button class="campaign-btn primary" type="button" onclick="closeReviewCampaign(true)">إغلاق</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
 <script>
-var db = window.db; // من atwad-firebase.js — لا تهيئة محلية
+var db = null;
+try {
+  if(typeof firebase !== 'undefined' && !firebase.apps.length) {
+    firebase.initializeApp({databaseURL:"https://atwad-booking-default-rtdb.firebaseio.com"});
+  }
+  db = firebase.database();
+} catch(e){ console.log('Firebase:', e); }
 
 // ========== DATA ==========
 let clients = JSON.parse(localStorage.getItem('atwad_clients') || '[]');
@@ -984,6 +1140,10 @@ function renderTable() {
 
   // شارة حالة التقييم
   function reviewBadge(c, work) {
+    if(c.reviewRequestStatus === 'reviewed' || c.reviewed === true || c.hasReviewed === true)
+                               return '<span style="font-size:10px;background:#EDE9FE;color:#6D28D9;padding:2px 7px;border-radius:20px;font-weight:700;">⭐ قيّم المؤسسة</span>';
+    if(c.reviewRequestExcluded === true || c.reviewRequestStatus === 'excluded')
+                               return '<span style="font-size:10px;background:#FEE2E2;color:#991B1B;padding:2px 7px;border-radius:20px;font-weight:700;">🚫 مستبعد</span>';
     if(c.reviewRequestSent)    return '<span style="font-size:10px;background:#D1FAE5;color:#065F46;padding:2px 7px;border-radius:20px;font-weight:700;">✅ تم الإرسال</span>';
     if(c.reviewCandidate)      return '<span style="font-size:10px;background:#FEF9C3;color:#92400E;padding:2px 7px;border-radius:20px;font-weight:700;">⭐ مرشح</span>';
     if(work.status === 'done') return '<span style="font-size:10px;background:#EFF6FF;color:#1E40AF;padding:2px 7px;border-radius:20px;font-weight:700;">💡 جاهز للطلب</span>';
@@ -1215,14 +1375,9 @@ function openDetail(id) {
           <span class="toggle-slider"></span>
         </label>
       </div>
-      <div class="review-status ${c.reviewRequestSent ? 'sent' : ''}">
-        ${c.reviewRequestSent
-          ? '✅ تم طلب التقييم — آخر طلب: ' + fmtReviewDate(c.reviewRequestSentAt) +
-            (c.reviewRequestCount > 1 ? ' (أُرسل ' + c.reviewRequestCount + ' مرات)' : '')
-          : '⬜ لم يُطلب منه التقييم بعد'}
-      </div>
+      <div class="review-status ${c.reviewRequestSent ? 'sent' : ''}">${getReviewDetailStatus(c)}</div>
       <button class="btn-send-review"
-        ${c.reviewCandidate !== true ? 'disabled title="فعّل الترشيح أولاً"' : ''}
+        ${getReviewBlockReason(c) ? 'disabled title="' + escapeReviewHtml(getReviewBlockReason(c)) + '"' : ''}
         onclick="sendReviewRequest('${c.id}')">
         ⭐ إرسال طلب التقييم
       </button>
@@ -1270,16 +1425,16 @@ function closeModal(id) {
 /** تنسيق رقم الجوال السعودي للواتساب */
 function normalizePhoneForWA(phone) {
   var p = (phone || '').replace(/[\s\-\(\)\+]/g, '');
-  if(p.startsWith('966')) return p;
-  if(p.startsWith('05') && p.length === 10) return '966' + p.slice(1);
-  if(p.startsWith('5')  && p.length === 9)  return '966' + p;
-  return '966' + p; // محاولة أفضل جهد
+  if(p.startsWith('00966')) p = p.slice(2);
+  if(p.startsWith('05') && p.length === 10) p = '966' + p.slice(1);
+  if(p.startsWith('5')  && p.length === 9)  p = '966' + p;
+  return /^9665\d{8}$/.test(p) ? p : '';
 }
 
 /** تبديل حالة الترشيح للتقييم */
 function toggleReviewCandidate(id, checked) {
   var c = clients.find(function(x){ return x.id === id; });
-  if(!c || !c._fbKey) return;
+  if(!c || !c._fbKey || !db) return;
   c.reviewCandidate = checked;
   db.ref('customers/' + c._fbKey).update({ reviewCandidate: checked }).then(function() {
     showToast(checked ? '⭐ تم تفعيل الترشيح للتقييم' : '🔕 تم إلغاء الترشيح');
@@ -1287,47 +1442,524 @@ function toggleReviewCandidate(id, checked) {
   }).catch(function(e){ showToast('❌ خطأ: ' + e.message); });
 }
 
-/** إرسال طلب التقييم عبر واتساب */
+// ========== REVIEW CAMPAIGN ==========
+var REVIEW_BATCH_DEFAULT = 10;
+var REVIEW_BATCH_MAX = 30;
+var REVIEW_BLOCKED_PHONES = {'966565730008': true};
+var REVIEW_CAMPAIGN_SESSION_KEY = 'atwad_review_campaign_session';
+var _reviewCampaignSelected = {};
+var _reviewCampaign = null;
+var _reviewWhatsAppOpenedFor = '';
+var _reviewCampaignBusy = false;
+
+function escapeReviewHtml(value) {
+  return String(value == null ? '' : value)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function reviewClientKey(c) {
+  return c && c._fbKey && !String(c._fbKey).startsWith('B_') ? String(c._fbKey) : '';
+}
+
+function getReviewClientByKey(key) {
+  return clients.find(function(c){ return reviewClientKey(c) === key; });
+}
+
+function hasReviewComplaint(c) {
+  var satisfaction = String(c.satisfaction || c.customerSatisfaction || '').toLowerCase();
+  var complaintStatus = String(c.complaintStatus || '').toLowerCase();
+  return c.hasComplaint === true ||
+    c.isUnsatisfied === true ||
+    ['unhappy','dissatisfied','غير راض','غير راضي'].indexOf(satisfaction) !== -1 ||
+    ['open','active','مفتوحة','قائمة'].indexOf(complaintStatus) !== -1;
+}
+
+function getReviewBlockReason(c) {
+  if(!c) return 'بيانات العميل غير متاحة';
+  if(!reviewClientKey(c)) return 'يجب حفظ العميل في سجل العملاء أولًا';
+  var waPhone = normalizePhoneForWA(c.phone);
+  if(!waPhone) return 'رقم الجوال غير صالح';
+  if(REVIEW_BLOCKED_PHONES[waPhone]) return 'رقم مستبعد من التواصل';
+  if(c.reviewRequestExcluded === true || c.reviewRequestStatus === 'excluded') return 'العميل مستبعد من الحملات';
+  if(c.reviewRequestStatus === 'reviewed' || c.reviewed === true || c.hasReviewed === true) return 'سبق أن قيّم المؤسسة';
+  if(hasReviewComplaint(c)) return 'لدى العميل شكوى أو عدم رضا مسجل';
+  return '';
+}
+
+function getReviewDetailStatus(c) {
+  if(c.reviewRequestExcluded === true || c.reviewRequestStatus === 'excluded') {
+    return '🚫 مستبعد من حملات التقييم' +
+      (c.reviewRequestExcludedReason ? ' — ' + escapeReviewHtml(c.reviewRequestExcludedReason) : '');
+  }
+  if(c.reviewRequestStatus === 'reviewed' || c.reviewed === true || c.hasReviewed === true) {
+    return '⭐ قيّم المؤسسة';
+  }
+  if(c.reviewRequestSent) {
+    return '✅ تم طلب التقييم — آخر طلب: ' + fmtReviewDate(c.reviewRequestSentAt) +
+      ((Number(c.reviewRequestCount) || 0) > 1 ? ' (أُرسل ' + c.reviewRequestCount + ' مرات)' : '');
+  }
+  return '⬜ لم يُطلب منه التقييم بعد';
+}
+
+function buildReviewRequestMessage(c) {
+  var clientName = String((c && c.name) || '').trim();
+  var greeting = clientName ? 'السلام عليكم أستاذ/ة ' + clientName : 'السلام عليكم';
+  return greeting + '\n\n' +
+    'سبق أن تشرفنا بخدمتكم في مؤسسة أطواد لصيانة المكيفات، سواء كان ذلك مؤخرًا أو منذ مدة.\n\n' +
+    'يسعدنا معرفة رأيكم في تجربتكم معنا، فتقييمكم يساعدنا على تحسين الخدمة والمحافظة على جودة العمل.\n\n' +
+    'رابط التقييم:\n' +
+    'https://attwadac-sys.github.io/atwad/atwad-reviews.html\n\n' +
+    'شاكرين لكم ثقتكم وتقديركم 🌹';
+}
+
+function getReviewCampaignVisibleClients() {
+  var searchEl = document.getElementById('reviewCampaignSearch');
+  var filterEl = document.getElementById('reviewCampaignFilter');
+  var search = searchEl ? searchEl.value.trim().toLowerCase() : '';
+  var filter = filterEl ? filterEl.value : 'all';
+  return clients.filter(function(c) {
+    if(filter === 'not_sent' && c.reviewRequestSent === true) return false;
+    if(filter === 'sent' && c.reviewRequestSent !== true) return false;
+    var haystack = [
+      c.name, c.phone, c.city, c.address, c.district, c.neighborhood
+    ].join(' ').toLowerCase();
+    return !search || haystack.indexOf(search) !== -1;
+  });
+}
+
+function openReviewCampaign() {
+  var modal = document.getElementById('reviewCampaignModal');
+  if(!modal) return;
+
+  var saved = null;
+  try { saved = JSON.parse(localStorage.getItem(REVIEW_CAMPAIGN_SESSION_KEY) || 'null'); }
+  catch(e) { localStorage.removeItem(REVIEW_CAMPAIGN_SESSION_KEY); }
+
+  if(saved && saved.campaignId && Array.isArray(saved.queue) &&
+     Number(saved.index || 0) < saved.queue.length &&
+     confirm('توجد حملة طلب تقييم غير مكتملة.\n\nهل تريد استئنافها الآن؟')) {
+    _reviewCampaign = saved;
+    _reviewCampaignSelected = {};
+    modal.classList.add('open');
+    showReviewCampaignStep('send');
+    renderCurrentReviewCampaignClient();
+    return;
+  }
+
+  _reviewCampaign = null;
+  _reviewCampaignSelected = {};
+  _reviewWhatsAppOpenedFor = '';
+  var searchEl = document.getElementById('reviewCampaignSearch');
+  var filterEl = document.getElementById('reviewCampaignFilter');
+  var selectVisible = document.getElementById('reviewCampaignSelectVisible');
+  if(searchEl) searchEl.value = '';
+  if(filterEl) filterEl.value = 'all';
+  if(selectVisible) selectVisible.checked = false;
+  showReviewCampaignStep('select');
+  renderReviewCampaignList();
+  modal.classList.add('open');
+}
+
+function showReviewCampaignStep(step) {
+  var selectStep = document.getElementById('reviewCampaignSelectStep');
+  var sendStep = document.getElementById('reviewCampaignSendStep');
+  var doneStep = document.getElementById('reviewCampaignDoneStep');
+  if(selectStep) selectStep.style.display = step === 'select' ? '' : 'none';
+  if(sendStep) sendStep.style.display = step === 'send' ? '' : 'none';
+  if(doneStep) doneStep.style.display = step === 'done' ? '' : 'none';
+}
+
+function closeReviewCampaign(force) {
+  if(!force && _reviewCampaign && Number(_reviewCampaign.index || 0) < _reviewCampaign.queue.length) {
+    if(!confirm('الحملة لم تكتمل بعد.\n\nيمكنك إغلاقها واستئنافها لاحقًا. هل تريد الإغلاق؟')) return;
+  }
+  var modal = document.getElementById('reviewCampaignModal');
+  if(modal) modal.classList.remove('open');
+  if(force) {
+    _reviewCampaign = null;
+    _reviewCampaignSelected = {};
+    _reviewWhatsAppOpenedFor = '';
+  }
+}
+
+function renderReviewCampaignList() {
+  var body = document.getElementById('reviewCampaignBody');
+  var empty = document.getElementById('reviewCampaignEmpty');
+  var loadedCount = document.getElementById('reviewCampaignLoadedCount');
+  if(!body) return;
+  var list = getReviewCampaignVisibleClients();
+  if(loadedCount) loadedCount.textContent = 'العملاء المحمّلون: ' + clients.length + ' — الظاهرون: ' + list.length;
+
+  if(!list.length) {
+    body.innerHTML = '';
+    if(empty) empty.style.display = 'block';
+    updateReviewCampaignSelectionUI();
+    return;
+  }
+  if(empty) empty.style.display = 'none';
+
+  body.innerHTML = list.map(function(c) {
+    var key = reviewClientKey(c);
+    var reason = getReviewBlockReason(c);
+    var checked = key && _reviewCampaignSelected[key] ? 'checked' : '';
+    var disabled = reason ? 'disabled' : '';
+    var statusClass = reason ? 'blocked' : (c.reviewRequestSent ? 'sent' : 'not-sent');
+    var statusText = reason || (c.reviewRequestSent ? 'تم الإرسال' : 'لم يُرسل');
+    var place = [c.city || '', c.district || c.neighborhood || c.address || ''].filter(Boolean).join(' — ') || '—';
+    return '<tr class="' + (reason ? 'review-disabled' : '') + '">' +
+      '<td><input type="checkbox" value="' + escapeReviewHtml(key) + '" ' + checked + ' ' + disabled +
+        ' onchange="toggleReviewCampaignSelection(this.value,this.checked,this)"></td>' +
+      '<td><strong style="color:var(--deep);">' + escapeReviewHtml(c.name || '—') + '</strong></td>' +
+      '<td dir="ltr">' + escapeReviewHtml(c.phone || '—') + '</td>' +
+      '<td>' + escapeReviewHtml(place) + '</td>' +
+      '<td><span class="campaign-status ' + statusClass + '">' + escapeReviewHtml(statusText) + '</span></td>' +
+      '<td>' + (c.reviewRequestSentAt ? escapeReviewHtml(fmtReviewDate(c.reviewRequestSentAt)) : '—') + '</td>' +
+      '<td>' + (Number(c.reviewRequestCount) || 0) + '</td>' +
+    '</tr>';
+  }).join('');
+  updateReviewCampaignSelectionUI();
+}
+
+function toggleReviewCampaignSelection(key, checked, checkbox) {
+  var c = getReviewClientByKey(key);
+  var reason = getReviewBlockReason(c);
+  if(checked && reason) {
+    if(checkbox) checkbox.checked = false;
+    showToast('⚠️ ' + reason);
+    return;
+  }
+  if(checked && Object.keys(_reviewCampaignSelected).length >= REVIEW_BATCH_MAX) {
+    if(checkbox) checkbox.checked = false;
+    showToast('حفاظًا على سلامة حساب واتساب، الحد الأقصى للدفعة الواحدة هو 30 عميلًا.');
+    return;
+  }
+  if(checked && c && c.reviewRequestSent === true) {
+    var repeatText = 'سبق إرسال طلب تقييم لهذا العميل بتاريخ ' + fmtReviewDate(c.reviewRequestSentAt) +
+      '، وعدد مرات الإرسال ' + (Number(c.reviewRequestCount) || 1) + '.\n\nهل تريد إضافته للحملة مرة أخرى؟';
+    if(!confirm(repeatText)) {
+      if(checkbox) checkbox.checked = false;
+      return;
+    }
+  }
+  if(checked) _reviewCampaignSelected[key] = true;
+  else delete _reviewCampaignSelected[key];
+  updateReviewCampaignSelectionUI();
+}
+
+function selectVisibleReviewClients(checked) {
+  var visible = getReviewCampaignVisibleClients();
+  if(!checked) {
+    visible.forEach(function(c){ delete _reviewCampaignSelected[reviewClientKey(c)]; });
+    renderReviewCampaignList();
+    return;
+  }
+
+  var limitReached = false;
+  var addedThisTime = 0;
+  visible.forEach(function(c) {
+    var key = reviewClientKey(c);
+    // «تحديد الظاهر» يتجنب إعادة الإرسال؛ يمكن اختيار المرسل له يدويًا مع تأكيد.
+    if(c.reviewRequestSent === true || getReviewBlockReason(c)) return;
+    if(addedThisTime >= REVIEW_BATCH_DEFAULT ||
+       Object.keys(_reviewCampaignSelected).length >= REVIEW_BATCH_MAX) {
+      limitReached = true;
+      return;
+    }
+    if(!_reviewCampaignSelected[key]) {
+      _reviewCampaignSelected[key] = true;
+      addedThisTime++;
+    }
+  });
+  if(limitReached) showToast('تم تحديد أول 10 عملاء. يمكنك إضافة المزيد يدويًا حتى 30 عميلًا.');
+  renderReviewCampaignList();
+}
+
+function updateReviewCampaignSelectionUI() {
+  var count = Object.keys(_reviewCampaignSelected).length;
+  var counter = document.getElementById('reviewCampaignCounter');
+  var startBtn = document.getElementById('reviewCampaignStartBtn');
+  if(counter) counter.textContent = 'تم تحديد ' + count + ' من ' + REVIEW_BATCH_MAX;
+  if(startBtn) startBtn.disabled = count === 0 || _reviewCampaignBusy;
+}
+
+function createReviewCampaignId() {
+  if(db) {
+    var key = db.ref('reviewCampaigns').push().key;
+    if(key) return key;
+  }
+  return 'RC_' + Date.now();
+}
+
+function saveReviewCampaignSession() {
+  if(!_reviewCampaign) return;
+  localStorage.setItem(REVIEW_CAMPAIGN_SESSION_KEY, JSON.stringify(_reviewCampaign));
+}
+
+async function startReviewCampaign(optionalKeys, isSingle) {
+  if(_reviewCampaignBusy) return;
+  if(!db) {
+    showToast('❌ لا يمكن بدء الحملة دون اتصال بقاعدة البيانات');
+    return;
+  }
+
+  var keys = Array.isArray(optionalKeys) ? optionalKeys.slice() : Object.keys(_reviewCampaignSelected);
+  keys = keys.filter(function(key) {
+    var c = getReviewClientByKey(key);
+    return c && !getReviewBlockReason(c);
+  }).slice(0, REVIEW_BATCH_MAX);
+  if(!keys.length) {
+    showToast('⚠️ اختر عميلًا واحدًا على الأقل');
+    return;
+  }
+
+  _reviewCampaignBusy = true;
+  updateReviewCampaignSelectionUI();
+  var startBtn = document.getElementById('reviewCampaignStartBtn');
+  if(startBtn) startBtn.textContent = 'جاري تجهيز الحملة...';
+
+  var campaignId = createReviewCampaignId();
+  var customerStates = {};
+  keys.forEach(function(key){ customerStates[key] = 'pending'; });
+  var campaignData = {
+    createdAt: firebase.database.ServerValue.TIMESTAMP,
+    updatedAt: firebase.database.ServerValue.TIMESTAMP,
+    status: 'active',
+    selectedCount: keys.length,
+    sentCount: 0,
+    skippedCount: 0,
+    excludedCount: 0,
+    manualWhatsApp: true,
+    customers: customerStates
+  };
+
+  try {
+    await db.ref('reviewCampaigns/' + campaignId).set(campaignData);
+    _reviewCampaign = {
+      campaignId: campaignId,
+      queue: keys,
+      index: 0,
+      selectedCount: keys.length,
+      sentCount: 0,
+      skippedCount: 0,
+      excludedCount: 0,
+      isSingle: isSingle === true
+    };
+    _reviewWhatsAppOpenedFor = '';
+    saveReviewCampaignSession();
+    var modal = document.getElementById('reviewCampaignModal');
+    if(modal) modal.classList.add('open');
+    closeModal('detailModal');
+    showReviewCampaignStep('send');
+    renderCurrentReviewCampaignClient();
+  } catch(e) {
+    console.error('review campaign create error:', e);
+    showToast('❌ تعذر إنشاء الحملة: ' + (e.message || e));
+  } finally {
+    _reviewCampaignBusy = false;
+    if(startBtn) startBtn.textContent = 'بدء الإرسال اليدوي';
+    updateReviewCampaignSelectionUI();
+  }
+}
+
+function getCurrentReviewCampaignClient() {
+  if(!_reviewCampaign || !Array.isArray(_reviewCampaign.queue)) return null;
+  return getReviewClientByKey(_reviewCampaign.queue[Number(_reviewCampaign.index) || 0]);
+}
+
+function renderCurrentReviewCampaignClient() {
+  if(!_reviewCampaign) return;
+  var total = _reviewCampaign.queue.length;
+  var index = Number(_reviewCampaign.index) || 0;
+  if(index >= total) {
+    finishReviewCampaign();
+    return;
+  }
+
+  var c = getCurrentReviewCampaignClient();
+  if(!c) {
+    showToast('⚠️ تعذر العثور على العميل الحالي. اختر «تخطي الآن».');
+    return;
+  }
+
+  var processed = index;
+  var place = [c.city || '', c.district || c.neighborhood || c.address || ''].filter(Boolean).join(' — ');
+  document.getElementById('reviewCampaignPosition').textContent = 'العميل ' + (index + 1) + ' من ' + total;
+  document.getElementById('reviewCampaignProgressCounts').textContent =
+    'أُرسل: ' + _reviewCampaign.sentCount + ' | تخطي: ' + _reviewCampaign.skippedCount +
+    ' | استبعاد: ' + _reviewCampaign.excludedCount + ' | المتبقي: ' + (total - processed);
+  document.getElementById('reviewCampaignProgressBar').style.width = Math.round((processed / total) * 100) + '%';
+  document.getElementById('reviewCampaignCurrentName').textContent = c.name || 'بدون اسم';
+  document.getElementById('reviewCampaignCurrentMeta').textContent =
+    (c.phone || '—') + (place ? ' — ' + place : '') +
+    (c.reviewRequestSent ? ' — سبق الإرسال ' + (Number(c.reviewRequestCount) || 1) + ' مرة' : '');
+  document.getElementById('reviewCampaignMessage').value = buildReviewRequestMessage(c);
+
+  _reviewWhatsAppOpenedFor = '';
+  setReviewCampaignBusy(false);
+  var openBtn = document.getElementById('reviewOpenWhatsAppBtn');
+  if(openBtn) openBtn.textContent = '📲 فتح في واتساب';
+  var sentBtn = document.getElementById('reviewConfirmSentBtn');
+  if(sentBtn) sentBtn.disabled = true;
+}
+
+function setReviewCampaignBusy(busy) {
+  _reviewCampaignBusy = busy;
+  ['reviewOpenWhatsAppBtn','reviewExcludeBtn','reviewSkipBtn','reviewConfirmSentBtn'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if(el) el.disabled = busy || (id === 'reviewConfirmSentBtn' && !_reviewWhatsAppOpenedFor);
+  });
+}
+
+function openCurrentReviewWhatsApp() {
+  if(_reviewCampaignBusy) return;
+  var c = getCurrentReviewCampaignClient();
+  if(!c) return;
+  var key = reviewClientKey(c);
+  var waPhone = normalizePhoneForWA(c.phone);
+  if(!waPhone) {
+    showToast('❌ رقم الجوال غير صالح');
+    return;
+  }
+  if(_reviewWhatsAppOpenedFor === key &&
+     !confirm('سبق فتح رسالة هذا العميل في واتساب.\n\nهل تريد فتحها مرة أخرى؟')) return;
+
+  window.open('https://wa.me/' + waPhone + '?text=' + encodeURIComponent(buildReviewRequestMessage(c)), '_blank', 'noopener');
+  _reviewWhatsAppOpenedFor = key;
+  var sentBtn = document.getElementById('reviewConfirmSentBtn');
+  var openBtn = document.getElementById('reviewOpenWhatsAppBtn');
+  if(sentBtn) sentBtn.disabled = false;
+  if(openBtn) openBtn.textContent = '📲 إعادة فتح واتساب';
+  showToast('📲 تم فتح واتساب — لن يُسجَّل الإرسال حتى تؤكده');
+}
+
+async function recordCurrentReviewDecision(decision, extra) {
+  if(_reviewCampaignBusy || !_reviewCampaign || !db) return;
+  var c = getCurrentReviewCampaignClient();
+  if(!c) return;
+  var key = reviewClientKey(c);
+  var campaignId = _reviewCampaign.campaignId;
+  var nextSent = Number(_reviewCampaign.sentCount) || 0;
+  var nextSkipped = Number(_reviewCampaign.skippedCount) || 0;
+  var nextExcluded = Number(_reviewCampaign.excludedCount) || 0;
+  if(decision === 'sent') nextSent++;
+  if(decision === 'skipped') nextSkipped++;
+  if(decision === 'excluded') nextExcluded++;
+
+  var nextIndex = (Number(_reviewCampaign.index) || 0) + 1;
+  var isDone = nextIndex >= _reviewCampaign.queue.length;
+  var nowLocal = Date.now();
+  var serverTime = firebase.database.ServerValue.TIMESTAMP;
+  var updates = {};
+
+  updates['reviewCampaigns/' + campaignId + '/customers/' + key] = decision;
+  updates['reviewCampaigns/' + campaignId + '/sentCount'] = nextSent;
+  updates['reviewCampaigns/' + campaignId + '/skippedCount'] = nextSkipped;
+  updates['reviewCampaigns/' + campaignId + '/excludedCount'] = nextExcluded;
+  updates['reviewCampaigns/' + campaignId + '/updatedAt'] = serverTime;
+  updates['reviewCampaigns/' + campaignId + '/status'] = isDone ? 'completed' : 'active';
+  if(isDone) updates['reviewCampaigns/' + campaignId + '/completedAt'] = serverTime;
+
+  if(decision === 'sent') {
+    var newCount = (Number(c.reviewRequestCount) || 0) + 1;
+    updates['customers/' + key + '/reviewRequestSent'] = true;
+    updates['customers/' + key + '/reviewRequestSentAt'] = serverTime;
+    updates['customers/' + key + '/reviewRequestCount'] = newCount;
+    updates['customers/' + key + '/reviewRequestStatus'] = 'sent';
+    updates['customers/' + key + '/reviewRequestLastCampaignId'] = campaignId;
+    updates['customers/' + key + '/reviewRequestUpdatedAt'] = serverTime;
+  }
+
+  if(decision === 'excluded') {
+    updates['customers/' + key + '/reviewCandidate'] = false;
+    updates['customers/' + key + '/reviewRequestExcluded'] = true;
+    updates['customers/' + key + '/reviewRequestStatus'] = 'excluded';
+    updates['customers/' + key + '/reviewRequestExcludedReason'] = (extra && extra.reason) || '';
+    updates['customers/' + key + '/reviewRequestExcludedAt'] = serverTime;
+    updates['customers/' + key + '/reviewRequestUpdatedAt'] = serverTime;
+  }
+
+  setReviewCampaignBusy(true);
+  try {
+    await db.ref().update(updates);
+    if(decision === 'sent') {
+      c.reviewRequestSent = true;
+      c.reviewRequestSentAt = nowLocal;
+      c.reviewRequestCount = (Number(c.reviewRequestCount) || 0) + 1;
+      c.reviewRequestStatus = 'sent';
+      c.reviewRequestLastCampaignId = campaignId;
+    }
+    if(decision === 'excluded') {
+      c.reviewCandidate = false;
+      c.reviewRequestExcluded = true;
+      c.reviewRequestStatus = 'excluded';
+      c.reviewRequestExcludedReason = (extra && extra.reason) || '';
+      c.reviewRequestExcludedAt = nowLocal;
+    }
+
+    _reviewCampaign.sentCount = nextSent;
+    _reviewCampaign.skippedCount = nextSkipped;
+    _reviewCampaign.excludedCount = nextExcluded;
+    _reviewCampaign.index = nextIndex;
+    _reviewWhatsAppOpenedFor = '';
+    localStorage.setItem('atwad_clients', JSON.stringify(clients));
+    if(isDone) localStorage.removeItem(REVIEW_CAMPAIGN_SESSION_KEY);
+    else saveReviewCampaignSession();
+    renderCurrentReviewCampaignClient();
+  } catch(e) {
+    console.error('review campaign decision error:', e);
+    showToast('❌ لم يتم حفظ القرار. حاول مرة أخرى: ' + (e.message || e));
+    setReviewCampaignBusy(false);
+  }
+}
+
+function confirmCurrentReviewSent() {
+  var c = getCurrentReviewCampaignClient();
+  if(!c || _reviewWhatsAppOpenedFor !== reviewClientKey(c)) {
+    showToast('⚠️ افتح رسالة العميل في واتساب أولًا');
+    return;
+  }
+  recordCurrentReviewDecision('sent');
+}
+
+function skipCurrentReviewClient() {
+  recordCurrentReviewDecision('skipped');
+}
+
+function excludeCurrentReviewClient() {
+  var c = getCurrentReviewCampaignClient();
+  if(!c) return;
+  if(!confirm('هل تريد استبعاد ' + (c.name || 'هذا العميل') + ' من حملات طلب التقييم القادمة؟')) return;
+  var reason = prompt('سبب الاستبعاد (اختياري):', '') || '';
+  recordCurrentReviewDecision('excluded', {reason: reason.trim()});
+}
+
+function finishReviewCampaign() {
+  if(!_reviewCampaign) return;
+  showReviewCampaignStep('done');
+  document.getElementById('reviewDoneSelected').textContent = _reviewCampaign.selectedCount || _reviewCampaign.queue.length;
+  document.getElementById('reviewDoneSent').textContent = _reviewCampaign.sentCount || 0;
+  document.getElementById('reviewDoneSkipped').textContent = _reviewCampaign.skippedCount || 0;
+  document.getElementById('reviewDoneExcluded').textContent = _reviewCampaign.excludedCount || 0;
+  localStorage.removeItem(REVIEW_CAMPAIGN_SESSION_KEY);
+  renderTable();
+}
+
+/** فتح طلب تقييم فردي بالطريقة اليدوية نفسها، دون تسجيل تلقائي */
 function sendReviewRequest(id) {
   var c = clients.find(function(x){ return x.id === id; });
   if(!c) return;
-
-  // تحذير عند الإرسال المكرر
+  var reason = getReviewBlockReason(c);
+  if(reason) {
+    showToast('⚠️ ' + reason);
+    return;
+  }
   if(c.reviewRequestSent === true) {
-    if(!confirm('سبق إرسال طلب تقييم لهذا العميل.\n\nهل تريد إرسال الطلب مرة أخرى؟')) return;
+    var repeatText = 'سبق إرسال طلب تقييم لهذا العميل بتاريخ ' + fmtReviewDate(c.reviewRequestSentAt) +
+      '، وعدد مرات الإرسال ' + (Number(c.reviewRequestCount) || 1) + '.\n\nهل تريد إرسال الطلب مرة أخرى؟';
+    if(!confirm(repeatText)) return;
   }
-
-  var waPhone = normalizePhoneForWA(c.phone);
-  var clientName = (c.name && c.name.trim()) ? c.name.trim() : 'عميلنا العزيز';
-  var msg =
-    'السلام عليكم ' + (clientName === 'عميلنا العزيز' ? clientName : 'أستاذ/أستاذة ' + clientName) + ' 🌹\n\n' +
-    'أسأل الله أن تكونوا بخير.\n\n' +
-    'سبق أن تشرفنا بخدمتكم في مؤسسة أطواد لصيانة المكيفات، سواء كانت الزيارة قبل فترة قريبة أو منذ مدة.\n\n' +
-    'إذا كانت تجربتكم معنا مرضية، فسيسعدنا كثيرًا أن تشاركونا تقييمكم عبر الرابط التالي، فتقييمكم يساعدنا على تطوير الخدمة ويمنح العملاء الجدد الثقة في اختيارنا.\n\n' +
-    '⭐ رابط التقييم:\n' +
-    'https://attwadac-sys.github.io/atwad/atwad-reviews.html\n\n' +
-    'شكرًا لكم على ثقتكم، ونسأل الله أن نكون دائمًا عند حسن ظنكم.\n\n' +
-    'مؤسسة أطواد لصيانة المكيفات';
-
-  // فتح واتساب
-  window.open('https://wa.me/' + waPhone + '?text=' + encodeURIComponent(msg), '_blank', 'noopener');
-
-  // تحديث سجل العميل
-  var now = new Date().toISOString();
-  var newCount = (c.reviewRequestCount || 0) + 1;
-  c.reviewRequestSent   = true;
-  c.reviewRequestSentAt = now;
-  c.reviewRequestCount  = newCount;
-
-  if(c._fbKey) {
-    db.ref('customers/' + c._fbKey).update({
-      reviewRequestSent:   true,
-      reviewRequestSentAt: now,
-      reviewRequestCount:  newCount
-    }).then(function(){ openDetail(id); })
-      .catch(function(e){ console.error('review update error:', e); });
-  }
-  showToast('📲 تم فتح واتساب لإرسال طلب التقييم');
+  startReviewCampaign([reviewClientKey(c)], true);
 }
 
 /** تنسيق تاريخ ISO لعرض مقروء */
@@ -1875,202 +2507,11 @@ function downloadBackup() {
   showToast('💾 تم تنزيل النسخة الاحتياطية');
 }
 
-// ================================================================
-// محرك حملة طلب التقييم
-// ================================================================
-var CAMP_MAX = 30;
-var _campSelected = new Set();
-var _campQueue    = [];
-var _campIdx      = 0;
-var _campWAOpened = false;
-var _campStats    = {sent:0, skip:0, excl:0};
-var _campId       = null;
-
-var REVIEW_STATUS_LABELS = {
-  not_sent:'لم يُرسل', ready:'جاهز', sent:'تم الإرسال', reviewed:'قيّم', excluded:'مستبعد'
-};
-function getReviewStatus(c) {
-  if(c.reviewRequest && c.reviewRequest.status) return c.reviewRequest.status;
-  if(c.reviewRequestSent) return 'sent';
-  if(c.reviewCandidate)   return 'ready';
-  return 'not_sent';
-}
-function isEligibleForCampaign(c) {
-  var phone = normalizePhoneImport(c.phone||'');
-  if(!phone || !/^05\d{8}$/.test(phone)) return false;
-  if(isBlockedPhone(phone)) return false;
-  var s = getReviewStatus(c);
-  return s !== 'excluded' && s !== 'reviewed';
-}
-function buildReviewMessage(name) {
-  var n=(name&&name.trim()&&name.trim()!=='undefined')?name.trim():'';
-  var g=n?'السلام عليكم أستاذ/ة '+n:'السلام عليكم';
-  return g+'\n\nسبق أن تشرفنا بخدمتكم في مؤسسة أطواد لصيانة المكيفات، سواء كان ذلك مؤخرًا أو منذ مدة.\n\nيسعدنا معرفة رأيكم في تجربتكم معنا، فتقييمكم يساعدنا على تحسين الخدمة والمحافظة على جودة العمل.\n\nرابط التقييم:\nhttps://attwadac-sys.github.io/atwad/atwad-reviews.html\n\nشاكرين لكم ثقتكم وتقديركم 🌹';
-}
-function openCampaignModal() {
-  _campSelected.clear();
-  var cities=Array.from(new Set(clients.map(function(c){return c.city||'';}).filter(Boolean))).sort();
-  var sel=document.getElementById('campFilterCity');
-  sel.innerHTML='<option value="">كل المدن</option>'+cities.map(function(ct){return '<option>'+ct+'</option>';}).join('');
-  document.getElementById('campSearch').value='';
-  document.getElementById('campFilterStatus').value='all';
-  renderCampTable();
-  document.getElementById('campModal').classList.add('open');
-}
-function closeCampaignModal(){ document.getElementById('campModal').classList.remove('open'); _campSelected.clear(); }
-function renderCampTable() {
-  var search=(document.getElementById('campSearch').value||'').toLowerCase();
-  var stFilt=document.getElementById('campFilterStatus').value;
-  var ctFilt=document.getElementById('campFilterCity').value;
-  var list=clients.filter(function(c){
-    var status=getReviewStatus(c); var eligible=isEligibleForCampaign(c);
-    if(!eligible&&status!=='sent') return false;
-    if(stFilt&&stFilt!=='all'&&status!==stFilt) return false;
-    if(ctFilt&&(c.city||'')!==ctFilt) return false;
-    if(search){var n=(c.name||'').toLowerCase(); if(!n.includes(search)&&!(c.phone||'').includes(search))return false;}
-    return true;
-  });
-  var html=list.map(function(c){
-    var cid=c.id||c._fbKey; var status=getReviewStatus(c); var eligible=isEligibleForCampaign(c);
-    var isSel=_campSelected.has(cid); var rr=c.reviewRequest||{};
-    var rrAt=rr.lastSentAt?fmtReviewDate(new Date(rr.lastSentAt).toISOString()):(c.reviewRequestSentAt?fmtReviewDate(c.reviewRequestSentAt):'—');
-    var rrCnt=rr.sentCount||c.reviewRequestCount||0;
-    var slabel=REVIEW_STATUS_LABELS[status]||status;
-    var scol={not_sent:'#92400E',ready:'#1E40AF',sent:'#065F46',reviewed:'#7C3AED',excluded:'#991B1B'}[status]||'#64748B';
-    return '<tr class="'+(eligible?'':'excluded-row')+'">'+
-      '<td><input type="checkbox"'+(isSel?' checked':'')+' '+(eligible?'':'disabled')+
-        ' onchange="campToggleOne(\''+cid+'\',this)"></td>'+
-      '<td><b>'+(c.name||'—')+'</b></td><td dir="ltr">'+(c.phone||'—')+'</td>'+
-      '<td>'+(c.city||'')+(c.district?' / '+c.district:'')+'</td>'+
-      '<td>'+(c.lastVisit||c.lastService||'—')+'</td>'+
-      '<td><span style="font-size:11px;font-weight:700;color:'+scol+'">'+slabel+'</span></td>'+
-      '<td style="font-size:11px;">'+rrAt+'</td><td style="text-align:center;">'+(rrCnt||'—')+'</td>'+
-    '</tr>';
-  }).join('');
-  document.getElementById('campTableBody').innerHTML=html||'<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--mist)">لا يوجد عملاء</td></tr>';
-  updateCampCounter();
-}
-function campToggleOne(id,cb){
-  var c=clients.find(function(x){return(x.id||x._fbKey)===id;});
-  if(!c) return;
-  if(cb.checked){
-    if(_campSelected.size>=CAMP_MAX){cb.checked=false;alert('حفاظًا على سلامة حساب واتساب، الحد الأقصى للدفعة الواحدة هو '+CAMP_MAX+' عميلًا.');return;}
-    if(getReviewStatus(c)==='sent'){
-      var rr=c.reviewRequest||{};
-      var lastAt=rr.lastSentAt?fmtReviewDate(new Date(rr.lastSentAt).toISOString()):(c.reviewRequestSentAt?fmtReviewDate(c.reviewRequestSentAt):'—');
-      var cnt=rr.sentCount||c.reviewRequestCount||1;
-      if(!confirm('سبق إرسال طلب تقييم.\nآخر إرسال: '+lastAt+' | مرات: '+cnt+'\nهل تريد إعادة الطلب؟')){cb.checked=false;return;}
-    }
-    _campSelected.add(id);
-  }else{_campSelected.delete(id);}
-  updateCampCounter();
-}
-function campToggleAll(checked){
-  document.querySelectorAll('#campTableBody input[type=checkbox]:not(:disabled)').forEach(function(cb){
-    var m=(cb.getAttribute('onchange')||'').match(/campToggleOne\(\'([^\']+)\'/);
-    if(!m)return;
-    if(checked&&_campSelected.size<CAMP_MAX){_campSelected.add(m[1]);cb.checked=true;}
-    else if(!checked){_campSelected.delete(m[1]);cb.checked=false;}
-  });
-  updateCampCounter();
-}
-function updateCampCounter(){
-  var n=_campSelected.size;
-  document.getElementById('campCounter').textContent='تم تحديد '+n+' من '+CAMP_MAX;
-  document.getElementById('btnStartCamp').disabled=n===0;
-}
-function startCampaign(){
-  if(_campSelected.size===0){showToast('⚠️ لم تختر أي عميل');return;}
-  _campQueue=clients.filter(function(c){return _campSelected.has(c.id||c._fbKey);});
-  _campIdx=0;_campStats={sent:0,skip:0,excl:0};_campWAOpened=false;
-  _campId='camp_'+Date.now();
-  if(db) db.ref('reviewCampaigns/'+_campId).set({
-    createdAt:new Date().toISOString(),total:_campQueue.length,
-    sent:0,skipped:0,excluded:0,status:'active',
-    clientIds:_campQueue.map(function(c){return c.id||c._fbKey||'';})
-  }).catch(function(e){console.error('[Campaign]',e);});
-  document.getElementById('campModal').classList.remove('open');
-  openSendModal();
-}
-function openSendModal(){
-  if(_campIdx>=_campQueue.length){endCampaign();return;}
-  var c=_campQueue[_campIdx];
-  document.getElementById('sStatTotal').textContent=_campQueue.length;
-  document.getElementById('sStatSent').textContent=_campStats.sent;
-  document.getElementById('sStatSkip').textContent=_campStats.skip;
-  document.getElementById('sStatExcl').textContent=_campStats.excl;
-  document.getElementById('sendProgress').textContent='العميل '+(_campIdx+1)+' من '+_campQueue.length;
-  document.getElementById('sendClientName').textContent=c.name||'عميل';
-  document.getElementById('sendClientPhone').textContent=c.phone||'—';
-  document.getElementById('sendMsgPreview').textContent=buildReviewMessage(c.name);
-  _campWAOpened=false;
-  document.getElementById('btnOpenWA').disabled=false;
-  document.getElementById('btnMarkSent').disabled=true;
-  document.getElementById('sendModal').classList.add('open');
-}
-function openWACurrent(){
-  var c=_campQueue[_campIdx]; if(!c)return;
-  var phone=normalizePhoneImport(c.phone||'');
-  var waPhone=phone.startsWith('05')?'966'+phone.slice(1):phone;
-  var url='https://wa.me/'+waPhone+'?text='+encodeURIComponent(buildReviewMessage(c.name));
-  var a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener noreferrer';
-  document.body.appendChild(a);a.click();document.body.removeChild(a);
-  _campWAOpened=true;
-  document.getElementById('btnMarkSent').disabled=false;
-  document.getElementById('btnOpenWA').disabled=true;
-}
-function campDecision(decision){
-  var c=_campQueue[_campIdx]; if(!c||!c._fbKey){_campIdx++;openSendModal();return;}
-  var btns=document.querySelectorAll('#sendModal button');
-  btns.forEach(function(b){b.disabled=true;});
-  if(decision==='sent'){
-    if(!db){showToast('❌ Firebase غير متاح');btns.forEach(function(b){b.disabled=false;});return;}
-    var rr=c.reviewRequest||{};var cnt=(rr.sentCount||c.reviewRequestCount||0)+1;
-    db.ref('customers/'+c._fbKey).update({
-      'reviewRequest/status':'sent','reviewRequest/lastSentAt':firebase.database.ServerValue.TIMESTAMP,
-      'reviewRequest/sentCount':cnt,'reviewRequest/lastCampaignId':_campId,
-      'reviewRequest/updatedAt':firebase.database.ServerValue.TIMESTAMP,
-      reviewRequestSent:true,reviewRequestSentAt:new Date().toISOString(),reviewRequestCount:cnt
-    }).then(function(){_campStats.sent++;campUpdateLog('sent');_campIdx++;openSendModal();})
-     .catch(function(e){showToast('❌ خطأ: '+e.message);btns.forEach(function(b){b.disabled=false;});});
-  }else if(decision==='skip'){
-    _campStats.skip++;campUpdateLog('skip');_campIdx++;openSendModal();
-  }else if(decision==='exclude'){
-    var reason=prompt('سبب الاستبعاد (اختياري):');
-    if(reason===null){btns.forEach(function(b){b.disabled=false;});return;}
-    if(!confirm('استبعاد «'+(c.name||'—')+'» من الحملات القادمة؟')){btns.forEach(function(b){b.disabled=false;});return;}
-    if(db) db.ref('customers/'+c._fbKey).update({
-      'reviewRequest/status':'excluded','reviewRequest/excludedAt':firebase.database.ServerValue.TIMESTAMP,
-      'reviewRequest/excludeReason':reason||''
-    }).then(function(){_campStats.excl++;campUpdateLog('excl');_campIdx++;openSendModal();})
-     .catch(function(e){showToast('❌ خطأ: '+e.message);btns.forEach(function(b){b.disabled=false;});});
-    else{_campStats.excl++;_campIdx++;openSendModal();}
-  }
-}
-function campUpdateLog(type){
-  if(!db||!_campId)return;
-  try{
-    var upd={};
-    if(type==='sent')upd.sent=firebase.database.ServerValue.increment(1);
-    if(type==='skip')upd.skipped=firebase.database.ServerValue.increment(1);
-    if(type==='excl')upd.excluded=firebase.database.ServerValue.increment(1);
-    db.ref('reviewCampaigns/'+_campId).update(upd);
-  }catch(e){console.warn('[Campaign]',e);}
-}
-function endCampaign(){
-  document.getElementById('sendModal').classList.remove('open');
-  if(db&&_campId) db.ref('reviewCampaigns/'+_campId).update({status:'completed',completedAt:new Date().toISOString()});
-  alert('🎉 انتهت الحملة\n\n✅ تم الإرسال: '+_campStats.sent+'\n⏭️ تم التخطي: '+_campStats.skip+'\n🚫 تم الاستبعاد: '+_campStats.excl+'\n📊 المجموع: '+_campQueue.length);
-  _campId=null;_campQueue=[];_campIdx=0;
-}
-
-window.__atwadInitPage = function(user) {
-  console.log('[customers] مسجّل:', user.email);
+if(db) {
+  console.log('[customers] جاري الاتصال بـ Firebase — المسار: customers');
   clients = [];
   renderTable();
   syncFromFirebase();
-};
-if(false) { // يُستبدل بواجهة المصادقة
 } else {
   console.warn('[customers] ⚠️ Firebase غير متاح');
   var errBanner = document.createElement('div');
@@ -2201,68 +2642,6 @@ function applyPageLang(l) {
       <button class="btn-preview" id="btnPreview" onclick="showPreview()" style="display:none;">👁️ معاينة البيانات</button>
       <button class="btn-start-import" id="btnStartImport" data-ready="0" onclick="startImport()" style="display:none;" disabled>🚀 بدء الاستيراد</button>
       <button class="btn-cancel-import" onclick="closeImportModal()">✕ إلغاء</button>
-    </div>
-  </div>
-</div>
-
-<!-- ========== نافذة حملة التقييم ========== -->
-<div class="camp-overlay" id="campModal">
-  <div class="camp-box">
-    <div class="camp-title">
-      ⭐ حملة طلب التقييم
-      <span class="camp-counter" id="campCounter">تم تحديد 0 من 30</span>
-    </div>
-    <div class="camp-filters">
-      <input type="text" class="camp-search" id="campSearch" placeholder="🔍 اسم أو جوال..." oninput="renderCampTable()">
-      <select class="camp-select" id="campFilterStatus" onchange="renderCampTable()">
-        <option value="all">جميع الحالات</option>
-        <option value="not_sent">لم يُرسل</option>
-        <option value="ready">جاهز للإرسال</option>
-        <option value="sent">تم الإرسال</option>
-      </select>
-      <select class="camp-select" id="campFilterCity" onchange="renderCampTable()">
-        <option value="">كل المدن</option>
-      </select>
-      <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:var(--slate);">
-        <input type="checkbox" id="campSelectAll" onchange="campToggleAll(this.checked)"> تحديد الكل
-      </label>
-    </div>
-    <div class="camp-table-wrap">
-      <table class="camp-table">
-        <thead><tr>
-          <th>✓</th><th>العميل</th><th>الجوال</th><th>المدينة/الحي</th>
-          <th>آخر زيارة</th><th>حالة التقييم</th><th>آخر إرسال</th><th>مرات الإرسال</th>
-        </tr></thead>
-        <tbody id="campTableBody"></tbody>
-      </table>
-    </div>
-    <div class="camp-btns">
-      <button class="btn-start-camp" id="btnStartCamp" onclick="startCampaign()" disabled>🚀 بدء الإرسال اليدوي</button>
-      <button class="btn-close-camp" onclick="closeCampaignModal()">✕ إغلاق</button>
-    </div>
-  </div>
-</div>
-
-<!-- ========== نافذة الإرسال المتتابع ========== -->
-<div class="send-overlay" id="sendModal">
-  <div class="send-box">
-    <div class="send-stats">
-      <div class="send-stat"><div class="sn" id="sStatTotal">0</div><div class="sl">الدفعة</div></div>
-      <div class="send-stat"><div class="sn" id="sStatSent" style="color:#10B981">0</div><div class="sl">تم الإرسال</div></div>
-      <div class="send-stat"><div class="sn" id="sStatSkip" style="color:#0EA5E9">0</div><div class="sl">تخطي</div></div>
-      <div class="send-stat"><div class="sn" id="sStatExcl" style="color:#EF4444">0</div><div class="sl">استبعاد</div></div>
-    </div>
-    <div class="send-progress" id="sendProgress">العميل 1 من 10</div>
-    <div class="send-client-name" id="sendClientName">—</div>
-    <div class="send-phone" id="sendClientPhone">—</div>
-    <div class="send-msg-preview" id="sendMsgPreview"></div>
-    <div class="send-actions">
-      <button class="btn-open-wa" id="btnOpenWA" onclick="openWACurrent()">📲 فتح في واتساب</button>
-      <div class="send-decisions">
-        <button class="btn-mark-sent" id="btnMarkSent" onclick="campDecision(\"sent\")" disabled>✅ تم الإرسال</button>
-        <button class="btn-skip" onclick="campDecision(\"skip\")">⏭️ تخطي</button>
-        <button class="btn-exclude" onclick="campDecision(\"exclude\")">🚫 استبعاد</button>
-      </div>
     </div>
   </div>
 </div>

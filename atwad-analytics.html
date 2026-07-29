@@ -3,7 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>أطواد - التحليلات v1.1</title><style>
+<title>أطواد - التحليلات v1.1</title>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+<script src="atwad-admin-auth.js"></script>
+<style>
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
 :root{
   --deep:#0C3B5E;--sky:#0EA5E9;--ice:#E8F4FD;--frost:#F0F9FF;
@@ -174,11 +179,7 @@ body{font-family:'Cairo',sans-serif;background:#F1F5F9;color:var(--slate);}
     border-top:1px solid var(--ice);
   }
 }
-</style><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-<script src="atwad-firebase.js"></script>
-<script src="atwad-auth.js"></script>
+</style>
 </head>
 <body>
 
@@ -260,7 +261,11 @@ body{font-family:'Cairo',sans-serif;background:#F1F5F9;color:var(--slate);}
 // ============================================================
 // Firebase — لا تغيير
 // ============================================================
-var db = window.db; // من atwad-firebase.js — لا تهيئة محلية
+var db = null;
+try {
+  if(!firebase.apps.length) firebase.initializeApp({databaseURL:'https://atwad-booking-default-rtdb.firebaseio.com'});
+  db = firebase.database();
+} catch(e){ console.error('Firebase initialization error:', e); }
 
 var allAppts = [], allWOs = [], allClients = [];
 var TECHS = { Abrar:'أحمد', 'أبرار':'أحمد', 'Abrar':'أحمد', Shoib:'شعيب', Suhail:'سهيل'};
@@ -959,7 +964,6 @@ function switchTab(id, btn) {
 
 // تشغيل
 loadAll();
-
-window.__atwadInitPage = function(user) { console.log("[analytics] مسجّل:", user.email); if(typeof loadData==="function") loadData(); };
-
 </script>
+</body>
+</html>

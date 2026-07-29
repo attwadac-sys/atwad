@@ -279,14 +279,16 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 .btn-save-new{background:#D1FAE5;color:#065F46;}
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
 </head>
 <body>
 
 <!-- Loading -->
 <div class="loading-overlay" id="loadingOverlay">
-  <div class="loading-spinner"></div>
-  <div style="font-family:'Tajawal',sans-serif;font-size:15px;font-weight:700;color:var(--deep);">جاري تحميل المواعيد...</div>
+  <div class="loading-spinner" id="loadingSpinner"></div>
+  <div id="loadingMessage" style="font-family:'Tajawal',sans-serif;font-size:15px;font-weight:700;color:var(--deep);">جاري تحميل المواعيد...</div>
+  <button id="loadingRetryBtn" type="button" onclick="initFirebaseSync()" style="display:none;border:0;border-radius:10px;background:var(--sky);color:#fff;padding:10px 18px;font-family:'Tajawal',sans-serif;font-weight:700;cursor:pointer;">إعادة المحاولة</button>
 </div>
 
 <div class="sidebar">
@@ -312,8 +314,9 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
       <!-- مؤشر الاتصال -->
       <div class="fb-status" id="fbStatus">
         <div class="fb-dot loading" id="fbDot"></div>
-        <span id="fbStatusText">جاري الاتصال...</span>
+        <span id="fbStatusText">جاري التحقق...</span>
       </div>
+      <button type="button" onclick="logoutAdmin()" title="تسجيل الخروج" style="padding:7px 10px;border-radius:9px;border:1.5px solid #E2E8F0;background:#fff;color:#475569;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">خروج</button>
       <div class="view-toggle">
         <button class="view-btn" id="vWeek" onclick="switchView('week')">📆 أسبوع</button>
         <button class="view-btn active" id="vList" onclick="switchView('list')">📋 قائمة</button>
@@ -502,7 +505,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
     </div>
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeModal()">إلغاء</button>
-      <button class="btn-save" onclick="saveAppt()">💾 حفظ الموعد</button>
+      <button class="btn-save" id="saveApptBtn" onclick="saveAppt()">💾 حفظ الموعد</button>
     </div>
   </div>
 </div>
@@ -636,10 +639,68 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 <script>
 // ===== FIREBASE =====
 var db = null;
+var auth = null;
+var secureSyncStarted = false;
+var ADMIN_UID = 'NU8g25megKefUOBQGvfkVtBOw802';
 try {
-  firebase.initializeApp({databaseURL:"https://atwad-booking-default-rtdb.firebaseio.com"});
+  firebase.initializeApp({
+    apiKey: "AIzaSyAjq2PVCkAVYwqpIpKIGx01LkbCB3TmW6w",
+    authDomain: "atwad-booking.firebaseapp.com",
+    databaseURL: "https://atwad-booking-default-rtdb.firebaseio.com",
+    projectId: "atwad-booking",
+    storageBucket: "atwad-booking.firebasestorage.app",
+    messagingSenderId: "110922546416",
+    appId: "1:110922546416:web:d8cd48aa90f2d6ce9cd635"
+  });
+  auth = firebase.auth();
   db = firebase.database();
 } catch(e){ console.log('Firebase:', e); }
+
+function adminLoginUrl(reason) {
+  var returnPage = encodeURIComponent(location.pathname.split('/').pop() || 'atwad-appointments.html');
+  var suffix = reason ? '&reason=' + encodeURIComponent(reason) : '';
+  return 'atwad-login.html?return=' + returnPage + suffix;
+}
+
+function logoutAdmin() {
+  if(!auth) {
+    location.replace(adminLoginUrl());
+    return;
+  }
+  auth.signOut().finally(function() {
+    location.replace(adminLoginUrl('signed-out'));
+  });
+}
+
+function startSecureAppointments() {
+  if(secureSyncStarted) return;
+  secureSyncStarted = true;
+  loadWaitingList();
+  initFirebaseSync();
+  loadFridaySetting();
+}
+
+if(auth) {
+  auth.onAuthStateChanged(function(user) {
+    if(!user) {
+      location.replace(adminLoginUrl('login-required'));
+      return;
+    }
+    if(user.uid !== ADMIN_UID) {
+      auth.signOut().finally(function() {
+        location.replace(adminLoginUrl('unauthorized'));
+      });
+      return;
+    }
+    startSecureAppointments();
+  }, function(err) {
+    console.error('Authentication:', err);
+    document.getElementById('fbStatusText').textContent = 'تعذر التحقق';
+    setAppointmentsLoadingState('تعذر التحقق من تسجيل الدخول. أعد تحميل الصفحة.', true);
+  });
+} else {
+  location.replace(adminLoginUrl('auth-unavailable'));
+}
 
 // ===== STATE =====
 let appointments = []; // كل البيانات من Firebase
@@ -767,27 +828,96 @@ function toggleFriday() {
 }
 
 // ===== FIREBASE REALTIME SYNC =====
+var appointmentsValueHandler = null;
+var appointmentsErrorHandler = null;
+var firebaseSyncAttempt = 0;
+var firebaseInitialLoadTimer = null;
+
+function setAppointmentsLoadingState(message, allowRetry) {
+  var overlay = document.getElementById('loadingOverlay');
+  var spinner = document.getElementById('loadingSpinner');
+  var messageEl = document.getElementById('loadingMessage');
+  var retryBtn = document.getElementById('loadingRetryBtn');
+  if(overlay) overlay.style.display = 'flex';
+  if(spinner) spinner.style.display = allowRetry ? 'none' : 'block';
+  if(messageEl) messageEl.textContent = message;
+  if(retryBtn) retryBtn.style.display = allowRetry ? 'inline-block' : 'none';
+}
+
+function finishAppointmentsLoading() {
+  if(firebaseInitialLoadTimer) {
+    clearTimeout(firebaseInitialLoadTimer);
+    firebaseInitialLoadTimer = null;
+  }
+  var overlay = document.getElementById('loadingOverlay');
+  if(overlay) overlay.style.display = 'none';
+}
+
+function applyLoadedAppointments(fbAppts, bookingWarning) {
+  appointments = fbAppts;
+  updateStats();
+  renderWeek();
+  renderList();
+  document.getElementById('fbDot').className = 'fb-dot connected';
+  document.getElementById('fbStatusText').textContent =
+    (bookingWarning ? 'متصل جزئياً • ' : 'متصل • ') + appointments.length + ' موعد';
+  finishAppointmentsLoading();
+  if(bookingWarning) {
+    showToast('⚠️ عُرضت المواعيد الداخلية، وتعذر مؤقتاً تحميل الحجوزات الإلكترونية');
+  }
+}
+
 function initFirebaseSync() {
   if(!db) {
     document.getElementById('fbDot').className = 'fb-dot';
     document.getElementById('fbStatusText').textContent = 'غير متصل';
-    document.getElementById('loadingOverlay').style.display = 'none';
+    setAppointmentsLoadingState('تعذر تشغيل الاتصال بقاعدة البيانات', true);
     return;
   }
 
+  firebaseSyncAttempt += 1;
+  var thisAttempt = firebaseSyncAttempt;
+  var initialResponseReceived = false;
+
+  // منع تكرار المستمع عند الضغط على «إعادة المحاولة».
+  if(appointmentsValueHandler) {
+    db.ref('appointments').off('value', appointmentsValueHandler);
+  }
+
+  if(firebaseInitialLoadTimer) clearTimeout(firebaseInitialLoadTimer);
+  setAppointmentsLoadingState('جاري تحميل المواعيد...', false);
   document.getElementById('fbDot').className = 'fb-dot loading';
   document.getElementById('fbStatusText').textContent = 'جاري الاتصال...';
 
+  // لا تبقى الصفحة محجوبة إلى ما لا نهاية عند انقطاع الشبكة.
+  firebaseInitialLoadTimer = setTimeout(function() {
+    if(thisAttempt !== firebaseSyncAttempt || initialResponseReceived) return;
+    document.getElementById('fbDot').className = 'fb-dot';
+    document.getElementById('fbStatusText').textContent = 'تعذر الاتصال';
+    setAppointmentsLoadingState('تعذر تحميل المواعيد. تحقق من الإنترنت ثم أعد المحاولة.', true);
+  }, 15000);
+
   // مزامنة مواعيد النظام الداخلي
-  db.ref('appointments').on('value', function(snap) {
+  appointmentsValueHandler = function(snap) {
+    if(thisAttempt !== firebaseSyncAttempt) return;
+    initialResponseReceived = true;
     const fbAppts = [];
     snap.forEach(function(child) {
       fbAppts.push({ ...child.val(), _fbKey: child.key, _source: 'appointments' });
     });
 
     // مزامنة حجوزات العملاء من صفحة الحجز
-    db.ref('bookings').once('value', function(bookSnap) {
-      const existingRefs = fbAppts.map(a => a._fbKey);
+    var bookingsFinished = false;
+    var bookingsTimer = setTimeout(function() {
+      if(bookingsFinished || thisAttempt !== firebaseSyncAttempt) return;
+      bookingsFinished = true;
+      applyLoadedAppointments(fbAppts, true);
+    }, 8000);
+
+    db.ref('bookings').once('value').then(function(bookSnap) {
+      if(bookingsFinished || thisAttempt !== firebaseSyncAttempt) return;
+      bookingsFinished = true;
+      clearTimeout(bookingsTimer);
       bookSnap.forEach(function(child) {
         const b = child.val();
         if(!b.date || !b.time) return;
@@ -817,23 +947,30 @@ function initFirebaseSync() {
           locationSource:  b.locationSource  || ''
         });
       });
-
-      appointments = fbAppts;
-      updateStats();
-      renderWeek();
-      renderList();
-
-      // تحديث مؤشر الاتصال
-      document.getElementById('fbDot').className = 'fb-dot connected';
-      document.getElementById('fbStatusText').textContent = 'متصل • ' + appointments.length + ' موعد';
-      document.getElementById('loadingOverlay').style.display = 'none';
+      applyLoadedAppointments(fbAppts, false);
+    }).catch(function(err) {
+      if(bookingsFinished || thisAttempt !== firebaseSyncAttempt) return;
+      bookingsFinished = true;
+      clearTimeout(bookingsTimer);
+      console.error('bookings load:', err);
+      applyLoadedAppointments(fbAppts, true);
     });
-  }, function(err) {
+  };
+
+  appointmentsErrorHandler = function(err) {
+    if(thisAttempt !== firebaseSyncAttempt) return;
+    initialResponseReceived = true;
+    if(firebaseInitialLoadTimer) {
+      clearTimeout(firebaseInitialLoadTimer);
+      firebaseInitialLoadTimer = null;
+    }
     document.getElementById('fbDot').className = 'fb-dot';
     document.getElementById('fbStatusText').textContent = 'خطأ في الاتصال';
-    document.getElementById('loadingOverlay').style.display = 'none';
+    setAppointmentsLoadingState('تعذر تحميل المواعيد: ' + (err.message || 'خطأ في الاتصال'), true);
     showToast('❌ خطأ في الاتصال: ' + err.message);
-  });
+  };
+
+  db.ref('appointments').on('value', appointmentsValueHandler, appointmentsErrorHandler);
 }
 
 // ===== STATS =====
@@ -1418,7 +1555,58 @@ function resetLocFields() {
   document.getElementById('clientFoundMsg').style.display = 'none';
 }
 
+function appointmentStartMinutes(time){
+  var match=String(time||'').match(/(\d{1,2}):(\d{2})/);
+  if(!match) return null;
+  var hour=parseInt(match[1],10),minute=parseInt(match[2],10);
+  if(hour<0||hour>23||minute<0||minute>59) return null;
+  return hour*60+minute;
+}
+
+function appointmentIsActive(appt){
+  var status=String((appt&&appt.status)||'').toLowerCase();
+  return status!=='cancelled'&&status!=='canceled'&&status!=='ملغي';
+}
+
+function findAppointmentTimeConflict(candidate,excludeKey){
+  if(!candidate||!candidate.date||!candidate.time||!appointmentIsActive(candidate)) return null;
+  var start=appointmentStartMinutes(candidate.time);
+  if(start===null) return null;
+  var end=start+(parseInt(candidate.duration,10)||90);
+
+  return appointments.find(function(existing){
+    if(!existing||existing.date!==candidate.date||!appointmentIsActive(existing)) return false;
+    if(excludeKey&&existing._fbKey===excludeKey) return false;
+    var existingStart=appointmentStartMinutes(existing.time);
+    if(existingStart===null) return false;
+    var existingEnd=existingStart+(parseInt(existing.duration,10)||90);
+    return start<existingEnd&&end>existingStart;
+  })||null;
+}
+
+function describeAppointmentConflict(conflict){
+  var name=conflict.client||conflict.name||'عميل آخر';
+  var time=conflict.time||'وقت غير محدد';
+  return name+' — '+time;
+}
+
+var manualSaveInProgress=false;
+function beginManualSave(){
+  if(manualSaveInProgress) return false;
+  manualSaveInProgress=true;
+  var btn=document.getElementById('saveApptBtn');
+  if(btn){btn.disabled=true;btn.textContent='⏳ جاري الحفظ...';}
+  return true;
+}
+
+function endManualSave(){
+  manualSaveInProgress=false;
+  var btn=document.getElementById('saveApptBtn');
+  if(btn){btn.disabled=false;btn.textContent='💾 حفظ الموعد';}
+}
+
 function saveAppt(){
+  if(manualSaveInProgress) return;
   const client=document.getElementById('f_client').value.trim();
   const phone=document.getElementById('f_phone').value.trim();
   const address=document.getElementById('f_address').value.trim();
@@ -1447,6 +1635,11 @@ function saveAppt(){
     duration: 90,
     updatedAt: new Date().toISOString()
   };
+
+  var timeConflict=findAppointmentTimeConflict(data,editingFirebaseKey||null);
+  if(timeConflict){
+    return showToast('❌ لا يمكن حفظ الموعد: الوقت متداخل مع موعد '+describeAppointmentConflict(timeConflict));
+  }
   if(!editingFirebaseKey) {
     data.serviceAreaChecked = true;
     data.serviceAreaDistrict = manualAreaDistrict;
@@ -1488,6 +1681,7 @@ function saveAppt(){
     }
 
     // لم يتغير التاريخ — حفظ مباشر بدون سؤال
+    if(!beginManualSave()) return;
     var cancelPrevious = false;
     var _saveToCustomer = !!(document.getElementById('chk_save_to_customer') &&
                              document.getElementById('chk_save_to_customer').checked &&
@@ -1542,10 +1736,12 @@ function saveAppt(){
           editingOriginalDate = '';
           closeModal();
         }
+        endManualSave();
       })
-      .catch(function(e){ showToast('❌ خطأ في الحفظ: ' + e.message); });
+      .catch(function(e){ endManualSave(); showToast('❌ خطأ في الحفظ: ' + e.message); });
   } else {
     // إضافة موعد جديد
+    if(!beginManualSave()) return;
     var _saveToCustomerNew = !!(document.getElementById('chk_save_to_customer') &&
                                 document.getElementById('chk_save_to_customer').checked &&
                                 _foundCustomerKey);
@@ -1577,8 +1773,9 @@ function saveAppt(){
         showToast('✅ تم إضافة الموعد بنجاح');
         sendAdminNotification(data);
         closeModal();
+        endManualSave();
       })
-      .catch(function(e){ showToast('❌ خطأ في الحفظ: ' + e.message); });
+      .catch(function(e){ endManualSave(); showToast('❌ خطأ في الحفظ: ' + e.message); });
   }
 }
 
@@ -1635,6 +1832,7 @@ function rescheduleChoice(choice) {
                      document.getElementById('appointment_location_verified').value === 'true');
   var _custKey  = _foundCustomerKey || null;
   var _origDate = editingOriginalDate;
+  if(!beginManualSave()) return;
 
   // العملية ١: تحويل الموعد القديم إلى cancelled
   var dataWithCancel = Object.assign({}, data, {
@@ -1666,10 +1864,11 @@ function rescheduleChoice(choice) {
           showToast('✅ تم ترحيل الموعد بنجاح. تم إنشاء الموعد الجديد، وتحويل الموعد السابق إلى حالة (ملغي).');
           editingOriginalDate = '';
           closeModal();
+          endManualSave();
         })
-        .catch(function(e){ showToast('❌ خطأ عند إنشاء الموعد الجديد: ' + e.message); });
+        .catch(function(e){ endManualSave(); showToast('❌ خطأ عند إنشاء الموعد الجديد: ' + e.message); });
     })
-    .catch(function(e){ showToast('❌ خطأ في الحفظ: ' + e.message); });
+    .catch(function(e){ endManualSave(); showToast('❌ خطأ في الحفظ: ' + e.message); });
 }
 
 function showToast(msg){
@@ -1688,6 +1887,7 @@ function closeModal(){
   manualAreaApproved=false;
   manualAreaDistrict='';
   document.getElementById('areaApprovedBanner').style.display='none';
+  endManualSave();
 }
 
 // ===== DETAIL =====
@@ -2141,7 +2341,7 @@ function confirmCancel() {
 // ٣. قائمة الانتظار — عرض الوقت الحر عند الإلغاء
 // ============================================================
 // ============================================================
-// قائمة الانتظار الذكية — Firebase Collection: waitingList
+// قائمة الانتظار الذكية — Firebase Collection: appointmentWaitlist
 // ============================================================
 var waitingList = []; // تُحمَّل من Firebase
 var _freeSlotForWaiting = null; // الموعد الشاغر الحالي
@@ -2149,7 +2349,7 @@ var _freeSlotForWaiting = null; // الموعد الشاغر الحالي
 /** تحميل قائمة الانتظار من Firebase */
 function loadWaitingList() {
   if(!db) return;
-  db.ref('waitingList').orderByChild('booked').equalTo(false).on('value', function(snap) {
+  db.ref('appointmentWaitlist').orderByChild('booked').equalTo(false).on('value', function(snap) {
     waitingList = [];
     snap.forEach(function(c) {
       waitingList.push(Object.assign({}, c.val(), {_key: c.key}));
@@ -2221,7 +2421,7 @@ function saveWaitingEntry() {
   };
 
   if(db) {
-    db.ref('waitingList').push(entry).then(function() {
+    db.ref('appointmentWaitlist').push(entry).then(function() {
       showToast('✅ تم إضافة ' + name + ' إلى قائمة الانتظار');
       document.getElementById('addWaitingModal').classList.remove('open');
     }).catch(function(e){ showToast('❌ خطأ: ' + e.message); });
@@ -2308,7 +2508,7 @@ function agreeFromWaiting(key) {
     time: (freeAppt && freeAppt.time) || ''
   }, function(){
     // تعليم كـ محجوز فقط بعد اجتياز فحص النطاق وفتح نموذج الموعد
-    if(db) db.ref('waitingList/' + key).update({booked: true, bookedAt: new Date().toISOString()});
+    if(db) db.ref('appointmentWaitlist/' + key).update({booked: true, bookedAt: new Date().toISOString()});
     document.getElementById('waitingListModal').classList.remove('open');
     showToast('✅ تم التحقق من النطاق وفتح نموذج الموعد لـ ' + w.name);
   });
@@ -2318,7 +2518,7 @@ function agreeFromWaiting(key) {
 function removeFromWaiting(key) {
   if(!confirm('إزالة هذا العميل من قائمة الانتظار؟')) return;
   if(db) {
-    db.ref('waitingList/' + key).remove().then(function(){
+    db.ref('appointmentWaitlist/' + key).remove().then(function(){
       showToast('تم الإزالة');
       openWaitingList(_freeSlotForWaiting);
     });
@@ -2340,9 +2540,6 @@ function showFreeSlot(cancelledAppt) {
   }
 }
 
-// تحميل قائمة الانتظار عند البدء
-loadWaitingList();
-
 document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
 
 // ===== INIT =====
@@ -2350,8 +2547,6 @@ const calDates = getWeekDates(0);
 const ms = new Date(calDates[0]+'T00:00:00');
 document.getElementById('calMonth').textContent = ms.toLocaleDateString('ar-SA-u-ca-gregory',{month:'long',year:'numeric'});
 switchView('list');
-initFirebaseSync(); // تشغيل المزامنة التلقائية
-loadFridaySetting(); // تحميل إعداد الجمعة
 </script>
 
 <script>
