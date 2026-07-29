@@ -321,6 +321,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
         <button class="view-btn" id="vWeek" onclick="switchView('week')">📆 أسبوع</button>
         <button class="view-btn active" id="vList" onclick="switchView('list')">📋 قائمة</button>
       </div>
+      <button id="cancelledToggleBtn" onclick="toggleCancelledAppointments()" title="إظهار أو إخفاء سجل المواعيد الملغاة" style="padding:7px 12px;border-radius:10px;border:1.5px solid #FECACA;background:#FFF7F7;color:#991B1B;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">🗂️ الملغاة مخفية</button>
       <button id="fridayBtn" onclick="toggleFriday()" style="padding:7px 12px;border-radius:10px;border:none;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;background:#FEF3C7;color:#92400E;">&#9940; الجمعة</button>
       <div style="position:relative;display:inline-block;">
         <button onclick="openNotifications()" style="padding:7px 12px;border-radius:10px;border:1.5px solid #E2E8F0;background:#fff;font-family:'Tajawal',sans-serif;font-size:12px;cursor:pointer;color:var(--slate);">&#128276;</button>
@@ -719,6 +720,7 @@ let appointments = []; // كل البيانات من Firebase
 let currentWeekOffset = 0;
 let currentView = 'list';
 let techFilter = 'all';
+let showCancelledAppointments = false;
 let editingId = null;
 let editingFirebaseKey = null;
 let editingOriginalDate = ''; // التاريخ الأصلي للموعد قبل التعديل
@@ -934,6 +936,7 @@ function applyLoadedAppointments(fbAppts, bookingWarning) {
     return normalized;
   });
   updateStats();
+  updateCancelledToggle();
   renderWeek();
   renderList();
   var electronicBookingsCount = appointments.filter(function(a) {
@@ -1069,11 +1072,12 @@ function initFirebaseSync() {
 // ===== STATS =====
 function updateStats(){
   const tod = today();
-  document.getElementById('statToday').textContent = appointments.filter(a=>a.date===tod).length;
+  const activeAppointments = appointments.filter(appointmentIsActive);
+  document.getElementById('statToday').textContent = activeAppointments.filter(a=>a.date===tod).length;
   document.getElementById('statPending').textContent = appointments.filter(a=>a.status==='pending').length;
   const weekDates = getWeekDates(0);
   document.getElementById('statDone').textContent = appointments.filter(a=>weekDates.includes(a.date)&&a.status==='done').length;
-  document.getElementById('statTotal').textContent = appointments.length;
+  document.getElementById('statTotal').textContent = activeAppointments.length;
 }
 
 // ===== WEEK VIEW =====
@@ -1095,7 +1099,7 @@ function renderWeek(){
     const d = new Date(date+'T00:00:00');
     html += `<div><div class="week-day-header${isToday?' today':''}"><div class="week-day-name">${dayNames[d.getDay()]}</div><div class="week-day-num">${d.getDate()}</div></div><div class="day-col">`;
     hours.forEach(()=>{ html += `<div class="day-hour"></div>`; });
-    appointments.filter(a=>a.date===date&&(techFilter==='all'||a.tech===techFilter)).forEach(a=>{
+    visibleAppointments().filter(a=>a.date===date&&(techFilter==='all'||a.tech===techFilter)).forEach(a=>{
       const [hh,mm] = (a.time||'09:00').split(':').map(Number);
       const top = (hh - 7) * 60 + mm;
       const dur = appointmentDuration(a);
@@ -1113,7 +1117,7 @@ function renderWeek(){
 
 // ===== LIST VIEW =====
 function renderList(){
-  let appts = [...appointments];
+  let appts = [...visibleAppointments()];
   if(techFilter!=='all') appts = appts.filter(a=>a.tech===techFilter);
   // ترتيب تنازلي: التاريخ الأحدث أولاً ثم الوقت المتأخر — المواعيد بلا وقت تأتي آخراً داخل يومها
   appts.sort(function(a, b) {
@@ -1661,8 +1665,31 @@ function appointmentStartMinutes(time){
 }
 
 function appointmentIsActive(appt){
-  var status=String((appt&&appt.status)||'').toLowerCase();
+  var status=String((appt&&appt.status)||'').trim().toLowerCase();
   return status!=='cancelled'&&status!=='canceled'&&status!=='ملغي';
+}
+
+function visibleAppointments(){
+  return showCancelledAppointments
+    ? appointments
+    : appointments.filter(appointmentIsActive);
+}
+
+function updateCancelledToggle(){
+  var btn=document.getElementById('cancelledToggleBtn');
+  if(!btn) return;
+  var cancelledCount=appointments.filter(function(a){return !appointmentIsActive(a);}).length;
+  btn.textContent=showCancelledAppointments
+    ? '🗂️ إخفاء الملغاة ('+cancelledCount+')'
+    : '🗂️ الملغاة مخفية ('+cancelledCount+')';
+  btn.style.background=showCancelledAppointments?'#FEE2E2':'#FFF7F7';
+}
+
+function toggleCancelledAppointments(){
+  showCancelledAppointments=!showCancelledAppointments;
+  updateCancelledToggle();
+  renderWeek();
+  renderList();
 }
 
 function findAppointmentTimeConflict(candidate,excludeKey){
@@ -1940,15 +1967,34 @@ function rescheduleChoice(choice) {
   var _origDate = editingOriginalDate;
   if(!beginManualSave()) return;
 
-  // العملية ١: تحويل الموعد القديم إلى cancelled
-  var dataWithCancel = Object.assign({}, data, {
-    status:       'cancelled',
-    previousDate: _origDate,
-    cancelledAt:  new Date().toISOString(),
-    cancelReason: 'تم إعادة الجدولة إلى ' + date
+  // أنشئ مفتاح الموعد الجديد مسبقاً، ثم نفّذ الترحيل كتحديث ذري واحد.
+  // مهم: لا نكتب بيانات الموعد الجديد فوق السجل القديم؛ يجب أن يحتفظ
+  // السجل الملغي بتاريخه ووقته الأصليين حتى لا يظهر كنسخة مكررة في اليوم الجديد.
+  var newRef = db.ref('appointments').push();
+  var newKey = newRef.key;
+  var nowIso = new Date().toISOString();
+  var newData = Object.assign({}, data, {
+    status:             'pending',
+    createdAt:          nowIso,
+    rescheduledFrom:    _origDate,
+    rescheduledFromKey: fbKey
   });
+  delete newData.cancelledAt;
+  delete newData.cancelledBy;
+  delete newData.cancelReason;
+  delete newData.previousDate;
+  delete newData.rescheduledToKey;
 
-  db.ref('appointments/' + fbKey).update(dataWithCancel)
+  var rescheduleUpdates = {};
+  rescheduleUpdates['appointments/' + fbKey + '/status'] = 'cancelled';
+  rescheduleUpdates['appointments/' + fbKey + '/cancelledAt'] = nowIso;
+  rescheduleUpdates['appointments/' + fbKey + '/cancelledBy'] = 'admin';
+  rescheduleUpdates['appointments/' + fbKey + '/cancelReason'] = 'تم إعادة الجدولة إلى ' + date;
+  rescheduleUpdates['appointments/' + fbKey + '/rescheduledTo'] = date;
+  rescheduleUpdates['appointments/' + fbKey + '/rescheduledToKey'] = newKey;
+  rescheduleUpdates['appointments/' + newKey] = newData;
+
+  db.ref().update(rescheduleUpdates)
     .then(function() {
       // حفظ الموقع إن طُلب — خطأه لا يوقف العملية
       if(_saveToCustomer && _custKey && _mapsLink) {
@@ -1959,20 +2005,10 @@ function rescheduleChoice(choice) {
           });
         } catch(locErr){ console.error('saveLocationToCustomer:', locErr); }
       }
-      // العملية ٢: إنشاء الموعد الجديد
-      var newData = Object.assign({}, data, {
-        status:          'pending',
-        createdAt:       new Date().toISOString(),
-        rescheduledFrom: _origDate
-      });
-      db.ref('appointments').push(newData)
-        .then(function() {
-          showToast('✅ تم ترحيل الموعد بنجاح. تم إنشاء الموعد الجديد، وتحويل الموعد السابق إلى حالة (ملغي).');
-          editingOriginalDate = '';
-          closeModal();
-          endManualSave();
-        })
-        .catch(function(e){ endManualSave(); showToast('❌ خطأ عند إنشاء الموعد الجديد: ' + e.message); });
+      showToast('✅ تم ترحيل الموعد بنجاح. احتُفظ بالموعد السابق في سجل الملغاة.');
+      editingOriginalDate = '';
+      closeModal();
+      endManualSave();
     })
     .catch(function(e){ endManualSave(); showToast('❌ خطأ في الحفظ: ' + e.message); });
 }
