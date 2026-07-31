@@ -50,6 +50,13 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
 .svc-card .s-icon{font-size:46px;margin-bottom:10px;}
 .svc-card .s-name{font-size:16px;font-weight:900;color:var(--deep);}
 .svc-card .s-price{font-size:13px;font-weight:700;color:var(--sky);margin-top:4px;}
+.svc-card.primary-service{grid-column:1/-1;}
+.svc-card.is-disabled{cursor:not-allowed;opacity:.72;background:#F1F5F9;border-color:#CBD5E1;box-shadow:none;}
+.svc-card.is-disabled:hover{background:#F1F5F9;border-color:#CBD5E1;box-shadow:none;}
+.svc-card.is-disabled .s-name{color:#64748B;}
+.svc-card .s-unavailable{color:#DC2626;font-weight:900;}
+.washing-options{display:none;}
+.washing-options.show{display:block;}
 .units-box{display:none;margin-bottom:16px;background:linear-gradient(135deg,var(--frost),var(--ice));border:2px solid rgba(14,165,233,.2);border-radius:14px;padding:16px;}
 .units-box.show{display:block;}
 .units-lbl{font-size:13px;font-weight:700;color:var(--slate);margin-bottom:12px;}
@@ -237,7 +244,14 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
 <div class="step-section active" id="step1">
   <div class="card-header"><div class="card-icon">🛠️</div><div><h2>اختر نوع الخدمة</h2><p>حدد الخدمة والعدد</p></div></div>
   <div class="card-body">
-    <div class="section-lbl">💧 أسعار تنظيف وغسيل المكيفات</div>
+    <div class="section-lbl">🛠️ الخدمات / Services</div>
+    <div class="service-grid">
+      <div class="svc-card primary-service" id="sv1" onclick="showWashingOptions()"><div class="s-icon">💧❄️</div><div class="s-name">غسيل مكيفات</div><div class="s-price">متوفر الآن — اختر العدد والسعر</div></div>
+      <div class="svc-card" id="sv2" onclick="selSvc('صيانة مكيف','AC Maintenance',100,'sv2')"><div class="s-icon">🛠️</div><div class="s-name">صيانة مكيف</div><div class="s-price">تبدأ من 100 ريال</div></div>
+      <div class="svc-card is-disabled" id="sv5" aria-disabled="true" title="غير متوفر الآن"><div class="s-icon">🔧</div><div class="s-name">تركيب مكيف</div><div class="s-price s-unavailable">غير متوفر الآن</div></div>
+    </div>
+    <div class="washing-options" id="washing-options">
+    <div class="section-lbl" id="washing-options-title">💧 غسيل المكيفات — اختر العدد والسعر</div>
     <div style="background:linear-gradient(135deg,#0C3B5E,#1E5F8A);border-radius:14px;padding:14px;margin-bottom:10px;">
       <div class="clean-grid">
         <div class="clean-tile" id="ct1" onclick="selClean(1,110)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 100" style="width:80px;height:36px;margin-bottom:6px;">
@@ -340,10 +354,6 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
         <div style="color:rgba(255,255,255,.85);font-size:14px;font-weight:600;margin-top:8px;">10 مكيفات فأكثر: 55 ريال للمكيف / 10+ units: 55 SAR each</div>
       </div>
     </div>
-    <div class="section-lbl">🔧 صيانة وتركيب / Maintenance & Installation</div>
-    <div class="service-grid">
-      <div class="svc-card" id="sv2" onclick="selSvc('صيانة مكيف','AC Maintenance',100,'sv2')"><div class="s-icon">🛠️</div><div class="s-name">صيانة مكيف</div><div class="s-price">تبدأ من 100 ريال</div></div>
-      <div class="svc-card" id="sv5" onclick="selSvc('تركيب مكيف','AC Installation',0,'sv5')"><div class="s-icon">🔧</div><div class="s-name">تركيب مكيف</div><div class="s-price">السعر حسب العمل</div></div>
     </div>
     <!-- عدد المكيفات للخدمات الأخرى -->
     <div class="units-box" id="units-box">
@@ -1313,14 +1323,41 @@ function changeUnits(dir){
 }
 
 // ===== الخدمة =====
-function selClean(u,p){
+function resetServiceCards(){
+  ['sv1','sv2'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.className=id==='sv1'?'svc-card primary-service':'svc-card';
+  });
+  var install=document.getElementById('sv5');
+  if(install) install.className='svc-card is-disabled';
+}
+
+function resetCleaningTiles(){
   ['ct1','ct2','ct3','ct4','ct5u','ct6','ct7','ct8'].forEach(function(id){
     var el=document.getElementById(id); if(el) el.className='clean-tile';
   });
-  document.getElementById('ct5').className='offer-tile';
-  ['sv1','sv2','sv3','sv4','sv5','sv6','sv7'].forEach(function(id){
-    var el=document.getElementById(id); if(el) el.className='svc-card';
-  });
+  var offer=document.getElementById('ct5');
+  if(offer) offer.className='offer-tile';
+}
+
+function showWashingOptions(){
+  resetCleaningTiles();
+  resetServiceCards();
+  document.getElementById('sv1').className='svc-card primary-service sel';
+  document.getElementById('washing-options').className='washing-options show';
+  S.service=''; S.serviceAr=''; S.price=0; S.isClean=false; S.units=1;
+  document.getElementById('units-box').className='units-box';
+  document.getElementById('e_svc').textContent='الرجاء اختيار عدد المكيفات للغسيل';
+  document.getElementById('e_svc').className='err-msg';
+  setTimeout(function(){
+    document.getElementById('washing-options-title').scrollIntoView({behavior:'smooth',block:'start'});
+  },50);
+}
+
+function selClean(u,p){
+  resetCleaningTiles();
+  resetServiceCards();
+  document.getElementById('sv1').className='svc-card primary-service sel';
+  document.getElementById('washing-options').className='washing-options show';
   if(u===5)     { var el=document.getElementById('ct5u'); if(el) el.className='clean-tile sel'; }
   else if(u===6){ var el=document.getElementById('ct6');  if(el) el.className='clean-tile sel'; }
   else if(u===7){ var el=document.getElementById('ct7');  if(el) el.className='clean-tile sel'; }
@@ -1328,28 +1365,26 @@ function selClean(u,p){
   else if(u<=4) { document.getElementById('ct'+u).className='clean-tile sel'; }
   else          { document.getElementById('ct5').className='offer-tile sel'; }
 
-  S.service='تنظيف وغسيل المكيفات'; S.serviceAr='تنظيف وغسيل المكيفات';
+  S.service='غسيل مكيفات'; S.serviceAr='غسيل مكيفات';
   S.isClean=true;
   if(u >= 10)    { S.units=u; S.price=u*55; }
   else if(u >= 5){ S.units=u; S.price=u*60; }
   else           { S.units=u; S.price=p; }
   document.getElementById('units-box').className='units-box';
+  document.getElementById('e_svc').textContent='الرجاء اختيار نوع الخدمة';
   document.getElementById('e_svc').className='err-msg';
 }
 
 function selSvc(nameAr,nameEn,price,id){
-  ['ct1','ct2','ct3','ct4','ct5u','ct6','ct7','ct8'].forEach(function(i){
-    var el=document.getElementById(i); if(el) el.className='clean-tile';
-  });
-  document.getElementById('ct5').className='offer-tile';
-  ['sv1','sv2','sv3','sv4','sv5','sv6','sv7'].forEach(function(i){
-    var el=document.getElementById(i); if(el) el.className='svc-card';
-  });
+  resetCleaningTiles();
+  resetServiceCards();
   document.getElementById(id).className='svc-card sel';
+  document.getElementById('washing-options').className='washing-options';
   S.service=nameAr; S.serviceAr=nameAr;
   S.price=price; S.isClean=false;
   S.units=parseInt(document.getElementById('units-display').textContent)||1;
   document.getElementById('units-box').className='units-box show';
+  document.getElementById('e_svc').textContent='الرجاء اختيار نوع الخدمة';
   document.getElementById('e_svc').className='err-msg';
 }
 
@@ -1465,7 +1500,7 @@ function next2(){
 
 // ===== الموعد =====
 var FRIDAY_VAR=true;
-var DUR_MAP={'تنظيف وغسيل المكيفات':30,'صيانة مكيف':60,'تركيب مكيف':90};
+var DUR_MAP={'غسيل مكيفات':30,'صيانة مكيف':60,'تركيب مكيف':90};
 var SLOTS=[{t:'8:00 - 10:00',start:480,ar:'8-10 ص'},{t:'10:00 - 12:00',start:600,ar:'10-12 ص'},{t:'12:00 - 14:00',start:720,ar:'12-2 م'},{t:'14:00 - 16:00',start:840,ar:'2-4 م'},{t:'16:00 - 18:00',start:960,ar:'4-6 م'},{t:'18:00 - 20:00',start:1080,ar:'6-8 م'}];
 var slotCheckSeq=0;
 var slotsCheckReady=false;
@@ -1626,7 +1661,7 @@ function fmtDate(d){try{return new Date(d+'T00:00:00').toLocaleDateString('ar-SA
 
 function buildSum(){
   if(!S.isClean) S.units=parseInt(document.getElementById('units-display').textContent)||S.units;
-  var isWashing=S.serviceAr==='تنظيف وغسيل المكيفات';
+  var isWashing=S.serviceAr==='غسيل مكيفات';
   var total;
   if(S.isClean){total=S.units>=5?S.units*60:S.price;}
   else if(isWashing){if(S.units===1)total=110;else if(S.units===2)total=180;else if(S.units===3)total=240;else if(S.units===4)total=280;else total=S.units*60;}
