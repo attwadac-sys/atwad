@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="atwad-build" content="2026-07-31-booking-simple-v3">
 <title>مؤسسة أطواد - حجز خدمة</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
@@ -199,6 +200,9 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
 .location-preview-section.confirmed{border-color:#86EFAC;background:#F0FFF4;}
 .location-confirmed-msg{display:none;margin-top:8px;padding:9px 12px;background:#F0FFF4;border:1.5px solid #86EFAC;border-radius:9px;font-size:12px;color:#065F46;font-weight:700;}
 .location-preview-section.confirmed .location-confirmed-msg{display:block;}
+.submit-status{display:none;margin-top:12px;padding:12px 14px;border-radius:11px;font-size:13px;font-weight:700;line-height:1.8;text-align:center;}
+.submit-status.error{display:block;background:#FFF7ED;border:1.5px solid #FDBA74;color:#9A3412;}
+.submit-status a{display:inline-block;margin-top:7px;padding:8px 13px;border-radius:9px;background:#16A34A;color:#fff;text-decoration:none;font-weight:800;}
 .customer-lookup{display:none;margin-top:7px;padding:8px 10px;border-radius:9px;font-size:12px;font-weight:700;line-height:1.6;}
 .customer-lookup.loading{display:block;background:#EFF6FF;border:1.5px solid #BFDBFE;color:#1E40AF;}
 .customer-lookup.found{display:block;background:#F0FFF4;border:1.5px solid #86EFAC;color:#065F46;}
@@ -336,15 +340,10 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
         <div style="color:rgba(255,255,255,.85);font-size:14px;font-weight:600;margin-top:8px;">10 مكيفات فأكثر: 55 ريال للمكيف / 10+ units: 55 SAR each</div>
       </div>
     </div>
-    <div class="section-lbl">🔧 خدمات أخرى / Other Services</div>
+    <div class="section-lbl">🔧 صيانة وتركيب / Maintenance & Installation</div>
     <div class="service-grid">
-      <div class="svc-card" id="sv1" onclick="selSvc('غسيل مكيف','AC Washing',120,'sv1')"><div class="s-icon">🧼</div><div class="s-name">غسيل مكيف</div><div class="s-price">From 120 SAR</div></div>
-      <div class="svc-card" id="sv2" onclick="selSvc('كشف وإصلاح عطل','Diagnosis & Repair',100,'sv2')"><div class="s-icon">🔧</div><div class="s-name">كشف وإصلاح عطل</div><div class="s-price">From 100 SAR</div></div>
-      <div class="svc-card" id="sv3" onclick="selSvc('تعبئة فريون','Freon Refill',150,'sv3')"><div class="s-icon">❄️</div><div class="s-name">تعبئة فريون</div><div class="s-price">From 150 SAR</div></div>
-      <div class="svc-card" id="sv4" onclick="selSvc('صيانة وقائية دورية','Periodic Maintenance',120,'sv4')"><div class="s-icon">🛠️</div><div class="s-name">صيانة وقائية دورية</div><div class="s-price">From 120 SAR</div></div>
-      <div class="svc-card" id="sv5" style="opacity:.45;cursor:not-allowed;" title="غير متوفر حالياً"><div class="s-icon">🚫</div><div class="s-name">تركيب مكيف جديد</div><div class="s-price" style="color:#EF4444">غير متوفر حالياً</div></div>
-      <div class="svc-card" id="sv6" onclick="selSvc('باقة الصيانة السنوية','Annual Package',400,'sv6')"><div class="s-icon">📅</div><div class="s-name">باقة الصيانة السنوية</div><div class="s-price">From 400 SAR</div></div>
-      <div class="svc-card" id="sv7" onclick="selSvcOther('sv7')"><div class="s-icon">📝</div><div class="s-name">أخرى</div><div class="s-price">حدد الخدمة</div></div>
+      <div class="svc-card" id="sv2" onclick="selSvc('صيانة مكيف','AC Maintenance',100,'sv2')"><div class="s-icon">🛠️</div><div class="s-name">صيانة مكيف</div><div class="s-price">تبدأ من 100 ريال</div></div>
+      <div class="svc-card" id="sv5" onclick="selSvc('تركيب مكيف','AC Installation',0,'sv5')"><div class="s-icon">🔧</div><div class="s-name">تركيب مكيف</div><div class="s-price">السعر حسب العمل</div></div>
     </div>
     <!-- عدد المكيفات للخدمات الأخرى -->
     <div class="units-box" id="units-box">
@@ -355,112 +354,7 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
         <button class="units-btn minus" onclick="changeUnits(-1)">−</button>
       </div>
     </div>
-    <!-- السعر التقديري للخدمة -->
-    <div class="service-price-box" id="servicePriceBox">
-      <label for="servicePrice">💰 السعر التقديري للخدمة (ريال)</label>
-      <input type="number" id="servicePrice" name="servicePrice"
-        min="0" step="1" inputmode="decimal" placeholder="مثال: 300">
-      <small class="field-hint">السعر تقديري ويمكن تعديله عند إصدار الفاتورة.</small>
-    </div>
-    <div class="section-lbl">👥 نوع العميل <span class="req">*</span></div>
-    <div class="type-row">
-      <button class="type-btn" id="tb1" onclick="selType('أفراد','tb1')">🏠 أفراد</button>
-      <button class="type-btn" id="tb2" onclick="selType('شركات','tb2')">🏢 شركات</button>
-      <button class="type-btn" id="tb3" onclick="selType('دائم','tb3')">⭐ دائم</button>
-    </div>
     <div class="err-msg" id="e_svc">الرجاء اختيار نوع الخدمة</div>
-    <!-- حقل "أخرى" — يظهر فقط عند اختيار أخرى -->
-    <div id="otherSvcGroup" style="display:none;margin-top:12px;">
-      <label style="font-size:13px;font-weight:700;color:var(--deep);display:block;margin-bottom:6px;">يرجى كتابة نوع الخدمة المطلوبة</label>
-      <input type="text" id="otherSvcInput"
-        placeholder="اكتب الخدمة المطلوبة..."
-        style="width:100%;padding:10px 14px;border:1.5px solid #E2E8F0;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:14px;color:var(--slate);background:var(--frost);outline:none;"
-        oninput="S.service=this.value.trim()||'أخرى'; S.serviceAr=S.service;">
-    </div>
-    <div class="err-msg" id="e_type">الرجاء اختيار نوع العميل</div>
-
-    <!-- قسم وصف المشكلة — اختياري بالكامل -->
-    <div class="problem-section" id="problemSection">
-      <div class="problem-section-title">📝 وصف مختصر للمشكلة أو الطلب</div>
-      <div class="problem-section-hint">اختر ما ينطبق على حالتك، ويمكنك اختيار أكثر من خيار.</div>
-
-      <!-- Progress Bar -->
-      <div class="prob-progress-wrap">
-        <div class="prob-progress-label">
-          <span>درجة اكتمال البلاغ</span>
-          <span id="probProgressPct">0%</span>
-        </div>
-        <div class="prob-progress-bar"><div class="prob-progress-fill" id="probProgressFill" style="width:0%"></div></div>
-      </div>
-
-      <!-- الأعطال الشائعة -->
-      <div class="common-faults">
-        <div class="common-faults-label">⭐ الأعطال الأكثر شيوعًا</div>
-        <div class="problem-chips" id="commonChipsContainer"></div>
-      </div>
-
-      <!-- زر عرض المزيد -->
-      <button type="button" class="show-more-btn" id="showMoreBtn" onclick="toggleAllProblems()">عرض جميع الأعطال ▼</button>
-
-      <!-- جميع الأعطال — مخفية افتراضياً -->
-      <div class="all-problems-wrap" id="allProblemsWrap">
-        <div id="problemChipsContainer" style="margin-top:10px;"></div>
-      </div>
-
-      <!-- تفاصيل إضافية — مرة واحدة فقط -->
-      <div class="prob-textarea-wrap">
-        <label>تفاصيل إضافية <span style="font-size:10px;color:var(--mist);">(اختياري)</span></label>
-        <textarea id="problemDescription" maxlength="300"
-          placeholder="مثال: المكيف لا يبرد ويوجد صوت مرتفع عند التشغيل، أو يوجد تسريب ماء من الوحدة الداخلية."
-          oninput="updateCharCount(this,'descCount',300);updateProgress()"></textarea>
-        <div class="char-counter"><span id="descCount">0</span> / 300</div>
-      </div>
-
-      <!-- هل المكيف يعمل الآن؟ -->
-      <div class="prob-question">
-        <label>هل المكيف يعمل الآن؟ <span style="font-size:10px;color:var(--mist);">(اختياري)</span></label>
-        <div class="prob-radio-row" id="acStatusRow">
-          <button type="button" class="prob-radio-btn" data-val="working" onclick="selRadio('acStatus',this)">نعم، يعمل</button>
-          <button type="button" class="prob-radio-btn" data-val="weak" onclick="selRadio('acStatus',this)">يعمل بكفاءة ضعيفة</button>
-          <button type="button" class="prob-radio-btn" data-val="not_working" onclick="selRadio('acStatus',this)">لا يعمل إطلاقًا</button>
-          <button type="button" class="prob-radio-btn" data-val="unknown" onclick="selRadio('acStatus',this)">لا أعلم</button>
-        </div>
-      </div>
-
-      <!-- هل سبق إصلاح المشكلة؟ -->
-      <div class="prob-question">
-        <label>هل سبق إصلاح نفس المشكلة من قبل؟ <span style="font-size:10px;color:var(--mist);">(اختياري)</span></label>
-        <div class="prob-radio-row" id="prevRepairRow">
-          <button type="button" class="prob-radio-btn" data-val="yes" onclick="selRadio('prevRepair',this)">نعم</button>
-          <button type="button" class="prob-radio-btn" data-val="no" onclick="selRadio('prevRepair',this)">لا</button>
-          <button type="button" class="prob-radio-btn" data-val="unknown" onclick="selRadio('prevRepair',this)">لا أعلم</button>
-        </div>
-        <div class="prev-repair-detail" id="prevRepairDetailWrap">
-          <label style="font-size:11px;font-weight:700;color:var(--slate);display:block;margin-bottom:4px;">ما الذي تم عمله سابقًا؟ <span style="font-size:10px;color:var(--mist);">(اختياري)</span></label>
-          <textarea id="previousRepairDetails" maxlength="200"
-            placeholder="مثال: تمت تعبئة فريون، تغيير مكثف، تنظيف المكيف، إصلاح تسريب."
-            oninput="updateCharCount(this,'prevDetailCount',200)"></textarea>
-          <div class="char-counter"><span id="prevDetailCount">0</span> / 200</div>
-        </div>
-      </div>
-
-      <!-- هل سبق أن زارك فني آخر؟ -->
-      <div class="prob-question">
-        <label>هل سبق أن زارك فني آخر؟ <span style="font-size:10px;color:var(--mist);">(اختياري)</span></label>
-        <div class="prob-radio-row" id="visitedBeforeRow">
-          <button type="button" class="prob-radio-btn" data-val="yes" onclick="selRadio('visitedBefore',this)">نعم</button>
-          <button type="button" class="prob-radio-btn" data-val="no" onclick="selRadio('visitedBefore',this)">لا</button>
-        </div>
-        <div id="prevTechSolvedWrap" style="display:none;margin-top:8px;">
-          <label style="font-size:11px;font-weight:700;color:var(--slate);display:block;margin-bottom:6px;">هل تم حل المشكلة؟</label>
-          <div class="prob-radio-row" id="prevTechSolvedRow">
-            <button type="button" class="prob-radio-btn" data-val="yes" onclick="selRadio('prevTechSolved',this)">نعم</button>
-            <button type="button" class="prob-radio-btn" data-val="no" onclick="selRadio('prevTechSolved',this)">لا</button>
-          </div>
-          <div class="prev-tech-note" id="prevTechNote">⚠️ هذه الحالة تعتبر ذات أولوية أعلى.</div>
-        </div>
-      </div>
-    </div>
 
     <div class="btn-row"><button class="btn-next" onclick="next1()">التالي ←</button></div>
   </div>
@@ -553,7 +447,6 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
       <input type="file" id="f_img" accept="image/*" style="display:none;" onchange="previewImage(this)">
       <button type="button" id="removeImgBtn" onclick="removeImage()" style="display:none;margin-top:6px;padding:4px 12px;background:#FEE2E2;color:#EF4444;border:none;border-radius:6px;font-family:'Tajawal',sans-serif;font-size:12px;cursor:pointer;">🗑️ حذف الصورة</button>
     </div>
-    <div class="field"><label>ملاحظات</label><textarea id="f_notes" rows="2" placeholder="أي تفاصيل للفني..."></textarea></div>
     <div class="btn-row">
       <button class="btn-back" onclick="goStep(1)">← رجوع</button>
       <button class="btn-next" onclick="next2()">التالي ←</button>
@@ -617,6 +510,7 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
       <button class="btn-back" onclick="goStep(3)">← تعديل</button>
       <button type="button" class="btn-next" id="submitBookingBtn" onclick="submitBooking()">✅ إرسال الحجز</button>
     </div>
+    <div class="submit-status" id="submitBookingStatus" role="alert" aria-live="assertive"></div>
   </div>
 </div>
 
@@ -660,9 +554,13 @@ var db = null;
 // يمنع إرسال الحجز أكثر من مرة أثناء انتظار رد Firebase.
 // يجب تعريفه مسبقًا؛ غيابه كان يوقف submitBooking فور الضغط على الزر.
 var bookingSubmitting = false;
+// نعيد استخدام المفتاح نفسه عند إعادة المحاولة لمنع إنشاء حجزين متطابقين.
+var pendingBookingKey = '';
+var pendingBookingFingerprint = '';
+var pendingBookingRef = '';
 try { firebase.initializeApp({databaseURL:"https://atwad-booking-default-rtdb.firebaseio.com"}); db=firebase.database(); } catch(e){}
 
-var S = {service:'',serviceAr:'',price:0,units:1,isClean:false,clientType:'',name:'',phone:'',city:'',addr:'',notes:'',date:'',time:'',duration:0};
+var S = {service:'',serviceAr:'',price:0,units:1,isClean:false,name:'',phone:'',city:'',addr:'',date:'',time:'',duration:0};
 
 // ============================================================
 // بيانات أوصاف المشاكل — مصفوفة واحدة
@@ -1403,9 +1301,6 @@ function lookupCustomerByPhone(value) {
 // تحميل إعداد الجمعة
 if(db) db.ref('settings/fridayClosed').once('value',function(s){if(s.val()!==null)FRIDAY_CLOSED=s.val();});
 
-// بناء chips الأوصاف
-buildProblemChips();
-
 // الحد الأدنى لاختيار التاريخ هو اليوم — اليوم مسموح إذا بقي وقت شاغر بعد ساعتين
 // لا نستخدم toISOString() لأنه UTC وقد يُنتج تاريخًا مختلفًا في السعودية
 document.getElementById('f_date').min = todaySaudiDate();
@@ -1426,10 +1321,6 @@ function selClean(u,p){
   ['sv1','sv2','sv3','sv4','sv5','sv6','sv7'].forEach(function(id){
     var el=document.getElementById(id); if(el) el.className='svc-card';
   });
-  // إخفاء حقل أخرى عند اختيار تنظيف
-  document.getElementById('otherSvcGroup').style.display='none';
-  document.getElementById('otherSvcInput').value='';
-
   if(u===5)     { var el=document.getElementById('ct5u'); if(el) el.className='clean-tile sel'; }
   else if(u===6){ var el=document.getElementById('ct6');  if(el) el.className='clean-tile sel'; }
   else if(u===7){ var el=document.getElementById('ct7');  if(el) el.className='clean-tile sel'; }
@@ -1444,8 +1335,6 @@ function selClean(u,p){
   else           { S.units=u; S.price=p; }
   document.getElementById('units-box').className='units-box';
   document.getElementById('e_svc').className='err-msg';
-  currentServiceFilter = 'cleaning';
-  buildProblemChips();
 }
 
 function selSvc(nameAr,nameEn,price,id){
@@ -1457,49 +1346,16 @@ function selSvc(nameAr,nameEn,price,id){
     var el=document.getElementById(i); if(el) el.className='svc-card';
   });
   document.getElementById(id).className='svc-card sel';
-  // إخفاء حقل أخرى عند اختيار أي خدمة محددة
-  document.getElementById('otherSvcGroup').style.display='none';
-  document.getElementById('otherSvcInput').value='';
   S.service=nameAr; S.serviceAr=nameAr;
   S.price=price; S.isClean=false;
   S.units=parseInt(document.getElementById('units-display').textContent)||1;
   document.getElementById('units-box').className='units-box show';
   document.getElementById('e_svc').className='err-msg';
-  currentServiceFilter = mapServiceToFilter(nameAr);
-  buildProblemChips();
-}
-
-// بطاقة "أخرى" — تُظهر حقل الكتابة
-function selSvcOther(id) {
-  ['ct1','ct2','ct3','ct4','ct5u','ct6','ct7','ct8'].forEach(function(i){
-    var el=document.getElementById(i); if(el) el.className='clean-tile';
-  });
-  document.getElementById('ct5').className='offer-tile';
-  ['sv1','sv2','sv3','sv4','sv5','sv6','sv7'].forEach(function(i){
-    var el=document.getElementById(i); if(el) el.className='svc-card';
-  });
-  document.getElementById(id).className='svc-card sel';
-  // إظهار حقل أخرى
-  document.getElementById('otherSvcGroup').style.display='block';
-  document.getElementById('otherSvcInput').focus();
-  S.service='أخرى'; S.serviceAr='أخرى'; S.isClean=false;
-  document.getElementById('units-box').className='units-box show';
-  document.getElementById('e_svc').className='err-msg';
-  currentServiceFilter='other';
-  buildProblemChips();
-}
-
-function selType(type,id){
-  ['tb1','tb2','tb3'].forEach(function(i){document.getElementById(i).className='type-btn';});
-  document.getElementById(id).className='type-btn sel';
-  S.clientType=type;
-  document.getElementById('e_type').className='err-msg';
 }
 
 function next1(){
   var ok=true;
   if(!S.service){document.getElementById('e_svc').className='err-msg show';ok=false;}
-  if(!S.clientType){document.getElementById('e_type').className='err-msg show';ok=false;}
   if(!S.isClean&&S.service) S.units=parseInt(document.getElementById('units-display').textContent)||1;
   if(ok) goStep(2);
 }
@@ -1604,12 +1460,12 @@ function next2(){
   if(!phone||!/^05\d{8}$/.test(phone)){document.getElementById('e_phone').className='err-msg show';document.getElementById('f_phone').className='err';ok=false;}else{document.getElementById('e_phone').className='err-msg';document.getElementById('f_phone').className='';}
   if(!city){document.getElementById('e_city').className='err-msg show';ok=false;}else{document.getElementById('e_city').className='err-msg';}
   if(!mapsLink){document.getElementById('e_addr').className='err-msg show';ok=false;}else{document.getElementById('e_addr').className='err-msg';}
-  if(ok){S.name=name;S.phone=phone;S.city=city;S.addr=mapsLink;S.notes=document.getElementById('f_notes').value.trim();goStep(3);}
+  if(ok){S.name=name;S.phone=phone;S.city=city;S.addr=mapsLink;goStep(3);}
 }
 
 // ===== الموعد =====
 var FRIDAY_VAR=true;
-var DUR_MAP={'تنظيف وغسيل المكيفات':30,'صيانة دورية':45,'تعبئة غاز':40,'كشف وإصلاح أعطال':60,'تركيب مكيف جديد':90,'باقة صيانة سنوية':45};
+var DUR_MAP={'تنظيف وغسيل المكيفات':30,'صيانة مكيف':60,'تركيب مكيف':90};
 var SLOTS=[{t:'8:00 - 10:00',start:480,ar:'8-10 ص'},{t:'10:00 - 12:00',start:600,ar:'10-12 ص'},{t:'12:00 - 14:00',start:720,ar:'12-2 م'},{t:'14:00 - 16:00',start:840,ar:'2-4 م'},{t:'16:00 - 18:00',start:960,ar:'4-6 م'},{t:'18:00 - 20:00',start:1080,ar:'6-8 م'}];
 var slotCheckSeq=0;
 var slotsCheckReady=false;
@@ -1785,38 +1641,11 @@ function buildSum(){
     ['🗺️ رابط الموقع',S.addr.length>40?S.addr.substring(0,40)+'...':S.addr],
     ['📅 التاريخ',fmtDate(S.date)],
     ['🕐 الوقت',S.time],
-    ['👥 نوع العميل',S.clientType],
     ['⏱️ المدة',fmtDur(calcDur())]
   ];
-  if(S.notes) rows.push(['📝 ملاحظات',S.notes]);
   document.getElementById('sumBox').innerHTML=rows.map(function(r){return '<div class="sum-row"><span class="lbl">'+r[0]+'</span><span class="val">'+r[1]+'</span></div>';}).join('');
 
-  // قسم وصف الطلب في الملخص
-  var probRows = [];
-  if(selectedProblemLabels.length) probRows.push(['🔧 أوصاف المشكلة', selectedProblemLabels.join('، ')]);
-  var probDesc = document.getElementById('problemDescription').value.trim();
-  if(probDesc) probRows.push(['📝 تفاصيل إضافية', probDesc]);
-  var acStatusLabels = {working:'نعم، يعمل', weak:'يعمل بكفاءة ضعيفة', not_working:'لا يعمل إطلاقًا', unknown:'لا أعلم'};
-  if(selectedAcStatus) probRows.push(['⚡ حالة التشغيل', acStatusLabels[selectedAcStatus]||selectedAcStatus]);
-  var prevLabels = {yes:'نعم', no:'لا', unknown:'لا أعلم'};
-  if(selectedPrevRepair) probRows.push(['🔄 سبق إصلاحه', prevLabels[selectedPrevRepair]||selectedPrevRepair]);
-  if(selectedPrevRepair === 'yes') {
-    var prevDet = document.getElementById('previousRepairDetails').value.trim();
-    if(prevDet) probRows.push(['📋 تفاصيل الإصلاح السابق', prevDet]);
-  }
-  if(selectedVisitedBefore) probRows.push(['🔧 سبق زيارة فني', selectedVisitedBefore === 'yes' ? 'نعم' : 'لا']);
-  if(selectedVisitedBefore === 'yes' && selectedPrevTechSolved) probRows.push(['✅ هل حُلّت', selectedPrevTechSolved === 'yes' ? 'نعم' : 'لا']);
-  var probHtml = '';
-  if(probRows.length) {
-    probHtml = '<div style="margin-top:12px;padding:12px;background:#F0F9FF;border:1.5px solid #BAE6FD;border-radius:12px;">' +
-      '<div style="font-size:12px;font-weight:800;color:var(--deep);margin-bottom:8px;">📋 وصف الطلب</div>' +
-      probRows.map(function(r){return '<div class="sum-row"><span class="lbl">'+r[0]+'</span><span class="val">'+r[1]+'</span></div>';}).join('') +
-      '</div>';
-  }
-  var sumBox = document.getElementById('sumBox');
-  sumBox.innerHTML += probHtml;
-
-  document.getElementById('totalPr').textContent=total+'+ SAR';
+  document.getElementById('totalPr').textContent=total>0?'يبدأ من '+total+' ريال':'يُحدّد بعد المعاينة';
 
   var isInspection=S.serviceAr==='كشف وإصلاح أعطال';
   document.getElementById('inspection-info').style.display=isInspection?'block':'none';
@@ -1836,59 +1665,40 @@ function submitBooking(){
     alert('يرجى الموافقة على سياسة رسوم الكشف');
     return;
   }
-  if(!db){
-    showToast('❌ تعذر الاتصال الآن. لم يتم تسجيل الحجز؛ حاول مرة أخرى.');
+  if(typeof fetch!=='function'){
+    showToast('❌ المتصفح قديم ولا يدعم إرسال الحجز. تواصل معنا عبر واتساب.');
     return;
   }
 
   bookingSubmitting=true;
   var submitBtn=document.getElementById('submitBookingBtn');
+  var submitStatus=document.getElementById('submitBookingStatus');
+  if(submitStatus){
+    submitStatus.className='submit-status';
+    submitStatus.innerHTML='';
+  }
   if(submitBtn){
     submitBtn.disabled=true;
     submitBtn.textContent='⏳ جاري إرسال الحجز...';
   }
 
-  var ref='ATW-'+Math.floor(10000+Math.random()*90000);
-  var msg=encodeURIComponent('مرحباً مؤسسة أطواد 👋\nرقم الحجز: '+ref+'\nالخدمة: '+S.serviceAr+'\nعدد المكيفات: '+S.units+'\nالاسم: '+S.name+'\nالجوال: '+S.phone+'\nالتاريخ: '+fmtDate(S.date)+'\nالوقت: '+S.time+'\nالمدينة: '+S.city+'\nالموقع: '+S.addr);
-  var waUrl='https://wa.me/966509720382?text='+msg;
-
   try{
-    var bookingData = {ref:ref,date:S.date,time:S.time,duration:calcDur(),client:S.name,phone:S.phone,service:S.serviceAr,units:S.units,city:S.city,mapsLink:S.addr,locationImage:bookImageBase64||'',createdAt:new Date().toISOString()};
-
-    // السعر التقديري — اختياري، يُحفظ فقط إذا أُدخل
-    var servicePriceRaw = document.getElementById('servicePrice') ? document.getElementById('servicePrice').value : '';
-    var servicePrice = safeNumber(servicePriceRaw);
-    if(servicePrice > 0) bookingData.servicePrice = servicePrice;
-
-    // حقول الوصف — اختيارية، تُضاف فقط عند توفرها
-    if(selectedProblemCodes.length) {
-      bookingData.problemCodes  = selectedProblemCodes;
-      bookingData.problemLabels = selectedProblemLabels;
-      bookingData.problemDescriptionSummary = selectedProblemLabels.join('، ');
+    var bookingFingerprint=JSON.stringify([S.date,S.time,S.phone,S.serviceAr,S.units,S.city,S.addr]);
+    if(!pendingBookingKey||pendingBookingFingerprint!==bookingFingerprint){
+      pendingBookingKey='web_'+Date.now()+'_'+Math.random().toString(36).slice(2,10);
+      pendingBookingFingerprint=bookingFingerprint;
+      pendingBookingRef='ATW-'+Math.floor(10000+Math.random()*90000);
     }
-    var probDesc = document.getElementById('problemDescription').value.trim();
-    if(probDesc) bookingData.problemDescription = probDesc;
-    if(selectedAcStatus) bookingData.acOperatingStatus = selectedAcStatus;
-    if(selectedPrevRepair) {
-      bookingData.previousRepairStatus = selectedPrevRepair;
-      if(selectedPrevRepair === 'yes') {
-        var prevDet = document.getElementById('previousRepairDetails').value.trim();
-        if(prevDet) bookingData.previousRepairDetails = prevDet;
-      }
-    }
-    if(selectedVisitedBefore) bookingData.visitedBefore = selectedVisitedBefore;
-    if(selectedPrevTechSolved) bookingData.previousTechnicianSolved = selectedPrevTechSolved;
+    var ref=pendingBookingRef;
+    var msg=encodeURIComponent('مرحباً مؤسسة أطواد 👋\nرقم الحجز: '+ref+'\nالخدمة: '+S.serviceAr+'\nعدد المكيفات: '+S.units+'\nالاسم: '+S.name+'\nالجوال: '+S.phone+'\nالتاريخ: '+fmtDate(S.date)+'\nالوقت: '+S.time+'\nالمدينة: '+S.city+'\nالموقع: '+S.addr);
+    var waUrl='https://wa.me/966509720382?text='+msg;
+    var bookingData = {ref:ref,date:S.date,time:S.time,duration:calcDur(),client:S.name,phone:S.phone,service:S.serviceAr,units:S.units,city:S.city,mapsLink:S.addr,createdAt:new Date().toISOString()};
 
-    // التحليل الذكي الداخلي — لا يظهر للعميل
-    var recData = calcRecommendations();
-    bookingData.priority            = recData.priority;
-    bookingData.requiredTools       = recData.requiredTools;
-    bookingData.estimatedInspection = recData.estimatedInspection;
-    bookingData.recommendations     = {
-      priority: recData.priority,
-      requiredTools: recData.requiredTools,
-      estimatedInspection: recData.estimatedInspection
-    };
+    // لا نرسل الحقل الاختياري عندما لا توجد صورة؛ هذا يقلل حجم الطلب ويطابق قواعد التحقق.
+    if(bookImageBase64) bookingData.locationImage=bookImageBase64;
+
+    // السعر التقديري يُحسب من الخدمة، ولا يُطلب من العميل إدخاله.
+    if(S.price > 0) bookingData.servicePrice = S.price;
 
     // إضافة lat/lng اختياريًا فقط إذا كانت صالحة
     var latValue      = document.getElementById('f_lat').value.trim();
@@ -1904,7 +1714,7 @@ function submitBooking(){
 
       // إضافة دقة الموقع إذا كانت صالحة
       if(Number.isFinite(parsedAccuracy) && parsedAccuracy > 0) {
-        bookingData.locationAccuracy = parsedAccuracy;
+        bookingData.accuracy = parsedAccuracy;
       }
 
       // locationVerified: من hidden field أو من checkbox
@@ -1921,39 +1731,30 @@ function submitBooking(){
       }
     }
 
-    // مصدر الموقع — دائماً إذا كان متاحاً
-    if(selectedLocationSource) {
-      bookingData.locationSource = selectedLocationSource;
-    }
-
-    db.ref('bookings').push(bookingData).then(function(){
-      // فشل الإشعار لا يلغي الحجز الذي تم حفظه بنجاح.
-      return db.ref('notifications').push({
-        title: '📅 حجز جديد من الموقع',
-        body: 'عميل: '+S.name+' | '+S.serviceAr+' | '+S.date+' '+S.time,
-        ref: ref,
-        phone: S.phone,
-        createdAt: new Date().toISOString(),
-        read: false
-      }).catch(function(notificationError){
-        console.warn('[booking] notification write failed:',notificationError);
-      });
-    }).then(function(){
+    writePublicBooking(pendingBookingKey,bookingData,18000).then(function(){
       document.getElementById('refNum').textContent=ref;
       document.getElementById('waLink').href=waUrl;
       goStep('OK');
-      resetProblemSection();
-      var spEl=document.getElementById('servicePrice');
-      if(spEl) spEl.value='';
+      pendingBookingKey='';
+      pendingBookingFingerprint='';
+      pendingBookingRef='';
       setTimeout(function(){window.open(waUrl,'_blank');},800);
     }).catch(function(err){
       console.error('[booking] submit failed:',err);
-      showToast('❌ تعذر إرسال الحجز. لم يتم تسجيل الطلب؛ حاول مرة أخرى أو تواصل معنا عبر واتساب.');
+      var timedOut=err&&err.code==='BOOKING_TIMEOUT';
+      var message=timedOut
+        ? 'تعذر تأكيد استلام الحجز خلال 18 ثانية بسبب الاتصال. لا تقلق: لن تبقى الصفحة معلّقة، ويمكنك إعادة المحاولة أو إرسال الطلب مباشرة عبر واتساب.'
+        : 'تعذر إرسال الحجز إلى النظام. يمكنك إعادة المحاولة أو إرسال بيانات الطلب مباشرة عبر واتساب.';
+      if(submitStatus){
+        submitStatus.className='submit-status error';
+        submitStatus.innerHTML='⚠️ '+message+'<br><a href="'+waUrl+'" target="_blank" rel="noopener">فتح واتساب وإرسال الطلب</a>';
+      }
+      showToast('⚠️ تعذر تأكيد الحجز؛ استخدم إعادة المحاولة أو واتساب.');
     }).then(function(){
       bookingSubmitting=false;
       if(submitBtn){
         submitBtn.disabled=false;
-        submitBtn.textContent='✅ إرسال الحجز';
+        submitBtn.textContent='🔄 إعادة محاولة الإرسال';
       }
     });
   }catch(err){
@@ -1965,6 +1766,53 @@ function submitBooking(){
     }
     showToast('❌ تعذر تجهيز الحجز. لم يتم تسجيل الطلب؛ حاول مرة أخرى.');
   }
+}
+
+// إرسال الحجز عبر طلب HTTPS عادي؛ وهو أكثر ثباتًا على شبكات الجوال من انتظار
+// اتصال Firebase المستمر. المهلة تمنع بقاء العميل على "جاري الإرسال" بلا نهاية.
+function writePublicBooking(key,bookingData,timeoutMs){
+  var controller=typeof AbortController!=='undefined'?new AbortController():null;
+  var timeoutId=null;
+  var timedOut=false;
+  var timeoutPromise=new Promise(function(resolve,reject){
+    timeoutId=setTimeout(function(){
+      timedOut=true;
+      if(controller) controller.abort();
+      var timeoutError=new Error('Booking confirmation timed out');
+      timeoutError.code='BOOKING_TIMEOUT';
+      reject(timeoutError);
+    },timeoutMs);
+  });
+  var url='https://atwad-booking-default-rtdb.firebaseio.com/bookings/'+encodeURIComponent(key)+'.json';
+  var requestOptions={
+    method:'PUT',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(bookingData),
+    cache:'no-store'
+  };
+  if(controller) requestOptions.signal=controller.signal;
+  var requestPromise=fetch(url,requestOptions).then(function(response){
+    if(!response.ok){
+      var httpError=new Error('Firebase HTTP '+response.status);
+      httpError.code='FIREBASE_HTTP_'+response.status;
+      throw httpError;
+    }
+    return true;
+  }).catch(function(error){
+    if(timedOut){
+      var timeoutError=new Error('Booking confirmation timed out');
+      timeoutError.code='BOOKING_TIMEOUT';
+      throw timeoutError;
+    }
+    throw error;
+  });
+  return Promise.race([requestPromise,timeoutPromise]).then(function(result){
+    clearTimeout(timeoutId);
+    return result;
+  },function(error){
+    clearTimeout(timeoutId);
+    throw error;
+  });
 }
 
 function goStep(n){
