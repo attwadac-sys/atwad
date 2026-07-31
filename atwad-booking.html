@@ -615,7 +615,7 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
     </div>
     <div class="btn-row">
       <button class="btn-back" onclick="goStep(3)">← تعديل</button>
-      <button class="btn-next" id="submitBookingBtn" onclick="submitBooking()">✅ إرسال الحجز</button>
+      <button type="button" class="btn-next" id="submitBookingBtn" onclick="submitBooking()">✅ إرسال الحجز</button>
     </div>
   </div>
 </div>
@@ -657,6 +657,9 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
 <script>
 var LANG = 'ar';
 var db = null;
+// يمنع إرسال الحجز أكثر من مرة أثناء انتظار رد Firebase.
+// يجب تعريفه مسبقًا؛ غيابه كان يوقف submitBooking فور الضغط على الزر.
+var bookingSubmitting = false;
 try { firebase.initializeApp({databaseURL:"https://atwad-booking-default-rtdb.firebaseio.com"}); db=firebase.database(); } catch(e){}
 
 var S = {service:'',serviceAr:'',price:0,units:1,isClean:false,clientType:'',name:'',phone:'',city:'',addr:'',notes:'',date:'',time:'',duration:0};
