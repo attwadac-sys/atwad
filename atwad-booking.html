@@ -1532,7 +1532,9 @@ function nowSaudiMinutes() {
 // todaySaudiDate — تاريخ اليوم بتوقيت السعودية بصيغة YYYY-MM-DD
 // ============================================================
 function todaySaudiDate() {
-  return new Intl.DateTimeFormat('en-CA', {timeZone:'Asia/Riyadh'}).format(new Date());
+  var parts=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Riyadh',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+  var out={}; parts.forEach(function(p){ if(p.type!=='literal') out[p.type]=p.value; });
+  return out.year+'-'+out.month+'-'+out.day;
 }
 
 function calcDur(){return Math.min((DUR_MAP[S.serviceAr]||30)*S.units,240);}
@@ -1572,25 +1574,46 @@ function checkSlots(date){
     return response.json();
   }).then(function(locks){
     if(requestSeq!==slotCheckSeq) return;
-    var booked=[];
+    // مجموعة كتل الوقت المشغولة كما هي في المرجع الموحد slotLocks
+    var bookedBlocks={};
     Object.keys(locks||{}).forEach(function(blockKey){
-      var mins=lockBlockMinutes(blockKey);
-      if(mins!==null) booked.push({start:mins,dur:30});
+      if(lockBlockMinutes(blockKey)!==null) bookedBlocks[blockKey]=true;
     });
     slotsCheckReady=true;
     lastCheckedDate=date;
-    renderSlots(booked,dur,date,'المواعيد المحجوزة محجوبة تلقائياً.');
+    renderSlots(bookedBlocks,dur,date,'المواعيد المحجوزة محجوبة تلقائياً.');
   }).catch(function(error){
     if(requestSeq!==slotCheckSeq) return;
     console.error('[ATWAD BOOKING] availability check failed:',error);
+    // سلوك آمن: عند تعذر التحقق لا تظهر أي فترة على أنها متاحة
     slotsCheckReady=false;
     lastCheckedDate='';
-    renderSlots([],dur,date,'تعذر التحقق من المواعيد الآن. أعد المحاولة بعد قليل.');
-    document.querySelectorAll('#slotsGrid .slot').forEach(function(slot){
-      slot.className='slot booked';
-      slot.onclick=null;
-    });
+    renderSlotsUnavailable('تعذر التحقق من توفر الموعد، حاول مرة أخرى');
   });
+}
+
+/** فشل آمن: كل الفترات محجوبة ولا يمكن اختيار أي منها */
+function renderSlotsUnavailable(message){
+  var grid=document.getElementById('slotsGrid');
+  grid.innerHTML='';
+  S.time='';
+  var icons=['🌅','☀️','🕛','🕑','🌤️','🌙'];
+  SLOTS.forEach(function(sl,idx){
+    var div=document.createElement('div');
+    div.className='slot booked';
+    div.innerHTML=icons[idx]+'<br>'+sl.ar+'<br><span style="font-size:9px;color:#94A3B8;font-weight:700">غير متاح</span>';
+    grid.appendChild(div);
+  });
+  var notice=document.createElement('div');
+  notice.style.cssText='grid-column:1/-1;text-align:center;padding:10px 12px;margin-top:4px;color:#9A3412;background:#FFF7ED;border:1px solid #FDBA74;border-radius:10px;font-size:12px;font-weight:700;line-height:1.7;';
+  notice.textContent='⚠️ '+message;
+  grid.appendChild(notice);
+  var retry=document.createElement('button');
+  retry.type='button';
+  retry.textContent='🔄 إعادة المحاولة';
+  retry.style.cssText='grid-column:1/-1;margin-top:8px;padding:10px;border:none;border-radius:10px;background:#0EA5E9;color:#fff;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;';
+  retry.onclick=function(){ var d=document.getElementById('f_date').value; if(d) checkSlots(d); };
+  grid.appendChild(retry);
 }
 
 function lockBlockMinutes(blockKey){
@@ -1607,21 +1630,28 @@ function selectedSlotStartMinutes(timeValue){
   return parseInt(match[1],10)*60+parseInt(match[2],10);
 }
 
+/** كتل 30 دقيقة التي تغطي الفترة [start,end) — نفس منطق لوحة الإدارة */
+function timeBlocksBetween(start,end){
+  var blocks=[];
+  if(start===null||!isFinite(start)||!isFinite(end)||end<=start) return blocks;
+  for(var m=Math.floor(start/30)*30;m<end&&m<1440;m+=30){
+    blocks.push(String(Math.floor(m/60)).padStart(2,'0')+String(m%60).padStart(2,'0'));
+  }
+  return blocks;
+}
+
 function bookingLockBlocks(timeValue,duration){
   var start=selectedSlotStartMinutes(timeValue);
   if(start===null) return [];
   // الوقت المعروض للعميل نافذة كاملة (مثلاً 2-4 م)، وليس مجرد وقت بدء.
   // نحجز النافذة كاملة، ونمددها فقط إذا كانت مدة العمل التقديرية أطول منها.
   var end=start+Math.max(SLOT_WINDOW_MINUTES,(parseInt(duration,10)||30));
-  var blocks=[];
-  for(var minute=Math.floor(start/30)*30;minute<end;minute+=30){
-    var hour=Math.floor(minute/60),mins=minute%60;
-    blocks.push(String(hour).padStart(2,'0')+String(mins).padStart(2,'0'));
-  }
-  return blocks;
+  return timeBlocksBetween(start,end);
 }
 
+/** booked: خريطة كتل مشغولة {"1600":true,...} من slotLocks */
 function renderSlots(booked,dur,selectedDate,availabilityNotice){
+  booked=booked||{};
   var grid=document.getElementById('slotsGrid'); grid.innerHTML='';
   var icons=['🌅','☀️','🕛','🕑','🌤️','🌙'];
 
@@ -1634,19 +1664,12 @@ function renderSlots(booked,dur,selectedDate,availabilityNotice){
 
   SLOTS.forEach(function(sl,idx){
     var div=document.createElement('div');
-    // أي موعد يقع داخل نافذة الوصول ذات الساعتين يجعل النافذة غير متاحة.
-    // كان الكود القديم يفحص مدة الخدمة فقط (30 دقيقة غالباً)، ولذلك كان
-    // يعرض 2-4 م متاحاً رغم وجود موعد عند 3 م.
+    // تُفحص نافذة الحجز المعروضة كاملة (ساعتان) وليس مدة الخدمة القصيرة،
+    // ويُمدد الفحص إذا كانت الخدمة أطول من النافذة. أي كتلة مشغولة داخل
+    // النطاق تجعل النافذة محجوزة — فموعد 3:00–5:00 يغلق 2–4 و4–6 معًا.
     var newEnd=sl.start+Math.max(SLOT_WINDOW_MINUTES,dur);
-    var conflict=booked.some(function(b){
-      var existingStart=Number.isFinite(b.start)?b.start:null;
-      if(existingStart===null){
-        var ex=SLOTS.find(function(s){return s.t===b.time;});
-        existingStart=ex?ex.start:null;
-      }
-      if(existingStart===null) return false;
-      return sl.start<(existingStart+(b.dur||90))&&newEnd>existingStart;
-    });
+    var windowBlocks=timeBlocksBetween(sl.start,newEnd);
+    var conflict=windowBlocks.some(function(b){ return !!booked[b]; });
 
     // تحقق الوقت: إذا كان اليوم، يجب أن يبدأ الموعد بعد الآن + ساعتان
     var isPast = isToday && (sl.start < currentMins + ADVANCE_MINUTES);
@@ -1842,22 +1865,24 @@ function submitBooking(){
       console.error('[booking] submit failed:',err);
       var timedOut=err&&err.code==='BOOKING_TIMEOUT';
       var isSlotConflict=err&&(/^FIREBASE_HTTP_(401|403)$/.test(err.code||'')||/الفترة المختارة/.test(err.message||''));
-      var message=isSlotConflict
-        ? 'هذا الوقت حُجز قبل إتمام طلبك أو يتداخل مع موعد قائم. ارجع إلى خطوة الموعد واختر وقتًا آخر.'
-        : timedOut
-        ? 'تعذر تأكيد استلام الحجز خلال 18 ثانية بسبب الاتصال. لا تقلق: لن تبقى الصفحة معلّقة، ويمكنك إعادة المحاولة أو إرسال الطلب مباشرة عبر واتساب.'
-        : 'تعذر إرسال الحجز إلى النظام. يمكنك إعادة المحاولة أو إرسال بيانات الطلب مباشرة عبر واتساب.';
-      if(submitStatus){
-        submitStatus.className='submit-status error';
-        submitStatus.innerHTML='⚠️ '+message+'<br><a href="'+waUrl+'" target="_blank" rel="noopener">فتح واتساب وإرسال الطلب</a>';
+
+      // إعادة المحاولة بعد نجاح صامت: إن كانت أقفال الفترة تحمل مفتاح هذا
+      // الطلب نفسه فالحجز مسجَّل فعلاً — نعرض النجاح ولا ننشئ حجزًا ثانيًا.
+      if(isSlotConflict && pendingBookingKey){
+        return confirmBookingAlreadySaved(S.date,pendingBookingKey).then(function(alreadySaved){
+          if(alreadySaved){
+            document.getElementById('refNum').textContent=ref;
+            document.getElementById('waLink').href=waUrl;
+            goStep('OK');
+            pendingBookingKey='';
+            pendingBookingFingerprint='';
+            pendingBookingRef='';
+            return;
+          }
+          showSubmitFailure(err,timedOut,isSlotConflict,waUrl,submitStatus);
+        });
       }
-      if(isSlotConflict){
-        S.time='';
-        showToast('⛔ الوقت محجوز. الرجاء اختيار موعد آخر.');
-        setTimeout(function(){goStep(3);checkSlots(S.date);},900);
-      } else {
-        showToast('⚠️ تعذر تأكيد الحجز؛ استخدم إعادة المحاولة أو واتساب.');
-      }
+      showSubmitFailure(err,timedOut,isSlotConflict,waUrl,submitStatus);
     }).then(function(){
       bookingSubmitting=false;
       if(submitBtn){
@@ -1873,6 +1898,42 @@ function submitBooking(){
       submitBtn.textContent='✅ إرسال الحجز';
     }
     showToast('❌ تعذر تجهيز الحجز. لم يتم تسجيل الطلب؛ حاول مرة أخرى.');
+  }
+}
+
+/** يتحقق من أن أقفال اليوم تحمل مفتاح هذا الطلب — يمنع الحجز المكرر */
+function confirmBookingAlreadySaved(date,bookingKey){
+  if(!date||!bookingKey) return Promise.resolve(false);
+  var url='https://atwad-booking-default-rtdb.firebaseio.com/slotLocks/'+encodeURIComponent(date)+'.json';
+  return fetch(url,{cache:'no-store'}).then(function(r){
+    if(!r.ok) return false;
+    return r.json();
+  }).then(function(locks){
+    if(!locks) return false;
+    return Object.keys(locks).some(function(b){
+      var lock=locks[b]||{};
+      return lock.bookingKey===bookingKey || lock.ownerKey==='bookings:'+bookingKey;
+    });
+  }).catch(function(){ return false; });
+}
+
+function showSubmitFailure(err,timedOut,isSlotConflict,waUrl,submitStatus){
+  var _unused=err;
+  var message=isSlotConflict
+    ? 'هذا الوقت حُجز قبل إتمام طلبك أو يتداخل مع موعد قائم. ارجع إلى خطوة الموعد واختر وقتًا آخر.'
+    : timedOut
+    ? 'تعذر تأكيد استلام الحجز خلال 18 ثانية بسبب الاتصال. لا تقلق: لن تبقى الصفحة معلّقة، ويمكنك إعادة المحاولة أو إرسال الطلب مباشرة عبر واتساب.'
+    : 'تعذر إرسال الحجز إلى النظام. يمكنك إعادة المحاولة أو إرسال بيانات الطلب مباشرة عبر واتساب.';
+  if(submitStatus){
+    submitStatus.className='submit-status error';
+    submitStatus.innerHTML='⚠️ '+message+'<br><a href="'+waUrl+'" target="_blank" rel="noopener">فتح واتساب وإرسال الطلب</a>';
+  }
+  if(isSlotConflict){
+    S.time='';
+    showToast('⛔ الوقت محجوز. الرجاء اختيار موعد آخر.');
+    setTimeout(function(){goStep(3);checkSlots(S.date);},900);
+  } else {
+    showToast('⚠️ تعذر تأكيد الحجز؛ استخدم إعادة المحاولة أو واتساب.');
   }
 }
 
@@ -1898,6 +1959,13 @@ function writePublicBooking(key,bookingData,timeoutMs){
   // كتابة الحجز وأقفال الوقت في طلب ذري واحد: إما تنجح جميعها أو لا يُكتب شيء.
   // قواعد Firebase تمنع استبدال أي قفل موجود، وبذلك لا يمكن لحجزين متزامنين
   // الاستيلاء على الفترة نفسها.
+  var lockMap={};
+  lockBlocks.forEach(function(blockKey){ lockMap[blockKey]=true; });
+  var lastMinutes=lockBlockMinutes(lockBlocks[lockBlocks.length-1]);
+  bookingData.lockBlocks=lockMap;
+  bookingData.startBlock=lockBlocks[0];
+  bookingData.endBlock=String(Math.floor((lastMinutes+30)/60)).padStart(2,'0')+
+                       String((lastMinutes+30)%60).padStart(2,'0');
   var atomicUpdate={};
   atomicUpdate['bookings/'+key]=bookingData;
   lockBlocks.forEach(function(blockKey){
