@@ -376,7 +376,7 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
   <div class="card-body">
     <div class="two-col">
       <div class="field"><label>الاسم <span class="req">*</span></label><input type="text" id="f_name" placeholder="اسمك الكريم"><div class="err-msg" id="e_name">أدخل اسمك</div></div>
-      <div class="field"><label>الجوال <span class="req">*</span></label><input type="tel" id="f_phone" placeholder="05xxxxxxxx" maxlength="10" inputmode="numeric" autocomplete="tel" oninput="lookupCustomerByPhone(this.value)"><div class="err-msg" id="e_phone">رقم غير صحيح</div><div class="customer-lookup" id="customerLookupMsg" aria-live="polite"></div></div>
+      <div class="field"><label>الجوال <span class="req">*</span></label><input type="tel" id="f_phone" placeholder="05xxxxxxxx أو +966 5x xxx xxxx" maxlength="24" inputmode="tel" autocomplete="tel" oninput="lookupCustomerByPhone(this.value)"><div class="err-msg" id="e_phone">رقم غير صحيح</div><div class="customer-lookup" id="customerLookupMsg" aria-live="polite"></div></div>
     </div>
     <div class="field">
       <label>المدينة <span class="req">*</span></label>
@@ -1135,7 +1135,11 @@ var lastCustomerAutofill = null;
 
 function normalizeCustomerPhone(value) {
   var arabicDigits = {'٠':'0','١':'1','٢':'2','٣':'3','٤':'4','٥':'5','٦':'6','٧':'7','٨':'8','٩':'9'};
-  var p = String(value || '').replace(/[٠-٩]/g, function(d){ return arabicDigits[d]; }).replace(/\D/g, '');
+  var persianDigits = {'۰':'0','۱':'1','۲':'2','۳':'3','۴':'4','۵':'5','۶':'6','۷':'7','۸':'8','۹':'9'};
+  var p = String(value || '')
+    .replace(/[٠-٩]/g, function(d){ return arabicDigits[d]; })
+    .replace(/[۰-۹]/g, function(d){ return persianDigits[d]; })
+    .replace(/\D/g, '');
   if(p.indexOf('00966') === 0) p = p.slice(5);
   else if(p.indexOf('966') === 0) p = p.slice(3);
   if(p.length === 9 && p.charAt(0) === '5') p = '0' + p;
@@ -1487,7 +1491,9 @@ function removeImage(){
 
 function next2(){
   var name=document.getElementById('f_name').value.trim();
-  var phone=document.getElementById('f_phone').value.trim();
+  var phoneInput=document.getElementById('f_phone');
+  var phone=normalizeCustomerPhone(phoneInput.value);
+  phoneInput.value=phone;
   var city=document.getElementById('f_city').value;
   var mapsLink=document.getElementById('f_maps_link').value.trim();
   var ok=true;
@@ -1502,6 +1508,7 @@ function next2(){
 var FRIDAY_VAR=true;
 var DUR_MAP={'غسيل مكيفات':30,'صيانة مكيف':60,'تركيب مكيف':90};
 var SLOTS=[{t:'8:00 - 10:00',start:480,ar:'8-10 ص'},{t:'10:00 - 12:00',start:600,ar:'10-12 ص'},{t:'12:00 - 14:00',start:720,ar:'12-2 م'},{t:'14:00 - 16:00',start:840,ar:'2-4 م'},{t:'16:00 - 18:00',start:960,ar:'4-6 م'},{t:'18:00 - 20:00',start:1080,ar:'6-8 م'}];
+var SLOT_WINDOW_MINUTES=120;
 var slotCheckSeq=0;
 var slotsCheckReady=false;
 var lastCheckedDate='';
@@ -1557,13 +1564,61 @@ function checkSlots(date){
   var dn=document.getElementById('durNote');
   dn.style.display='block';
   dn.textContent='المدة التقديرية: '+fmtDur(dur)+' ('+S.units+' × '+(dur/S.units)+' د)';
-  // صفحة الحجز عامة، لذلك لا تقرأ bookings أو أي مسار إداري محمي.
-  // الوقت هنا "مفضل" ويُراجع من الإدارة بعد استلام الطلب.
-  if(requestSeq!==slotCheckSeq) return;
-  slotsCheckReady=true;
-  lastCheckedDate=date;
-  console.info('[ATWAD BOOKING] protected availability mode 2026-07-29-v2');
-  renderSlots([],dur,date,'سيتم مراجعة توفر الموعد وتأكيده من الإدارة.');
+  // نقرأ سجلاً عاماً آمناً للفترات المشغولة فقط. لا يحتوي هذا المسار أسماء
+  // العملاء أو أرقامهم أو تفاصيل مواعيدهم.
+  var availabilityUrl='https://atwad-booking-default-rtdb.firebaseio.com/slotLocks/'+encodeURIComponent(date)+'.json';
+  fetch(availabilityUrl,{cache:'no-store'}).then(function(response){
+    if(!response.ok) throw new Error('availability '+response.status);
+    return response.json();
+  }).then(function(locks){
+    if(requestSeq!==slotCheckSeq) return;
+    var booked=[];
+    Object.keys(locks||{}).forEach(function(blockKey){
+      var mins=lockBlockMinutes(blockKey);
+      if(mins!==null) booked.push({start:mins,dur:30});
+    });
+    slotsCheckReady=true;
+    lastCheckedDate=date;
+    renderSlots(booked,dur,date,'المواعيد المحجوزة محجوبة تلقائياً.');
+  }).catch(function(error){
+    if(requestSeq!==slotCheckSeq) return;
+    console.error('[ATWAD BOOKING] availability check failed:',error);
+    slotsCheckReady=false;
+    lastCheckedDate='';
+    renderSlots([],dur,date,'تعذر التحقق من المواعيد الآن. أعد المحاولة بعد قليل.');
+    document.querySelectorAll('#slotsGrid .slot').forEach(function(slot){
+      slot.className='slot booked';
+      slot.onclick=null;
+    });
+  });
+}
+
+function lockBlockMinutes(blockKey){
+  var match=String(blockKey||'').match(/^(\d{2})(\d{2})$/);
+  if(!match) return null;
+  var hour=parseInt(match[1],10),minute=parseInt(match[2],10);
+  if(hour>23||minute>59) return null;
+  return hour*60+minute;
+}
+
+function selectedSlotStartMinutes(timeValue){
+  var match=String(timeValue||'').match(/(\d{1,2}):(\d{2})/);
+  if(!match) return null;
+  return parseInt(match[1],10)*60+parseInt(match[2],10);
+}
+
+function bookingLockBlocks(timeValue,duration){
+  var start=selectedSlotStartMinutes(timeValue);
+  if(start===null) return [];
+  // الوقت المعروض للعميل نافذة كاملة (مثلاً 2-4 م)، وليس مجرد وقت بدء.
+  // نحجز النافذة كاملة، ونمددها فقط إذا كانت مدة العمل التقديرية أطول منها.
+  var end=start+Math.max(SLOT_WINDOW_MINUTES,(parseInt(duration,10)||30));
+  var blocks=[];
+  for(var minute=Math.floor(start/30)*30;minute<end;minute+=30){
+    var hour=Math.floor(minute/60),mins=minute%60;
+    blocks.push(String(hour).padStart(2,'0')+String(mins).padStart(2,'0'));
+  }
+  return blocks;
 }
 
 function renderSlots(booked,dur,selectedDate,availabilityNotice){
@@ -1579,11 +1634,18 @@ function renderSlots(booked,dur,selectedDate,availabilityNotice){
 
   SLOTS.forEach(function(sl,idx){
     var div=document.createElement('div');
-    var newEnd=sl.start+dur;
+    // أي موعد يقع داخل نافذة الوصول ذات الساعتين يجعل النافذة غير متاحة.
+    // كان الكود القديم يفحص مدة الخدمة فقط (30 دقيقة غالباً)، ولذلك كان
+    // يعرض 2-4 م متاحاً رغم وجود موعد عند 3 م.
+    var newEnd=sl.start+Math.max(SLOT_WINDOW_MINUTES,dur);
     var conflict=booked.some(function(b){
-      var ex=SLOTS.find(function(s){return s.t===b.time;});
-      if(!ex) return false;
-      return sl.start<(ex.start+(b.dur||90))&&newEnd>ex.start;
+      var existingStart=Number.isFinite(b.start)?b.start:null;
+      if(existingStart===null){
+        var ex=SLOTS.find(function(s){return s.t===b.time;});
+        existingStart=ex?ex.start:null;
+      }
+      if(existingStart===null) return false;
+      return sl.start<(existingStart+(b.dur||90))&&newEnd>existingStart;
     });
 
     // تحقق الوقت: إذا كان اليوم، يجب أن يبدأ الموعد بعد الآن + ساعتان
@@ -1596,9 +1658,8 @@ function renderSlots(booked,dur,selectedDate,availabilityNotice){
       div.className='slot booked';
       div.innerHTML=icons[idx]+'<br>'+sl.ar+'<br><span style="font-size:9px;color:#94A3B8;font-weight:700">انتهى الوقت</span>';
     } else {
-      var endH=Math.floor(newEnd/60),endM=newEnd%60;
       div.className='slot';
-      div.innerHTML=icons[idx]+'<br>'+sl.ar+'<br><span style="font-size:9px;color:var(--success);font-weight:600">ينتهي '+endH+':'+(endM===0?'00':endM)+'</span>';
+      div.innerHTML=icons[idx]+'<br>'+sl.ar+'<br><span style="font-size:9px;color:var(--success);font-weight:600">متاح</span>';
       div.onclick=(function(t){return function(){selSlot(div,t);};})(sl.t);
       hasAvailable = true;
     }
@@ -1718,6 +1779,9 @@ function submitBooking(){
   }
 
   try{
+    // حماية إضافية: لا يُحفظ في Firebase إلا الرقم السعودي المحلي الموحّد 05xxxxxxxx.
+    S.phone=normalizeCustomerPhone(S.phone);
+    if(!/^05\d{8}$/.test(S.phone)) throw new Error('رقم الجوال غير صحيح. الرجاء إدخاله بصيغة 05xxxxxxxx أو +966 5x xxx xxxx.');
     var bookingFingerprint=JSON.stringify([S.date,S.time,S.phone,S.serviceAr,S.units,S.city,S.addr]);
     if(!pendingBookingKey||pendingBookingFingerprint!==bookingFingerprint){
       pendingBookingKey='web_'+Date.now()+'_'+Math.random().toString(36).slice(2,10);
@@ -1777,14 +1841,23 @@ function submitBooking(){
     }).catch(function(err){
       console.error('[booking] submit failed:',err);
       var timedOut=err&&err.code==='BOOKING_TIMEOUT';
-      var message=timedOut
+      var isSlotConflict=err&&(/^FIREBASE_HTTP_(401|403)$/.test(err.code||'')||/الفترة المختارة/.test(err.message||''));
+      var message=isSlotConflict
+        ? 'هذا الوقت حُجز قبل إتمام طلبك أو يتداخل مع موعد قائم. ارجع إلى خطوة الموعد واختر وقتًا آخر.'
+        : timedOut
         ? 'تعذر تأكيد استلام الحجز خلال 18 ثانية بسبب الاتصال. لا تقلق: لن تبقى الصفحة معلّقة، ويمكنك إعادة المحاولة أو إرسال الطلب مباشرة عبر واتساب.'
         : 'تعذر إرسال الحجز إلى النظام. يمكنك إعادة المحاولة أو إرسال بيانات الطلب مباشرة عبر واتساب.';
       if(submitStatus){
         submitStatus.className='submit-status error';
         submitStatus.innerHTML='⚠️ '+message+'<br><a href="'+waUrl+'" target="_blank" rel="noopener">فتح واتساب وإرسال الطلب</a>';
       }
-      showToast('⚠️ تعذر تأكيد الحجز؛ استخدم إعادة المحاولة أو واتساب.');
+      if(isSlotConflict){
+        S.time='';
+        showToast('⛔ الوقت محجوز. الرجاء اختيار موعد آخر.');
+        setTimeout(function(){goStep(3);checkSlots(S.date);},900);
+      } else {
+        showToast('⚠️ تعذر تأكيد الحجز؛ استخدم إعادة المحاولة أو واتساب.');
+      }
     }).then(function(){
       bookingSubmitting=false;
       if(submitBtn){
@@ -1818,17 +1891,35 @@ function writePublicBooking(key,bookingData,timeoutMs){
       reject(timeoutError);
     },timeoutMs);
   });
-  var url='https://atwad-booking-default-rtdb.firebaseio.com/bookings/'+encodeURIComponent(key)+'.json';
+  var lockBlocks=bookingLockBlocks(bookingData.time,bookingData.duration);
+  if(!bookingData.date||lockBlocks.length===0){
+    return Promise.reject(new Error('تعذر تحديد فترة الموعد'));
+  }
+  // كتابة الحجز وأقفال الوقت في طلب ذري واحد: إما تنجح جميعها أو لا يُكتب شيء.
+  // قواعد Firebase تمنع استبدال أي قفل موجود، وبذلك لا يمكن لحجزين متزامنين
+  // الاستيلاء على الفترة نفسها.
+  var atomicUpdate={};
+  atomicUpdate['bookings/'+key]=bookingData;
+  lockBlocks.forEach(function(blockKey){
+    atomicUpdate['slotLocks/'+bookingData.date+'/'+blockKey]={
+      bookingKey:key,
+      ownerKey:'bookings:'+key,
+      createdAt:firebase.database.ServerValue.TIMESTAMP
+    };
+  });
+  var url='https://atwad-booking-default-rtdb.firebaseio.com/.json';
   var requestOptions={
-    method:'PUT',
+    method:'PATCH',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify(bookingData),
+    body:JSON.stringify(atomicUpdate),
     cache:'no-store'
   };
   if(controller) requestOptions.signal=controller.signal;
   var requestPromise=fetch(url,requestOptions).then(function(response){
     if(!response.ok){
-      var httpError=new Error('Firebase HTTP '+response.status);
+      var httpError=new Error(response.status===401||response.status===403
+        ? 'الفترة المختارة محجوزة أو لم تُفعّل قواعد منع التداخل بعد.'
+        : 'Firebase HTTP '+response.status);
       httpError.code='FIREBASE_HTTP_'+response.status;
       throw httpError;
     }
