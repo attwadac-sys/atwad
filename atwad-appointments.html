@@ -362,8 +362,6 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
   <div class="tech-filter">
     <button class="tech-chip active" onclick="filterTech('all',this)">الكل</button>
     <button class="tech-chip" onclick="filterTech('Abrar',this)">👷 أحمد</button>
-    <button class="tech-chip" onclick="filterTech('Shoib',this)">👷 شعيب</button>
-    <button class="tech-chip" onclick="filterTech('Suhail',this)">👷 سهيل</button>
   </div>
 
   <div id="weekView" style="display:none;padding:0 22px 30px;">
@@ -449,9 +447,8 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
       </div>
       <div class="form-row">
         <div class="form-group"><label>الفني المسؤول <span class="req">*</span></label>
-          <select id="f_tech">
-            <option value="">-- اختر الفني --</option>
-            <option value="Abrar">أحمد</option><option value="Shoib">شعيب</option><option value="Suhail">سهيل</option>
+          <select id="f_tech" disabled aria-label="الفني المسؤول ثابت: أحمد">
+            <option value="Abrar" selected>أحمد — ثابت</option>
           </select>
         </div>
         <div class="form-group"><label>الحالة</label>
@@ -596,11 +593,8 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
       </div>
       <div class="form-row two-col">
         <div class="form-group"><label>الفني المفضل</label>
-          <select id="wf_tech">
-            <option value="">أي فني</option>
-            <option value="Abrar">أحمد</option>
-            <option value="Shoib">شعيب</option>
-            <option value="Suhail">سهيل</option>
+          <select id="wf_tech" disabled aria-label="الفني المفضل ثابت: أحمد">
+            <option value="Abrar" selected>أحمد — ثابت</option>
           </select>
         </div>
         <div class="form-group"><label>التاريخ المطلوب</label><input type="date" id="wf_date"></div>
@@ -910,10 +904,7 @@ function getWeekDates(offset=0){
   return Array.from({length:7},function(_,i){ return addDaysToDate(weekStart,i); });
 }
 function autoAssignTech(date) {
-  const dayAppts = appointments.filter(a => a.date === date);
-  const techCount = {Abrar:0, Shoib:0, Suhail:0};
-  dayAppts.forEach(a => { if(techCount[a.tech]!==undefined) techCount[a.tech]++; });
-  return Object.keys(techCount).reduce((a,b) => techCount[a]<=techCount[b]?a:b);
+  return 'Abrar';
 }
 
 // ===== وظائف الصورة =====
@@ -1094,8 +1085,13 @@ function initFirebaseSync() {
     const fbAppts = [];
     snap.forEach(function(child) {
       const rawAppt = child.val() || {};
-      fbAppts.push({ ...rawAppt, _fbKey: child.key, _source: 'appointments',
-                     _statusRaw: rawAppt.status, status: atwadStatusLogic(rawAppt.status) });
+      const normalizedStatus = atwadStatusLogic(rawAppt.status);
+      const operationalTech = (normalizedStatus === 'done' || normalizedStatus === 'cancelled')
+        ? (rawAppt.tech || 'Abrar')
+        : 'Abrar';
+      fbAppts.push({ ...rawAppt, tech: operationalTech,
+                     _fbKey: child.key, _source: 'appointments',
+                     _statusRaw: rawAppt.status, status: normalizedStatus });
     });
 
     // مزامنة حجوزات العملاء من صفحة الحجز
@@ -1142,7 +1138,9 @@ function initFirebaseSync() {
           units: b.units || 1,
           date: b.date,
           time: b.time.includes(' - ') ? b.time.split(' - ')[0] : b.time,
-          tech: b.tech || autoAssignTech(b.date),
+          // أحمد هو الفني التشغيلي الوحيد للمواعيد النشطة، مع حفظ التاريخ كما كان.
+          tech: (bookingStatus === 'done' || bookingStatus === 'cancelled')
+            ? (b.tech || 'Abrar') : 'Abrar',
           status: bookingStatus,
           notes: 'حجز من النموذج الإلكتروني',
           duration: b.duration || 60,
@@ -1441,7 +1439,8 @@ function openNewApptForm(){
   document.getElementById('modalTitle').textContent='➕ موعد جديد';
   ['f_client','f_phone','f_address','f_notes'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('f_service').value='';
-  document.getElementById('f_tech').value='';
+  // أحمد هو الفني التشغيلي الوحيد لجميع المواعيد الجديدة.
+  document.getElementById('f_tech').value='Abrar';
   document.getElementById('f_status').value='pending';
   document.getElementById('f_units').value='1';
   document.getElementById('f_date').value=today();
@@ -1458,7 +1457,7 @@ function openNewApptForm(){
     if(prefill.client) document.getElementById('f_client').value = prefill.client;
     if(prefill.phone) document.getElementById('f_phone').value = prefill.phone;
     if(prefill.service) document.getElementById('f_service').value = prefill.service;
-    if(prefill.tech) document.getElementById('f_tech').value = prefill.tech;
+    document.getElementById('f_tech').value = 'Abrar';
     if(prefill.date) document.getElementById('f_date').value = prefill.date;
     if(prefill.time) document.getElementById('f_time').value = prefill.time;
     if(prefill.notes) document.getElementById('f_notes').value = prefill.notes;
@@ -1483,7 +1482,8 @@ function editAppt(id){
   document.getElementById('f_phone').value=a.phone||'';
   document.getElementById('f_address').value=a.address||'';
   document.getElementById('f_service').value=a.service||'';
-  document.getElementById('f_tech').value=a.tech||'';
+  // عند تعديل أي موعد يُثبّت الفني أحمد بدل أي إسناد قديم.
+  document.getElementById('f_tech').value='Abrar';
   document.getElementById('f_status').value=a.status||'pending';
   document.getElementById('f_units').value=a.units||1;
   document.getElementById('f_date').value=a.date||today();
@@ -2011,7 +2011,7 @@ function saveAppt(){
   const phone=document.getElementById('f_phone').value.trim();
   const address=document.getElementById('f_address').value.trim();
   const service=document.getElementById('f_service').value;
-  const tech=document.getElementById('f_tech').value;
+  const tech='Abrar';
   const date=document.getElementById('f_date').value;
   if(!client||!phone||!service||!tech||!date) return showToast('❌ أكمل الحقول المطلوبة');
   if(!editingFirebaseKey) {
@@ -3059,7 +3059,7 @@ function openAddWaitingModal() {
   document.getElementById('wf_phone').value   = '';
   document.getElementById('wf_district').value= '';
   document.getElementById('wf_service').value = '';
-  document.getElementById('wf_tech').value    = '';
+  document.getElementById('wf_tech').value    = 'Abrar';
   document.getElementById('wf_date').value    = '';
   document.getElementById('wf_period').value  = 'anytime';
   document.getElementById('wf_flex').value    = 'anytime';
@@ -3078,7 +3078,7 @@ function saveWaitingEntry() {
     phone:        phone,
     district:     document.getElementById('wf_district').value.trim(),
     service:      document.getElementById('wf_service').value,
-    preferredTech:document.getElementById('wf_tech').value,
+    preferredTech:'Abrar',
     requestedDate:document.getElementById('wf_date').value,
     period:       document.getElementById('wf_period').value,
     flexibility:  document.getElementById('wf_flex').value,
@@ -3170,7 +3170,7 @@ function agreeFromWaiting(key) {
     phone: w.phone,
     address: w.district || '',
     service: w.service || '',
-    tech: w.preferredTech || (freeAppt && freeAppt.tech) || '',
+    tech: 'Abrar',
     date: (freeAppt && freeAppt.date) || '',
     time: (freeAppt && freeAppt.time) || ''
   }, function(){
