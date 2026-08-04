@@ -862,6 +862,12 @@ function atwadStatusKey(raw){
 }
 /** المفتاح المستخدم في المنطق — غير المعروف يُعامل كـ pending دون تعديل المحفوظ */
 function atwadStatusLogic(raw){ return atwadStatusKey(raw)||'pending'; }
+/** المواعيد الملغاة تبقى محفوظة في Firebase، لكنها لا تظهر في شاشة التشغيل اليومية */
+function atwadIsVisibleAppointment(a){
+  var raw=(a&&a._statusRaw!==undefined&&a._statusRaw!==null&&String(a._statusRaw).trim()!=='')
+          ? a._statusRaw : (a?a.status:'');
+  return atwadStatusLogic(raw)!=='cancelled';
+}
 /** بيانات العرض — القيمة غير المعروفة تُعرض كما هي مع أيقونة احتياطية */
 function atwadStatusView(a){
   var raw=(a&&a._statusRaw!==undefined&&a._statusRaw!==null&&String(a._statusRaw).trim()!=='')
@@ -1187,11 +1193,12 @@ function initFirebaseSync() {
 // ===== STATS =====
 function updateStats(){
   const tod = today();
-  document.getElementById('statToday').textContent = appointments.filter(a=>a.date===tod).length;
+  const visibleAppointments = appointments.filter(atwadIsVisibleAppointment);
+  document.getElementById('statToday').textContent = visibleAppointments.filter(a=>a.date===tod).length;
   document.getElementById('statPending').textContent = appointments.filter(a=>a.status==='pending').length;
   const weekDates = getWeekDates(0);
   document.getElementById('statDone').textContent = appointments.filter(a=>weekDates.includes(a.date)&&a.status==='done').length;
-  document.getElementById('statTotal').textContent = appointments.length;
+  document.getElementById('statTotal').textContent = visibleAppointments.length;
 }
 
 // ===== WEEK VIEW =====
@@ -1213,7 +1220,7 @@ function renderWeek(){
     const d = new Date(date+'T00:00:00');
     html += `<div><div class="week-day-header${isToday?' today':''}"><div class="week-day-name">${dayNames[d.getDay()]}</div><div class="week-day-num">${d.getDate()}</div></div><div class="day-col">`;
     hours.forEach(()=>{ html += `<div class="day-hour"></div>`; });
-    appointments.filter(a=>a.date===date&&(techFilter==='all'||a.tech===techFilter)).forEach(a=>{
+    appointments.filter(a=>atwadIsVisibleAppointment(a)&&a.date===date&&(techFilter==='all'||a.tech===techFilter)).forEach(a=>{
       const [hh,mm] = (a.time||'09:00').split(':').map(Number);
       const top = (hh - 7) * 60 + mm;
       const dur = (a.duration||60);
@@ -1231,7 +1238,7 @@ function renderWeek(){
 
 // ===== LIST VIEW =====
 function renderList(){
-  let appts = [...appointments];
+  let appts = appointments.filter(atwadIsVisibleAppointment);
   if(techFilter!=='all') appts = appts.filter(a=>a.tech===techFilter);
   // ترتيب تنازلي: التاريخ الأحدث أولاً ثم الوقت المتأخر — المواعيد بلا وقت تأتي آخراً داخل يومها
   appts.sort(function(a, b) {
