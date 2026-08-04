@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>إدارة آراء العملاء — مؤسسة أطواد</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="atwad-firebase.js"></script>
+<style>
+:root{
+  --deep:#0C3B5E;--steel:#1E5F8A;--sky:#0EA5E9;--ice:#E8F4FD;--frost:#F0F9FF;
+  --slate:#334155;--mist:#94A3B8;--white:#FFFFFF;--success:#10B981;--warning:#F59E0B;
+  --danger:#EF4444;--gold:#F5A623;--border:#DCEAF3;--shadow:0 6px 24px rgba(12,59,94,.08)
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);min-height:100vh}
+.auth-pending .app-shell{visibility:hidden}
+.sidebar{position:fixed;right:0;top:0;bottom:0;width:230px;background:linear-gradient(180deg,var(--deep),var(--steel));z-index:200;display:flex;flex-direction:column;box-shadow:4px 0 24px rgba(12,59,94,.18)}
+.sidebar-logo{padding:22px 18px 18px;border-bottom:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:12px}
+.sidebar-logo .icon{width:42px;height:42px;background:linear-gradient(135deg,var(--sky),#38BDF8);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px}
+.sidebar-logo h1{color:#fff;font-size:16px;font-weight:900}.sidebar-logo p{color:rgba(255,255,255,.5);font-size:11px}
+.nav-section{padding:14px 10px 6px}.nav-label{color:rgba(255,255,255,.3);font-size:10px;font-weight:700;padding:0 8px 5px;letter-spacing:1px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:rgba(255,255,255,.72);font-size:13px;font-weight:500;cursor:pointer;transition:.2s;margin-bottom:2px;text-decoration:none}
+.nav-item:hover{background:rgba(255,255,255,.08);color:#fff}.nav-item.active{background:rgba(14,165,233,.22);color:#38BDF8;font-weight:800}.nav-icon{font-size:16px;width:20px;text-align:center}
+.main{margin-right:230px;min-height:100vh}.topbar{background:#fff;padding:13px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #E2E8F0;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.04);gap:12px;flex-wrap:wrap}
+.title h1{font-size:18px;font-weight:900;color:var(--deep)}.title p{font-size:11px;color:var(--mist);margin-top:2px}
+.top-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.btn{border:0;border-radius:10px;padding:9px 14px;font-family:'Tajawal',sans-serif;font-weight:800;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;text-decoration:none;transition:.2s}.btn:hover{transform:translateY(-1px)}
+.btn-primary{background:linear-gradient(90deg,var(--deep),var(--sky));color:#fff;box-shadow:0 4px 12px rgba(14,165,233,.25)}.btn-soft{background:var(--ice);color:var(--steel);border:1px solid #BFDBFE}.btn-danger{background:#FEE2E2;color:#991B1B}.btn-plain{background:#fff;color:var(--slate);border:1px solid #E2E8F0}
+.content{padding:20px 22px 46px}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}.stat{background:#fff;border:1px solid var(--border);border-radius:16px;padding:17px;box-shadow:var(--shadow)}.stat .icon{font-size:21px}.stat .num{font-size:27px;font-weight:900;color:var(--deep);margin-top:5px}.stat .label{font-size:11px;color:var(--mist);margin-top:2px}.stat.gold .num{color:var(--gold)}.stat.green .num{color:var(--success)}.stat.blue .num{color:var(--sky)}
+.panel{background:#fff;border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);padding:16px;margin-bottom:16px}.panel-title{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:13px}.panel-title h2{font-size:15px;font-weight:900;color:var(--deep)}.panel-title small{font-size:11px;color:var(--mist)}
+.filters{display:grid;grid-template-columns:2fr repeat(4,1fr);gap:9px}.field{display:flex;flex-direction:column;gap:5px}.field label{font-size:10px;font-weight:800;color:#64748B}.field input,.field select{width:100%;padding:9px 11px;border:1.5px solid #E2E8F0;border-radius:9px;background:#F8FAFC;font-family:'Tajawal',sans-serif;font-size:12px;color:var(--slate);outline:none}.field input:focus,.field select:focus{border-color:var(--sky);background:#fff;box-shadow:0 0 0 3px rgba(14,165,233,.08)}
+.distribution{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}.dist-item{background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:9px}.dist-head{display:flex;justify-content:space-between;font-size:11px;font-weight:800;color:var(--slate);margin-bottom:6px}.dist-track{height:6px;background:#E2E8F0;border-radius:20px;overflow:hidden}.dist-fill{height:100%;background:linear-gradient(90deg,var(--gold),#FCD34D);border-radius:20px;width:0}
+.reviews-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px}.reviews-head h2{font-size:15px;font-weight:900;color:var(--deep)}.result-count{font-size:11px;color:var(--mist)}
+.review-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}.review-card{background:#fff;border:1px solid var(--border);border-radius:15px;padding:16px;box-shadow:var(--shadow);position:relative}.review-card:hover{border-color:#B7DFF5}.review-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}.reviewer{display:flex;align-items:center;gap:10px;min-width:0}.avatar{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--steel),var(--sky));color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;flex:0 0 auto}.name{font-size:14px;font-weight:900;color:var(--deep);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:230px}.date{font-size:10px;color:var(--mist);margin-top:2px}.stars{color:var(--gold);font-size:16px;letter-spacing:1px;white-space:nowrap}.muted-stars{color:#D7E2EA}.meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}.tag{font-size:10px;font-weight:800;padding:3px 8px;border-radius:20px;background:var(--ice);color:var(--steel)}.tag.yes{background:#D1FAE5;color:#065F46}.tag.no{background:#FEE2E2;color:#991B1B}.text{margin-top:11px;background:#F8FAFC;border-right:3px solid var(--sky);border-radius:10px;padding:11px 12px;font-size:12px;line-height:1.8;min-height:54px;white-space:pre-wrap;overflow-wrap:anywhere}.actions{display:flex;justify-content:flex-end;gap:7px;margin-top:12px}.mini-btn{border:0;border-radius:8px;padding:6px 10px;font-family:'Tajawal',sans-serif;font-size:10px;font-weight:800;cursor:pointer}.copy-btn{background:var(--ice);color:var(--steel)}.delete-btn{background:#FEE2E2;color:#991B1B}
+.state{background:#fff;border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);padding:55px 20px;text-align:center;color:var(--mist)}.state .icon{font-size:44px;margin-bottom:10px}.state strong{display:block;color:var(--deep);font-size:15px;margin-bottom:4px}.state p{font-size:12px}.hidden{display:none!important}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(90px);background:var(--deep);color:#fff;padding:11px 20px;border-radius:10px;font-size:12px;font-weight:800;box-shadow:0 10px 28px rgba(0,0,0,.2);transition:.25s;z-index:9999}.toast.show{transform:translateX(-50%) translateY(0)}.toast.error{background:#991B1B}.toast.success{background:#047857}
+@media(max-width:1000px){.sidebar{display:none}.main{margin-right:0}.stats{grid-template-columns:repeat(2,1fr)}.filters{grid-template-columns:repeat(2,1fr)}.review-grid{grid-template-columns:1fr}}
+@media(max-width:560px){.content{padding:12px}.topbar{padding:11px 12px}.stats{gap:8px}.stat{padding:13px}.stat .num{font-size:23px}.filters{grid-template-columns:1fr}.distribution{grid-template-columns:1fr}.review-card{padding:13px}.name{max-width:175px}.top-actions{width:100%}.top-actions .btn{flex:1;justify-content:center}}
+@media print{.sidebar,.topbar,.filters-panel,.distribution-panel,.actions{display:none!important}.main{margin:0}.content{padding:0}.review-grid{grid-template-columns:1fr}.review-card{break-inside:avoid;box-shadow:none}.stats{grid-template-columns:repeat(4,1fr)}}
+</style>
+</head>
+<body class="auth-pending">
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-logo"><div class="icon">❄️</div><div><h1>أطواد</h1><p>لصيانة المكيفات</p></div></div>
+    <div class="nav-section">
+      <div class="nav-label">القائمة</div>
+      <a class="nav-item" href="atwad-customers.html"><span class="nav-icon">👥</span> العملاء</a>
+      <a class="nav-item" href="atwad-appointments.html"><span class="nav-icon">📅</span> المواعيد</a>
+      <a class="nav-item" href="atwad-workorders.html"><span class="nav-icon">🔧</span> أوامر العمل</a>
+      <a class="nav-item" href="atwad-finance.html"><span class="nav-icon">💰</span> الإدارة المالية</a>
+      <a class="nav-item" href="atwad-reports.html"><span class="nav-icon">📊</span> التقارير</a>
+      <a class="nav-item active" href="atwad-reviews-admin.html"><span class="nav-icon">⭐</span> آراء العملاء</a>
+    </div>
+    <div class="nav-section" style="margin-top:auto;border-top:1px solid rgba(255,255,255,.08);padding-top:10px">
+      <a class="nav-item" href="index.html"><span class="nav-icon">🏠</span> الرئيسية</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div class="title"><h1>⭐ آراء العملاء</h1><p id="connectionText">في انتظار تسجيل الدخول...</p></div>
+      <div class="top-actions">
+        <button class="btn btn-soft" type="button" onclick="copyPublicReviewLink()">🔗 نسخ رابط التقييم</button>
+        <a class="btn btn-primary" href="atwad-reviews.html" target="_blank" rel="noopener">✍️ فتح صفحة التقييم</a>
+        <button class="btn btn-plain" type="button" onclick="exportReviewsCsv()">📥 تصدير CSV</button>
+        <button class="btn btn-plain" type="button" onclick="window.print()">🖨️ طباعة</button>
+        <button class="btn btn-danger" type="button" onclick="logoutAdmin()">🚪 خروج</button>
+      </div>
+    </div>
+
+    <div class="content">
+      <section class="stats">
+        <div class="stat"><div class="icon">📝</div><div class="num" id="statTotal">0</div><div class="label">إجمالي التقييمات</div></div>
+        <div class="stat gold"><div class="icon">⭐</div><div class="num" id="statAverage">0.0</div><div class="label">متوسط التقييم</div></div>
+        <div class="stat blue"><div class="icon">🌟</div><div class="num" id="statFive">0</div><div class="label">تقييمات 5 نجوم</div></div>
+        <div class="stat green"><div class="icon">👍</div><div class="num" id="statRecommend">0%</div><div class="label">يوصون بالخدمة</div></div>
+      </section>
+
+      <section class="panel filters-panel">
+        <div class="panel-title"><h2>🔎 البحث والتصفية</h2><small>تتحدث النتائج فورًا</small></div>
+        <div class="filters">
+          <div class="field"><label>بحث</label><input id="searchInput" type="search" placeholder="اسم العميل، الخدمة أو نص الرأي..." oninput="applyFilters()"></div>
+          <div class="field"><label>النجوم</label><select id="ratingFilter" onchange="applyFilters()"><option value="all">كل التقييمات</option><option value="5">5 نجوم</option><option value="4">4 نجوم</option><option value="3">3 نجوم</option><option value="2">نجمتان</option><option value="1">نجمة واحدة</option></select></div>
+          <div class="field"><label>الخدمة</label><select id="serviceFilter" onchange="applyFilters()"><option value="all">كل الخدمات</option></select></div>
+          <div class="field"><label>التوصية</label><select id="recommendFilter" onchange="applyFilters()"><option value="all">الكل</option><option value="yes">يوصي بالخدمة</option><option value="no">لا يوصي</option><option value="unknown">غير محدد</option></select></div>
+          <div class="field"><label>الترتيب</label><select id="sortFilter" onchange="applyFilters()"><option value="newest">الأحدث أولًا</option><option value="oldest">الأقدم أولًا</option><option value="highest">الأعلى تقييمًا</option><option value="lowest">الأقل تقييمًا</option></select></div>
+        </div>
+      </section>
+
+      <section class="panel distribution-panel">
+        <div class="panel-title"><h2>📊 توزيع التقييمات</h2><small>من إجمالي التقييمات</small></div>
+        <div class="distribution" id="distribution"></div>
+      </section>
+
+      <section>
+        <div class="reviews-head"><h2>تعليقات العملاء</h2><div class="result-count" id="resultCount">0 نتيجة</div></div>
+        <div class="state" id="loadingState"><div class="icon">⏳</div><strong>جاري تحميل الآراء</strong><p>يتم الاتصال بقاعدة البيانات بعد التحقق من حساب الإدارة.</p></div>
+        <div class="state hidden" id="emptyState"><div class="icon">💬</div><strong>لا توجد نتائج</strong><p>غيّر البحث أو الفلاتر، أو أرسل رابط التقييم إلى العملاء.</p></div>
+        <div class="state hidden" id="errorState"><div class="icon">⚠️</div><strong>تعذر تحميل الآراء</strong><p id="errorText">تحقق من الاتصال والصلاحيات ثم أعد تحميل الصفحة.</p></div>
+        <div class="review-grid hidden" id="reviewsGrid"></div>
+      </section>
+    </div>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  'use strict';
+
+  var reviews = [];
+  var filteredReviews = [];
+  var reviewsRef = null;
+  var reviewsValueHandler = null;
+  var pageInitialized = false;
+
+  function asText(value){
+    return value === null || value === undefined ? '' : String(value).trim();
+  }
+
+  function normalizeTimestamp(raw){
+    var value = raw.timestamp !== undefined ? raw.timestamp :
+      (raw.createdAt !== undefined ? raw.createdAt :
+      (raw.date !== undefined ? raw.date : raw.submittedAt));
+    if(value === null || value === undefined || value === '') return 0;
+    if(typeof value === 'number') return value < 100000000000 ? value * 1000 : value;
+    var numeric = Number(value);
+    if(Number.isFinite(numeric)) return numeric < 100000000000 ? numeric * 1000 : numeric;
+    var parsed = Date.parse(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  function normalizeRecommend(value){
+    if(value === true) return 'yes';
+    if(value === false) return 'no';
+    var text = asText(value).toLowerCase();
+    if(['yes','true','1','نعم','recommended'].indexOf(text) !== -1) return 'yes';
+    if(['no','false','0','لا','not_recommended'].indexOf(text) !== -1) return 'no';
+    return 'unknown';
+  }
+
+  function normalizeReview(id, raw){
+    raw = raw || {};
+    var rating = parseInt(raw.rating !== undefined ? raw.rating : (raw.stars !== undefined ? raw.stars : raw.score), 10);
+    if(!Number.isFinite(rating)) rating = 0;
+    rating = Math.max(0, Math.min(5, rating));
+    return {
+      id:id,
+      customerName:asText(raw.customerName || raw.name || raw.client) || 'عميل بدون اسم',
+      rating:rating,
+      service:asText(raw.service || raw.serviceAr || raw.serviceType || raw.category),
+      text:asText(raw.text || raw.review || raw.comment || raw.notes || raw.message),
+      recommend:normalizeRecommend(raw.recommend !== undefined ? raw.recommend : raw.recommended),
+      timestamp:normalizeTimestamp(raw)
+    };
+  }
+
+  function formatDate(timestamp){
+    if(!timestamp) return 'تاريخ غير متوفر';
+    try{
+      return new Date(timestamp).toLocaleString('ar-SA-u-ca-gregory',{
+        year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'
+      });
+    }catch(e){ return 'تاريخ غير متوفر'; }
+  }
+
+  function initials(name){
+    var parts = asText(name).split(/\s+/).filter(Boolean);
+    if(!parts.length) return 'ع';
+    return parts.slice(0,2).map(function(p){return p.charAt(0);}).join('');
+  }
+
+  function showToast(message, type){
+    var toast = document.getElementById('toast');
+    if(!toast) return;
+    clearTimeout(toast._timer);
+    toast.textContent = message;
+    toast.className = 'toast ' + (type || '');
+    requestAnimationFrame(function(){toast.classList.add('show');});
+    toast._timer = setTimeout(function(){toast.classList.remove('show');}, 3000);
+  }
+
+  function setConnection(text){
+    var el = document.getElementById('connectionText');
+    if(el) el.textContent = text;
+  }
+
+  function showState(state, errorMessage){
+    ['loadingState','emptyState','errorState','reviewsGrid'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.classList.add('hidden');
+    });
+    var target = document.getElementById(state);
+    if(target) target.classList.remove('hidden');
+    if(errorMessage){
+      var errorText = document.getElementById('errorText');
+      if(errorText) errorText.textContent = errorMessage;
+    }
+  }
+
+  function updateStats(){
+    var total = reviews.length;
+    var valid = reviews.filter(function(r){return r.rating > 0;});
+    var average = valid.length ? valid.reduce(function(sum,r){return sum+r.rating;},0)/valid.length : 0;
+    var five = reviews.filter(function(r){return r.rating === 5;}).length;
+    var knownRecommend = reviews.filter(function(r){return r.recommend !== 'unknown';});
+    var recommendYes = knownRecommend.filter(function(r){return r.recommend === 'yes';}).length;
+    var recommendPercent = knownRecommend.length ? Math.round(recommendYes * 100 / knownRecommend.length) : 0;
+    document.getElementById('statTotal').textContent = total.toLocaleString('ar-SA');
+    document.getElementById('statAverage').textContent = average.toFixed(1);
+    document.getElementById('statFive').textContent = five.toLocaleString('ar-SA');
+    document.getElementById('statRecommend').textContent = recommendPercent + '%';
+  }
+
+  function updateDistribution(){
+    var container = document.getElementById('distribution');
+    container.replaceChildren();
+    var total = reviews.length || 1;
+    for(var rating=5; rating>=1; rating--){
+      var count = reviews.filter(function(r){return r.rating === rating;}).length;
+      var percent = Math.round(count * 100 / total);
+      var item = document.createElement('div');
+      item.className = 'dist-item';
+      var head = document.createElement('div');
+      head.className = 'dist-head';
+      var label = document.createElement('span');
+      label.textContent = rating + ' ⭐';
+      var value = document.createElement('span');
+      value.textContent = count;
+      head.append(label,value);
+      var track = document.createElement('div');
+      track.className = 'dist-track';
+      var fill = document.createElement('div');
+      fill.className = 'dist-fill';
+      fill.style.width = percent + '%';
+      track.appendChild(fill);
+      item.append(head,track);
+      container.appendChild(item);
+    }
+  }
+
+  function updateServiceOptions(){
+    var select = document.getElementById('serviceFilter');
+    var previous = select.value;
+    while(select.options.length > 1) select.remove(1);
+    var services = Array.from(new Set(reviews.map(function(r){return r.service;}).filter(Boolean))).sort(function(a,b){return a.localeCompare(b,'ar');});
+    services.forEach(function(service){
+      var option = document.createElement('option');
+      option.value = service;
+      option.textContent = service;
+      select.appendChild(option);
+    });
+    if(Array.from(select.options).some(function(o){return o.value === previous;})) select.value = previous;
+  }
+
+  function buildStars(rating){
+    var span = document.createElement('span');
+    span.className = 'stars';
+    for(var i=1;i<=5;i++){
+      var star = document.createElement('span');
+      star.textContent = '★';
+      if(i > rating) star.className = 'muted-stars';
+      span.appendChild(star);
+    }
+    return span;
+  }
+
+  function buildReviewCard(review){
+    var card = document.createElement('article');
+    card.className = 'review-card';
+
+    var top = document.createElement('div');
+    top.className = 'review-top';
+    var reviewer = document.createElement('div');
+    reviewer.className = 'reviewer';
+    var avatar = document.createElement('div');
+    avatar.className = 'avatar';
+    avatar.textContent = initials(review.customerName);
+    var who = document.createElement('div');
+    who.style.minWidth = '0';
+    var name = document.createElement('div');
+    name.className = 'name';
+    name.textContent = review.customerName;
+    var date = document.createElement('div');
+    date.className = 'date';
+    date.textContent = formatDate(review.timestamp);
+    who.append(name,date);
+    reviewer.append(avatar,who);
+    top.append(reviewer,buildStars(review.rating));
+    card.appendChild(top);
+
+    var meta = document.createElement('div');
+    meta.className = 'meta';
+    if(review.service){
+      var service = document.createElement('span');
+      service.className = 'tag';
+      service.textContent = '🛠️ ' + review.service;
+      meta.appendChild(service);
+    }
+    var rec = document.createElement('span');
+    rec.className = 'tag ' + (review.recommend === 'yes' ? 'yes' : review.recommend === 'no' ? 'no' : '');
+    rec.textContent = review.recommend === 'yes' ? '👍 يوصي بالخدمة' : review.recommend === 'no' ? '👎 لا يوصي' : 'ℹ️ التوصية غير محددة';
+    meta.appendChild(rec);
+    card.appendChild(meta);
+
+    var text = document.createElement('div');
+    text.className = 'text';
+    text.textContent = review.text || 'لم يكتب العميل تعليقًا.';
+    card.appendChild(text);
+
+    var actions = document.createElement('div');
+    actions.className = 'actions';
+    var copy = document.createElement('button');
+    copy.className = 'mini-btn copy-btn';
+    copy.type = 'button';
+    copy.textContent = '📋 نسخ الرأي';
+    copy.addEventListener('click', function(){copyReview(review);});
+    var del = document.createElement('button');
+    del.className = 'mini-btn delete-btn';
+    del.type = 'button';
+    del.textContent = '🗑️ حذف';
+    del.addEventListener('click', function(){deleteReview(review);});
+    actions.append(copy,del);
+    card.appendChild(actions);
+    return card;
+  }
+
+  function renderReviews(){
+    var grid = document.getElementById('reviewsGrid');
+    grid.replaceChildren();
+    document.getElementById('resultCount').textContent = filteredReviews.length.toLocaleString('ar-SA') + ' نتيجة';
+    if(!filteredReviews.length){
+      showState('emptyState');
+      return;
+    }
+    filteredReviews.forEach(function(review){grid.appendChild(buildReviewCard(review));});
+    showState('reviewsGrid');
+  }
+
+  window.applyFilters = function(){
+    var query = asText(document.getElementById('searchInput').value).toLowerCase();
+    var rating = document.getElementById('ratingFilter').value;
+    var service = document.getElementById('serviceFilter').value;
+    var recommend = document.getElementById('recommendFilter').value;
+    var sort = document.getElementById('sortFilter').value;
+    filteredReviews = reviews.filter(function(review){
+      var haystack = [review.customerName,review.service,review.text].join(' ').toLowerCase();
+      if(query && haystack.indexOf(query) === -1) return false;
+      if(rating !== 'all' && review.rating !== Number(rating)) return false;
+      if(service !== 'all' && review.service !== service) return false;
+      if(recommend !== 'all' && review.recommend !== recommend) return false;
+      return true;
+    });
+    filteredReviews.sort(function(a,b){
+      if(sort === 'oldest') return a.timestamp - b.timestamp;
+      if(sort === 'highest') return b.rating - a.rating || b.timestamp - a.timestamp;
+      if(sort === 'lowest') return a.rating - b.rating || b.timestamp - a.timestamp;
+      return b.timestamp - a.timestamp;
+    });
+    renderReviews();
+  };
+
+  function copyText(text){
+    if(navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(text);
+    return new Promise(function(resolve,reject){
+      var area = document.createElement('textarea');
+      area.value = text;
+      area.style.position = 'fixed';
+      area.style.opacity = '0';
+      document.body.appendChild(area);
+      area.select();
+      try{document.execCommand('copy');resolve();}catch(e){reject(e);}finally{area.remove();}
+    });
+  }
+
+  function copyReview(review){
+    var text = 'رأي العميل: ' + review.customerName + '\n' +
+      'التقييم: ' + review.rating + ' من 5\n' +
+      (review.service ? 'الخدمة: ' + review.service + '\n' : '') +
+      (review.text || 'لا يوجد تعليق');
+    copyText(text).then(function(){showToast('📋 تم نسخ الرأي','success');}).catch(function(){showToast('تعذر النسخ','error');});
+  }
+
+  function deleteReview(review){
+    if(!window.db || !review || !review.id) return;
+    if(!confirm('هل تريد حذف تقييم العميل "' + review.customerName + '" نهائيًا؟')) return;
+    window.db.ref('reviews/' + review.id).remove()
+      .then(function(){showToast('🗑️ تم حذف التقييم','success');})
+      .catch(function(error){showToast('❌ تعذر الحذف: ' + error.message,'error');});
+  }
+
+  window.copyPublicReviewLink = function(){
+    var link = location.origin + location.pathname.replace(/[^/]+$/, 'atwad-reviews.html');
+    copyText(link).then(function(){showToast('🔗 تم نسخ رابط التقييم','success');}).catch(function(){showToast('تعذر نسخ الرابط','error');});
+  };
+
+  function csvCell(value){
+    return '"' + asText(value).replace(/"/g,'""') + '"';
+  }
+
+  window.exportReviewsCsv = function(){
+    if(!filteredReviews.length){showToast('لا توجد نتائج للتصدير','error');return;}
+    var rows = [['اسم العميل','التقييم','الخدمة','الرأي','يوصي بالخدمة','التاريخ']];
+    filteredReviews.forEach(function(review){
+      rows.push([
+        review.customerName,
+        review.rating,
+        review.service,
+        review.text,
+        review.recommend === 'yes' ? 'نعم' : review.recommend === 'no' ? 'لا' : 'غير محدد',
+        formatDate(review.timestamp)
+      ]);
+    });
+    var csv = '\uFEFF' + rows.map(function(row){return row.map(csvCell).join(',');}).join('\r\n');
+    var blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+    var url = URL.createObjectURL(blob);
+    var anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = 'atwad-reviews-' + new Date().toISOString().slice(0,10) + '.csv';
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  window.logoutAdmin = function(){
+    if(window.auth){
+      window.auth.signOut().catch(function(error){showToast('تعذر تسجيل الخروج: ' + error.message,'error');});
+    }
+  };
+
+  function startReviewsListener(){
+    if(!window.db){
+      showState('errorState','Firebase غير متاح في الصفحة.');
+      setConnection('Firebase غير متاح');
+      return;
+    }
+    reviewsRef = window.db.ref('reviews');
+    reviewsValueHandler = function(snapshot){
+      reviews = [];
+      snapshot.forEach(function(child){reviews.push(normalizeReview(child.key,child.val()));});
+      updateStats();
+      updateDistribution();
+      updateServiceOptions();
+      window.applyFilters();
+      setConnection('متصل • ' + reviews.length.toLocaleString('ar-SA') + ' تقييم');
+    };
+    reviewsRef.on('value',reviewsValueHandler,function(error){
+      console.error('[REVIEWS ADMIN] load error:',error);
+      showState('errorState','تعذر قراءة reviews: ' + (error.message || 'خطأ في الصلاحيات أو الاتصال.'));
+      setConnection('تعذر تحميل التقييمات');
+    });
+  }
+
+  window.__atwadInitPage = function(){
+    if(pageInitialized) return;
+    pageInitialized = true;
+    document.body.classList.remove('auth-pending');
+    showState('loadingState');
+    setConnection('جاري تحميل التقييمات...');
+    startReviewsListener();
+  };
+})();
+</script>
+<script src="atwad-auth.js"></script>
+</body>
+</html>
