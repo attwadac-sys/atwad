@@ -1255,13 +1255,20 @@ function buildReviewWAMsg(wo) {
 
 function normPhoneForWA(phone) {
   if(!phone) return '';
-  var p = String(phone).replace(/[\s\-().+]/g,'');
+  // WhatsApp links accept ASCII digits only. Firebase may contain Arabic or
+  // Persian numerals when the number was entered from an Arabic keyboard.
+  var p = String(phone)
+    .replace(/[\u0660-\u0669]/g, function(d) { return String(d.charCodeAt(0) - 0x0660); })
+    .replace(/[\u06F0-\u06F9]/g, function(d) { return String(d.charCodeAt(0) - 0x06F0); })
+    .replace(/\D/g, '');
+
   if(p.startsWith('00966')) p = p.slice(2);
-  else if(p.startsWith('966') && p.length >= 12) { /* ok */ }
-  else if(p.startsWith('05') && p.length === 10) p = '966' + p.slice(1);
-  else if(p.startsWith('5')  && p.length === 9)  p = '966' + p;
-  else p = '966' + p;
-  return p;
+  if(p.startsWith('9660')) p = '966' + p.slice(4);
+  else if(p.startsWith('05')) p = '966' + p.slice(1);
+  else if(p.startsWith('5') && p.length === 9) p = '966' + p;
+
+  // Saudi mobile format required by wa.me: 9665XXXXXXXX
+  return /^9665\d{8}$/.test(p) ? p : '';
 }
 
 function firstCustomerPhone(obj) {
