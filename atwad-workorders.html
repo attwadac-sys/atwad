@@ -1264,6 +1264,97 @@ function normPhoneForWA(phone) {
   return p;
 }
 
+function firstCustomerPhone(obj) {
+  if(!obj) return '';
+  return obj.phone || obj.clientPhone || obj.customerPhone || obj.mobile || obj.phoneNumber || '';
+}
+
+function persistResolvedWOPhone(wo, phone) {
+  if(!wo || !phone) return;
+  wo.phone = String(phone).trim();
+  localStorage.setItem('atwad_workorders', JSON.stringify(workOrders));
+  if(db && wo._fbKey) {
+    db.ref('workOrders/' + wo._fbKey + '/phone').set(wo.phone).catch(function(err) {
+      console.warn('[Review WhatsApp] could not persist resolved phone:', err);
+    });
+  }
+}
+
+// يستعيد رقم العميل من أمر العمل أو السجل المرتبط دون تغيير بنية Firebase.
+function resolveWOPhone(wo) {
+  var directPhone = firstCustomerPhone(wo);
+  if(directPhone) return Promise.resolve(directPhone);
+
+  var localClient = clients.find(function(c) {
+    return c && wo.client && (c.name === wo.client || c.client === wo.client);
+  });
+  var localPhone = firstCustomerPhone(localClient);
+  if(localPhone) return Promise.resolve(localPhone);
+  if(!db) return Promise.resolve('');
+
+  var paths = [];
+  function addPath(path) { if(path && paths.indexOf(path) === -1) paths.push(path); }
+
+  if(wo.firebaseRef) addPath('bookings/' + wo.firebaseRef);
+  if(wo.sourceApptKey) {
+    if(wo.sourceApptSrc === 'bookings') addPath('bookings/' + wo.sourceApptKey);
+    else if(wo.sourceApptSrc === 'appointments') addPath('appointments/' + wo.sourceApptKey);
+    else {
+      addPath('appointments/' + wo.sourceApptKey);
+      addPath('bookings/' + wo.sourceApptKey);
+    }
+  }
+  if(wo.clientId) addPath('clients/' + wo.clientId);
+  if(wo.customerId) addPath('clients/' + wo.customerId);
+
+  function tryLinkedPath(index) {
+    if(index >= paths.length) return Promise.resolve('');
+    return db.ref(paths[index]).once('value').then(function(snap) {
+      var phone = firstCustomerPhone(snap.val());
+      return phone || tryLinkedPath(index + 1);
+    }).catch(function() {
+      return tryLinkedPath(index + 1);
+    });
+  }
+
+  return tryLinkedPath(0).then(function(phone) {
+    if(phone || !wo.client) return phone;
+    return db.ref('clients').orderByChild('name').equalTo(wo.client).once('value').then(function(snap) {
+      var found = '';
+      snap.forEach(function(child) {
+        if(!found) found = firstCustomerPhone(child.val());
+      });
+      return found;
+    }).catch(function() { return ''; });
+  });
+}
+
+function openReviewWhatsApp(wo, rawPhone, pendingWindow) {
+  var normalizedPhone = normPhoneForWA(rawPhone);
+  if(!normalizedPhone) {
+    if(pendingWindow && !pendingWindow.closed) pendingWindow.close();
+    showToast('❌ رقم جوال العميل غير صالح');
+    return;
+  }
+  persistResolvedWOPhone(wo, rawPhone);
+
+  var message     = buildReviewWAMsg(wo);
+  var whatsappUrl = 'https://wa.me/' + normalizedPhone + '?text=' + encodeURIComponent(message);
+  if(pendingWindow && !pendingWindow.closed) {
+    pendingWindow.location.href = whatsappUrl;
+    showToast('📲 تم فتح واتساب — راجع الرسالة وأرسلها يدوياً');
+    return;
+  }
+  var a = document.createElement('a');
+  a.href = whatsappUrl;
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  showToast('📲 تم فتح واتساب — راجع الرسالة وأرسلها يدوياً');
+}
+
 // يُستدعى من زر step5 الجديد
 function sendReviewRequestFromStep() {
   console.log('[Review WhatsApp] function started');
@@ -1276,47 +1367,41 @@ function sendReviewRequestFromStep() {
     return;
   }
 
-  var rawPhone = wo.phone || wo.clientPhone || wo.customerPhone || wo.mobile || '';
-  console.log('[Review WhatsApp] rawPhone:', rawPhone, '| keys:', Object.keys(wo).join(', '));
-
-  if(!rawPhone) { showToast('❌ لا يوجد رقم جوال مسجّل لهذا العميل'); return; }
-
-  var normalizedPhone = normPhoneForWA(rawPhone);
-  var message        = buildReviewWAMsg(wo);
-  var whatsappUrl    = 'https://wa.me/' + normalizedPhone + '?text=' + encodeURIComponent(message);
-
-  console.log('[Review WhatsApp]', {
-    rawPhone: rawPhone,
-    normalizedPhone: normalizedPhone,
-    message: message.slice(0,80) + '...',
-    whatsappUrl: whatsappUrl.slice(0,120) + '...'
+  var reviewWindow = window.open('', '_blank');
+  showToast('⏳ جارٍ استرجاع رقم العميل...');
+  resolveWOPhone(wo).then(function(rawPhone) {
+    console.log('[Review WhatsApp] resolved phone:', rawPhone ? 'FOUND' : 'NOT FOUND');
+    if(!rawPhone) {
+      if(reviewWindow && !reviewWindow.closed) reviewWindow.close();
+      showToast('❌ لا يوجد رقم جوال مسجّل لهذا العميل');
+      return;
+    }
+    openReviewWhatsApp(wo, rawPhone, reviewWindow);
+  }).catch(function(err) {
+    if(reviewWindow && !reviewWindow.closed) reviewWindow.close();
+    console.error('[Review WhatsApp] phone lookup failed:', err);
+    showToast('❌ تعذر استرجاع رقم جوال العميل');
   });
-
-  // <a> بدل window.open — يعمل على الجوال والكمبيوتر بدون حجب popup
-  var a = document.createElement('a');
-  a.href   = whatsappUrl;
-  a.target = '_blank';
-  a.rel    = 'noopener noreferrer';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-
-  showToast('📲 تم فتح واتساب — راجع الرسالة وأرسلها يدوياً');
 }
 
 // يُستدعى من شاشة النجاح (زر ⭐ تقييم الموجود)
 function sendReviewRequest() {
   var wo = workOrders.find(function(w){ return w.id === currentWOId; });
   if(!wo) { showToast('❌ لا يوجد أمر عمل'); return; }
-  var rawPhone = wo.phone || wo.clientPhone || wo.customerPhone || wo.mobile || '';
-  if(!rawPhone) { showToast('❌ لا يوجد رقم جوال مسجّل'); return; }
-  var waPhone = normPhoneForWA(rawPhone);
-  var msg     = buildReviewWAMsg(wo);
-  var url     = 'https://wa.me/' + waPhone + '?text=' + encodeURIComponent(msg);
-  var a = document.createElement('a');
-  a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer';
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  showToast('📲 تم فتح واتساب — راجع الرسالة وأرسلها يدوياً');
+  var reviewWindow = window.open('', '_blank');
+  showToast('⏳ جارٍ استرجاع رقم العميل...');
+  resolveWOPhone(wo).then(function(rawPhone) {
+    if(!rawPhone) {
+      if(reviewWindow && !reviewWindow.closed) reviewWindow.close();
+      showToast('❌ لا يوجد رقم جوال مسجّل لهذا العميل');
+      return;
+    }
+    openReviewWhatsApp(wo, rawPhone, reviewWindow);
+  }).catch(function(err) {
+    if(reviewWindow && !reviewWindow.closed) reviewWindow.close();
+    console.error('[Review WhatsApp] phone lookup failed:', err);
+    showToast('❌ تعذر استرجاع رقم جوال العميل');
+  });
 }
 
 // ===== ?? التقرير اليومي =====
