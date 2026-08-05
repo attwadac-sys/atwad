@@ -1400,19 +1400,31 @@ function next1(){
 }
 
 // ===== رابط الموقع =====
+function cleanMapsLocationValue(value){
+  var raw=String(value||'').replace(/[\u200E\u200F\u202A-\u202E]/g,' ').trim();
+  var urls=raw.match(/https?:\/\/[^\s<>"']+/gi)||[];
+  var link=urls.find(function(url){
+    return url.includes('maps.app.goo.gl')||
+           url.includes('google.com/maps')||
+           url.includes('goo.gl/maps')||
+           url.includes('maps.google');
+  })||'';
+
+  // إزالة علامات الترقيم التي قد تُنسخ بعد الرابط من تطبيقات الجوال.
+  return link.replace(/[،,؛;.!?)\]\}]+$/g,'');
+}
+
 function validateMapsLink(val){
   var raw=val.trim();
-  var urlMatch = raw.match(/(https?:\/\/[^\s]+)/);
-  var link = urlMatch ? urlMatch[1] : raw;
-  link = link.split(' ')[0].split('\n')[0];
-  if(urlMatch && link !== raw) {
+  var link=cleanMapsLocationValue(raw);
+  if(link && link !== raw) {
     document.getElementById('f_maps_link').value = link;
   }
   var ok=document.getElementById('maps-ok');
   var okCoords=document.getElementById('maps-ok-coords');
   var shortMsg=document.getElementById('maps-shortlink');
   var err=document.getElementById('e_addr');
-  var isValid=link.length>10&&(link.includes('maps.app.goo.gl')||link.includes('google.com/maps')||link.includes('goo.gl/maps')||link.includes('maps.google'));
+  var isValid=link.length>10;
 
   okCoords.style.display='none';
   shortMsg.style.display='none';
@@ -1495,12 +1507,23 @@ function next2(){
   var phone=normalizeCustomerPhone(phoneInput.value);
   phoneInput.value=phone;
   var city=document.getElementById('f_city').value;
-  var mapsLink=document.getElementById('f_maps_link').value.trim();
+  var mapsInput=document.getElementById('f_maps_link');
+  var mapsLink=cleanMapsLocationValue(mapsInput.value);
   var ok=true;
   if(!name){document.getElementById('e_name').className='err-msg show';document.getElementById('f_name').className='err';ok=false;}else{document.getElementById('e_name').className='err-msg';document.getElementById('f_name').className='';}
   if(!phone||!/^05\d{8}$/.test(phone)){document.getElementById('e_phone').className='err-msg show';document.getElementById('f_phone').className='err';ok=false;}else{document.getElementById('e_phone').className='err-msg';document.getElementById('f_phone').className='';}
   if(!city){document.getElementById('e_city').className='err-msg show';ok=false;}else{document.getElementById('e_city').className='err-msg';}
-  if(!mapsLink){document.getElementById('e_addr').className='err-msg show';ok=false;}else{document.getElementById('e_addr').className='err-msg';}
+  if(!mapsLink){
+    document.getElementById('e_addr').textContent='أدخل رابط موقع صحيحًا من Google Maps';
+    document.getElementById('e_addr').className='err-msg show';
+    mapsInput.className='err';
+    ok=false;
+  }else{
+    mapsInput.value=mapsLink;
+    mapsInput.className='';
+    document.getElementById('f_addr').value=mapsLink;
+    document.getElementById('e_addr').className='err-msg';
+  }
   if(ok){S.name=name;S.phone=phone;S.city=city;S.addr=mapsLink;goStep(3);}
 }
 
@@ -1805,6 +1828,9 @@ function submitBooking(){
     // حماية إضافية: لا يُحفظ في Firebase إلا الرقم السعودي المحلي الموحّد 05xxxxxxxx.
     S.phone=normalizeCustomerPhone(S.phone);
     if(!/^05\d{8}$/.test(S.phone)) throw new Error('رقم الجوال غير صحيح. الرجاء إدخاله بصيغة 05xxxxxxxx أو +966 5x xxx xxxx.');
+    var cleanMapsLink=cleanMapsLocationValue(S.addr);
+    if(!cleanMapsLink) throw new Error('رابط الموقع غير صحيح. الرجاء العودة وإدخال رابط Google Maps فقط.');
+    S.addr=cleanMapsLink;
     var bookingFingerprint=JSON.stringify([S.date,S.time,S.phone,S.serviceAr,S.units,S.city,S.addr]);
     if(!pendingBookingKey||pendingBookingFingerprint!==bookingFingerprint){
       pendingBookingKey='web_'+Date.now()+'_'+Math.random().toString(36).slice(2,10);
@@ -1812,8 +1838,35 @@ function submitBooking(){
       pendingBookingRef='ATW-'+Math.floor(10000+Math.random()*90000);
     }
     var ref=pendingBookingRef;
-    var msg=encodeURIComponent('مرحباً مؤسسة أطواد 👋\nرقم الحجز: '+ref+'\nالخدمة: '+S.serviceAr+'\nعدد المكيفات: '+S.units+'\nالاسم: '+S.name+'\nالجوال: '+S.phone+'\nالتاريخ: '+fmtDate(S.date)+'\nالوقت: '+S.time+'\nالمدينة: '+S.city+'\nالموقع: '+S.addr);
+    var messageLines=[
+      'مرحباً مؤسسة أطواد 👋',
+      'رقم الحجز: '+ref,
+      'الخدمة: '+S.serviceAr,
+      'عدد المكيفات: '+S.units,
+      'الاسم: '+S.name,
+      'الجوال: '+S.phone,
+      'التاريخ: '+fmtDate(S.date),
+      'الوقت: '+S.time,
+      'المدينة: '+S.city,
+      'الموقع: '+S.addr
+    ];
+    var msg=encodeURIComponent(messageLines.join('\n'));
     var waUrl='https://wa.me/966509720382?text='+msg;
+    // لا نضع رقمًا مرجعيًا في رسالة الفشل؛ الرقم يصبح حجزًا معتمدًا فقط
+    // بعد نجاح الكتابة الذرية للحجز وأقفال الوقت في Firebase.
+    var unconfirmedMessageLines=[
+      'مرحباً مؤسسة أطواد 👋',
+      '⚠️ طلب حجز غير مؤكد — لم يُسجل في النظام',
+      'الخدمة: '+S.serviceAr,
+      'عدد المكيفات: '+S.units,
+      'الاسم: '+S.name,
+      'الجوال: '+S.phone,
+      'التاريخ: '+fmtDate(S.date),
+      'الوقت المطلوب: '+S.time,
+      'المدينة: '+S.city,
+      'الموقع: '+S.addr
+    ];
+    var unconfirmedWaUrl='https://wa.me/966509720382?text='+encodeURIComponent(unconfirmedMessageLines.join('\n'));
     var bookingData = {ref:ref,date:S.date,time:S.time,duration:calcDur(),client:S.name,phone:S.phone,service:S.serviceAr,units:S.units,city:S.city,mapsLink:S.addr,createdAt:new Date().toISOString()};
 
     // لا نرسل الحقل الاختياري عندما لا توجد صورة؛ هذا يقلل حجم الطلب ويطابق قواعد التحقق.
@@ -1866,9 +1919,9 @@ function submitBooking(){
       var timedOut=err&&err.code==='BOOKING_TIMEOUT';
       var isSlotConflict=err&&(/^FIREBASE_HTTP_(401|403)$/.test(err.code||'')||/الفترة المختارة/.test(err.message||''));
 
-      // إعادة المحاولة بعد نجاح صامت: إن كانت أقفال الفترة تحمل مفتاح هذا
-      // الطلب نفسه فالحجز مسجَّل فعلاً — نعرض النجاح ولا ننشئ حجزًا ثانيًا.
-      if(isSlotConflict && pendingBookingKey){
+      // بعد أي خطأ أو انقطاع نتأكد من الأقفال أولاً: قد تكون الكتابة نجحت
+      // ووصل الرد متأخرًا. إن لم نجد أقفال الطلب فلا نعرض الرقم كحجز مؤكد.
+      if(pendingBookingKey){
         return confirmBookingAlreadySaved(S.date,pendingBookingKey).then(function(alreadySaved){
           if(alreadySaved){
             document.getElementById('refNum').textContent=ref;
@@ -1879,10 +1932,10 @@ function submitBooking(){
             pendingBookingRef='';
             return;
           }
-          showSubmitFailure(err,timedOut,isSlotConflict,waUrl,submitStatus);
+          showSubmitFailure(err,timedOut,isSlotConflict,unconfirmedWaUrl,submitStatus);
         });
       }
-      showSubmitFailure(err,timedOut,isSlotConflict,waUrl,submitStatus);
+      showSubmitFailure(err,timedOut,isSlotConflict,unconfirmedWaUrl,submitStatus);
     }).then(function(){
       bookingSubmitting=false;
       if(submitBtn){
@@ -1917,7 +1970,7 @@ function confirmBookingAlreadySaved(date,bookingKey){
   }).catch(function(){ return false; });
 }
 
-function showSubmitFailure(err,timedOut,isSlotConflict,waUrl,submitStatus){
+function showSubmitFailure(err,timedOut,isSlotConflict,unconfirmedWaUrl,submitStatus){
   var _unused=err;
   var message=isSlotConflict
     ? 'هذا الوقت حُجز قبل إتمام طلبك أو يتداخل مع موعد قائم. ارجع إلى خطوة الموعد واختر وقتًا آخر.'
@@ -1926,7 +1979,7 @@ function showSubmitFailure(err,timedOut,isSlotConflict,waUrl,submitStatus){
     : 'تعذر إرسال الحجز إلى النظام. يمكنك إعادة المحاولة أو إرسال بيانات الطلب مباشرة عبر واتساب.';
   if(submitStatus){
     submitStatus.className='submit-status error';
-    submitStatus.innerHTML='⚠️ '+message+'<br><a href="'+waUrl+'" target="_blank" rel="noopener">فتح واتساب وإرسال الطلب</a>';
+    submitStatus.innerHTML='⚠️ '+message+'<br><a href="'+unconfirmedWaUrl+'" target="_blank" rel="noopener">فتح واتساب وإرسال طلب غير مؤكد</a>';
   }
   if(isSlotConflict){
     S.time='';
