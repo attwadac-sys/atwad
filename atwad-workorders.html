@@ -223,8 +223,8 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
   </div>
 
   <div class="toolbar">
-    <button class="filter-btn active" id="fAll" onclick="setFilter('all',this)">الكل</button>
-    <button class="filter-btn" id="fOpen" onclick="setFilter('open',this)">🔵 مفتوح</button>
+    <button class="filter-btn" id="fAll" onclick="setFilter('all',this)">الكل</button>
+    <button class="filter-btn active" id="fOpen" onclick="setFilter('open',this)">🔵 مفتوح</button>
     <button class="filter-btn" id="fInprog" onclick="setFilter('inprogress',this)">⚡ قيد التنفيذ</button>
     <button class="filter-btn" id="fDone" onclick="setFilter('done',this)">✅ مكتمل</button>
     <button class="filter-btn" id="fInvoiced" onclick="setFilter('invoiced',this)">🧾 فاتورة</button>
@@ -270,12 +270,19 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
             <select id="w_service">
               <option value="">-- اختر --</option>
               <option>تنظيف مكيف</option>
+              <option>غسيل مكيفات</option>
               <option>تنظيف وغسيل المكيفات</option>
               <option>صيانة دورية</option>
+              <option>صيانة وقائية دورية</option>
               <option>تعبئة غاز</option>
+              <option>تعبئة فريون</option>
+              <option>كشف وإصلاح</option>
               <option>كشف وإصلاح أعطال</option>
+              <option>تركيب مكيف جديد</option>
               <option>تركيب مكيف</option>
+              <option>باقة صيانة سنوية</option>
               <option>باقة سنوية</option>
+              <option>أخرى</option>
             </select>
           </div>
           <div class="form-group"><label>نوع المكيف</label>
@@ -439,6 +446,92 @@ try {
   db = firebase.database();
 } catch(e){ console.log('Firebase:',e); }
 
+// قراءة اسم الخدمة من جميع الصيغ التي استُخدمت في الحجوزات والمواعيد القديمة.
+// لا نستبدل خدمة صحيحة، بل نستخدم هذه الدالة فقط عند الإنشاء أو لاستكمال سجل ناقص.
+function getSourceServiceName(source) {
+  if(!source || typeof source !== 'object') return '';
+  var values = [
+    source.service, source.serviceAr, source.serviceName, source.serviceType,
+    source.serviceTitle, source.workType, source.requestType
+  ];
+  for(var i=0; i<values.length; i++) {
+    var value = values[i];
+    if(value !== undefined && value !== null) {
+      value = String(value).trim();
+      if(value && value !== '—') return value;
+    }
+  }
+  return '';
+}
+
+function normalizeSourcePhone(value) {
+  var digits = String(value || '').replace(/[^0-9]/g, '');
+  if(digits.indexOf('00966') === 0) digits = digits.slice(5);
+  else if(digits.indexOf('966') === 0) digits = digits.slice(3);
+  if(digits.indexOf('0') === 0) digits = digits.slice(1);
+  return digits.slice(-9);
+}
+
+function sourceSnapshotMap(snap) {
+  var map = {};
+  if(snap) snap.forEach(function(child){ map[child.key] = child.val() || {}; });
+  return map;
+}
+
+function findLinkedSourceForWO(wo, appointmentMap, bookingMap) {
+  if(!wo) return null;
+  if(wo.firebaseRef && bookingMap[wo.firebaseRef]) return bookingMap[wo.firebaseRef];
+  if(wo.sourceApptKey) {
+    if(wo.sourceApptSrc === 'bookings' && bookingMap[wo.sourceApptKey]) return bookingMap[wo.sourceApptKey];
+    if(wo.sourceApptSrc === 'appointments' && appointmentMap[wo.sourceApptKey]) return appointmentMap[wo.sourceApptKey];
+    if(appointmentMap[wo.sourceApptKey]) return appointmentMap[wo.sourceApptKey];
+    if(bookingMap[wo.sourceApptKey]) return bookingMap[wo.sourceApptKey];
+  }
+
+  // حماية للسجلات القديمة التي سبقت إضافة مفاتيح الربط: لا نعتمد المطابقة
+  // إلا إذا كانت نتيجة واحدة مؤكدة بالجوال والتاريخ.
+  var phone = normalizeSourcePhone(wo.phone);
+  var date = String(wo.date || '');
+  if(!phone || !date) return null;
+  var matches = [];
+  [appointmentMap, bookingMap].forEach(function(map){
+    Object.keys(map).forEach(function(key){
+      var item = map[key] || {};
+      if(String(item.date || '') === date && normalizeSourcePhone(item.phone) === phone) matches.push(item);
+    });
+  });
+  if(matches.length === 1) return matches[0];
+  if(matches.length > 1) {
+    var serviceNames = matches.map(getSourceServiceName).filter(Boolean);
+    var uniqueServices = serviceNames.filter(function(name, index){ return serviceNames.indexOf(name) === index; });
+    if(uniqueServices.length === 1) return matches[0];
+  }
+  return null;
+}
+
+function completeMissingWorkOrderServices(list, appointmentMap, bookingMap) {
+  return (list || []).map(function(wo){
+    var currentService = getSourceServiceName(wo);
+    if(currentService) {
+      if(!wo.service) wo.service = currentService;
+      return wo;
+    }
+    var source = findLinkedSourceForWO(wo, appointmentMap, bookingMap);
+    var recoveredService = getSourceServiceName(source);
+    if(recoveredService) wo.service = recoveredService;
+    return wo;
+  });
+}
+
+/** مفتاح موحّد للمهمة: التاريخ + الوقت + اسم العميل */
+function woJobKey(w){
+  var name = String((w && (w.client || w.name)) || '').trim().toLowerCase().replace(/\s+/g,' ');
+  var date = String((w && w.date) || '').trim();
+  if(!name || !date) return '';
+  var t = String((w && w.time) || '').split(' - ')[0].trim();
+  return date + '|' + t + '|' + name;
+}
+
 function importWOFromFirebase() {
   if(!db){ showToast('⚠️ Firebase غير متاح'); return; }
   var btn = document.getElementById('importWOBtn');
@@ -447,7 +540,15 @@ function importWOFromFirebase() {
   // مفاتيح موجودة (bookings أو appointments)
   var existRefs     = new Set(workOrders.map(function(w){ return w.firebaseRef||''; }));
   var existApptKeys = new Set(workOrders.map(function(w){ return w.sourceApptKey||''; }));
+  // مفتاح المهمة نفسها: يمنع ازدواج الحجز المحوَّل إلى موعد (مفتاحان مختلفان لعمل واحد)
+  var existJobKeys  = new Set();
+  workOrders.forEach(function(w){ var k = woJobKey(w); if(k) existJobKeys.add(k); });
   var added = 0, skip = 0;
+
+  function sourceIsCancelled(item) {
+    var status = String((item && item.status) || '').trim().toLowerCase();
+    return ['cancelled','canceled','rejected','declined','ملغي','ملغى','مرفوض'].indexOf(status) !== -1;
+  }
 
   function finish() {
     saveData(); updateStats(); renderWOs();
@@ -461,7 +562,10 @@ function importWOFromFirebase() {
     snapB.forEach(function(child) {
       var b = child.val(); var key = child.key;
       if(existRefs.has(key)){ skip++; return; }
+      if(sourceIsCancelled(b)){ skip++; return; }
       if(!b.date) return;
+      var bJob = woJobKey({client:b.client||b.name, date:b.date, time:b.time});
+      if(bJob && existJobKeys.has(bJob)){ skip++; return; }
       workOrders.unshift({
         id: 'WO-' + String(workOrders.length+1001).padStart(5,'0'),
         firebaseRef:   key,
@@ -469,7 +573,7 @@ function importWOFromFirebase() {
         status: 'open',
         client:  b.client||b.name||'—',
         phone:   (b.phone||'').replace(/[^0-9]/g,'').replace(/^966/,'0'),
-        address: b.city||'جدة', service: b.service||'تنظيف مكيف',
+        address: b.city||'جدة', service: getSourceServiceName(b)||'تنظيف مكيف',
         actype:  'سبليت', units: b.units||1, tech: 'Abrar',
         date: b.date, time: (b.time||'').split(' - ')[0]||b.time||'',
         problem: 'من نموذج الحجز الإلكتروني', parts: '',
@@ -481,7 +585,9 @@ function importWOFromFirebase() {
         booking: {servicePrice: safeInvoiceNumber(b.servicePrice||0)},
         createdAt: b.createdAt||new Date().toISOString()
       });
-      existRefs.add(key); added++;
+      existRefs.add(key);
+      if(bJob) existJobKeys.add(bJob);
+      added++;
     });
 
     // ٢. استيراد من appointments (المواعيد التي أُنشئت مباشرة)
@@ -490,7 +596,12 @@ function importWOFromFirebase() {
         var a = child.val(); var key = child.key;
         // تخطي إذا مرتبط بـ booking موجود أو له أمر عمل بالفعل
         if(existApptKeys.has(key)){ skip++; return; }
+        // الموعد المحوَّل من حجز: أمر العمل أُنشئ أصلاً من الحجز
+        if(a.sourceBookingKey && existRefs.has(a.sourceBookingKey)){ skip++; return; }
+        if(sourceIsCancelled(a)){ skip++; return; }
         if(!a.date || !a.client) return;
+        var aJob = woJobKey({client:a.client, date:a.date, time:a.time});
+        if(aJob && existJobKeys.has(aJob)){ skip++; return; }
         workOrders.unshift({
           id: 'WO-' + String(workOrders.length+1001).padStart(5,'0'),
           firebaseRef:   '',
@@ -500,15 +611,21 @@ function importWOFromFirebase() {
           client:  a.client||'—',
           phone:   (a.phone||'').replace(/[^0-9]/g,'').replace(/^966/,'0'),
           address: a.address||a.city||'جدة',
-          service: a.service||'—',
+          service: getSourceServiceName(a)||'—',
           actype:  'سبليت', units: a.units||1, tech: a.tech||'',
           date: a.date, time: (a.time||'').split(' - ')[0]||a.time||'',
           problem: a.notes||'من صفحة المواعيد', parts: '',
-          price: 0, servicePrice: 0, partsCost: 0, discount: 0, total: 0,
+          price: safeInvoiceNumber(a.servicePrice||a.price||0),
+          servicePrice: safeInvoiceNumber(a.servicePrice||a.price||0),
+          partsCost: 0, discount: 0,
+          total: safeInvoiceNumber(a.servicePrice||a.price||0),
           payment: 'كاش', rating: 0,
           createdAt: a.createdAt||new Date().toISOString()
         });
-        existApptKeys.add(key); added++;
+        existApptKeys.add(key);
+        if(aJob) existJobKeys.add(aJob);
+        if(a.sourceBookingKey) existRefs.add(a.sourceBookingKey);
+        added++;
       });
 
       // أيضاً: workOrders المنشأة من createMissingWO لها sourceApptKey
@@ -542,20 +659,35 @@ function syncFromFirebase() {
       delete clean._fbKey;
       fbData.push(Object.assign(clean, {_fbKey: child.key}));
     });
-    // دائماً نُحدِّث من Firebase — حتى لو جاءت قائمة أقل من المحلية
-    // هذا يضمن أن أي أمر محفوظ في Firebase يظهر بعد إعادة التحميل
-    workOrders = fbData;
-    localStorage.setItem('atwad_workorders', JSON.stringify(workOrders));
-    updateStats();
-    renderWOs();
-    document.getElementById('fbDot') && (document.getElementById('fbDot').className='fb-dot connected');
+    // استكمل الخدمة الناقصة من الموعد/الحجز المرتبط للعرض والتعامل الحالي.
+    // القراءة هنا آمنة ولا تكتب تلقائياً في Firebase؛ عند حفظ أمر العمل لاحقاً
+    // تُحفظ الخدمة المسترجعة معه بصورة طبيعية.
+    Promise.all([
+      db.ref('appointments').once('value'),
+      db.ref('bookings').once('value')
+    ]).then(function(sourceSnaps) {
+      workOrders = completeMissingWorkOrderServices(
+        fbData,
+        sourceSnapshotMap(sourceSnaps[0]),
+        sourceSnapshotMap(sourceSnaps[1])
+      );
+    }).catch(function(sourceErr) {
+      console.warn('[workOrders] تعذر استكمال الخدمات من مصادرها:', sourceErr);
+      workOrders = fbData;
+    }).then(function() {
+      // دائماً نُحدِّث من Firebase — حتى لو جاءت قائمة أقل من المحلية.
+      localStorage.setItem('atwad_workorders', JSON.stringify(workOrders));
+      updateStats();
+      renderWOs();
+      document.getElementById('fbDot') && (document.getElementById('fbDot').className='fb-dot connected');
+    });
   }, function(err) {
     console.error('[workOrders] Firebase error:', err);
     document.getElementById('fbDot') && (document.getElementById('fbDot').className='fb-dot');
   });
 }
 let clients = []; try { clients = JSON.parse(localStorage.getItem('atwad_clients') || '[]'); } catch {}
-let currentFilter = 'all';
+let currentFilter = 'open';   // تفتح الشاشة على العمل غير المنجز
 let currentStep = 1;
 let editingWO = null;
 let currentRating = 0;
@@ -571,20 +703,70 @@ function saveData(){
   localStorage.setItem('atwad_workorders', JSON.stringify(workOrders));
   // حفظ في Firebase أيضاً
   if(db) {
-    workOrders.forEach(function(wo) {
-      if(wo._fbKey) {
-        var copy = {...wo}; delete copy._fbKey;
-        db.ref('workOrders/' + wo._fbKey).set(copy);
-      } else {
-        var ref = db.ref('workOrders').push();
-        wo._fbKey = ref.key;
-        ref.set(wo);
-      }
-    });
+    workOrders.forEach(function(wo) { saveOneWorkOrder(wo); });
   }
+}
+
+/** نسخة نظيفة بلا مفتاح التخزين الداخلي */
+function woCleanCopy(wo){
+  var copy = {};
+  Object.keys(wo).forEach(function(k){ if(k !== '_fbKey') copy[k] = wo[k]; });
+  return copy;
+}
+
+/**
+ * حفظ أمر عمل واحد.
+ * السجل بلا مفتاح لا يُدفع مباشرة — يُبحث عن رقمه أولاً، لأن الدفع الأعمى
+ * كان ينشئ نسخة جديدة لكل جهاز يحمل بيانات قديمة في تخزينه المحلي.
+ */
+function saveOneWorkOrder(wo){
+  if(!wo) return;
+  if(wo._fbKey){
+    db.ref('workOrders/' + wo._fbKey).set(woCleanCopy(wo));
+    return;
+  }
+  if(!wo.id){
+    var refNew = db.ref('workOrders').push();
+    wo._fbKey = refNew.key;
+    refNew.set(woCleanCopy(wo));
+    return;
+  }
+  db.ref('workOrders').orderByChild('id').equalTo(wo.id).once('value').then(function(snap){
+    var existingKey = null;
+    snap.forEach(function(c){ if(!existingKey) existingKey = c.key; });
+    if(existingKey){
+      wo._fbKey = existingKey;
+      db.ref('workOrders/' + existingKey).set(woCleanCopy(wo));
+    } else {
+      var ref = db.ref('workOrders').push();
+      wo._fbKey = ref.key;
+      ref.set(woCleanCopy(wo));
+    }
+  }).catch(function(err){
+    console.warn('[workOrders] تعذر التحقق قبل الحفظ:', err);
+  });
 }
 function today(){ return new Date().toISOString().split('T')[0]; }
 function fmtDate(d){ try{ return new Date(d+'T00:00:00').toLocaleDateString('ar-SA-u-ca-gregory',{year:'numeric',month:'short',day:'numeric'}); } catch{ return d||'—'; } }
+function escapeHTML(value){
+  return String(value == null ? '' : value)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function setSelectValueKeepingLegacyOption(selectId, value) {
+  var select = document.getElementById(selectId);
+  value = String(value || '').trim();
+  if(!select) return;
+  if(value && !Array.prototype.some.call(select.options, function(option){ return option.value === value; })) {
+    var legacyOption = document.createElement('option');
+    legacyOption.value = value;
+    legacyOption.textContent = value;
+    legacyOption.setAttribute('data-source-service', 'true');
+    select.appendChild(legacyOption);
+  }
+  select.value = value;
+}
 
 // ===== STATS =====
 /** هل أمر العمل ناقص البيانات؟ */
@@ -623,13 +805,21 @@ function toggleIncompleteReport() {
     if(!w.service) missing.push('نوع الخدمة');
     if(!w.price || w.price === 0) missing.push('سعر الخدمة');
     return '<div class="incomplete-row">' +
-      '<div><strong>' + w.id + '</strong> — ' + (w.client||'بدون اسم') + '<br>' +
+      '<div><strong>' + escapeHTML(w.id) + '</strong> — ' + escapeHTML(w.client||'بدون اسم') + '<br>' +
       '<span style="color:var(--mist);font-size:11px;">ناقص: ' + missing.join('، ') + '</span></div>' +
       '<button class="fix-btn" onclick="openWODetail(\'' + w.id + '\');toggleIncompleteReport()">📝 إكمال</button>' +
       '</div>';
   }).join('');
 
   report.classList.add('show');
+}
+
+/** مفتاح الترتيب: تاريخ الخدمة، وإن غاب فتاريخ الإنشاء */
+function woSortKey(w){
+  var d = String((w && w.date) || '').trim();
+  if(d) return d;
+  var c = String((w && w.createdAt) || '').trim();
+  return c ? c.slice(0,10) : '';
 }
 
 // ===== FILTER =====
@@ -642,7 +832,7 @@ function setFilter(f, btn){
 
 // ===== RENDER =====
 function renderWOs(search=''){
-  let list = [...workOrders];
+  let list = workOrders.slice();
   if(currentFilter !== 'all') list = list.filter(w=>w.status===currentFilter);
   if(search) list = list.filter(function(w){
     var s = search.toLowerCase();
@@ -650,7 +840,12 @@ function renderWOs(search=''){
         || (w.id||'').includes(s)
         || (w.phone||'').includes(search);
   });
-  list.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''));
+  // الترتيب: تاريخ الخدمة تنازلياً — createdAt وحده كان يترك السجلات المستوردة بلا ترتيب
+  list.sort(function(a, b){
+    var da = woSortKey(a), db2 = woSortKey(b);
+    if(da !== db2) return db2.localeCompare(da);
+    return String(b.id||'').localeCompare(String(a.id||''));
+  });
 
   const sMap = { open:'ws-open', inprogress:'ws-inprogress', done:'ws-done', invoiced:'ws-invoiced' };
   const sLabel = { open:'مفتوح', inprogress:'قيد التنفيذ', done:'مكتمل', invoiced:'فاتورة صادرة' };
@@ -663,17 +858,17 @@ function renderWOs(search=''){
   document.getElementById('woGrid').innerHTML = list.map(w=>{
     var incomplete = isIncomplete(w);
     return `
-    <div class="wo-card s-${w.status||'open'}" onclick="openWODetail('${w.id}')">
+      <div class="wo-card s-${w.status||'open'}" onclick="openWODetail('${w.id}')">
       ${incomplete ? '<span class="incomplete-badge">⚠️ ناقص</span>' : ''}
       <div class="wo-header">
-        <span class="wo-id">${w.id}</span>
+        <span class="wo-id">${escapeHTML(w.id)}</span>
         <span class="wo-status ${sMap[w.status||'open']}">${sLabel[w.status||'open']}</span>
       </div>
-      <div class="wo-client">${w.client||'—'}</div>
-      <div class="wo-service">🛠️ ${w.service||'—'} · ${w.units||1} وحدة · ${TECHS[w.tech]||w.tech||'—'}</div>
+      <div class="wo-client">${escapeHTML(w.client||'—')}</div>
+      <div class="wo-service">🛠️ ${escapeHTML(w.service||'—')} · ${escapeHTML(w.units||1)} وحدة · ${escapeHTML(TECHS[w.tech]||w.tech||'—')}</div>
       <div class="wo-meta">
-        <span>📅 ${fmtDate(w.date)}</span>
-        <span>📍 ${(w.address||'').substring(0,20)||'—'}</span>
+        <span>📅 ${escapeHTML(fmtDate(w.date))}</span>
+        <span>📍 ${escapeHTML((w.address||'').substring(0,20)||'—')}</span>
         ${w.rating?`<span>⭐ ${w.rating}/5</span>`:''}
       </div>
       <div class="wo-footer">
@@ -726,7 +921,7 @@ function openWODetail(id){
   document.getElementById('w_client').value  = w.client  || '';
   document.getElementById('w_phone').value   = w.phone   || '';
   document.getElementById('w_address').value = w.address || '';
-  document.getElementById('w_service').value = w.service || '';
+  setSelectValueKeepingLegacyOption('w_service', getSourceServiceName(w));
   document.getElementById('w_actype').value  = w.actype  || '';
   document.getElementById('w_tech').value    = w.tech    || '';
   document.getElementById('w_units').value   = w.units   || 1;
@@ -833,7 +1028,10 @@ function saveWO(){
   };
   if(editingWO){
     const idx = workOrders.findIndex(w=>w.id===editingWO);
-    workOrders[idx] = {...workOrders[idx],...data};
+    var merged = {};
+    Object.keys(workOrders[idx]).forEach(function(k){ merged[k] = workOrders[idx][k]; });
+    Object.keys(data).forEach(function(k){ merged[k] = data[k]; });
+    workOrders[idx] = merged;
   } else {
     workOrders.unshift(data);
   }
@@ -1154,17 +1352,6 @@ function shareWhatsapp(){
 
 // ===== TOAST =====
 function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2800); }
-
-// ===== DEMO DATA =====
-if(workOrders.length===0){
-  workOrders=[
-    {id:'WO-01001',status:'invoiced',client:'Dr. Hasan Al Shahri',phone:'0555519923',address:'Al Bsatin',service:'تنظيف مكيف',actype:'سبليت',units:3,tech:'Abrar',date:today(),time:'09:00',problem:'تنظيف دوري',parts:'',price:300,partsCost:0,discount:0,total:300,payment:'كاش',rating:5,createdAt:new Date().toISOString()},
-    {id:'WO-01002',status:'inprogress',client:'Farash Al Shareef',phone:'0543322162',address:'Obur North',service:'صيانة دورية',actype:'سبليت',units:1,tech:'Shoib',date:today(),time:'11:30',problem:'صوت غير طبيعي',parts:'كباستر 35 ميكروفاراد',price:150,partsCost:80,discount:0,total:230,payment:'تحويل',rating:0,createdAt:new Date().toISOString()},
-    {id:'WO-01003',status:'open',client:'أم سعود السلامة',phone:'0504332700',address:'Al Salamah',service:'تعبئة غاز',actype:'سبليت',units:2,tech:'Suhail',date:today(),time:'14:00',problem:'المكيف لا يبرد',parts:'فريون R22',price:200,partsCost:120,discount:20,total:300,payment:'كاش',rating:0,createdAt:new Date().toISOString()},
-    {id:'WO-01004',status:'done',client:'نوره زبونة',phone:'0596615884',address:'Al Rehab',service:'تنظيف مكيف',actype:'شباك',units:1,tech:'Abrar',date:today(),time:'10:00',problem:'تنظيف عادي',parts:'',price:110,partsCost:0,discount:0,total:110,payment:'كاش',rating:4,createdAt:new Date().toISOString()},
-  ];
-  saveData();
-}
 
 updateStats();
 renderWOs();

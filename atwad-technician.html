@@ -184,26 +184,41 @@ var currentFilter = 'today';
 const STATUS_LABELS = {confirmed:'مؤكد', pending:'في الانتظار', done:'مكتمل', cancelled:'ملغي'};
 const STATUS_BADGES = {confirmed:'badge-confirmed', pending:'badge-pending', done:'badge-done', cancelled:'badge-cancelled'};
 
-function today(){ return new Date().toISOString().split('T')[0]; }
+function today(){
+  try {
+    var parts=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Riyadh',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+    var out={}; parts.forEach(function(p){ if(p.type!=='literal') out[p.type]=p.value; });
+    return out.year+'-'+out.month+'-'+out.day;
+  } catch(e) {
+    var d=new Date(Date.now()+3*60*60*1000);
+    return d.toISOString().split('T')[0];
+  }
+}
+/** تاريخ بعد n يوماً من اليوم بتوقيت الرياض */
+function dateOffset(n){
+  var base=today().split('-');
+  var d=new Date(Date.UTC(parseInt(base[0],10), parseInt(base[1],10)-1, parseInt(base[2],10)));
+  d.setUTCDate(d.getUTCDate()+n);
+  return d.toISOString().split('T')[0];
+}
 function formatDate(d){ try{ return new Date(d+'T00:00:00').toLocaleDateString('ar-SA-u-ca-gregory',{weekday:'long',month:'long',day:'numeric'}); } catch{ return d; } }
 function formatDateShort(d){ try{ return new Date(d+'T00:00:00').toLocaleDateString('ar-SA-u-ca-gregory',{month:'short',day:'numeric'}); } catch{ return d; } }
 
 function getWeekDates(){
   const dates = [];
   for(let i=0; i<7; i++){
-    const d = new Date();
-    d.setDate(d.getDate() + i);
-    dates.push(d.toISOString().split('T')[0]);
+    dates.push(dateOffset(i));
   }
   return dates;
 }
 
 // تحديث التاريخ
 function updateDate(){
-  const now = new Date();
+  // نفس مرجع التاريخ المستخدم في الفلترة حتى لا يختلف الشريط عن القائمة
+  const ref = new Date(today()+'T00:00:00');
   const days = ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
-  document.getElementById('dayName').textContent = days[now.getDay()];
-  document.getElementById('todayDate').textContent = now.toLocaleDateString('ar-SA-u-ca-gregory',{year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('dayName').textContent = days[ref.getDay()];
+  document.getElementById('todayDate').textContent = ref.toLocaleDateString('ar-SA-u-ca-gregory',{year:'numeric',month:'long',day:'numeric'});
 }
 
 // اختيار الفني
@@ -216,54 +231,129 @@ function selectTech(tech, techAr, btn) {
 }
 
 // تحميل المواعيد من Firebase
+function techStatusLogic(raw) {
+  var t=String(raw==null?'':raw).trim().toLowerCase();
+  var aliases={
+    confirmed:'confirmed',confirm:'confirmed',approved:'confirmed',accepted:'confirmed','مؤكد':'confirmed','مؤكدة':'confirmed','تم التأكيد':'confirmed',
+    pending:'pending',new:'pending',open:'pending',waiting:'pending',scheduled:'pending','في الانتظار':'pending','قيد الانتظار':'pending','جديد':'pending','معلق':'pending','قيد التنفيذ':'pending',
+    done:'done',completed:'done',complete:'done',finished:'done',closed:'done','مكتمل':'done','منجز':'done','تم':'done','منتهي':'done',
+    cancelled:'cancelled',canceled:'cancelled',rejected:'cancelled',declined:'cancelled','ملغي':'cancelled','ملغى':'cancelled','مرفوض':'cancelled'
+  };
+  return aliases[t] || 'pending';
+}
+
+function techNormalizePhone(v){
+  var p=String(v==null?'':v).replace(/\D/g,'');
+  if(p.indexOf('00966')===0) p=p.slice(5);
+  else if(p.indexOf('966')===0) p=p.slice(3);
+  if(p.charAt(0)==='0') p=p.slice(1);
+  return p;
+}
+function techStartTime(v){
+  var m=String(v||'').match(/(\d{1,2})\s*:\s*(\d{2})/);
+  if(!m) return '';
+  return String(parseInt(m[1],10)).padStart(2,'0')+':'+m[2];
+}
+function techDisplayIdentity(a){
+  if(!a) return '';
+  var date=String(a.date||'').trim(), time=techStartTime(a.time);
+  if(!date||!time) return '';
+  var phone=techNormalizePhone(a.phone||'');
+  var client=String(a.client||a.name||'').trim().toLowerCase().replace(/\s+/g,' ');
+  return date+'|'+time+'|'+(phone?('p:'+phone):('n:'+client));
+}
+function techDedupeForDisplay(items){
+  var out=[], exact={}, links={}, phones={}, names={};
+  function nm(a){ return String((a&&(a.client||a.name))||'').trim().toLowerCase().replace(/\s+/g,' '); }
+  function base(a){
+    var d=String((a&&a.date)||'').trim(), t=techStartTime(a&&a.time);
+    return d&&t ? d+'|'+t : '';
+  }
+  (items||[]).forEach(function(a){
+    if(!a) return;
+    var ex=(a._source||'appointments')+':'+(a._fbKey||a.id||'');
+    if(ex && exact[ex]!==undefined) return;
+    var b=base(a), ph=techNormalizePhone(a.phone||''), name=nm(a);
+    var pk=b&&ph ? b+'|p:'+ph : '';
+    var nk=b&&name ? b+'|n:'+name : '';
+    var lk=a.sourceBookingKey ? 'booking:'+String(a.sourceBookingKey) : '';
+    var idx = lk&&links[lk]!==undefined ? links[lk] :
+              pk&&phones[pk]!==undefined ? phones[pk] :
+              nk&&names[nk]!==undefined ? names[nk] : undefined;
+    if(idx!==undefined){
+      var prev=out[idx];
+      if(prev && prev._source==='bookings' && a._source==='appointments') out[idx]=a;
+      if(ex) exact[ex]=idx; if(lk) links[lk]=idx; if(pk) phones[pk]=idx; if(nk) names[nk]=idx;
+      return;
+    }
+    idx=out.length; out.push(a);
+    if(ex) exact[ex]=idx; if(lk) links[lk]=idx; if(pk) phones[pk]=idx; if(nk) names[nk]=idx;
+  });
+  return out;
+}
+
+// تحميل موحّد من Firebase: نفس المصدرين ونفس أولوية الدمج المستخدمة في صفحة المواعيد
 function loadAppts() {
   if(!db || !currentTech) return;
   document.getElementById('apptList').innerHTML = '<div class="loading"><div class="spinner"></div><div>جاري تحميل المواعيد...</div></div>';
 
-  // جمع من appointments و bookings
   var combined = [];
-
   db.ref('appointments').once('value', function(snap) {
+    var linkedBookingKeys = {};
     snap.forEach(function(c) {
-      var a = c.val();
-      if(a.tech === currentTech) {
-        combined.push({...a, _fbKey: c.key, _source: 'appointments'});
-      }
+      var a = c.val() || {};
+      var status = techStatusLogic(a.status);
+      var row = {};
+      Object.keys(a).forEach(function(k){ row[k] = a[k]; });
+      row.tech = a.tech || 'Abrar';
+      row.status = status;
+      row._statusRaw = a.status;
+      row._fbKey = c.key;
+      row._source = 'appointments';
+      combined.push(row);
+      if(a.sourceBookingKey) linkedBookingKeys[a.sourceBookingKey]=true;
     });
 
     db.ref('bookings').once('value', function(snap2) {
       snap2.forEach(function(c) {
-        var b = c.val();
-        // تعيين الفني تلقائياً إذا لم يكن محدداً
-        var assignedTech = b.tech || autoAssign(b.date, combined);
-        if(assignedTech === currentTech) {
-          combined.push({
-            _fbKey: c.key,
-            _source: 'bookings',
-            id: 'B_' + c.key,
-            client: b.client || b.name || '—',
-            phone: b.phone || '',
-            address: b.city || 'جدة',
-            service: b.service || 'تنظيف مكيف',
-            units: b.units || 1,
-            date: b.date,
-            time: b.time ? (b.time.includes(' - ') ? b.time.split(' - ')[0] : b.time) : '09:00',
-            tech: assignedTech,
-            status: b.status || 'pending',
-            notes: 'حجز إلكتروني',
-            locationImage: b.locationImage || '',
-            duration: b.duration || 60,
-          });
-        }
+        var b = c.val() || {};
+        if(!b.date || !b.time) return;
+        if(linkedBookingKeys[c.key]) return;
+        var assignedTech = b.tech || 'Abrar';
+        combined.push({
+          _fbKey: c.key,
+          _source: 'bookings',
+          id: 'B_' + c.key,
+          client: b.client || b.name || '—',
+          phone: b.phone || '',
+          address: b.address || b.district || b.city || 'جدة',
+          service: b.service || 'تنظيف مكيف',
+          units: b.units || 1,
+          date: b.date,
+          time: techStartTime(b.time) || '09:00',
+          tech: assignedTech,
+          status: techStatusLogic(b.status),
+          _statusRaw: b.status,
+          notes: 'حجز إلكتروني',
+          locationImage: b.locationImage || '',
+          duration: b.duration || 60,
+          sourceBookingKey: c.key
+        });
       });
 
-      allAppts = combined.sort((a,b) => ((a.date||'')+(a.time||'')).localeCompare((b.date||'')+(b.time||'')));
+      // إزالة التكرار من الواجهة فقط، ثم تطبيق نفس قاعدة إخفاء الملغي.
+      var merged = techDedupeForDisplay(combined).filter(function(a){ return techStatusLogic(a._statusRaw!==undefined?a._statusRaw:a.status)!=='cancelled'; });
+      allAppts = merged.filter(function(a){ return (a.tech || 'Abrar') === currentTech; })
+        .sort(function(a,b){
+          var dc=String(a.date||'').localeCompare(String(b.date||''));
+          if(dc!==0) return dc;
+          return String(techStartTime(a.time)||'23:59').localeCompare(String(techStartTime(b.time)||'23:59'));
+        });
       updateStats();
       renderAppts();
     });
   });
 }
-
 function autoAssign(date, existing) {
   // تعيين أحمد افتراضياً للحجوزات الجديدة
   return 'Abrar';
@@ -286,7 +376,7 @@ function filterAppts(filter, btn) {
 function renderAppts() {
   const tod = today();
   const weekDates = getWeekDates();
-  let appts = [...allAppts];
+  let appts = allAppts.slice();
 
   if(currentFilter === 'today') appts = appts.filter(a => a.date === tod);
   else if(currentFilter === 'week') appts = appts.filter(a => weekDates.includes(a.date));
@@ -298,9 +388,25 @@ function renderAppts() {
     return;
   }
 
-  // تجميع بالتاريخ
+  // ترتيب نهائي حسب تاريخ ووقت الموعد الفعلي، وليس حسب وقت إنشاء الحجز
+  appts.sort((a,b) => {
+    const dateCmp = String(a.date || '').localeCompare(String(b.date || ''));
+    if(dateCmp !== 0) return dateCmp;
+    const timeA = String(a.time || '23:59').trim().slice(0,5);
+    const timeB = String(b.time || '23:59').trim().slice(0,5);
+    return timeA.localeCompare(timeB);
+  });
+
+  // تجميع بالتاريخ مع ترتيب مواعيد كل يوم حسب الوقت تصاعدياً
   const grouped = {};
   appts.forEach(a => { if(!grouped[a.date]) grouped[a.date]=[]; grouped[a.date].push(a); });
+  Object.keys(grouped).forEach(date => {
+    grouped[date].sort((a,b) => {
+      const timeA = String(a.time || '23:59').trim().slice(0,5);
+      const timeB = String(b.time || '23:59').trim().slice(0,5);
+      return timeA.localeCompare(timeB);
+    });
+  });
 
   let html = '';
   Object.keys(grouped).sort().forEach(date => {
@@ -346,7 +452,7 @@ function renderAppts() {
         </div>
         <div class="card-actions">
           ${a.phone ? `<button class="act-btn btn-wa" onclick="openWhatsApp('${a.phone}','${a.client}','${a.service}','${a.time}')">📲 واتساب</button>` : ''}
-          <button class="act-btn btn-map" onclick="openMap('${a.address||''}')">🗺️ خريطة</button>
+          <button class="act-btn btn-map" onclick="openMapForAppt('${aId}')">🗺️ خريطة</button>
           <button class="act-btn btn-done" ${isDone?'disabled':''} onclick="markDone('${aId}','${a._source}','${a._fbKey}')">
             ${isDone ? '✅ مكتمل' : '✓ إتمام'}
           </button>
@@ -361,6 +467,126 @@ function renderAppts() {
 function openWhatsApp(phone, name, service, time) {
   const msg = encodeURIComponent(`مرحباً ${name}،\nنود إبلاغكم بأن الفني في طريقه إليكم لتنفيذ خدمة: ${service}\nالوقت المتوقع للوصول: ${time}\nمؤسسة أطواد ❄️`);
   window.open(`https://wa.me/966${phone.replace(/^0/,'')}?text=${msg}`, '_blank');
+}
+
+/* ===== الموقع الدقيق — نفس منطق صفحة المواعيد ===== */
+function locationUrlFields(record){
+  if(!record) return [];
+  return [
+    record.mapsLink, record.mapLink, record.mapUrl, record.mapsUrl,
+    record.locationUrl, record.googleMapsUrl, record.googleMapsLink,
+    record.locationLink, record.customerLocation, record.addressUrl,
+    typeof record.location === 'string' ? record.location : ''
+  ];
+}
+function isValidCoordinates(lat, lng){
+  return Number.isFinite(lat) && Number.isFinite(lng) &&
+         lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180 &&
+         !(lat === 0 && lng === 0);
+}
+function isGenericCityMapsUrl(value){
+  var raw = String(value || '').trim();
+  if(!raw) return false;
+  var decoded = raw;
+  try { decoded = decodeURIComponent(raw); } catch(e) {}
+  decoded = decoded.replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069]/g,'')
+                   .replace(/\+/g,' ').toLowerCase();
+  var plainCity  = /^(?:جدة|jeddah|jeddah\s*\/\s*جدة|جدة\s*\/\s*jeddah)$/i.test(decoded.trim());
+  var cityPlace  = /\/maps\/(?:place|search)\/(?:جدة|jeddah)(?:\/|@|\?|$)/i.test(decoded);
+  var cityQuery  = /[?&](?:q|query|destination)=(?:جدة|jeddah)(?:&|$)/i.test(decoded);
+  var veryWide   = /,\d{5,}m(?:\/|$)/i.test(decoded);
+  return plainCity || cityPlace || cityQuery || veryWide;
+}
+function extractCoordinatesFromMapUrl(url){
+  if(!url || typeof url !== 'string') return null;
+  var s = url.trim();
+  if(s.indexOf('maps.app.goo.gl') !== -1 || s.indexOf('goo.gl/maps') !== -1) return null;
+  try { s = decodeURIComponent(s); } catch(e) {}
+  var rawPair = s.match(/^\s*(-?\d+(?:\.\d+)?)\s*[,،]\s*(-?\d+(?:\.\d+)?)\s*$/);
+  if(rawPair){
+    var rl = Number(rawPair[1]), rg = Number(rawPair[2]);
+    if(isValidCoordinates(rl,rg)) return {lat:rl,lng:rg};
+  }
+  var placeMatch = s.match(/!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/);
+  if(placeMatch){
+    var pl = Number(placeMatch[1]), pg = Number(placeMatch[2]);
+    if(isValidCoordinates(pl,pg)) return {lat:pl,lng:pg};
+  }
+  var qm = s.match(/[?&](?:q|query|destination|ll)=\s*(-?\d+(?:\.\d+)?)\s*[,،]\s*(-?\d+(?:\.\d+)?)/i);
+  if(qm){
+    var ql = Number(qm[1]), qg = Number(qm[2]);
+    if(isValidCoordinates(ql,qg)) return {lat:ql,lng:qg};
+  }
+  return null;
+}
+function isTrustedGoogleMapsLocationUrl(value){
+  var link = String(value||'').trim();
+  if(!/^https?:\/\//i.test(link) || isGenericCityMapsUrl(link)) return false;
+  try {
+    var parsed = new URL(link);
+    var host = parsed.hostname.toLowerCase().replace(/^www\./,'');
+    return host === 'maps.app.goo.gl' ||
+      (host === 'goo.gl' && parsed.pathname.toLowerCase().indexOf('/maps') === 0) ||
+      ((host === 'google.com' || /(^|\.)google\.[a-z.]+$/i.test(host)) &&
+        (parsed.pathname.toLowerCase().indexOf('/maps') === 0 ||
+         parsed.searchParams.has('q') || parsed.searchParams.has('query') ||
+         parsed.searchParams.has('destination')));
+  } catch(e){ return false; }
+}
+function exactCoordinatesFromRecord(record){
+  if(!record) return null;
+  var links = locationUrlFields(record).map(function(v){ return String(v||'').trim(); });
+  var pairs = [
+    [record.lat,record.lng], [record.latitude,record.longitude],
+    [record.customerLat,record.customerLng], [record.locationLat,record.locationLng],
+    [record.geoLat,record.geoLng]
+  ];
+  var nested = [record.location, record.coordinates, record.coords, record.position];
+  nested.forEach(function(item){
+    if(item && typeof item === 'object'){
+      pairs.push([item.lat,item.lng],[item.latitude,item.longitude]);
+    }
+  });
+  for(var p=0;p<pairs.length;p++){
+    var la = Number(pairs[p][0]), ln = Number(pairs[p][1]);
+    if(isValidCoordinates(la,ln)) return {lat:la,lng:ln};
+  }
+  for(var i=0;i<links.length;i++){
+    if(!links[i] || isGenericCityMapsUrl(links[i])) continue;
+    var ex = extractCoordinatesFromMapUrl(links[i]);
+    if(ex) return ex;
+  }
+  return null;
+}
+function trustedLocationUrl(record){
+  var links = locationUrlFields(record);
+  for(var i=0;i<links.length;i++){
+    var link = String(links[i]||'').trim();
+    if(isTrustedGoogleMapsLocationUrl(link)) return link;
+  }
+  return '';
+}
+
+/** فتح خريطة الموعد: الدبوس الدقيق أولاً، والعنوان النصي آخر الحلول */
+function openMapForAppt(id){
+  var a = null;
+  for(var i=0;i<allAppts.length;i++){
+    var x = allAppts[i];
+    if(x.id === id || x._fbKey === id || ('B_' + x._fbKey) === id){ a = x; break; }
+  }
+  if(!a){ showToast('❌ تعذر إيجاد الموعد'); return; }
+
+  var coords = exactCoordinatesFromRecord(a);
+  if(coords){
+    window.open('https://www.google.com/maps/dir/?api=1&destination=' +
+      encodeURIComponent(coords.lat + ',' + coords.lng), '_blank');
+    return;
+  }
+  var link = trustedLocationUrl(a);
+  if(link){ window.open(link, '_blank'); return; }
+
+  showToast('⚠️ لا يوجد دبوس دقيق — سيُفتح العنوان النصي فقط');
+  openMap(a.address || '');
 }
 
 function openMap(address) {
