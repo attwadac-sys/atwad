@@ -317,6 +317,8 @@
   .btn-view { background:var(--ice);color:var(--sky); }
   .btn-view:hover { background:var(--sky);color:#fff; }
   .btn-book { background:#D1FAE5;color:var(--reg-cl); }
+  .btn-recheck { background:#FEF3C7;color:#92400E; }
+  .btn-recheck:hover { background:#92400E;color:#fff; }
   .btn-book:hover { background:var(--reg-cl);color:#fff; }
   .btn-del  { background:#FEE2E2;color:var(--danger); }
   .btn-del:hover { background:var(--danger);color:#fff; }
@@ -1008,6 +1010,7 @@ function syncFromFirebase() {
           });
           updateStats();
           renderTable();
+          handleReviewRequestParam();
         });
       });
     });
@@ -1044,7 +1047,8 @@ function saveData() {
   if(db) {
     clients.forEach(function(c) {
       if(c._fbKey) {
-        var copy = {...c}; delete copy._fbKey;
+        var copy = {};
+        Object.keys(c).forEach(function(k){ if(k !== '_fbKey') copy[k] = c[k]; });
         db.ref('customers/' + c._fbKey).set(copy);
       } else {
         var ref = db.ref('customers').push();
@@ -1217,6 +1221,7 @@ function renderTable() {
       '<td onclick="event.stopPropagation()"><div style="display:flex;gap:6px;">' +
         '<button class="action-btn btn-view" onclick="openDetail(\'' + c.id + '\')">عرض</button>' +
         '<button class="action-btn btn-book" onclick="quickBook(\'' + c.id + '\')">📅 حجز</button>' +
+        '<button class="action-btn btn-recheck" onclick="requestRecheckFor(\'' + c.id + '\')" title="فتح موعد إعادة فحص لهذا العميل">🔁 فحص</button>' +
         '<button class="action-btn btn-del"  onclick="deleteClient(\'' + c.id + '\')">🗑️</button>' +
       '</div></td>' +
     '</tr>';
@@ -1321,43 +1326,45 @@ function openDetail(id) {
   document.getElementById('detailTitle').textContent = '📋 ' + c.name;
   document.getElementById('detailEditBtn').onclick = () => { closeModal('detailModal'); openAddModal(id); };
 
-  const sampleHistory = [
-    { service:'تنظيف مكيف (2 وحدة)', date:'15/06/2025', price:'180 ريال' },
-    { service:'تعبئة غاز', date:'10/03/2025', price:'150 ريال' },
-  ];
+  const escDetail = value => String(value == null ? '' : value)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  // لا نعرض تاريخًا افتراضيًا. يُعرض فقط سجل محفوظ فعليًا داخل ملف العميل.
+  const serviceHistory = Array.isArray(c.serviceHistory) ? c.serviceHistory
+    : (Array.isArray(c.history) ? c.history : []);
 
   document.getElementById('detailBody').innerHTML = `
     <div style="display:flex;align-items:center;gap:16px;padding:16px;background:var(--frost);border-radius:14px;margin-bottom:20px;">
-      <div class="avatar" style="width:56px;height:56px;font-size:22px;background:${getAvatarColor(c.name)}">${getInitials(c.name)}</div>
+      <div class="avatar" style="width:56px;height:56px;font-size:22px;background:${getAvatarColor(c.name)}">${escDetail(getInitials(c.name))}</div>
       <div>
-        <div style="font-size:20px;font-weight:800;color:var(--deep)">${c.name}</div>
+        <div style="font-size:20px;font-weight:800;color:var(--deep)">${escDetail(c.name)}</div>
         <div style="margin-top:4px">${badgeHTML(c.type)}</div>
-        <div style="font-size:12px;color:var(--mist);margin-top:4px">رقم العميل: ${c.id} · تاريخ التسجيل: ${c.createdAt||'—'}</div>
+        <div style="font-size:12px;color:var(--mist);margin-top:4px">رقم العميل: ${escDetail(c.id)} · تاريخ التسجيل: ${escDetail(c.createdAt||'—')}</div>
       </div>
     </div>
     <div class="detail-section">
       <h4>معلومات التواصل</h4>
-      <div class="detail-row"><span class="d-label">📱 الجوال</span><span class="d-val"><a class="phone-link" href="tel:${c.phone}">${c.phone}</a></span></div>
-      <div class="detail-row"><span class="d-label">📍 المدينة</span><span class="d-val">${c.city||'—'}</span></div>
-      <div class="detail-row"><span class="d-label">🏠 العنوان</span><span class="d-val">${c.address||'—'}</span></div>
-      ${c.company ? `<div class="detail-row"><span class="d-label">🏢 الشركة</span><span class="d-val">${c.company}</span></div>` : ''}
+      <div class="detail-row"><span class="d-label">📱 الجوال</span><span class="d-val"><a class="phone-link" href="tel:${escDetail(c.phone)}">${escDetail(c.phone)}</a></span></div>
+      <div class="detail-row"><span class="d-label">📍 المدينة</span><span class="d-val">${escDetail(c.city||'—')}</span></div>
+      <div class="detail-row"><span class="d-label">🏠 العنوان</span><span class="d-val">${escDetail(c.address||'—')}</span></div>
+      ${c.company ? `<div class="detail-row"><span class="d-label">🏢 الشركة</span><span class="d-val">${escDetail(c.company)}</span></div>` : ''}
     </div>
     <div class="detail-section">
       <h4>إحصائيات الخدمة</h4>
-      <div class="detail-row"><span class="d-label">🔢 عدد الزيارات</span><span class="d-val">${c.visits||0} زيارة</span></div>
-      <div class="detail-row"><span class="d-label">📅 آخر زيارة</span><span class="d-val">${c.lastVisit||'لم تُسجَّل بعد'}</span></div>
+      <div class="detail-row"><span class="d-label">🔢 عدد الزيارات</span><span class="d-val">${escDetail(c.visits||0)} زيارة</span></div>
+      <div class="detail-row"><span class="d-label">📅 آخر زيارة</span><span class="d-val">${escDetail(c.lastVisit||'لم تُسجَّل بعد')}</span></div>
     </div>
-    ${c.notes ? `<div class="detail-section"><h4>ملاحظات</h4><div style="background:var(--frost);padding:12px;border-radius:10px;font-size:14px;color:var(--slate)">${c.notes}</div></div>` : ''}
+    ${c.notes ? `<div class="detail-section"><h4>ملاحظات</h4><div style="background:var(--frost);padding:12px;border-radius:10px;font-size:14px;color:var(--slate)">${escDetail(c.notes)}</div></div>` : ''}
     <div class="detail-section">
       <h4>سجل الخدمات (آخر الزيارات)</h4>
-      ${c.visits > 0 ? sampleHistory.map(h=>`
+      ${serviceHistory.length ? serviceHistory.map(h=>`
         <div class="history-item">
           <div>
-            <div class="h-service">${h.service}</div>
-            <div class="h-date">${h.date}</div>
+            <div class="h-service">${escDetail(h.service||h.description||'—')}</div>
+            <div class="h-date">${escDetail(h.date||'—')}</div>
           </div>
-          <div class="h-price">${h.price}</div>
-        </div>`).join('') : '<div style="color:var(--mist);font-size:13px;text-align:center;padding:12px">لا توجد زيارات مسجلة بعد</div>'}
+          <div class="h-price">${escDetail(h.price||h.amount||'—')}</div>
+        </div>`).join('') : '<div style="color:var(--mist);font-size:13px;text-align:center;padding:12px">لا توجد تفاصيل زيارات مرتبطة بملف العميل</div>'}
     </div>
     <div style="display:flex;gap:10px;margin-top:8px">
       <a href="https://wa.me/966${c.phone.slice(1)}" target="_blank" style="flex:1;text-align:center;padding:10px;background:#25D366;color:#fff;border-radius:10px;font-weight:700;text-decoration:none;font-size:14px;">📲 واتساب</a>
@@ -1413,6 +1420,38 @@ function quickBook(id) {
   showToast(`📅 جاري فتح نموذج الحجز لـ ${c.name}`);
   // يمكن ربطه بصفحة الحجز
   setTimeout(()=> window.open('atwad-booking.html','_blank'), 800);
+}
+
+/** طلب تقييم قادم من صفحة المواعيد: يفتح حملة التقييم لهذا العميل */
+function handleReviewRequestParam(){
+  var params;
+  try { params = new URLSearchParams(window.location.search); }
+  catch(e){ return; }
+  var phone = params.get('reviewPhone');
+  if(!phone) return;
+
+  if(window.history && window.history.replaceState){
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+
+  var wanted = normalizePhone(String(phone).trim());
+  var c = clients.find(function(x){
+    return x.phone && normalizePhone(String(x.phone).trim()) === wanted;
+  });
+  if(!c){ showToast('⚠️ لم يُعثر على العميل في قاعدة العملاء'); return; }
+  sendReviewRequest(c.id);
+}
+
+/** إعادة فحص: يفتح صفحة المواعيد بنموذج معبأ ببيانات هذا العميل */
+function requestRecheckFor(id) {
+  var c = clients.find(function(x){ return x.id === id; });
+  if(!c) { showToast('❌ تعذر إيجاد العميل'); return; }
+  var url = 'atwad-appointments.html?recheck=1'
+    + '&client=' + encodeURIComponent(clientName(c) || '')
+    + '&phone='  + encodeURIComponent(c.phone || '')
+    + '&city='   + encodeURIComponent(c.city || c.district || '');
+  showToast('🔁 فتح موعد إعادة فحص لـ ' + clientName(c));
+  window.open(url, '_blank');
 }
 
 // ========== HELPERS ==========
