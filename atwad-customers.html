@@ -1438,8 +1438,35 @@ function handleReviewRequestParam(){
   var c = clients.find(function(x){
     return x.phone && normalizePhone(String(x.phone).trim()) === wanted;
   });
-  if(!c){ showToast('⚠️ لم يُعثر على العميل في قاعدة العملاء'); return; }
+  if(!c){
+    alert('لم يُعثر على عميل بهذا الرقم في سجل العملاء:\n' + phone);
+    return;
+  }
+
+  highlightClientRow(c);
+
+  var reason = getReviewBlockReason(c);
+  if(reason){
+    alert('تعذر طلب التقييم من ' + (clientName(c) || phone) + '\n\nالسبب: ' + reason +
+          (reviewClientKey(c) ? '' : '\n\nهذا السجل قادم من حجز إلكتروني ولم يُحفظ بعد كعميل مستقل.' +
+           ' افتح «عرض» ثم احفظه في سجل العملاء، ثم أعد المحاولة.'));
+    return;
+  }
   sendReviewRequest(c.id);
+}
+
+/** إبراز صف العميل المقصود ليعرف المستخدم عمّن نتحدث */
+function highlightClientRow(c){
+  var rows = document.querySelectorAll('tbody tr');
+  for(var i=0;i<rows.length;i++){
+    if(rows[i].textContent.indexOf(String(c.phone||'')) !== -1){
+      rows[i].scrollIntoView({block:'center'});
+      rows[i].style.transition = 'background .4s';
+      rows[i].style.background = '#FEF3C7';
+      (function(row){ setTimeout(function(){ row.style.background = ''; }, 4000); })(rows[i]);
+      return;
+    }
+  }
 }
 
 /** إعادة فحص: يفتح صفحة المواعيد بنموذج معبأ ببيانات هذا العميل */
