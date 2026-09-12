@@ -290,8 +290,13 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
     <div class="service-grid">
       <div class="svc-card primary-service" id="sv1" onclick="showWashingOptions()"><div class="s-icon">💧❄️</div><div class="s-name">غسيل مكيفات</div><div class="s-price">متوفر الآن — اختر العدد والسعر</div></div>
       <div class="svc-card" id="sv2" onclick="selSvc('صيانة مكيف','AC Maintenance',100,'sv2')"><div class="s-icon">🛠️</div><div class="s-name">صيانة مكيف</div><div class="s-price">تبدأ من 100 ريال</div></div>
+      <div class="svc-card" id="sv7" onclick="selOutdoor()"><div class="s-icon">🌀</div><div class="s-name">تنظيف الوحدة الخارجية</div><div class="s-price">40 ريال للوحدة — 5 وحدات فأكثر</div></div>
       <div class="svc-card" id="sv6" onclick="selRecheck()"><div class="s-icon">🔁</div><div class="s-name">إعادة فحص</div><div class="s-price">لعمل سابق نفّذناه</div></div>
       <div class="svc-card is-disabled" id="sv5" aria-disabled="true" title="غير متوفر الآن"><div class="s-icon">🔧</div><div class="s-name">تركيب مكيف</div><div class="s-price s-unavailable">غير متوفر الآن</div></div>
+      <div class="recheck-note" id="outdoor-note" style="background:#EFF6FF;border-color:#BFDBFE;color:#1E40AF;">
+        <strong>🌀 تنظيف الوحدة الخارجية</strong><br>
+        40 ريال للوحدة الواحدة. الحد الأدنى للطلب 5 وحدات.
+      </div>
       <div class="recheck-note" id="recheck-note">
         <strong>🔁 شروط إعادة الفحص</strong><br>
         الزيارة بلا رسوم إذا كان الخلل ناتجاً عن عمل سابق قمنا به.
@@ -429,13 +434,57 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
     </div>
     <div class="field">
       <label>المدينة <span class="req">*</span></label>
-      <select id="f_city">
+      <select id="f_city" onchange="onCityChange()">
         <option value="">-- اختر --</option>
-        <option>جدة / Jeddah</option><option>الرياض / Riyadh</option>
-        <option>مكة المكرمة / Makkah</option><option>المدينة المنورة / Madinah</option>
-        <option>الدمام / Dammam</option><option>الطائف / Taif</option><option>أخرى / Other</option>
+        <option>جدة / Jeddah</option>
       </select>
       <div class="err-msg" id="e_city">اختر المدينة</div>
+
+      <div id="districtWrap" style="display:none;margin-top:14px;">
+        <label>الحي <span class="req">*</span></label>
+        <select id="f_district" onchange="onDistrictChange()">
+          <option value="">-- اختر الحي --</option>
+          <optgroup label="الشمال الساحلي">
+            <option>أبحر الشمالية</option><option>أبحر الجنوبية</option><option>الشراع</option>
+            <option>الياقوت</option><option>الزمرد</option><option>اللؤلؤ</option>
+            <option>المرجان</option><option>البساتين</option><option>الشاطئ</option>
+            <option>المحمدية</option>
+          </optgroup>
+          <optgroup label="الشمال الأوسط">
+            <option>النعيم</option><option>النهضة</option><option>الزهراء</option>
+            <option>السلامة</option><option>الروضة</option><option>الخالدية</option>
+            <option>البوادي</option><option>الربوة</option><option>الفيصلية</option>
+          </optgroup>
+          <optgroup label="الشمال والامتداد الجديد">
+            <option>الرياض</option><option>الحمدانية</option><option>الصالحية</option>
+            <option>الفلاح</option><option>الرحمانية</option><option>طيبة</option>
+            <option>الأصالة</option><option>المروة</option>
+          </optgroup>
+          <optgroup label="خيارات أخرى">
+            <option value="__other_north__">حي آخر داخل شمال جدة — يحتاج تأكيد</option>
+            <option value="__outside__">حي خارج شمال جدة (جنوب جدة أو غيره)</option>
+          </optgroup>
+        </select>
+        <div class="err-msg" id="e_district">اختر الحي</div>
+
+        <div id="districtOtherWrap" style="display:none;margin-top:12px;">
+          <label>اكتب اسم الحي <span class="req">*</span></label>
+          <input type="text" id="f_district_other" placeholder="مثال: حي الواحة" maxlength="40">
+          <div class="err-msg" id="e_district_other">اكتب اسم الحي</div>
+        </div>
+
+        <div class="recheck-note" id="districtOtherNote" style="background:#EFF6FF;border-color:#BFDBFE;color:#1E40AF;">
+          <strong>ℹ️ حي خارج القائمة</strong><br>
+          سنراجع موقعك قبل تثبيت الموعد، وقد نتواصل معك إن كان خارج نطاق الخدمة.
+        </div>
+      </div>
+
+      <div class="friday-closed" id="outsideAreaBox">
+        <div class="icon">⛔</div>
+        <p>نخدم حالياً شمال جدة فقط<br>من شارع الأمير محمد بن عبدالعزيز (التحلية) شمالاً</p>
+        <button type="button" class="friday-wa" onclick="requestAreaApproval()">📲 تواصل معنا للاستفسار</button>
+        <span class="friday-hint">إن كان موقعك قريباً من الحد، راسلنا وسنفيدك</span>
+      </div>
     </div>
     <!-- الموقع الدقيق: لا يُقبل الحجز من اسم المدينة أو رابط عام -->
     <div class="field">
@@ -1379,7 +1428,7 @@ function applySavedCustomerData(phone, records) {
   var history = records.slice().sort(function(a,b){ return savedRecordTime(b)-savedRecordTime(a); });
   var primary = customers[0] || history[0];
   if(!primary) {
-    showCustomerLookup('new', 'عميل جديد — أكمل البيانات للمتابعة.');
+    showCustomerLookup('', '');   // لا ندّعي نتيجة بحث لم يجرِ
     return;
   }
 
@@ -1426,12 +1475,12 @@ function lookupCustomerByPhone(value) {
     return;
   }
   if(!db) {
-    showCustomerLookup('error', 'تعذر الاتصال الآن. أكمل البيانات يدويًا.');
+    showCustomerLookup('', '');
     return;
   }
 
   var token = ++customerLookupToken;
-  showCustomerLookup('loading', '⏳ جاري البحث عن بياناتك المحفوظة...');
+  showCustomerLookup('', '');
   customerLookupTimer = setTimeout(function() {
     var variants = customerPhoneVariants(phone);
     Promise.all([
@@ -1443,13 +1492,18 @@ function lookupCustomerByPhone(value) {
       applySavedCustomerData(phone, groups[0].concat(groups[1], groups[2]));
     }).catch(function(err) {
       console.warn('[customer-lookup] تعذر استرجاع بيانات العميل:', err && (err.code || err.message));
-      if(token === customerLookupToken) showCustomerLookup('error', 'تعذر استرجاع البيانات الآن. يمكنك إكمال الحجز يدويًا.');
+      if(token === customerLookupToken) showCustomerLookup('', '');
     });
   }, 450);
 }
 
 // تحميل إعداد الجمعة
-if(db) db.ref('settings/fridayClosed').once('value',function(s){if(s.val()!==null)FRIDAY_CLOSED=s.val();});
+// العقدة العامة يقرؤها الزائر؛ عقدة settings محجوزة للإدارة ولا تُقرأ هنا
+if(db) db.ref('publicSettings/fridayClosed').once('value').then(function(s){
+  if(s.val()!==null) FRIDAY_CLOSED = s.val();
+}).catch(function(e){
+  console.warn('[friday] تعذّرت قراءة الإعداد، سنعتمد القيمة الافتراضية:', e && e.message);
+});
 
 // الحد الأدنى لاختيار التاريخ هو اليوم — اليوم مسموح إذا بقي وقت شاغر بعد ساعتين
 // لا نستخدم toISOString() لأنه UTC وقد يُنتج تاريخًا مختلفًا في السعودية
@@ -1457,22 +1511,25 @@ document.getElementById('f_date').min = todaySaudiDate();
 
 // ===== خانة العدد =====
 function changeUnits(dir){
-  var minUnits=largeCleaningSelection?9:1;
+  var minUnits = largeCleaningSelection ? 9 : (S.serviceAr === OUTDOOR_SERVICE ? 5 : 1);
   var n=Math.max(minUnits,Math.min(30,S.units+dir));
   S.units=n;
   document.getElementById('units-display').textContent=n;
   if(S.isClean) S.price=n>=10?n*55:(n>=5?n*60:S.price);
+  if(S.serviceAr === OUTDOOR_SERVICE) S.price = n * OUTDOOR_UNIT_PRICE;
   var note=document.getElementById('large-order-note');
   if(note) note.style.display=n>=10?'block':'none';
 }
 
 // ===== الخدمة =====
 function resetServiceCards(){
-  ['sv1','sv2','sv6'].forEach(function(id){
+  ['sv1','sv2','sv6','sv7'].forEach(function(id){
     var el=document.getElementById(id); if(el) el.className=id==='sv1'?'svc-card primary-service':'svc-card';
   });
   var rn=document.getElementById('recheck-note');
   if(rn) rn.className='recheck-note';
+  var on=document.getElementById('outdoor-note');
+  if(on) on.className='recheck-note';
   var install=document.getElementById('sv5');
   if(install) install.className='svc-card is-disabled';
 }
@@ -1542,6 +1599,23 @@ function selSvc(nameAr,nameEn,price,id){
   document.getElementById('e_svc').className='err-msg';
 }
 
+var OUTDOOR_SERVICE     = 'تنظيف الوحدة الخارجية';
+var OUTDOOR_UNIT_PRICE  = 40;
+var OUTDOOR_MIN_UNITS   = 5;
+
+/** تنظيف الوحدة الخارجية: 40 ريال للوحدة، والحد الأدنى خمس وحدات */
+function selOutdoor(){
+  selSvc(OUTDOOR_SERVICE, 'Outdoor Unit Cleaning', OUTDOOR_UNIT_PRICE * OUTDOOR_MIN_UNITS, 'sv7');
+  S.units = OUTDOOR_MIN_UNITS;
+  S.price = OUTDOOR_UNIT_PRICE * OUTDOOR_MIN_UNITS;
+  var disp = document.getElementById('units-display');
+  if(disp) disp.textContent = String(OUTDOOR_MIN_UNITS);
+  var box = document.getElementById('units-box');
+  if(box) box.className = 'units-box show';
+  var note = document.getElementById('outdoor-note');
+  if(note) note.className = 'recheck-note show';
+}
+
 /** إعادة فحص: زيارة واحدة، بلا سعر مبدئي، مع إظهار الشروط فوراً */
 function selRecheck(){
   selSvc('إعادة فحص','Re-inspection',0,'sv6');
@@ -1558,6 +1632,10 @@ function next1(){
   var ok=true;
   if(!S.service){document.getElementById('e_svc').className='err-msg show';ok=false;}
   if(!S.isClean&&S.service) S.units=parseInt(document.getElementById('units-display').textContent)||1;
+  if(ok && S.serviceAr === OUTDOOR_SERVICE && S.units < OUTDOOR_MIN_UNITS){
+    alert('الحد الأدنى لتنظيف الوحدات الخارجية هو ' + OUTDOOR_MIN_UNITS + ' وحدات.');
+    ok=false;
+  }
   if(ok) goStep(2);
 }
 
@@ -1750,6 +1828,47 @@ function removeImage(){
   document.getElementById('imgArea').style.borderColor='#E2E8F0';
 }
 
+/** نطاق الخدمة: شمال جدة فقط */
+function onCityChange(){
+  var city = document.getElementById('f_city').value;
+  var isJeddah = city.indexOf('جدة') !== -1;
+  document.getElementById('districtWrap').style.display = isJeddah ? 'block' : 'none';
+  document.getElementById('outsideAreaBox').style.display = (city && !isJeddah) ? 'block' : 'none';
+  if(!isJeddah){
+    var d = document.getElementById('f_district');
+    if(d) d.value = '';
+    document.getElementById('districtOtherNote').className = 'recheck-note';
+  }
+}
+
+function onDistrictChange(){
+  var v = document.getElementById('f_district').value;
+  document.getElementById('outsideAreaBox').style.display = (v === '__outside__') ? 'block' : 'none';
+  var isOther = (v === '__other_north__');
+  document.getElementById('districtOtherNote').className = isOther ? 'recheck-note show' : 'recheck-note';
+  document.getElementById('districtOtherWrap').style.display = isOther ? 'block' : 'none';
+  if(!isOther){
+    document.getElementById('f_district_other').value = '';
+    document.getElementById('e_district_other').className = 'err-msg';
+  }
+  document.getElementById('e_district').className = 'err-msg';
+}
+
+/** استفسار عن نطاق الخدمة عبر واتساب */
+function requestAreaApproval(){
+  var city = document.getElementById('f_city').value || '—';
+  var d    = document.getElementById('f_district');
+  var typedEl = document.getElementById('f_district_other');
+  var typed = typedEl ? typedEl.value.trim() : '';
+  var dist = d && d.value && d.value.indexOf('__') !== 0 ? d.value : typed;
+  var name = (document.getElementById('f_name') && document.getElementById('f_name').value) || '';
+  var lines = ['السلام عليكم، أستفسر عن إمكانية الخدمة في موقعي.', 'المدينة: ' + city];
+  if(dist) lines.push('الحي: ' + dist);
+  if(name) lines.push('الاسم: ' + name);
+  lines.push('شكراً لكم.');
+  window.open('https://wa.me/966509720382?text=' + encodeURIComponent(lines.join('\n')), '_blank');
+}
+
 function next2(){
   var name=document.getElementById('f_name').value.trim();
   var phoneInput=document.getElementById('f_phone');
@@ -1765,6 +1884,31 @@ function next2(){
   if(!name){document.getElementById('e_name').className='err-msg show';document.getElementById('f_name').className='err';ok=false;}else{document.getElementById('e_name').className='err-msg';document.getElementById('f_name').className='';}
   if(!phone||!/^05\d{8}$/.test(phone)){document.getElementById('e_phone').className='err-msg show';document.getElementById('f_phone').className='err';ok=false;}else{document.getElementById('e_phone').className='err-msg';document.getElementById('f_phone').className='';}
   if(!city){document.getElementById('e_city').className='err-msg show';ok=false;}else{document.getElementById('e_city').className='err-msg';}
+
+  var district = '';
+  if(city.indexOf('جدة') === -1){
+    if(city){ document.getElementById('outsideAreaBox').style.display='block'; }
+    ok=false;
+  } else {
+    district = document.getElementById('f_district').value;
+    if(!district){
+      document.getElementById('e_district').className='err-msg show';
+      ok=false;
+    } else if(district === '__outside__'){
+      document.getElementById('outsideAreaBox').style.display='block';
+      ok=false;
+    } else if(district === '__other_north__'){
+      var typed = document.getElementById('f_district_other').value.trim();
+      if(typed.length < 2){
+        document.getElementById('e_district_other').className='err-msg show';
+        document.getElementById('f_district_other').className='err';
+        ok=false;
+      } else {
+        document.getElementById('e_district_other').className='err-msg';
+        document.getElementById('f_district_other').className='';
+      }
+    }
+  }
   if(!exactLocation){
     document.getElementById('e_addr').textContent='يجب تحديد إحداثيات المنزل. اضغط «استخدام موقعي الحالي» ثم راجع الدبوس';
     document.getElementById('e_addr').className='err-msg show';
@@ -1786,12 +1930,18 @@ function next2(){
     document.getElementById('f_addr').value=mapsLink;
     document.getElementById('e_addr').className='err-msg';
   }
-  if(ok){S.name=name;S.phone=phone;S.city=city;S.addr=mapsLink;goStep(3);}
+  if(ok){
+    S.name=name;S.phone=phone;S.city=city;S.addr=mapsLink;
+    S.district = (district === '__other_north__')
+      ? document.getElementById('f_district_other').value.trim() + ' (حي خارج القائمة — يحتاج تأكيد)'
+      : district;
+    goStep(3);
+  }
 }
 
 // ===== الموعد =====
 var FRIDAY_VAR=true;
-var DUR_MAP={'غسيل مكيفات':30,'صيانة مكيف':60,'تركيب مكيف':90,'إعادة فحص':30};
+var DUR_MAP={'غسيل مكيفات':30,'صيانة مكيف':60,'تركيب مكيف':90,'إعادة فحص':30,'تنظيف الوحدة الخارجية':15};
 var SLOTS=[{t:'8:00 - 10:00',start:480,ar:'8-10 ص'},{t:'10:00 - 12:00',start:600,ar:'10-12 ص'},{t:'12:00 - 14:00',start:720,ar:'12-2 م'},{t:'14:00 - 16:00',start:840,ar:'2-4 م'},{t:'16:00 - 18:00',start:960,ar:'4-6 م'},{t:'18:00 - 20:00',start:1080,ar:'6-8 م'}];
 var SLOT_WINDOW_MINUTES=120;
 var slotCheckSeq=0;
@@ -2063,6 +2213,7 @@ function buildSum(){
     ['👤 الاسم',S.name],
     ['📱 الجوال',S.phone],
     ['📍 المدينة',S.city],
+    ['🏘️ الحي',S.district||'—'],
     ['🗺️ رابط الموقع',S.addr.length>40?S.addr.substring(0,40)+'...':S.addr],
     ['📅 التاريخ',fmtDate(S.date)],
     ['🕐 الوقت',S.time],
@@ -2148,6 +2299,7 @@ function submitBooking(){
       'التاريخ: '+fmtDate(S.date),
       'الوقت: '+S.time,
       'المدينة: '+S.city,
+      'الحي: '+(S.district||'—'),
       'الموقع: '+S.addr
     ];
     var msg=encodeURIComponent(messageLines.join('\n'));
@@ -2164,10 +2316,11 @@ function submitBooking(){
       'التاريخ: '+fmtDate(S.date),
       'الوقت المطلوب: '+S.time,
       'المدينة: '+S.city,
+      'الحي: '+(S.district||'—'),
       'الموقع: '+S.addr
     ];
     var unconfirmedWaUrl='https://wa.me/966509720382?text='+encodeURIComponent(unconfirmedMessageLines.join('\n'));
-    var bookingData = {ref:ref,date:S.date,time:S.time,duration:calcDur(),client:S.name,phone:S.phone,service:S.serviceAr,units:S.units,city:S.city,mapsLink:S.addr,createdAt:new Date().toISOString()};
+    var bookingData = {ref:ref,date:S.date,time:S.time,duration:calcDur(),client:S.name,phone:S.phone,service:S.serviceAr,units:S.units,city:S.city,district:S.district||'',mapsLink:S.addr,createdAt:new Date().toISOString()};
 
     // لا نرسل الحقل الاختياري عندما لا توجد صورة؛ هذا يقلل حجم الطلب ويطابق قواعد التحقق.
     if(bookImageBase64){
