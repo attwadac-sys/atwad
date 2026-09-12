@@ -2206,6 +2206,43 @@ function appointmentStartMinutes(time){ return atwadParseTime(time); }
 var SERVICE_UNIT_MINUTES = { 'تنظيف مكيف':30, 'غسيل مكيفات':30, 'صيانة دورية':45,
   'تعبئة غاز':45, 'كشف وإصلاح أعطال':60, 'صيانة مكيف':60, 'تركيب مكيف جديد':90, 'تركيب مكيف':90,'إعادة فحص':30,
   'تنظيف الوحدة الخارجية':15, 'تنظيف الوحدة الداخلية':20};
+
+/** خدمات لها حد أدنى لعدد الوحدات — لا تُقبل أقل منه إلا باستثناء صريح من المؤسسة */
+var MIN_UNITS_SERVICES = { 'تنظيف الوحدة الخارجية':5, 'تنظيف الوحدة الداخلية':5 };
+
+/**
+ * يتحقق من الحد الأدنى لعدد الوحدات.
+ * يعيد null إذا كان العدد مقبولاً أو مُنح استثناء، ويعيد نص الخطأ إذا رُفض.
+ * عند الاستثناء يكتب سبب الاستثناء في data.
+ */
+function checkMinUnitsOrException(data){
+  var svc = String(data.service||'').trim();
+  var minU = MIN_UNITS_SERVICES[svc];
+  if(!minU) return null;
+  var u = parseInt(data.units,10);
+  if(!isFinite(u)) u = 1;
+  if(u >= minU) return null;
+
+  var reason = window.prompt(
+    'الحد الأدنى لخدمة «' + svc + '» هو ' + minU + ' وحدات، والمُدخل ' + u + '.\n' +
+    'لا يُقبل أقل من ذلك إلا بطلب استثناء من المؤسسة.\n\n' +
+    'اكتب سبب الاستثناء والجهة التي وافقت عليه، أو اترك الحقل فارغاً للإلغاء:', '');
+
+  if(reason === null) return '❌ تم إلغاء الحفظ — الحد الأدنى ' + minU + ' وحدات.';
+  reason = String(reason).trim();
+  if(reason.length < 5) return '❌ يلزم سبب واضح للاستثناء (5 أحرف فأكثر). الحد الأدنى ' + minU + ' وحدات.';
+
+  data.minUnitsException = {
+    service: svc,
+    minUnits: minU,
+    actualUnits: u,
+    reason: reason,
+    approvedAt: new Date().toISOString()
+  };
+  var exLine = 'استثناء الحد الأدنى (' + u + ' من ' + minU + '): ' + reason;
+  data.notes = data.notes ? (data.notes + ' | ' + exLine) : exLine;
+  return null;
+}
 function suggestDuration(service,units){
   var per=SERVICE_UNIT_MINUTES[String(service||'').trim()]||45;
   var u=parseInt(units,10); if(!isFinite(u)||u<1) u=1;
@@ -2473,6 +2510,11 @@ function saveAppt(){
     duration: readManualDuration(),
     updatedAt: new Date().toISOString()
   };
+
+  var minUnitsError = checkMinUnitsOrException(data);
+  if(minUnitsError){
+    return showToast(minUnitsError);
+  }
 
   var _editSource = editingFirebaseKey ? (editingSource || 'appointments') : null;
 
