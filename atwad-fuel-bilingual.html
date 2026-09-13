@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>أطواد — مصروف البنزين</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
+:root{
+  --deep:#0C3B5E; --steel:#1E5F8A; --sky:#0EA5E9; --ice:#E8F4FD; --frost:#F0F9FF;
+  --slate:#334155; --mist:#94A3B8; --line:#E2E8F0;
+  --success:#10B981; --warning:#F59E0B; --danger:#EF4444;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);padding-bottom:50px;}
+.header{background:linear-gradient(135deg,var(--deep),var(--steel),var(--sky));color:#fff;padding:20px 18px;
+  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+.header h1{font-size:19px;font-weight:900;}
+.header p{font-size:12px;opacity:.85;margin-top:4px;}
+.lang{background:rgba(255,255,255,.16);border:1.5px solid rgba(255,255,255,.35);color:#fff;
+  font-family:'Tajawal',sans-serif;font-weight:800;font-size:13px;padding:7px 14px;border-radius:9px;cursor:pointer;}
+.lang:hover{background:rgba(255,255,255,.26);}
+.wrap{max-width:880px;margin:0 auto;padding:0 14px;}
+
+.month-bar{background:#fff;border-radius:14px;box-shadow:0 2px 10px rgba(12,59,94,.07);
+  margin-top:-14px;padding:12px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.month-bar label{font-size:13px;font-weight:700;color:var(--deep);}
+.month-bar input[type=month]{font-family:'Tajawal',sans-serif;font-size:14px;padding:8px 10px;
+  border:1.5px solid var(--line);border-radius:9px;color:var(--slate);}
+.spacer{flex:1;}
+.ghost{background:#fff;border:1.5px solid var(--line);color:var(--slate);font-family:'Tajawal',sans-serif;
+  font-weight:700;font-size:13px;padding:8px 14px;border-radius:9px;cursor:pointer;}
+.ghost:hover{border-color:var(--sky);color:var(--deep);}
+
+.total-card{background:linear-gradient(135deg,var(--deep),var(--steel));color:#fff;border-radius:16px;
+  padding:22px;margin-top:14px;display:flex;align-items:flex-end;gap:18px;flex-wrap:wrap;}
+.total-card .big{font-size:46px;font-weight:900;line-height:1;letter-spacing:-1px;}
+.total-card .cur{font-size:16px;font-weight:700;opacity:.75;margin-inline-start:6px;}
+.total-card .lbl{font-size:13px;opacity:.8;margin-bottom:8px;}
+.total-card .delta{margin-inline-start:auto;font-size:13px;font-weight:700;background:rgba(255,255,255,.14);
+  padding:7px 12px;border-radius:9px;}
+
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px;}
+.stat{background:#fff;border-radius:12px;padding:13px;text-align:center;box-shadow:0 1px 6px rgba(12,59,94,.06);}
+.stat b{display:block;font-size:20px;font-weight:900;color:var(--deep);}
+.stat span{font-size:11px;color:var(--mist);}
+
+.card{background:#fff;border-radius:14px;box-shadow:0 2px 10px rgba(12,59,94,.06);padding:16px;margin-top:14px;}
+.card h2{font-size:15px;font-weight:800;color:var(--deep);margin-bottom:12px;}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;}
+.field{display:flex;flex-direction:column;gap:5px;flex:1;min-width:130px;}
+.field label{font-size:12px;font-weight:700;color:var(--mist);}
+.field input{font-family:'Tajawal',sans-serif;font-size:15px;padding:10px 12px;border:1.5px solid var(--line);
+  border-radius:10px;color:var(--slate);background:var(--frost);}
+.field input:focus{outline:2px solid var(--sky);outline-offset:1px;border-color:var(--sky);}
+.add{background:var(--deep);color:#fff;border:none;font-family:'Tajawal',sans-serif;font-weight:800;
+  font-size:15px;padding:11px 26px;border-radius:10px;cursor:pointer;}
+.add:hover{background:var(--steel);}
+.quick{width:100%;margin-top:12px;background:var(--frost);border:1.5px dashed var(--sky);color:var(--deep);
+  font-family:'Tajawal',sans-serif;font-weight:800;font-size:15px;padding:13px;border-radius:11px;cursor:pointer;}
+.quick:hover{background:var(--ice);}
+.hint{font-size:12px;color:var(--mist);margin-top:9px;}
+
+.days{display:flex;align-items:flex-end;gap:3px;height:120px;margin-top:6px;overflow-x:auto;padding-bottom:4px;}
+.day{flex:1;min-width:9px;display:flex;flex-direction:column;justify-content:flex-end;height:100%;}
+.bar{background:var(--sky);border-radius:3px 3px 0 0;min-height:2px;}
+.bar.zero{background:var(--line);}
+.bar.top{background:var(--deep);}
+.daynum{font-size:9px;color:var(--mist);text-align:center;margin-top:3px;}
+
+table{width:100%;border-collapse:collapse;margin-top:4px;}
+th{text-align:start;font-size:12px;color:var(--mist);font-weight:700;padding:8px 10px;border-bottom:1.5px solid var(--line);}
+td{padding:11px 10px;border-bottom:1px solid #F1F5F9;font-size:14px;}
+td.amt{font-weight:800;color:var(--deep);}
+tr:last-child td{border-bottom:none;}
+.del{background:none;border:none;color:var(--danger);font-size:16px;cursor:pointer;padding:2px 6px;border-radius:6px;}
+.del:hover{background:#FEE2E2;}
+.empty{text-align:center;padding:34px 16px;color:var(--mist);font-size:14px;}
+
+.cmp-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #F1F5F9;}
+.cmp-row:last-child{border-bottom:none;}
+.cmp-date{font-size:12px;color:var(--mist);min-width:74px;}
+.cmp-track{flex:1;background:#F1F5F9;border-radius:6px;height:22px;position:relative;overflow:hidden;}
+.cmp-fill{height:100%;border-radius:6px;background:var(--sky);}
+.cmp-fill.best{background:var(--success);}
+.cmp-fill.worst{background:var(--warning);}
+.cmp-km{position:absolute;inset-inline-start:8px;top:0;line-height:22px;font-size:12px;font-weight:800;color:#fff;}
+.cmp-diff{font-size:12px;font-weight:700;min-width:62px;text-align:end;}
+.cmp-up{color:var(--success);} .cmp-down{color:var(--warning);}
+.cmp-avg{font-size:12px;color:var(--mist);margin-bottom:10px;}
+
+.warnbox{background:#FEF3C7;border:1.5px solid #FCD34D;color:#92400E;border-radius:11px;
+  padding:11px 14px;font-size:13px;font-weight:700;margin-top:12px;}
+@media(max-width:640px){
+  .stats{grid-template-columns:repeat(2,1fr);}
+  .total-card .big{font-size:38px;}
+  .total-card .delta{margin-inline-start:0;}
+}
+@media print{ body{background:#fff;} .month-bar,.card.entry,.del,.ghost,.lang{display:none;} }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1 data-i18n="title">مصروف البنزين</h1>
+    <p data-i18n="subtitle">مؤسسة أطواد — تسجيل يومي وحساب شهري</p>
+  </div>
+  <button class="lang" id="langBtn" onclick="toggleLang()">English</button>
+</div>
+
+<div class="wrap">
+
+  <div class="month-bar">
+    <label for="monthPick" data-i18n="month">الشهر</label>
+    <input type="month" id="monthPick" onchange="render()">
+    <span class="spacer"></span>
+    <button class="ghost" onclick="exportCsv()" data-i18n="export">تنزيل ملف إكسل</button>
+    <button class="ghost" onclick="window.print()" data-i18n="print">طباعة</button>
+  </div>
+
+  <div class="total-card">
+    <div>
+      <div class="lbl" id="monthLabel"></div>
+      <div><span class="big" id="monthTotal">0</span><span class="cur" id="curLabel">ريال</span></div>
+    </div>
+    <div class="delta" id="deltaBox"></div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><b id="sAvgDay">0</b><span data-i18n="avgDay">متوسط اليوم</span></div>
+    <div class="stat"><b id="sCount">0</b><span data-i18n="fills">عدد التعبئات</span></div>
+    <div class="stat"><b id="sAvgFill">0</b><span data-i18n="avgFill">متوسط التعبئة</span></div>
+    <div class="stat"><b id="sForecast">0</b><span data-i18n="forecast">توقع نهاية الشهر</span></div>
+    <div class="stat"><b id="sKm">0</b><span data-i18n="kmMonth">كيلومترات الشهر</span></div>
+    <div class="stat"><b id="sCostKm">—</b><span data-i18n="costKm">تكلفة الكيلومتر</span></div>
+    <div class="stat"><b id="sKmFill">—</b><span data-i18n="kmPerFill">كم لكل تعبئة</span></div>
+  </div>
+
+  <div class="card entry">
+    <h2 data-i18n="logFill">تسجيل تعبئة</h2>
+    <div class="row">
+      <div class="field">
+        <label for="fDate" data-i18n="date">التاريخ</label>
+        <input type="date" id="fDate">
+      </div>
+      <div class="field">
+        <label for="fAmount" data-i18n="amount">المبلغ بالريال</label>
+        <input type="number" id="fAmount" min="1" step="1" inputmode="decimal" value="100">
+      </div>
+      <div class="field">
+        <label for="fOdo" data-i18n="odometer">عداد الكيلومترات</label>
+        <input type="number" id="fOdo" min="0" step="1" inputmode="numeric" placeholder="370980">
+      </div>
+      <div class="field">
+        <label for="fNote" data-i18n="note">ملاحظة (اختياري)</label>
+        <input type="text" id="fNote" maxlength="60">
+      </div>
+      <button class="add" onclick="addEntry()" data-i18n="addBtn">إضافة</button>
+    </div>
+    <button class="quick" onclick="quickFill()" data-i18n="quickBtn">تسجيل تعبئة 100 ريال اليوم</button>
+    <p class="hint" data-i18n="hint">التعبئة المعتادة 100 ريال. سجّل قراءة العداد عند كل تعبئة لتُحسب المسافة وتكلفة الكيلومتر.</p>
+  </div>
+
+  <div class="card">
+    <h2 data-i18n="dailySpend">الصرف اليومي</h2>
+    <div class="days" id="daysStrip"></div>
+  </div>
+
+  <div class="card">
+    <h2 data-i18n="compare">مقارنة التعبئات</h2>
+    <div id="compareBox"></div>
+  </div>
+
+  <div class="card">
+    <h2 data-i18n="log">السجل</h2>
+    <div id="tableBox"></div>
+  </div>
+
+  <div id="storageWarn"></div>
+
+</div>
+
+<script>
+var STORE_KEY = 'atwad_fuel_v1';
+var LANG_KEY  = 'atwad_fuel_lang';
+var DEFAULT_FILL = 100;
+var entries = [];
+var storageOk = true;
+var lang = 'ar';
+
+/* ============ النصوص ============ */
+var TXT = {
+  ar: {
+    title:'مصروف البنزين', subtitle:'مؤسسة أطواد — تسجيل يومي وحساب شهري',
+    month:'الشهر', export:'تنزيل ملف إكسل', print:'طباعة',
+    avgDay:'متوسط اليوم', fills:'عدد التعبئات', avgFill:'متوسط التعبئة',
+    forecast:'توقع نهاية الشهر', kmMonth:'كيلومترات الشهر', costKm:'تكلفة الكيلومتر',
+    kmPerFill:'كم لكل تعبئة', logFill:'تسجيل تعبئة', date:'التاريخ', amount:'المبلغ بالريال',
+    odometer:'عداد الكيلومترات', note:'ملاحظة (اختياري)', addBtn:'إضافة',
+    quickBtn:'تسجيل تعبئة 100 ريال اليوم',
+    hint:'التعبئة المعتادة 100 ريال. سجّل قراءة العداد عند كل تعبئة لتُحسب المسافة وتكلفة الكيلومتر.',
+    dailySpend:'الصرف اليومي', compare:'مقارنة التعبئات', log:'السجل',
+    currency:'ريال', sar:'ر', km:'كم',
+    totalOf:'إجمالي ', noPrev:'لا توجد بيانات للشهر السابق',
+    higher:'أعلى من ', lower:'أقل من ', by:' بـ ', same:'مطابق للشهر السابق',
+    thDate:'التاريخ', thAmount:'المبلغ', thOdo:'العداد', thDist:'المسافة', thNote:'ملاحظة',
+    emptyLog:'لا توجد تعبئات في هذا الشهر. سجّل أول تعبئة من الأعلى.',
+    emptyCmp:'تحتاج تعبئتين على الأقل بقراءة عداد حتى تبدأ المقارنة.',
+    avgIs:'المتوسط ', perFill:' كم لكل تعبئة — الأخضر أفضل من المتوسط.',
+    noFill:'لا تعبئة',
+    errDate:'اختر التاريخ.', errAmount:'اكتب مبلغاً أكبر من صفر.',
+    errOdo:'قراءة العداد غير صحيحة.',
+    askBig:'المبلغ {a} ريال. هل هو صحيح؟',
+    askOdo:'العداد {a} أقل من آخر قراءة ({b}). هل تريد الحفظ رغم ذلك؟',
+    askDel:'حذف تعبئة {a} ريال بتاريخ {b}؟',
+    noExport:'لا توجد بيانات للتصدير.',
+    noStore:'المتصفح يمنع الحفظ على هذا الجهاز. البيانات ستبقى حتى إغلاق الصفحة فقط — نزّل ملف إكسل قبل الإغلاق.',
+    saveFail:'تعذر الحفظ: ',
+    months:['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'],
+    other:'English'
+  },
+  en: {
+    title:'Fuel Spending', subtitle:'Atwad — daily log and monthly total',
+    month:'Month', export:'Download Excel', print:'Print',
+    avgDay:'Daily average', fills:'Fill-ups', avgFill:'Average fill-up',
+    forecast:'Month-end forecast', kmMonth:'Kilometres this month', costKm:'Cost per km',
+    kmPerFill:'Km per fill-up', logFill:'Log a fill-up', date:'Date', amount:'Amount in SAR',
+    odometer:'Odometer reading', note:'Note (optional)', addBtn:'Add',
+    quickBtn:'Log a 100 SAR fill-up today',
+    hint:'A usual fill-up is 100 SAR. Enter the odometer each time to get distance and cost per km.',
+    dailySpend:'Daily spending', compare:'Fill-up comparison', log:'History',
+    currency:'SAR', sar:'SAR', km:'km',
+    totalOf:'Total for ', noPrev:'No data for the previous month',
+    higher:'Higher than ', lower:'Lower than ', by:' by ', same:'Same as last month',
+    thDate:'Date', thAmount:'Amount', thOdo:'Odometer', thDist:'Distance', thNote:'Note',
+    emptyLog:'No fill-ups this month. Log the first one above.',
+    emptyCmp:'Two fill-ups with odometer readings are needed before comparison starts.',
+    avgIs:'Average ', perFill:' km per fill-up — green beats the average.',
+    noFill:'no fill-up',
+    errDate:'Choose a date.', errAmount:'Enter an amount greater than zero.',
+    errOdo:'Odometer reading is not valid.',
+    askBig:'Amount is {a} SAR. Is that correct?',
+    askOdo:'Odometer {a} is lower than the last reading ({b}). Save anyway?',
+    askDel:'Delete the {a} SAR fill-up dated {b}?',
+    noExport:'Nothing to export yet.',
+    noStore:'This browser blocks saving on this device. Data lasts until you close the page — download the Excel file first.',
+    saveFail:'Could not save: ',
+    months:['January','February','March','April','May','June','July','August','September','October','November','December'],
+    other:'عربي'
+  }
+};
+function t(key){ return TXT[lang][key]; }
+function fill(tpl, a, b){ return String(tpl).replace('{a}', a).replace('{b}', b); }
+
+/* ============ اللغة ============ */
+function applyLang(){
+  var html = document.documentElement;
+  html.lang = lang;
+  html.dir = (lang === 'ar') ? 'rtl' : 'ltr';
+  document.title = (lang === 'ar' ? 'أطواد — ' : 'Atwad — ') + t('title');
+  var nodes = document.querySelectorAll('[data-i18n]');
+  for(var i = 0; i < nodes.length; i++){
+    nodes[i].textContent = t(nodes[i].getAttribute('data-i18n'));
+  }
+  document.getElementById('curLabel').textContent = t('currency');
+  document.getElementById('langBtn').textContent = t('other');
+  render();
+}
+function toggleLang(){
+  lang = (lang === 'ar') ? 'en' : 'ar';
+  try { window.localStorage.setItem(LANG_KEY, lang); } catch(err) { /* التخزين معطّل، واللغة تبقى لهذه الجلسة */ }
+  applyLang();
+}
+
+/* ============ التخزين ============ */
+function loadEntries(){
+  try {
+    var raw = window.localStorage.getItem(STORE_KEY);
+    entries = raw ? JSON.parse(raw) : [];
+    if(!Array.isArray(entries)) entries = [];
+    var savedLang = window.localStorage.getItem(LANG_KEY);
+    if(savedLang === 'en' || savedLang === 'ar') lang = savedLang;
+  } catch(err) {
+    storageOk = false;
+    entries = [];
+    document.getElementById('storageWarn').innerHTML = '<div class="warnbox">' + escapeHtml(t('noStore')) + '</div>';
+  }
+}
+function saveEntries(){
+  if(!storageOk) return;
+  try {
+    window.localStorage.setItem(STORE_KEY, JSON.stringify(entries));
+  } catch(err) {
+    storageOk = false;
+    document.getElementById('storageWarn').innerHTML =
+      '<div class="warnbox">' + escapeHtml(t('saveFail') + err.message) + '</div>';
+  }
+}
+
+/* ============ أدوات ============ */
+function escapeHtml(v){
+  return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function pad2(n){ return (n < 10 ? '0' : '') + n; }
+function todayIso(){
+  var d = new Date();
+  return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate());
+}
+function monthOf(iso){ return String(iso || '').slice(0,7); }
+function daysInMonth(ym){
+  var y = Number(ym.slice(0,4)), m = Number(ym.slice(5,7));
+  return new Date(y, m, 0).getDate();
+}
+function prevMonth(ym){
+  var y = Number(ym.slice(0,4)), m = Number(ym.slice(5,7)) - 1;
+  if(m === 0){ m = 12; y--; }
+  return y + '-' + pad2(m);
+}
+function money(n){
+  var v = Math.round(Number(n) || 0);
+  return v.toLocaleString('en-US');
+}
+function monthTitle(ym){
+  return t('months')[Number(ym.slice(5,7)) - 1] + ' ' + ym.slice(0,4);
+}
+function sumOf(list){
+  var total = 0;
+  list.forEach(function(e){ total += Number(e.amount) || 0; });
+  return total;
+}
+function entriesOfMonth(ym){
+  return entries.filter(function(e){ return monthOf(e.date) === ym; });
+}
+function sortedAsc(){
+  return entries.slice().sort(function(a,b){
+    if(a.date === b.date) return Number(a.id) - Number(b.id);
+    return a.date < b.date ? -1 : 1;
+  });
+}
+function lastOdometerBefore(date){
+  var prevOdo = null;
+  sortedAsc().forEach(function(e){
+    if(e.odo != null && e.date <= date) prevOdo = e.odo;
+  });
+  return prevOdo;
+}
+function distanceMap(){
+  var map = {}, prevOdo = null;
+  sortedAsc().forEach(function(e){
+    if(e.odo == null) return;
+    if(prevOdo !== null && e.odo >= prevOdo) map[e.id] = e.odo - prevOdo;
+    prevOdo = e.odo;
+  });
+  return map;
+}
+
+/* ============ الإدخال ============ */
+function addEntry(){
+  var date = document.getElementById('fDate').value;
+  var amount = Number(document.getElementById('fAmount').value);
+  var note = document.getElementById('fNote').value.trim();
+
+  if(!date){ alert(t('errDate')); return; }
+  if(!isFinite(amount) || amount <= 0){ alert(t('errAmount')); return; }
+  if(amount > 5000 && !confirm(fill(t('askBig'), money(amount)))) return;
+
+  var odoRaw = document.getElementById('fOdo').value;
+  var odo = odoRaw === '' ? null : Number(odoRaw);
+  if(odo !== null){
+    if(!isFinite(odo) || odo < 0){ alert(t('errOdo')); return; }
+    var last = lastOdometerBefore(date);
+    if(last !== null && odo < last && !confirm(fill(t('askOdo'), money(odo), money(last)))) return;
+  }
+
+  entries.push({ id: String(Date.now()), date: date, amount: amount, odo: odo, note: note });
+  saveEntries();
+
+  document.getElementById('fAmount').value = DEFAULT_FILL;
+  document.getElementById('fOdo').value = '';
+  document.getElementById('fNote').value = '';
+  document.getElementById('monthPick').value = monthOf(date);
+  render();
+}
+
+function quickFill(){
+  document.getElementById('fDate').value = todayIso();
+  document.getElementById('fAmount').value = DEFAULT_FILL;
+  addEntry();
+}
+
+function removeEntry(id){
+  var row = entries.filter(function(e){ return e.id === id; })[0];
+  if(!row) return;
+  if(!confirm(fill(t('askDel'), money(row.amount), row.date))) return;
+  entries = entries.filter(function(e){ return e.id !== id; });
+  saveEntries();
+  render();
+}
+
+/* ============ العرض ============ */
+function render(){
+  var ym = document.getElementById('monthPick').value || monthOf(todayIso());
+  var list = entriesOfMonth(ym);
+  var total = sumOf(list);
+  var nDays = daysInMonth(ym);
+
+  document.getElementById('monthLabel').textContent = t('totalOf') + monthTitle(ym);
+  document.getElementById('monthTotal').textContent = money(total);
+
+  var nowYm = monthOf(todayIso());
+  var elapsed = nDays;
+  if(ym === nowYm) elapsed = Number(todayIso().slice(8,10));
+  if(ym > nowYm) elapsed = 0;
+
+  var avgDay = elapsed > 0 ? total / elapsed : 0;
+  document.getElementById('sAvgDay').textContent = money(avgDay);
+  document.getElementById('sCount').textContent = list.length;
+  document.getElementById('sAvgFill').textContent = list.length ? money(total / list.length) : 0;
+  document.getElementById('sForecast').textContent = elapsed > 0 ? money(avgDay * nDays) : money(total);
+
+  var dist = distanceMap();
+  var km = 0;
+  list.forEach(function(e){ if(dist[e.id]) km += dist[e.id]; });
+  document.getElementById('sKm').textContent = km ? money(km) : 0;
+  document.getElementById('sCostKm').textContent = km > 0 ? (total / km).toFixed(2) + ' ' + t('sar') : '—';
+
+  var measured = list.filter(function(e){ return dist[e.id] > 0; });
+  var kmPerFill = measured.length ? km / measured.length : 0;
+  document.getElementById('sKmFill').textContent = measured.length ? money(kmPerFill) : '—';
+  renderCompare(list, dist, kmPerFill);
+
+  var prev = sumOf(entriesOfMonth(prevMonth(ym)));
+  var box = document.getElementById('deltaBox');
+  if(prev > 0){
+    var diff = total - prev;
+    var pct = Math.round(Math.abs(diff) / prev * 100);
+    if(diff > 0)      box.textContent = t('higher') + monthTitle(prevMonth(ym)) + t('by') + money(diff) + ' ' + t('currency') + ' (' + pct + '%)';
+    else if(diff < 0) box.textContent = t('lower')  + monthTitle(prevMonth(ym)) + t('by') + money(-diff) + ' ' + t('currency') + ' (' + pct + '%)';
+    else              box.textContent = t('same');
+  } else {
+    box.textContent = t('noPrev');
+  }
+
+  renderStrip(ym, list, nDays);
+  renderTable(list);
+}
+
+function renderStrip(ym, list, nDays){
+  var byDay = {};
+  list.forEach(function(e){
+    var d = Number(e.date.slice(8,10));
+    byDay[d] = (byDay[d] || 0) + (Number(e.amount) || 0);
+  });
+  var max = 0;
+  Object.keys(byDay).forEach(function(k){ if(byDay[k] > max) max = byDay[k]; });
+
+  var html = '';
+  for(var d = 1; d <= nDays; d++){
+    var v = byDay[d] || 0;
+    var h = max > 0 ? Math.round(v / max * 100) : 0;
+    var cls = v === 0 ? 'bar zero' : (v === max ? 'bar top' : 'bar');
+    var title = v > 0 ? (d + ' — ' + money(v) + ' ' + t('currency')) : (d + ' — ' + t('noFill'));
+    html += '<div class="day" title="' + escapeHtml(title) + '">' +
+              '<div class="' + cls + '" style="height:' + (v === 0 ? 2 : Math.max(h,4)) + '%;"></div>' +
+              '<div class="daynum">' + (d % 5 === 0 || d === 1 ? d : '') + '</div>' +
+            '</div>';
+  }
+  document.getElementById('daysStrip').innerHTML = html;
+}
+
+function renderCompare(list, dist, avg){
+  var rows = list.filter(function(e){ return dist[e.id] > 0; })
+                 .sort(function(a,b){ return a.date < b.date ? 1 : -1; });
+  if(rows.length < 2){
+    document.getElementById('compareBox').innerHTML = '<div class="empty">' + escapeHtml(t('emptyCmp')) + '</div>';
+    return;
+  }
+  var max = 0, min = Infinity;
+  rows.forEach(function(e){
+    var v = dist[e.id];
+    if(v > max) max = v;
+    if(v < min) min = v;
+  });
+
+  var html = '<p class="cmp-avg">' + escapeHtml(t('avgIs') + money(avg) + t('perFill')) + '</p>';
+  rows.forEach(function(e){
+    var v = dist[e.id];
+    var w = max > 0 ? Math.max(Math.round(v / max * 100), 12) : 12;
+    var cls = v === max ? 'cmp-fill best' : (v === min ? 'cmp-fill worst' : 'cmp-fill');
+    var diff = avg > 0 ? Math.round((v - avg) / avg * 100) : 0;
+    var diffTxt = diff === 0 ? '—' : (diff > 0 ? '+' + diff + '%' : diff + '%');
+    var diffCls = diff > 0 ? 'cmp-diff cmp-up' : (diff < 0 ? 'cmp-diff cmp-down' : 'cmp-diff');
+    html += '<div class="cmp-row">' +
+              '<span class="cmp-date">' + escapeHtml(e.date.slice(5)) + '</span>' +
+              '<span class="cmp-track"><span class="' + cls + '" style="width:' + w + '%;"></span>' +
+                '<span class="cmp-km">' + money(v) + ' ' + t('km') + '</span></span>' +
+              '<span class="' + diffCls + '">' + diffTxt + '</span>' +
+            '</div>';
+  });
+  document.getElementById('compareBox').innerHTML = html;
+}
+
+function renderTable(list){
+  if(!list.length){
+    document.getElementById('tableBox').innerHTML = '<div class="empty">' + escapeHtml(t('emptyLog')) + '</div>';
+    return;
+  }
+  var dist = distanceMap();
+  var sorted = list.slice().sort(function(a,b){
+    if(a.date === b.date) return Number(b.id) - Number(a.id);
+    return a.date < b.date ? 1 : -1;
+  });
+  var html = '<table><thead><tr>' +
+             '<th>' + t('thDate') + '</th><th>' + t('thAmount') + '</th><th>' + t('thOdo') + '</th>' +
+             '<th>' + t('thDist') + '</th><th>' + t('thNote') + '</th><th></th>' +
+             '</tr></thead><tbody>';
+  sorted.forEach(function(e){
+    html += '<tr>' +
+      '<td>' + escapeHtml(e.date) + '</td>' +
+      '<td class="amt">' + money(e.amount) + ' ' + t('currency') + '</td>' +
+      '<td>' + (e.odo != null ? money(e.odo) : '—') + '</td>' +
+      '<td style="color:var(--sky);font-weight:700;">' + (dist[e.id] ? money(dist[e.id]) + ' ' + t('km') : '—') + '</td>' +
+      '<td style="color:var(--mist);">' + escapeHtml(e.note || '—') + '</td>' +
+      '<td style="text-align:end;"><button class="del" onclick="removeEntry(\'' + escapeHtml(e.id) + '\')">✕</button></td>' +
+      '</tr>';
+  });
+  html += '</tbody></table>';
+  document.getElementById('tableBox').innerHTML = html;
+}
+
+/* ============ التصدير ============ */
+function exportCsv(){
+  if(!entries.length){ alert(t('noExport')); return; }
+  var sorted = sortedAsc();
+  var dist = distanceMap();
+  var lines = [[t('thDate'), t('thAmount'), t('thOdo'), t('thDist'), t('thNote')].join(',')];
+  sorted.forEach(function(e){
+    var note = String(e.note || '').replace(/"/g,'""');
+    lines.push(e.date + ',' + (Number(e.amount) || 0) + ',' +
+               (e.odo != null ? e.odo : '') + ',' + (dist[e.id] || '') + ',"' + note + '"');
+  });
+  var blob = new Blob(['\ufeff' + lines.join('\n')], {type:'text/csv;charset=utf-8;'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'atwad-fuel-' + todayIso() + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+}
+
+/* ============ البدء ============ */
+loadEntries();
+document.getElementById('fDate').value = todayIso();
+document.getElementById('monthPick').value = monthOf(todayIso());
+document.getElementById('fAmount').addEventListener('keydown', function(ev){
+  if(ev.key === 'Enter') addEntry();
+});
+applyLang();
+</script>
+</body>
+</html>
