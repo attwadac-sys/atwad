@@ -39,7 +39,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);padd
   padding:7px 12px;border-radius:9px;}
 
 /* إحصاءات */
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px;}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px;}
 .stat{background:#fff;border-radius:12px;padding:13px;text-align:center;box-shadow:0 1px 6px rgba(12,59,94,.06);}
 .stat b{display:block;font-size:20px;font-weight:900;color:var(--deep);}
 .stat span{font-size:11px;color:var(--mist);}
@@ -78,6 +78,17 @@ tr:last-child td{border-bottom:none;}
 .del{background:none;border:none;color:var(--danger);font-size:16px;cursor:pointer;padding:2px 6px;border-radius:6px;}
 .del:hover{background:#FEE2E2;}
 .empty{text-align:center;padding:34px 16px;color:var(--mist);font-size:14px;}
+.cmp-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #F1F5F9;}
+.cmp-row:last-child{border-bottom:none;}
+.cmp-date{font-size:12px;color:var(--mist);min-width:74px;}
+.cmp-track{flex:1;background:#F1F5F9;border-radius:6px;height:22px;position:relative;overflow:hidden;}
+.cmp-fill{height:100%;border-radius:6px;background:var(--sky);}
+.cmp-fill.best{background:var(--success);}
+.cmp-fill.worst{background:var(--warning);}
+.cmp-km{position:absolute;inset-inline-start:8px;top:0;line-height:22px;font-size:12px;font-weight:800;color:#fff;}
+.cmp-diff{font-size:12px;font-weight:700;min-width:62px;text-align:left;}
+.cmp-up{color:var(--success);} .cmp-down{color:var(--warning);}
+.cmp-avg{font-size:12px;color:var(--mist);margin-bottom:10px;}
 .warnbox{background:#FEF3C7;border:1.5px solid #FCD34D;color:#92400E;border-radius:11px;
   padding:11px 14px;font-size:13px;font-weight:700;margin-top:12px;}
 @media(max-width:640px){
@@ -120,6 +131,9 @@ tr:last-child td{border-bottom:none;}
     <div class="stat"><b id="sCount">0</b><span>عدد التعبئات</span></div>
     <div class="stat"><b id="sAvgFill">0</b><span>متوسط التعبئة</span></div>
     <div class="stat"><b id="sForecast">0</b><span>توقع نهاية الشهر</span></div>
+    <div class="stat"><b id="sKm">0</b><span>كيلومترات الشهر</span></div>
+    <div class="stat"><b id="sCostKm">—</b><span>تكلفة الكيلومتر</span></div>
+    <div class="stat"><b id="sKmFill">—</b><span>كم لكل تعبئة</span></div>
   </div>
 
   <div class="card entry">
@@ -134,18 +148,27 @@ tr:last-child td{border-bottom:none;}
         <input type="number" id="fAmount" min="1" step="1" inputmode="decimal" value="100">
       </div>
       <div class="field">
+        <label for="fOdo">عداد الكيلومترات</label>
+        <input type="number" id="fOdo" min="0" step="1" inputmode="numeric" placeholder="مثال: 152400">
+      </div>
+      <div class="field">
         <label for="fNote">ملاحظة (اختياري)</label>
         <input type="text" id="fNote" maxlength="60" placeholder="المحطة أو الوجهة">
       </div>
       <button class="add" onclick="addEntry()">إضافة</button>
     </div>
     <button class="quick" onclick="quickFill()">تسجيل تعبئة 100 ريال اليوم</button>
-    <p class="hint" id="entryHint">التعبئة المعتادة 100 ريال. غيّر المبلغ أعلاه إن اختلف.</p>
+    <p class="hint" id="entryHint">التعبئة المعتادة 100 ريال. سجّل قراءة العداد عند كل تعبئة لتُحسب المسافة وتكلفة الكيلومتر.</p>
   </div>
 
   <div class="card">
     <h2>الصرف اليومي</h2>
     <div class="days" id="daysStrip"></div>
+  </div>
+
+  <div class="card">
+    <h2>مقارنة التعبئات</h2>
+    <div id="compareBox"></div>
   </div>
 
   <div class="card">
@@ -237,14 +260,51 @@ function addEntry(){
   if(!isFinite(amount) || amount <= 0){ alert('اكتب مبلغاً أكبر من صفر.'); return; }
   if(amount > 5000 && !confirm('المبلغ ' + money(amount) + ' ريال. هل هو صحيح؟')) return;
 
-  entries.push({ id: String(Date.now()), date: date, amount: amount, note: note });
+  var odoRaw = document.getElementById('fOdo').value;
+  var odo = odoRaw === '' ? null : Number(odoRaw);
+  if(odo !== null){
+    if(!isFinite(odo) || odo < 0){ alert('قراءة العداد غير صحيحة.'); return; }
+    var last = lastOdometerBefore(date);
+    if(last !== null && odo < last){
+      if(!confirm('العداد ' + money(odo) + ' أقل من آخر قراءة (' + money(last) + '). هل تريد الحفظ رغم ذلك؟')) return;
+    }
+  }
+
+  entries.push({ id: String(Date.now()), date: date, amount: amount, odo: odo, note: note });
   saveEntries();
 
   document.getElementById('fAmount').value = DEFAULT_FILL;
+  document.getElementById('fOdo').value = '';
   document.getElementById('fNote').value = '';
   document.getElementById('monthPick').value = monthOf(date);
   document.getElementById('fAmount').focus();
   render();
+}
+
+/** السجلات مرتبة زمنياً تصاعدياً — أساس كل حسابات المسافة */
+function sortedAsc(){
+  return entries.slice().sort(function(a,b){
+    if(a.date === b.date) return Number(a.id) - Number(b.id);
+    return a.date < b.date ? -1 : 1;
+  });
+}
+/** آخر قراءة عداد مسجّلة قبل تاريخ معيّن (أو null) */
+function lastOdometerBefore(date){
+  var prevOdo = null;
+  sortedAsc().forEach(function(e){
+    if(e.odo != null && e.date <= date) prevOdo = e.odo;
+  });
+  return prevOdo;
+}
+/** المسافة المقطوعة منذ التعبئة السابقة، لكل سجل يحمل قراءة عداد */
+function distanceMap(){
+  var map = {}, prevOdo = null;
+  sortedAsc().forEach(function(e){
+    if(e.odo == null) return;
+    if(prevOdo !== null && e.odo >= prevOdo) map[e.id] = e.odo - prevOdo;
+    prevOdo = e.odo;
+  });
+  return map;
 }
 
 /** تسجيل تعبئة اليوم بالمبلغ المعتاد بضغطة واحدة */
@@ -284,6 +344,20 @@ function render(){
   document.getElementById('sCount').textContent = list.length;
   document.getElementById('sAvgFill').textContent = list.length ? money(total / list.length) : 0;
   document.getElementById('sForecast').textContent = elapsed > 0 ? money(avgDay * nDays) : money(total);
+
+  // المسافة: مجموع الفروق بين قراءات العداد داخل الشهر
+  var dist = distanceMap();
+  var km = 0;
+  list.forEach(function(e){ if(dist[e.id]) km += dist[e.id]; });
+  document.getElementById('sKm').textContent = km ? money(km) : 0;
+  document.getElementById('sCostKm').textContent =
+    km > 0 ? (total / km).toFixed(2) + ' ر' : '—';
+
+  // متوسط الكيلومترات لكل تعبئة (التعبئات التي لها مسافة محسوبة فقط)
+  var measured = list.filter(function(e){ return dist[e.id] > 0; });
+  var kmPerFill = measured.length ? km / measured.length : 0;
+  document.getElementById('sKmFill').textContent = measured.length ? money(kmPerFill) : '—';
+  renderCompare(list, dist, kmPerFill);
 
   // المقارنة بالشهر السابق
   var prev = sumOf(entriesOfMonth(prevMonth(ym)));
@@ -325,6 +399,40 @@ function renderStrip(ym, list, nDays){
   document.getElementById('daysStrip').innerHTML = html;
 }
 
+/** مقارنة التعبئات: كم قطعت كل تعبئة مقابل المتوسط */
+function renderCompare(list, dist, avg){
+  var rows = list.filter(function(e){ return dist[e.id] > 0; })
+                 .sort(function(a,b){ return a.date < b.date ? 1 : -1; });
+  if(rows.length < 2){
+    document.getElementById('compareBox').innerHTML =
+      '<div class="empty">تحتاج تعبئتين على الأقل بقراءة عداد حتى تبدأ المقارنة.</div>';
+    return;
+  }
+  var max = 0, min = Infinity;
+  rows.forEach(function(e){
+    var v = dist[e.id];
+    if(v > max) max = v;
+    if(v < min) min = v;
+  });
+
+  var html = '<p class="cmp-avg">المتوسط ' + money(avg) + ' كم لكل تعبئة — الأخضر أفضل من المتوسط.</p>';
+  rows.forEach(function(e){
+    var v = dist[e.id];
+    var w = max > 0 ? Math.max(Math.round(v / max * 100), 12) : 12;
+    var cls = v === max ? 'cmp-fill best' : (v === min ? 'cmp-fill worst' : 'cmp-fill');
+    var diff = avg > 0 ? Math.round((v - avg) / avg * 100) : 0;
+    var diffTxt = diff === 0 ? '—' : (diff > 0 ? '+' + diff + '%' : diff + '%');
+    var diffCls = diff > 0 ? 'cmp-diff cmp-up' : (diff < 0 ? 'cmp-diff cmp-down' : 'cmp-diff');
+    html += '<div class="cmp-row">' +
+              '<span class="cmp-date">' + escapeHtml(e.date.slice(5)) + '</span>' +
+              '<span class="cmp-track"><span class="' + cls + '" style="width:' + w + '%;"></span>' +
+                '<span class="cmp-km">' + money(v) + ' كم</span></span>' +
+              '<span class="' + diffCls + '">' + diffTxt + '</span>' +
+            '</div>';
+  });
+  document.getElementById('compareBox').innerHTML = html;
+}
+
 function renderTable(list){
   if(!list.length){
     document.getElementById('tableBox').innerHTML =
@@ -335,13 +443,16 @@ function renderTable(list){
     if(a.date === b.date) return Number(b.id) - Number(a.id);
     return a.date < b.date ? 1 : -1;
   });
+  var dist = distanceMap();
   var html = '<table><thead><tr>' +
-             '<th>التاريخ</th><th>المبلغ</th><th>ملاحظة</th><th></th>' +
+             '<th>التاريخ</th><th>المبلغ</th><th>العداد</th><th>المسافة</th><th>ملاحظة</th><th></th>' +
              '</tr></thead><tbody>';
   sorted.forEach(function(e){
     html += '<tr>' +
       '<td>' + escapeHtml(e.date) + '</td>' +
       '<td class="amt">' + money(e.amount) + ' ريال</td>' +
+      '<td>' + (e.odo != null ? money(e.odo) : '—') + '</td>' +
+      '<td style="color:var(--sky);font-weight:700;">' + (dist[e.id] ? money(dist[e.id]) + ' كم' : '—') + '</td>' +
       '<td style="color:var(--mist);">' + escapeHtml(e.note || '—') + '</td>' +
       '<td style="text-align:left;"><button class="del" onclick="removeEntry(\'' + escapeHtml(e.id) + '\')">✕</button></td>' +
       '</tr>';
@@ -354,10 +465,12 @@ function renderTable(list){
 function exportCsv(){
   if(!entries.length){ alert('لا توجد بيانات للتصدير.'); return; }
   var sorted = entries.slice().sort(function(a,b){ return a.date < b.date ? -1 : 1; });
-  var lines = ['التاريخ,المبلغ,ملاحظة'];
+  var dist = distanceMap();
+  var lines = ['التاريخ,المبلغ,العداد,المسافة,ملاحظة'];
   sorted.forEach(function(e){
     var note = String(e.note || '').replace(/"/g,'""');
-    lines.push(e.date + ',' + (Number(e.amount) || 0) + ',"' + note + '"');
+    lines.push(e.date + ',' + (Number(e.amount) || 0) + ',' +
+               (e.odo != null ? e.odo : '') + ',' + (dist[e.id] || '') + ',"' + note + '"');
   });
   var blob = new Blob(['\ufeff' + lines.join('\n')], {type:'text/csv;charset=utf-8;'});
   var a = document.createElement('a');
