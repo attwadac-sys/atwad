@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>أطواد - صفحة الفني</title><style>
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
+:root{
+  --deep:#0C3B5E; --sky:#0EA5E9; --ice:#E8F4FD; --frost:#F0F9FF;
+  --success:#10B981; --warning:#F59E0B; --danger:#EF4444;
+  --slate:#334155; --mist:#94A3B8;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Cairo',sans-serif;background:#F1F5F9;color:var(--slate);min-height:100vh;}
+
+/* HEADER */
+.header{background:linear-gradient(135deg,var(--deep),#0e5fa8,var(--sky));padding:20px 16px;position:relative;overflow:hidden;}
+.header::before{content:'❄';position:absolute;right:16px;top:-10px;font-size:80px;opacity:.07;color:#fff;}
+.header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.logo{display:flex;align-items:center;gap:10px;}
+.logo-icon{width:44px;height:44px;background:rgba(255,255,255,.15);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;}
+.logo-text h1{color:#fff;font-size:18px;font-weight:900;}
+.logo-text p{color:rgba(255,255,255,.6);font-size:11px;}
+.date-badge{background:rgba(255,255,255,.15);border-radius:10px;padding:8px 14px;text-align:center;}
+.date-badge .day{color:#fff;font-size:14px;font-weight:700;}
+.date-badge .date{color:rgba(255,255,255,.7);font-size:11px;}
+
+/* TECH SELECTOR */
+.tech-selector{background:rgba(255,255,255,.1);border-radius:12px;padding:12px;}
+.tech-selector p{color:rgba(255,255,255,.7);font-size:12px;margin-bottom:8px;}
+.tech-btns{display:flex;gap:8px;}
+.tech-btn{flex:1;padding:9px;border:2px solid rgba(255,255,255,.2);border-radius:10px;background:transparent;color:rgba(255,255,255,.7);font-family:'Cairo',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;}
+.tech-btn.active{background:#fff;color:var(--deep);border-color:#fff;}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:16px;}
+.stat{background:#fff;border-radius:12px;padding:14px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.05);}
+.stat .num{font-size:24px;font-weight:900;color:var(--deep);}
+.stat .lbl{font-size:11px;color:var(--mist);margin-top:2px;}
+.stat.today{border-top:3px solid var(--sky);}
+.stat.pending{border-top:3px solid var(--warning);}
+.stat.done{border-top:3px solid var(--success);}
+
+/* FILTER TABS */
+.tabs{display:flex;background:#fff;padding:4px;margin:0 16px 16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.05);}
+.tab{flex:1;padding:9px;text-align:center;border:none;border-radius:9px;font-family:'Cairo',sans-serif;font-size:12px;font-weight:700;cursor:pointer;background:transparent;color:var(--mist);transition:all .2s;}
+.tab.active{background:var(--deep);color:#fff;}
+
+/* APPOINTMENT CARDS */
+.list{padding:0 16px 100px;}
+
+.appt-card{background:#fff;border-radius:16px;margin-bottom:14px;box-shadow:0 3px 12px rgba(0,0,0,.07);overflow:hidden;border-right:4px solid transparent;}
+.appt-card.pending{border-color:var(--warning);}
+.appt-card.confirmed{border-color:var(--sky);}
+.appt-card.done{border-color:var(--success);opacity:.75;}
+.appt-card.cancelled{border-color:var(--danger);opacity:.6;}
+
+.card-header{padding:14px 16px 10px;display:flex;align-items:center;justify-content:space-between;}
+.client-info{display:flex;align-items:center;gap:10px;}
+.client-avatar{width:42px;height:42px;border-radius:11px;background:linear-gradient(135deg,var(--deep),var(--sky));display:flex;align-items:center;justify-content:center;color:#fff;font-size:17px;font-weight:900;flex-shrink:0;}
+.client-name{font-size:15px;font-weight:700;color:var(--deep);}
+.client-service{font-size:12px;color:var(--mist);margin-top:1px;}
+.status-badge{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+.badge-pending{background:#FEF3C7;color:#92400E;}
+.badge-confirmed{background:#DBEAFE;color:#1E40AF;}
+.badge-done{background:#D1FAE5;color:#065F46;}
+.badge-cancelled{background:#FEE2E2;color:#991B1B;}
+
+.card-body{padding:0 16px 14px;}
+
+.info-row{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--slate);margin-bottom:6px;}
+.info-row .icon{width:20px;text-align:center;flex-shrink:0;}
+
+/* صورة الموقع */
+.location-img{width:100%;height:140px;object-fit:cover;border-radius:10px;margin-bottom:10px;cursor:pointer;border:1.5px solid var(--ice);}
+.no-img{width:100%;height:80px;background:var(--frost);border-radius:10px;margin-bottom:10px;display:flex;align-items:center;justify-content:center;color:var(--mist);font-size:12px;border:1.5px dashed #E2E8F0;}
+
+/* ACTIONS */
+.card-actions{display:flex;gap:8px;padding:0 16px 14px;}
+.act-btn{flex:1;padding:10px;border:none;border-radius:10px;font-family:'Cairo',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:5px;}
+.act-btn:active{transform:scale(.97);}
+.btn-wa{background:#25D366;color:#fff;}
+.btn-map{background:var(--ice);color:var(--sky);}
+.btn-done{background:linear-gradient(135deg,var(--success),#34D399);color:#fff;}
+.btn-done:disabled{opacity:.5;cursor:not-allowed;}
+
+/* TIME BADGE */
+.time-badge{background:var(--deep);color:#fff;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:700;display:inline-flex;align-items:center;gap:5px;}
+
+/* EMPTY STATE */
+.empty{text-align:center;padding:60px 20px;color:var(--mist);}
+.empty .icon{font-size:52px;margin-bottom:12px;}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--deep);color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.2);transition:transform .3s;z-index:999;font-family:'Cairo',sans-serif;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+/* LOADING */
+.loading{text-align:center;padding:40px;color:var(--mist);}
+.spinner{width:36px;height:36px;border:3px solid var(--ice);border-top-color:var(--sky);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 10px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* DAY SECTION */
+.day-header{font-size:13px;font-weight:700;color:var(--mist);margin-bottom:8px;margin-top:4px;padding-right:4px;display:flex;align-items:center;gap:6px;}
+.day-count{background:var(--ice);color:var(--sky);padding:2px 8px;border-radius:10px;font-size:11px;}
+.today-tag{background:var(--sky);color:#fff;padding:2px 8px;border-radius:10px;font-size:11px;}
+</style><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="atwad-firebase.js"></script>
+<script src="atwad-auth.js"></script>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-top">
+    <div class="logo">
+      <div class="logo-icon">❄️</div>
+      <div class="logo-text">
+        <h1>أطواد</h1>
+        <p>لوحة الفني الميداني</p>
+      </div>
+    </div>
+    <div class="date-badge">
+      <div class="day" id="dayName">--</div>
+      <div class="date" id="todayDate">--</div>
+    </div>
+  </div>
+
+  <!-- اختيار الفني -->
+  <div class="tech-selector">
+    <p>👷 اختر الفني:</p>
+    <div class="tech-btns">
+      <button class="tech-btn" onclick="selectTech('Abrar','أحمد',this)">أحمد</button>
+      <button class="tech-btn" onclick="selectTech('Shoib','شعيب',this)">شعيب</button>
+      <button class="tech-btn" onclick="selectTech('Suhail','سهيل',this)">سهيل</button>
+    </div>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats">
+  <div class="stat today">
+    <div class="num" id="statToday">0</div>
+    <div class="lbl">مواعيد اليوم</div>
+  </div>
+  <div class="stat pending">
+    <div class="num" id="statPending">0</div>
+    <div class="lbl">في الانتظار</div>
+  </div>
+  <div class="stat done">
+    <div class="num" id="statDone">0</div>
+    <div class="lbl">مكتملة</div>
+  </div>
+</div>
+
+<!-- FILTER TABS -->
+<div class="tabs">
+  <button class="tab active" onclick="filterAppts('today',this)">اليوم</button>
+  <button class="tab" onclick="filterAppts('week',this)">الأسبوع</button>
+  <button class="tab" onclick="filterAppts('all',this)">الكل</button>
+</div>
+
+<!-- LIST -->
+<div class="list" id="apptList">
+  <div class="loading">
+    <div class="spinner"></div>
+    <div>اختر الفني لعرض مواعيده...</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// Firebase
+var db = window.db; // من atwad-firebase.js — لا تهيئة محلية
+
+var allAppts = [];
+var currentTech = '';
+var currentTechAr = '';
+var currentFilter = 'today';
+
+const STATUS_LABELS = {confirmed:'مؤكد', pending:'في الانتظار', done:'مكتمل', cancelled:'ملغي'};
+const STATUS_BADGES = {confirmed:'badge-confirmed', pending:'badge-pending', done:'badge-done', cancelled:'badge-cancelled'};
+
+function today(){
+  try {
+    var parts=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Riyadh',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+    var out={}; parts.forEach(function(p){ if(p.type!=='literal') out[p.type]=p.value; });
+    return out.year+'-'+out.month+'-'+out.day;
+  } catch(e) {
+    var d=new Date(Date.now()+3*60*60*1000);
+    return d.toISOString().split('T')[0];
+  }
+}
+/** تاريخ بعد n يوماً من اليوم بتوقيت الرياض */
+function dateOffset(n){
+  var base=today().split('-');
+  var d=new Date(Date.UTC(parseInt(base[0],10), parseInt(base[1],10)-1, parseInt(base[2],10)));
+  d.setUTCDate(d.getUTCDate()+n);
+  return d.toISOString().split('T')[0];
+}
+function formatDate(d){ try{ return new Date(d+'T00:00:00').toLocaleDateString('ar-SA-u-ca-gregory',{weekday:'long',month:'long',day:'numeric'}); } catch{ return d; } }
+function formatDateShort(d){ try{ return new Date(d+'T00:00:00').toLocaleDateString('ar-SA-u-ca-gregory',{month:'short',day:'numeric'}); } catch{ return d; } }
+
+function getWeekDates(){
+  const dates = [];
+  for(let i=0; i<7; i++){
+    dates.push(dateOffset(i));
+  }
+  return dates;
+}
+
+// تحديث التاريخ
+function updateDate(){
+  // نفس مرجع التاريخ المستخدم في الفلترة حتى لا يختلف الشريط عن القائمة
+  const ref = new Date(today()+'T00:00:00');
+  const days = ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+  document.getElementById('dayName').textContent = days[ref.getDay()];
+  document.getElementById('todayDate').textContent = ref.toLocaleDateString('ar-SA-u-ca-gregory',{year:'numeric',month:'long',day:'numeric'});
+}
+
+// اختيار الفني
+function selectTech(tech, techAr, btn) {
+  currentTech = tech;
+  currentTechAr = techAr;
+  document.querySelectorAll('.tech-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  loadAppts();
+}
+
+// تحميل المواعيد من Firebase
+function techStatusLogic(raw) {
+  var t=String(raw==null?'':raw).trim().toLowerCase();
+  var aliases={
+    confirmed:'confirmed',confirm:'confirmed',approved:'confirmed',accepted:'confirmed','مؤكد':'confirmed','مؤكدة':'confirmed','تم التأكيد':'confirmed',
+    pending:'pending',new:'pending',open:'pending',waiting:'pending',scheduled:'pending','في الانتظار':'pending','قيد الانتظار':'pending','جديد':'pending','معلق':'pending','قيد التنفيذ':'pending',
+    done:'done',completed:'done',complete:'done',finished:'done',closed:'done','مكتمل':'done','منجز':'done','تم':'done','منتهي':'done',
+    cancelled:'cancelled',canceled:'cancelled',rejected:'cancelled',declined:'cancelled','ملغي':'cancelled','ملغى':'cancelled','مرفوض':'cancelled'
+  };
+  return aliases[t] || 'pending';
+}
+
+function techNormalizePhone(v){
+  var p=String(v==null?'':v).replace(/\D/g,'');
+  if(p.indexOf('00966')===0) p=p.slice(5);
+  else if(p.indexOf('966')===0) p=p.slice(3);
+  if(p.charAt(0)==='0') p=p.slice(1);
+  return p;
+}
+function techStartTime(v){
+  var m=String(v||'').match(/(\d{1,2})\s*:\s*(\d{2})/);
+  if(!m) return '';
+  return String(parseInt(m[1],10)).padStart(2,'0')+':'+m[2];
+}
+function techDisplayIdentity(a){
+  if(!a) return '';
+  var date=String(a.date||'').trim(), time=techStartTime(a.time);
+  if(!date||!time) return '';
+  var phone=techNormalizePhone(a.phone||'');
+  var client=String(a.client||a.name||'').trim().toLowerCase().replace(/\s+/g,' ');
+  return date+'|'+time+'|'+(phone?('p:'+phone):('n:'+client));
+}
+function techDedupeForDisplay(items){
+  var out=[], exact={}, links={}, phones={}, names={};
+  function nm(a){ return String((a&&(a.client||a.name))||'').trim().toLowerCase().replace(/\s+/g,' '); }
+  function base(a){
+    var d=String((a&&a.date)||'').trim(), t=techStartTime(a&&a.time);
+    return d&&t ? d+'|'+t : '';
+  }
+  (items||[]).forEach(function(a){
+    if(!a) return;
+    var ex=(a._source||'appointments')+':'+(a._fbKey||a.id||'');
+    if(ex && exact[ex]!==undefined) return;
+    var b=base(a), ph=techNormalizePhone(a.phone||''), name=nm(a);
+    var pk=b&&ph ? b+'|p:'+ph : '';
+    var nk=b&&name ? b+'|n:'+name : '';
+    var lk=a.sourceBookingKey ? 'booking:'+String(a.sourceBookingKey) : '';
+    var idx = lk&&links[lk]!==undefined ? links[lk] :
+              pk&&phones[pk]!==undefined ? phones[pk] :
+              nk&&names[nk]!==undefined ? names[nk] : undefined;
+    if(idx!==undefined){
+      var prev=out[idx];
+      if(prev && prev._source==='bookings' && a._source==='appointments') out[idx]=a;
+      if(ex) exact[ex]=idx; if(lk) links[lk]=idx; if(pk) phones[pk]=idx; if(nk) names[nk]=idx;
+      return;
+    }
+    idx=out.length; out.push(a);
+    if(ex) exact[ex]=idx; if(lk) links[lk]=idx; if(pk) phones[pk]=idx; if(nk) names[nk]=idx;
+  });
+  return out;
+}
+
+// تحميل موحّد من Firebase: نفس المصدرين ونفس أولوية الدمج المستخدمة في صفحة المواعيد
+function loadAppts() {
+  if(!db || !currentTech) return;
+  document.getElementById('apptList').innerHTML = '<div class="loading"><div class="spinner"></div><div>جاري تحميل المواعيد...</div></div>';
+
+  var combined = [];
+  db.ref('appointments').once('value', function(snap) {
+    var linkedBookingKeys = {};
+    snap.forEach(function(c) {
+      var a = c.val() || {};
+      var status = techStatusLogic(a.status);
+      var row = {};
+      Object.keys(a).forEach(function(k){ row[k] = a[k]; });
+      row.tech = a.tech || 'Abrar';
+      row.status = status;
+      row._statusRaw = a.status;
+      row._fbKey = c.key;
+      row._source = 'appointments';
+      combined.push(row);
+      if(a.sourceBookingKey) linkedBookingKeys[a.sourceBookingKey]=true;
+    });
+
+    db.ref('bookings').once('value', function(snap2) {
+      snap2.forEach(function(c) {
+        var b = c.val() || {};
+        if(!b.date || !b.time) return;
+        if(linkedBookingKeys[c.key]) return;
+        var assignedTech = b.tech || 'Abrar';
+        combined.push({
+          _fbKey: c.key,
+          _source: 'bookings',
+          id: 'B_' + c.key,
+          client: b.client || b.name || '—',
+          phone: b.phone || '',
+          address: b.address || b.district || b.city || 'جدة',
+          service: b.service || 'تنظيف مكيف',
+          units: b.units || 1,
+          date: b.date,
+          time: techStartTime(b.time) || '09:00',
+          tech: assignedTech,
+          status: techStatusLogic(b.status),
+          _statusRaw: b.status,
+          notes: 'حجز إلكتروني',
+          locationImage: b.locationImage || '',
+          duration: b.duration || 60,
+          sourceBookingKey: c.key,
+          // حقول الموقع الدقيق — كانت مفقودة، فكان زر الخريطة يفتح المدينة كاملة
+          mapsLink: b.mapsLink || b.mapLink || b.mapUrl || b.mapsUrl || b.locationUrl ||
+                    b.googleMapsUrl || b.googleMapsLink || b.locationLink ||
+                    b.customerLocation || b.addressUrl || '',
+          lat: b.lat != null ? b.lat : (b.latitude != null ? b.latitude : ''),
+          lng: b.lng != null ? b.lng : (b.longitude != null ? b.longitude : ''),
+          accuracy: b.accuracy != null ? b.accuracy : ''
+        });
+      });
+
+      // إزالة التكرار من الواجهة فقط، ثم تطبيق نفس قاعدة إخفاء الملغي.
+      var merged = techDedupeForDisplay(combined).filter(function(a){ return techStatusLogic(a._statusRaw!==undefined?a._statusRaw:a.status)!=='cancelled'; });
+      allAppts = merged.filter(function(a){ return (a.tech || 'Abrar') === currentTech; })
+        .sort(function(a,b){
+          var dc=String(a.date||'').localeCompare(String(b.date||''));
+          if(dc!==0) return dc;
+          return String(techStartTime(a.time)||'23:59').localeCompare(String(techStartTime(b.time)||'23:59'));
+        });
+      updateStats();
+      renderAppts();
+    });
+  });
+}
+function autoAssign(date, existing) {
+  // تعيين أحمد افتراضياً للحجوزات الجديدة
+  return 'Abrar';
+}
+
+function updateStats() {
+  const tod = today();
+  document.getElementById('statToday').textContent = allAppts.filter(a=>a.date===tod).length;
+  document.getElementById('statPending').textContent = allAppts.filter(a=>a.status==='pending'||a.status==='confirmed').length;
+  document.getElementById('statDone').textContent = allAppts.filter(a=>a.status==='done').length;
+}
+
+function filterAppts(filter, btn) {
+  currentFilter = filter;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  renderAppts();
+}
+
+function renderAppts() {
+  const tod = today();
+  const weekDates = getWeekDates();
+  let appts = allAppts.slice();
+
+  if(currentFilter === 'today') appts = appts.filter(a => a.date === tod);
+  else if(currentFilter === 'week') appts = appts.filter(a => weekDates.includes(a.date));
+
+  const list = document.getElementById('apptList');
+
+  if(appts.length === 0) {
+    list.innerHTML = `<div class="empty"><div class="icon">📅</div><p>لا توجد مواعيد ${currentFilter==='today'?'اليوم':currentFilter==='week'?'هذا الأسبوع':''}</p></div>`;
+    return;
+  }
+
+  // ترتيب نهائي حسب تاريخ ووقت الموعد الفعلي، وليس حسب وقت إنشاء الحجز
+  appts.sort((a,b) => {
+    const dateCmp = String(a.date || '').localeCompare(String(b.date || ''));
+    if(dateCmp !== 0) return dateCmp;
+    const timeA = String(a.time || '23:59').trim().slice(0,5);
+    const timeB = String(b.time || '23:59').trim().slice(0,5);
+    return timeA.localeCompare(timeB);
+  });
+
+  // تجميع بالتاريخ مع ترتيب مواعيد كل يوم حسب الوقت تصاعدياً
+  const grouped = {};
+  appts.forEach(a => { if(!grouped[a.date]) grouped[a.date]=[]; grouped[a.date].push(a); });
+  Object.keys(grouped).forEach(date => {
+    grouped[date].sort((a,b) => {
+      const timeA = String(a.time || '23:59').trim().slice(0,5);
+      const timeB = String(b.time || '23:59').trim().slice(0,5);
+      return timeA.localeCompare(timeB);
+    });
+  });
+
+  let html = '';
+  Object.keys(grouped).sort().forEach(date => {
+    const isToday = date === tod;
+    html += `<div class="day-header">
+      ${formatDate(date)}
+      ${isToday ? '<span class="today-tag">اليوم</span>' : ''}
+      <span class="day-count">${grouped[date].length} موعد</span>
+    </div>`;
+
+    grouped[date].forEach(a => {
+      const aId = a.id || a._fbKey;
+      const initial = (a.client||'ع')[0];
+      const badgeClass = STATUS_BADGES[a.status||'pending'];
+      const statusLabel = STATUS_LABELS[a.status||'pending'];
+      const isDone = a.status === 'done';
+
+      html += `<div class="appt-card ${a.status||'pending'}" id="card-${aId}">
+        <div class="card-header">
+          <div class="client-info">
+            <div class="client-avatar">${initial}</div>
+            <div>
+              <div class="client-name">${a.client}</div>
+              <div class="client-service">🛠️ ${a.service||'—'} ${a.units>1?'('+a.units+' وحدات)':''}</div>
+            </div>
+          </div>
+          <div>
+            <span class="status-badge ${badgeClass}">${statusLabel}</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <span class="time-badge">⏰ ${a.time||'--:--'}</span>
+            <span style="font-size:12px;color:var(--mist);">${a.duration||60} دقيقة</span>
+          </div>
+          ${a.locationImage
+            ? `<img class="location-img" src="${a.locationImage}" alt="صورة الموقع" onclick="window.open('${a.locationImage}','_blank')">`
+            : `<div class="no-img">📷 لا توجد صورة للموقع</div>`
+          }
+          <div class="info-row"><span class="icon">📍</span><span>${a.address||'—'}</span></div>
+          ${a.phone ? `<div class="info-row"><span class="icon">📱</span><span>${a.phone}</span></div>` : ''}
+          ${a.notes ? `<div class="info-row"><span class="icon">📝</span><span style="font-size:12px;color:var(--mist);">${a.notes}</span></div>` : ''}
+        </div>
+        <div class="card-actions">
+          ${a.phone ? `<button class="act-btn btn-wa" onclick="openWhatsApp('${a.phone}','${a.client}','${a.service}','${a.time}')">📲 واتساب</button>` : ''}
+          ${apptHasPin(a)
+            ? `<button class="act-btn btn-map" onclick="openMapForAppt('${aId}')">🗺️ خريطة</button>`
+            : `<button class="act-btn btn-map" disabled style="opacity:.55;cursor:not-allowed;" title="لم يشارك العميل موقعه — اطلب الدبوس من الإدارة">📍 لا يوجد دبوس</button>`}
+          <button class="act-btn btn-done" ${isDone?'disabled':''} onclick="markDone('${aId}','${a._source}','${a._fbKey}')">
+            ${isDone ? '✅ مكتمل' : '✓ إتمام'}
+          </button>
+        </div>
+      </div>`;
+    });
+  });
+
+  list.innerHTML = html;
+}
+
+
+/* ===== وجهة واتساب حسب الجهاز =====
+   الجوال  → whatsapp:// يفتح التطبيق مباشرة.
+   الكمبيوتر → web.whatsapp.com يفتح تبويباً واحداً ويحافظ على ترميز
+   الرموز التعبيرية، بعكس تطبيق ويندوز الذي يكسرها.
+   في الحالتين لا تظهر الصفحة الوسيطة. */
+function atwadIsMobileDevice(){
+  try {
+    if(navigator.userAgentData && typeof navigator.userAgentData.mobile === 'boolean'){
+      return navigator.userAgentData.mobile;
+    }
+  } catch(e) { /* المتصفحات القديمة لا تدعم userAgentData */ }
+  return /Android|iPhone|iPad|iPod|Windows Phone|Mobile/i.test(navigator.userAgent || '');
+}
+function atwadWaPhone(raw){
+  var p = String(raw || '').replace(/[^0-9]/g,'');
+  if(!p) return '';
+  if(p.indexOf('966') === 0) return p;
+  if(p.indexOf('00966') === 0) return p.slice(2);
+  if(p.indexOf('0') === 0) return '966' + p.slice(1);
+  if(p.length === 9) return '966' + p;
+  return p;
+}
+function atwadWaUrl(phone, message){
+  var p = atwadWaPhone(phone);
+  var t = encodeURIComponent(String(message == null ? '' : message));
+  if(atwadIsMobileDevice()){
+    return 'whatsapp://send?phone=' + p + (t ? '&text=' + t : '');
+  }
+  return 'https://web.whatsapp.com/send?phone=' + p + (t ? '&text=' + t : '');
+}
+
+function openWhatsApp(phone, name, service, time) {
+  const msg = `مرحباً ${name}،\nنود إبلاغكم بأن الفني في طريقه إليكم لتنفيذ خدمة: ${service}\nالوقت المتوقع للوصول: ${time}\nمؤسسة أطواد ❄️`;
+  window.open(atwadWaUrl(phone, msg), '_blank');
+}
+
+/* ===== الموقع الدقيق — نفس منطق صفحة المواعيد ===== */
+function locationUrlFields(record){
+  if(!record) return [];
+  return [
+    record.mapsLink, record.mapLink, record.mapUrl, record.mapsUrl,
+    record.locationUrl, record.googleMapsUrl, record.googleMapsLink,
+    record.locationLink, record.customerLocation, record.addressUrl,
+    typeof record.location === 'string' ? record.location : ''
+  ];
+}
+function isValidCoordinates(lat, lng){
+  return Number.isFinite(lat) && Number.isFinite(lng) &&
+         lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180 &&
+         !(lat === 0 && lng === 0);
+}
+function isGenericCityMapsUrl(value){
+  var raw = String(value || '').trim();
+  if(!raw) return false;
+  var decoded = raw;
+  try { decoded = decodeURIComponent(raw); } catch(e) {}
+  decoded = decoded.replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069]/g,'')
+                   .replace(/\+/g,' ').toLowerCase();
+  var plainCity  = /^(?:جدة|jeddah|jeddah\s*\/\s*جدة|جدة\s*\/\s*jeddah)$/i.test(decoded.trim());
+  var cityPlace  = /\/maps\/(?:place|search)\/(?:جدة|jeddah)(?:\/|@|\?|$)/i.test(decoded);
+  var cityQuery  = /[?&](?:q|query|destination)=(?:جدة|jeddah)(?:&|$)/i.test(decoded);
+  var veryWide   = /,\d{5,}m(?:\/|$)/i.test(decoded);
+  return plainCity || cityPlace || cityQuery || veryWide;
+}
+function extractCoordinatesFromMapUrl(url){
+  if(!url || typeof url !== 'string') return null;
+  var s = url.trim();
+  if(s.indexOf('maps.app.goo.gl') !== -1 || s.indexOf('goo.gl/maps') !== -1) return null;
+  try { s = decodeURIComponent(s); } catch(e) {}
+  var rawPair = s.match(/^\s*(-?\d+(?:\.\d+)?)\s*[,،]\s*(-?\d+(?:\.\d+)?)\s*$/);
+  if(rawPair){
+    var rl = Number(rawPair[1]), rg = Number(rawPair[2]);
+    if(isValidCoordinates(rl,rg)) return {lat:rl,lng:rg};
+  }
+  var placeMatch = s.match(/!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/);
+  if(placeMatch){
+    var pl = Number(placeMatch[1]), pg = Number(placeMatch[2]);
+    if(isValidCoordinates(pl,pg)) return {lat:pl,lng:pg};
+  }
+  var qm = s.match(/[?&](?:q|query|destination|ll)=\s*(-?\d+(?:\.\d+)?)\s*[,،]\s*(-?\d+(?:\.\d+)?)/i);
+  if(qm){
+    var ql = Number(qm[1]), qg = Number(qm[2]);
+    if(isValidCoordinates(ql,qg)) return {lat:ql,lng:qg};
+  }
+  return null;
+}
+function isTrustedGoogleMapsLocationUrl(value){
+  var link = String(value||'').trim();
+  if(!/^https?:\/\//i.test(link) || isGenericCityMapsUrl(link)) return false;
+  try {
+    var parsed = new URL(link);
+    var host = parsed.hostname.toLowerCase().replace(/^www\./,'');
+    return host === 'maps.app.goo.gl' ||
+      (host === 'goo.gl' && parsed.pathname.toLowerCase().indexOf('/maps') === 0) ||
+      ((host === 'google.com' || /(^|\.)google\.[a-z.]+$/i.test(host)) &&
+        (parsed.pathname.toLowerCase().indexOf('/maps') === 0 ||
+         parsed.searchParams.has('q') || parsed.searchParams.has('query') ||
+         parsed.searchParams.has('destination')));
+  } catch(e){ return false; }
+}
+function exactCoordinatesFromRecord(record){
+  if(!record) return null;
+  var links = locationUrlFields(record).map(function(v){ return String(v||'').trim(); });
+  var pairs = [
+    [record.lat,record.lng], [record.latitude,record.longitude],
+    [record.customerLat,record.customerLng], [record.locationLat,record.locationLng],
+    [record.geoLat,record.geoLng]
+  ];
+  var nested = [record.location, record.coordinates, record.coords, record.position];
+  nested.forEach(function(item){
+    if(item && typeof item === 'object'){
+      pairs.push([item.lat,item.lng],[item.latitude,item.longitude]);
+    }
+  });
+  for(var p=0;p<pairs.length;p++){
+    var la = Number(pairs[p][0]), ln = Number(pairs[p][1]);
+    if(isValidCoordinates(la,ln)) return {lat:la,lng:ln};
+  }
+  for(var i=0;i<links.length;i++){
+    if(!links[i] || isGenericCityMapsUrl(links[i])) continue;
+    var ex = extractCoordinatesFromMapUrl(links[i]);
+    if(ex) return ex;
+  }
+  return null;
+}
+function trustedLocationUrl(record){
+  var links = locationUrlFields(record);
+  for(var i=0;i<links.length;i++){
+    var link = String(links[i]||'').trim();
+    if(isTrustedGoogleMapsLocationUrl(link)) return link;
+  }
+  return '';
+}
+
+/** هل للموعد دبوس دقيق (إحداثيات أو رابط خرائط موثوق)؟ */
+function apptHasPin(record){
+  if(!record) return false;
+  if(exactCoordinatesFromRecord(record)) return true;
+  return trustedLocationUrl(record) !== '';
+}
+
+/** فتح خريطة الموعد: الدبوس الدقيق أولاً، والعنوان النصي آخر الحلول */
+function openMapForAppt(id){
+  var a = null;
+  for(var i=0;i<allAppts.length;i++){
+    var x = allAppts[i];
+    if(x.id === id || x._fbKey === id || ('B_' + x._fbKey) === id){ a = x; break; }
+  }
+  if(!a){ showToast('❌ تعذر إيجاد الموعد'); return; }
+
+  var coords = exactCoordinatesFromRecord(a);
+  if(coords){
+    window.open('https://www.google.com/maps/dir/?api=1&destination=' +
+      encodeURIComponent(coords.lat + ',' + coords.lng), '_blank');
+    return;
+  }
+  var link = trustedLocationUrl(a);
+  if(link){ window.open(link, '_blank'); return; }
+
+  showToast('⚠️ لا يوجد دبوس دقيق — سيُفتح العنوان النصي فقط');
+  openMap(a.address || '');
+}
+
+function openMap(address) {
+  // إذا كان الرابط من Google Maps يفتحه مباشرة
+  if(address.includes('maps.app.goo.gl') || address.includes('google.com/maps') || address.includes('goo.gl/maps')) {
+    window.open(address, '_blank');
+  } else {
+    window.open('https://maps.google.com?q=' + encodeURIComponent(address), '_blank');
+  }
+}
+
+function markDone(id, source, fbKey) {
+  if(!db) { showToast('❌ Firebase غير متاح'); return; }
+  if(!confirm('هل تم إتمام العمل؟')) return;
+
+  const ref = source === 'bookings' ? 'bookings/' + fbKey : 'appointments/' + fbKey;
+  db.ref(ref).update({status: 'done'})
+    .then(() => {
+      // تحديث البطاقة محلياً
+      const card = document.getElementById('card-' + id);
+      if(card) {
+        card.className = 'appt-card done';
+        const badge = card.querySelector('.status-badge');
+        if(badge) { badge.className='status-badge badge-done'; badge.textContent='مكتمل'; }
+        const doneBtn = card.querySelector('.btn-done');
+        if(doneBtn) { doneBtn.disabled=true; doneBtn.textContent='✅ مكتمل'; }
+      }
+      // تحديث الإحصاء
+      const a = allAppts.find(x => (x.id===id || x._fbKey===id || ('B_'+x._fbKey)===id));
+      if(a) a.status = 'done';
+      updateStats();
+      showToast('🎉 تم إتمام العمل بنجاح!');
+    })
+    .catch(e => showToast('❌ خطأ: ' + e.message));
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// تهيئة
+updateDate();
+
+window.__atwadInitPage = function(user) { console.log("[technician] مسجّل:", user.email); if(typeof syncFromFirebase==="function") syncFromFirebase(); else if(typeof loadData==="function") loadData(); };
+
+</script>
