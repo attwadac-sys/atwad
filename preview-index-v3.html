@@ -821,16 +821,59 @@ function todayYMD(){
   return d.getFullYear() + '-' + m + '-' + day;
 }
 
+/**
+ * ينتظر جاهزية تسجيل الدخول قبل القراءة من قاعدة البيانات.
+ * القراءة قبل وصول رمز الدخول ترجع "permission denied" أو تتعلّق بلا رد.
+ */
+function authReady(){
+  if(typeof firebase === 'undefined' || typeof firebase.auth !== 'function'){
+    return Promise.resolve();
+  }
+  return new Promise(function(resolve){
+    var done = false;
+    var stop = setTimeout(function(){
+      if(!done){ done = true; resolve(); }
+    }, 8000);
+    firebase.auth().onAuthStateChanged(function(){
+      if(done) return;
+      done = true;
+      clearTimeout(stop);
+      resolve();
+    });
+  });
+}
+
+/** يرفض الوعد إذا تجاوز المهلة، حتى لا تبقى الصفحة معلّقة بلا رسالة */
+function withTimeout(promise, ms, label){
+  return new Promise(function(resolve, reject){
+    var settled = false;
+    var t = setTimeout(function(){
+      if(settled) return;
+      settled = true;
+      reject(new Error('انتهت مهلة ' + label));
+    }, ms);
+    promise.then(function(v){
+      if(settled) return;
+      settled = true; clearTimeout(t); resolve(v);
+    }, function(e){
+      if(settled) return;
+      settled = true; clearTimeout(t); reject(e);
+    });
+  });
+}
+
 /** يقرأ appointments و bookings مرة واحدة ويعيد قائمة موحّدة */
 function loadEntries(){
   if(apptCache) return Promise.resolve(apptCache);
   if(typeof db === 'undefined' || !db){
     return Promise.reject(new Error('قاعدة البيانات غير متاحة'));
   }
-  return Promise.all([
-    db.ref('appointments').once('value'),
-    db.ref('bookings').once('value')
-  ]).then(function(snaps){
+  return authReady().then(function(){
+    return withTimeout(Promise.all([
+      db.ref('appointments').once('value'),
+      db.ref('bookings').once('value')
+    ]), 15000, 'تحميل المواعيد');
+  }).then(function(snaps){
     var list = [];
     snaps[0].forEach(function(child){
       var a = child.val() || {};
@@ -928,8 +971,19 @@ function renderToday(){
     box.innerHTML = html;
   }).catch(function(err){
     console.error('جدول اليوم:', err);
-    box.innerHTML = '<div class="sched-note">تعذّر تحميل جدول اليوم. تحقّق من الاتصال ثم أعد تحميل الصفحة.</div>';
+    apptCache = null;
+    box.innerHTML = '<div class="sched-note">تعذّر تحميل جدول اليوم — ' + esc(err.message) + '.' +
+      ' <button type="button" onclick="retryToday()" ' +
+      'style="color:var(--accent);font-weight:700;text-decoration:underline;">إعادة المحاولة</button></div>';
   });
+}
+
+/** يعيد المحاولة يدوياً بعد فشل التحميل */
+function retryToday(){
+  apptCache = null;
+  var box = document.getElementById('todaySched');
+  if(box) box.innerHTML = '<div class="sched-note">جاري إعادة المحاولة…</div>';
+  renderToday();
 }
 
 /* ============ البحث السريع ============ */
@@ -1042,6 +1096,19 @@ function loadCustomers(){
 })();
 
 renderToday();
+
+/*
+  مراقب التعليق: أحياناً تبدأ قراءات لوحة اليوم قبل جاهزية رمز الدخول
+  فتبقى المؤشرات على "…" بلا رد. بعد 12 ثانية نعيد تشغيل دوال
+  الصفحة الأصلية كما هي، دون أي تعديل على كودها.
+*/
+setTimeout(function(){
+  var probe = document.getElementById('kpiTodayAppts');
+  if(!probe || probe.textContent.trim() !== '…') return;
+  console.warn('لوحة اليوم لم تستجب — إعادة تشغيل القراءة');
+  if(typeof loadAllKPIs === 'function') loadAllKPIs();
+  if(typeof loadActivities === 'function') loadActivities();
+}, 12000);
 </script>
 
 </body>
