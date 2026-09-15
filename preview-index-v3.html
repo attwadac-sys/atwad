@@ -742,8 +742,8 @@ var STATE_ALIAS = {
   'ملغي':'cancelled','ملغى':'cancelled','مرفوض':'cancelled'
 };
 
-var apptCache = null;   // مواعيد + حجوزات (تُحمَّل مرة واحدة وتُستخدم للجدول والبحث)
-var custCache = null;   // العملاء (تُحمَّل عند أول استخدام للبحث)
+var todayCache  = null;   // مواعيد وحجوزات اليوم فقط
+var searchCache = null;   // مجموعة البحث (عملاء + أحدث السجلات)
 
 function esc(v){
   return String(v == null ? '' : v)
@@ -752,8 +752,8 @@ function esc(v){
 
 function latinDigits(v){
   return String(v == null ? '' : v)
-    .replace(/[٠-٩]/g, function(d){ return String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)); })
-    .replace(/[۰-۹]/g, function(d){ return String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)); });
+    .replace(/[\u0660-\u0669]/g, function(d){ return String('\u0660\u0661\u0662\u0663\u0664\u0665\u0666\u0667\u0668\u0669'.indexOf(d)); })
+    .replace(/[\u06F0-\u06F9]/g, function(d){ return String('\u06F0\u06F1\u06F2\u06F3\u06F4\u06F5\u06F6\u06F7\u06F8\u06F9'.indexOf(d)); });
 }
 
 /** يحوّل نص الوقت إلى دقائق من منتصف الليل، أو null عند الفشل */
@@ -782,9 +782,8 @@ var IS_MOBILE = /Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAge
 
 /**
  * رابط محادثة واتساب.
- * على الجوال: wa.me يفتح التطبيق مباشرة.
- * على الكمبيوتر: web.whatsapp.com يفتح المحادثة فوراً بدل صفحة
- * "فتح التطبيق / المتابعة إلى واتساب ويب" الوسيطة.
+ * الجوال: wa.me يفتح التطبيق مباشرة.
+ * الكمبيوتر: web.whatsapp.com يفتح المحادثة فوراً بدل الصفحة الوسيطة.
  */
 function waLink(number, message){
   if(!number) return '';
@@ -822,8 +821,8 @@ function todayYMD(){
 }
 
 /**
- * ينتظر جاهزية تسجيل الدخول قبل القراءة من قاعدة البيانات.
- * القراءة قبل وصول رمز الدخول ترجع "permission denied" أو تتعلّق بلا رد.
+ * ينتظر جاهزية تسجيل الدخول قبل القراءة.
+ * القراءة قبل وصول رمز الدخول قد تُرفض أو تبقى بلا رد.
  */
 function authReady(){
   if(typeof firebase === 'undefined' || typeof firebase.auth !== 'function'){
@@ -843,7 +842,7 @@ function authReady(){
   });
 }
 
-/** يرفض الوعد إذا تجاوز المهلة، حتى لا تبقى الصفحة معلّقة بلا رسالة */
+/** يرفض الوعد عند تجاوز المهلة حتى لا تبقى الصفحة معلّقة بلا رسالة */
 function withTimeout(promise, ms, label){
   return new Promise(function(resolve, reject){
     var settled = false;
@@ -862,51 +861,78 @@ function withTimeout(promise, ms, label){
   });
 }
 
-/** يقرأ appointments و bookings مرة واحدة ويعيد قائمة موحّدة */
-function loadEntries(){
-  if(apptCache) return Promise.resolve(apptCache);
+/** يوحّد سجلاً من appointments أو bookings إلى شكل واحد */
+function normalize(key, v, source){
+  var r = v || {};
+  return {
+    key:     key,
+    source:  source,
+    client:  r.client || r.name || '—',
+    phone:   r.phone || '',
+    service: r.service || '—',
+    date:    r.date || '',
+    time:    r.time || '',
+    tech:    r.tech || '',
+    place:   r.district || r.address || r.city || '',
+    status:  r.status || ''
+  };
+}
+
+/**
+ * سجلات اليوم فقط.
+ * نستخدم orderByChild('date').equalTo(today) بدل قراءة الجدول كاملاً،
+ * لأن سجلات المواعيد تحتوي صور مواقع وقراءتها كلها ثقيلة وبطيئة.
+ */
+function loadToday(){
+  if(todayCache) return Promise.resolve(todayCache);
+  if(typeof db === 'undefined' || !db){
+    return Promise.reject(new Error('قاعدة البيانات غير متاحة'));
+  }
+  var today = todayYMD();
+  return authReady().then(function(){
+    return withTimeout(Promise.all([
+      db.ref('appointments').orderByChild('date').equalTo(today).once('value'),
+      db.ref('bookings').orderByChild('date').equalTo(today).once('value')
+    ]), 20000, 'تحميل جدول اليوم');
+  }).then(function(snaps){
+    var list = [];
+    snaps[0].forEach(function(c){ list.push(normalize(c.key, c.val(), 'appointments')); });
+    snaps[1].forEach(function(c){ list.push(normalize(c.key, c.val(), 'bookings')); });
+    todayCache = list;
+    return list;
+  });
+}
+
+/**
+ * مجموعة البحث: كل العملاء + أحدث 300 سجل من كل جدول.
+ * محدودة بعدد حتى لا نسحب أرشيف المواعيد كاملاً.
+ */
+function loadSearchPool(){
+  if(searchCache) return Promise.resolve(searchCache);
   if(typeof db === 'undefined' || !db){
     return Promise.reject(new Error('قاعدة البيانات غير متاحة'));
   }
   return authReady().then(function(){
     return withTimeout(Promise.all([
-      db.ref('appointments').once('value'),
-      db.ref('bookings').once('value')
-    ]), 15000, 'تحميل المواعيد');
+      db.ref('customers').once('value'),
+      db.ref('bookings').limitToLast(300).once('value'),
+      db.ref('appointments').limitToLast(300).once('value')
+    ]), 25000, 'تحميل بيانات البحث');
   }).then(function(snaps){
-    var list = [];
-    snaps[0].forEach(function(child){
-      var a = child.val() || {};
-      list.push({
-        key:     child.key,
-        source:  'appointments',
-        client:  a.client || a.name || '—',
-        phone:   a.phone || '',
-        service: a.service || '—',
-        date:    a.date || '',
-        time:    a.time || '',
-        tech:    a.tech || '',
-        place:   a.district || a.address || a.city || '',
-        status:  a.status || ''
+    var customers = [], records = [];
+    snaps[0].forEach(function(c){
+      var v = c.val() || {};
+      customers.push({
+        key:   c.key,
+        name:  v.name || '—',
+        phone: v.phone || '',
+        place: v.district || v.address || v.city || ''
       });
     });
-    snaps[1].forEach(function(child){
-      var b = child.val() || {};
-      list.push({
-        key:     child.key,
-        source:  'bookings',
-        client:  b.client || b.name || '—',
-        phone:   b.phone || '',
-        service: b.service || '—',
-        date:    b.date || '',
-        time:    b.time || '',
-        tech:    b.tech || '',
-        place:   b.district || b.address || b.city || '',
-        status:  b.status || ''
-      });
-    });
-    apptCache = list;
-    return list;
+    snaps[1].forEach(function(c){ records.push(normalize(c.key, c.val(), 'bookings')); });
+    snaps[2].forEach(function(c){ records.push(normalize(c.key, c.val(), 'appointments')); });
+    searchCache = { customers: customers, records: records };
+    return searchCache;
   });
 }
 
@@ -914,11 +940,9 @@ function loadEntries(){
 function renderToday(){
   var box = document.getElementById('todaySched');
   if(!box) return;
-  loadEntries().then(function(list){
-    var today = todayYMD();
+  loadToday().then(function(list){
     var rows = [];
     list.forEach(function(e){
-      if(String(e.date).substring(0, 10) !== today) return;
       if(stateKey(e.status) === 'cancelled') return;
       rows.push(e);
     });
@@ -944,7 +968,6 @@ function renderToday(){
       var start = latinDigits(e.time).split(' - ')[0].trim() || '—';
       var phone = latinDigits(e.phone).replace(/[^0-9]/g, '');
       var wa    = waNumber(phone);
-
       var kind  = serviceKind(e.service);
 
       html += '<div class="slot svc-b-' + kind + '">' +
@@ -971,7 +994,7 @@ function renderToday(){
     box.innerHTML = html;
   }).catch(function(err){
     console.error('جدول اليوم:', err);
-    apptCache = null;
+    todayCache = null;
     box.innerHTML = '<div class="sched-note">تعذّر تحميل جدول اليوم — ' + esc(err.message) + '.' +
       ' <button type="button" onclick="retryToday()" ' +
       'style="color:var(--accent);font-weight:700;text-decoration:underline;">إعادة المحاولة</button></div>';
@@ -980,34 +1003,13 @@ function renderToday(){
 
 /** يعيد المحاولة يدوياً بعد فشل التحميل */
 function retryToday(){
-  apptCache = null;
+  todayCache = null;
   var box = document.getElementById('todaySched');
   if(box) box.innerHTML = '<div class="sched-note">جاري إعادة المحاولة…</div>';
   renderToday();
 }
 
 /* ============ البحث السريع ============ */
-function loadCustomers(){
-  if(custCache) return Promise.resolve(custCache);
-  if(typeof db === 'undefined' || !db){
-    return Promise.reject(new Error('قاعدة البيانات غير متاحة'));
-  }
-  return db.ref('customers').once('value').then(function(snap){
-    var list = [];
-    snap.forEach(function(child){
-      var c = child.val() || {};
-      list.push({
-        key:   child.key,
-        name:  c.name || '—',
-        phone: c.phone || '',
-        place: c.district || c.address || c.city || ''
-      });
-    });
-    custCache = list;
-    return list;
-  });
-}
-
 (function(){
   var input = document.getElementById('qSearch');
   var panel = document.getElementById('qResults');
@@ -1019,8 +1021,7 @@ function loadCustomers(){
   function warm(){
     if(warming) return;
     warming = true;
-    loadEntries().catch(function(err){ console.error('تحميل السجلات:', err); });
-    loadCustomers().catch(function(err){ console.error('تحميل العملاء:', err); });
+    loadSearchPool().catch(function(err){ console.error('تحميل بيانات البحث:', err); });
   }
 
   function close(){ panel.classList.remove('open'); }
@@ -1032,10 +1033,10 @@ function loadCustomers(){
     panel.innerHTML = '<div class="res-note">جاري البحث…</div>';
     panel.classList.add('open');
 
-    Promise.all([loadCustomers(), loadEntries()]).then(function(data){
+    loadSearchPool().then(function(pool){
       var hits = [];
 
-      data[0].forEach(function(c){
+      pool.customers.forEach(function(c){
         if(hits.length >= 12) return;
         var hay = (c.name + ' ' + latinDigits(c.phone)).toLowerCase();
         if(hay.indexOf(q) === -1) return;
@@ -1047,7 +1048,7 @@ function loadCustomers(){
         });
       });
 
-      var recs = data[1].slice(0).sort(function(a, b){
+      var recs = pool.records.slice(0).sort(function(a, b){
         return String(b.date).localeCompare(String(a.date));
       });
       recs.forEach(function(e){
@@ -1095,7 +1096,11 @@ function loadCustomers(){
   });
 })();
 
-renderToday();
+if(document.readyState === 'complete'){
+  setTimeout(renderToday, 400);
+} else {
+  window.addEventListener('load', function(){ setTimeout(renderToday, 400); });
+}
 
 /*
   مراقب التعليق: أحياناً تبدأ قراءات لوحة اليوم قبل جاهزية رمز الدخول
