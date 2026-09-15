@@ -755,6 +755,22 @@ function waNumber(raw){
   return '966' + d;
 }
 
+var IS_MOBILE = /Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent || '');
+
+/**
+ * رابط محادثة واتساب.
+ * على الجوال: wa.me يفتح التطبيق مباشرة.
+ * على الكمبيوتر: web.whatsapp.com يفتح المحادثة فوراً بدل صفحة
+ * "فتح التطبيق / المتابعة إلى واتساب ويب" الوسيطة.
+ */
+function waLink(number, message){
+  if(!number) return '';
+  var q = message ? '&text=' + encodeURIComponent(message) : '';
+  return IS_MOBILE
+    ? 'https://wa.me/' + number + (message ? '?text=' + encodeURIComponent(message) : '')
+    : 'https://web.whatsapp.com/send?phone=' + number + q;
+}
+
 function stateKey(raw){
   var t = String(raw == null ? '' : raw).trim();
   if(!t) return 'pending';
@@ -868,7 +884,7 @@ function renderToday(){
         '<span><span class="state' + cls + '">' + esc(STATE_AR[k] || k) + '</span></span>' +
 
         (wa
-          ? '<a class="wa-mini" href="https://wa.me/' + wa + '" target="_blank" rel="noopener"' +
+          ? '<a class="wa-mini" href="' + esc(waLink(wa, 'مرحباً ' + e.client + '، معك مؤسسة أطواد بخصوص موعد اليوم الساعة ' + start)) + '" target="_blank" rel="noopener"' +
             ' title="مراسلة العميل على واتساب" aria-label="مراسلة العميل على واتساب">' +
             '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.5 15.2L2 22l4.9-1.4A10 10 0 1 0 12 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .1-1.7-.1a12 12 0 0 1-5.4-4.7c-.4-.6-.9-1.5-.9-2.4 0-.9.5-1.4.7-1.6.2-.2.4-.3.6-.3h.5c.2 0 .4 0 .5.4l.7 1.7c.1.2 0 .4-.1.5l-.3.4c-.1.1-.2.3-.1.5.3.6 1 1.5 1.8 2 .4.2.6.2.8 0l.6-.7c.2-.2.3-.2.6-.1l1.6.8c.2.1.3.2.3.3v.8z"/></svg></a>'
           : '<span></span>') +
