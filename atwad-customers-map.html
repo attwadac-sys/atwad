@@ -90,6 +90,8 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);disp
     <option value="180">آخر 6 أشهر</option>
     <option value="365">آخر سنة</option>
   </select>
+  <button class="chip" id="dayChip" onclick="toggleDayMode()">مواعيد يوم</button>
+  <input type="date" id="dayPick" style="display:none;font-family:'Tajawal',sans-serif;font-size:13px;padding:8px 10px;border:1.5px solid var(--line);border-radius:10px;" onchange="applyFilters()">
   <button class="chip on" id="labelChip" onclick="toggleLabels()">الأسماء ظاهرة</button>
   <button class="chip" id="repeatChip" onclick="toggleRepeat()">المتكررون فقط</button>
   <span class="counts" id="counts">جارٍ التحميل…</span>
@@ -112,6 +114,8 @@ try {
 
 var JEDDAH = [21.6, 39.16];
 var map, markerLayer;
+var allRecords = [];     // كل المواعيد والحجوزات كما هي
+var dayMode = false;     // عرض مواعيد يوم واحد بدل كل العملاء
 var customers = [];      // العملاء بعد التجميع
 var shown = [];          // المعروضون بعد التصفية
 var markers = {};        // phone -> marker
@@ -174,6 +178,7 @@ function loadAll(){
     return db.ref('bookings').once('value');
   }).then(function(snap2){
     snap2.forEach(function(c){ records.push(c.val() || {}); });
+    allRecords = records;
     buildCustomers(records);
   }).catch(function(err){
     console.error('read error:', err);
@@ -297,7 +302,127 @@ function drawMarkers(){
 }
 
 /* ============ القائمة والتصفية ============ */
+function todayIso(){
+  var d = new Date();
+  var p = function(n){ return (n<10?'0':'') + n; };
+  return d.getFullYear() + '-' + p(d.getMonth()+1) + '-' + p(d.getDate());
+}
+
+function toggleDayMode(){
+  dayMode = !dayMode;
+  var chip = document.getElementById('dayChip');
+  var pick = document.getElementById('dayPick');
+  chip.className = dayMode ? 'chip on' : 'chip';
+  pick.style.display = dayMode ? 'inline-block' : 'none';
+  if(dayMode && !pick.value) pick.value = todayIso();
+  applyFilters();
+}
+
+/** مواعيد اليوم المحدد، مرتبة بالوقت، ولها إحداثيات */
+function dayAppointments(){
+  var day = document.getElementById('dayPick').value || todayIso();
+  var q = document.getElementById('q').value.trim();
+  var out = [];
+  allRecords.forEach(function(r){
+    if(String(r.date || '') !== day) return;
+    var pos = coordsOf(r);
+    if(!pos) return;
+    var name = String(r.client || r.name || '').trim() || 'بلا اسم';
+    if(q && (name + ' ' + normPhone(r.phone) + ' ' + (r.district||'') + ' ' + (r.address||'')).indexOf(q) === -1) return;
+    out.push({
+      name:name, phone:normPhone(r.phone), pos:pos,
+      time:String(r.time || ''), service:String(r.service || ''),
+      tech:String(r.tech || r.technician || ''), status:String(r.status || ''),
+      units:r.units, district:String(r.district || ''), address:String(r.address || '')
+    });
+  });
+  out.sort(function(a,b){ return a.time < b.time ? -1 : (a.time > b.time ? 1 : 0); });
+  return out;
+}
+
+function statusLabel(st){
+  var m = { done:'مكتمل', pending:'في الانتظار', confirmed:'مؤكد', cancelled:'ملغى' };
+  return m[st] || st || '—';
+}
+
+function drawDayMarkers(list){
+  markerLayer.clearLayers();
+  markers = {};
+  var bounds = [];
+  var line = [];
+
+  list.forEach(function(a, i){
+    var num = i + 1;
+    var icon = L.divIcon({
+      className:'',
+      html:'<div style="background:' + (a.status === 'done' ? '#10B981' : '#0C3B5E') +
+           ';color:#fff;width:26px;height:26px;border-radius:50%;border:2px solid #fff;' +
+           'box-shadow:0 1px 4px rgba(0,0,0,.35);font-family:Tajawal,sans-serif;font-weight:900;' +
+           'font-size:13px;display:flex;align-items:center;justify-content:center;">' + num + '</div>',
+      iconSize:[26,26], iconAnchor:[13,13]
+    });
+    var m = L.marker(a.pos, { icon: icon });
+    var html = '<div class="pop">' +
+      '<h4>' + num + '. ' + esc(a.name) + '</h4>' +
+      (a.time ? '<p>🕐 ' + esc(a.time) + '</p>' : '') +
+      '<p>🛠️ ' + esc(a.service) + (a.units ? ' (' + esc(a.units) + ' وحدة)' : '') + '</p>' +
+      (a.tech ? '<p>👷 ' + esc(a.tech) + '</p>' : '') +
+      '<p>📱 ' + esc(a.phone) + '</p>' +
+      '<p>📋 ' + esc(statusLabel(a.status)) + '</p>' +
+      '<a href="https://www.google.com/maps/dir/?api=1&destination=' +
+        a.pos[0] + ',' + a.pos[1] + '" target="_blank" rel="noopener">فتح الاتجاهات ←</a>' +
+      '</div>';
+    m.bindPopup(html);
+    if(showLabels){
+      m.bindTooltip(esc(a.name) + (a.time ? ' · ' + esc(a.time.split(' ')[0]) : ''),
+        { permanent:true, direction:'top', offset:[0,-14], className:'pin-label' });
+    }
+    m.on('click', function(){ highlight(a.phone, false); });
+    m.addTo(markerLayer);
+    markers[a.phone] = m;
+    bounds.push(a.pos);
+    line.push(a.pos);
+  });
+
+  if(line.length > 1){
+    L.polyline(line, { color:'#0EA5E9', weight:3, opacity:.55, dashArray:'6,7' }).addTo(markerLayer);
+  }
+  if(bounds.length) map.fitBounds(bounds, { padding:[50,50], maxZoom:15 });
+}
+
+function renderDaySide(list){
+  var el = document.getElementById('side');
+  if(!list.length){
+    el.innerHTML = '<div class="empty">لا مواعيد بموقع دقيق في هذا اليوم.</div>';
+    return;
+  }
+  var html = '';
+  list.forEach(function(a, i){
+    html += '<div class="cust" id="row_' + esc(a.phone) + '" onclick="highlight(\'' + esc(a.phone) + '\',true)">' +
+      '<div class="nm">' + (i+1) + '. ' + esc(a.name) + '</div>' +
+      '<div class="meta">' + esc(a.time || '—') + ' · ' + esc(a.service) + '</div>' +
+      '<div class="tags">' +
+        (a.tech ? '<span class="tag">' + esc(a.tech) + '</span>' : '') +
+        '<span class="tag ' + (a.status === 'done' ? 'repeat' : '') + '">' + esc(statusLabel(a.status)) + '</span>' +
+        (a.district ? '<span class="tag">' + esc(a.district) + '</span>' : '') +
+      '</div></div>';
+  });
+  el.innerHTML = html;
+}
+
 function applyFilters(){
+  if(!map) return;
+
+  if(dayMode){
+    var dayList = dayAppointments();
+    var dayStr = document.getElementById('dayPick').value || todayIso();
+    document.getElementById('counts').innerHTML =
+      '<b>' + dayList.length + '</b> موعد على الخريطة يوم ' + esc(dayStr);
+    drawDayMarkers(dayList);
+    renderDaySide(dayList);
+    return;
+  }
+
   var q = document.getElementById('q').value.trim();
   var dis = document.getElementById('districtSel').value;
   var period = document.getElementById('periodSel').value;
