@@ -314,6 +314,10 @@ function toggleDayMode(){
   var pick = document.getElementById('dayPick');
   chip.className = dayMode ? 'chip on' : 'chip';
   pick.style.display = dayMode ? 'inline-block' : 'none';
+  ['districtSel','periodSel','repeatChip'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el){ el.disabled = dayMode; el.style.opacity = dayMode ? '.45' : '1'; }
+  });
   if(dayMode && !pick.value) pick.value = todayIso();
   applyFilters();
 }
@@ -416,8 +420,15 @@ function applyFilters(){
   if(dayMode){
     var dayList = dayAppointments();
     var dayStr = document.getElementById('dayPick').value || todayIso();
+    var totalDay = 0, missing = [];
+    allRecords.forEach(function(r){
+      if(String(r.date || '') !== dayStr) return;
+      totalDay++;
+      if(!coordsOf(r)) missing.push(String(r.client || r.name || 'بلا اسم'));
+    });
     document.getElementById('counts').innerHTML =
-      '<b>' + dayList.length + '</b> موعد على الخريطة يوم ' + esc(dayStr);
+      '<b>' + dayList.length + '</b> من ' + totalDay + ' موعد يوم ' + esc(dayStr) +
+      (missing.length ? ' · بلا موقع: ' + esc(missing.join('، ')) : ' · الكل محدد');
     drawDayMarkers(dayList);
     renderDaySide(dayList);
     return;
@@ -490,9 +501,10 @@ function toggleLabels(){
   var b = document.getElementById('labelChip');
   b.textContent = showLabels ? 'الأسماء ظاهرة' : 'الأسماء مخفية';
   b.className = showLabels ? 'chip on' : 'chip';
-  drawMarkers();
+  applyFilters();   // يحترم الوضع الحالي: يوم محدد أو كل العملاء
 }
 function toggleRepeat(){
+  if(dayMode) return;   // لا معنى لـ«المتكررون» داخل يوم واحد
   repeatOnly = !repeatOnly;
   var b = document.getElementById('repeatChip');
   b.className = repeatOnly ? 'chip on' : 'chip';
