@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مؤسسة أطواد — النسخة الاحتياطية</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
+:root{
+  --deep:#0C3B5E; --steel:#1E5F8A; --sky:#0EA5E9; --ice:#E8F4FD; --frost:#F0F9FF;
+  --slate:#334155; --mist:#94A3B8; --line:#E2E8F0;
+  --success:#10B981; --warning:#F59E0B; --danger:#EF4444;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);padding-bottom:60px;}
+.header{background:linear-gradient(135deg,var(--deep),var(--steel),var(--sky));color:#fff;padding:22px 18px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.header h1{font-size:19px;font-weight:900;}
+.header p{font-size:12px;opacity:.85;margin-top:3px;}
+.back{background:rgba(255,255,255,.16);border:1.5px solid rgba(255,255,255,.35);color:#fff;
+  font-family:'Tajawal',sans-serif;font-weight:800;font-size:13px;padding:7px 14px;border-radius:9px;
+  text-decoration:none;white-space:nowrap;}
+.wrap{max-width:760px;margin:0 auto;padding:0 14px;}
+
+.safe{background:#D1FAE5;border:1.5px solid #6EE7B7;color:#065F46;border-radius:12px;
+  padding:13px 16px;font-size:13px;font-weight:700;margin-top:16px;line-height:1.8;}
+
+.card{background:#fff;border-radius:14px;box-shadow:0 2px 10px rgba(12,59,94,.07);padding:18px;margin-top:14px;}
+.card h2{font-size:16px;font-weight:800;color:var(--deep);margin-bottom:6px;}
+.card p.sub{font-size:13px;color:var(--mist);margin-bottom:14px;line-height:1.8;}
+
+.btn{width:100%;border:none;font-family:'Tajawal',sans-serif;font-weight:800;font-size:15px;
+  padding:14px;border-radius:11px;cursor:pointer;}
+.btn-main{background:var(--deep);color:#fff;}
+.btn-main:hover{background:var(--steel);}
+.btn-main:disabled{background:var(--mist);cursor:not-allowed;}
+.btn-alt{background:#fff;border:1.5px solid var(--line);color:var(--slate);margin-top:10px;}
+.btn-alt:hover{border-color:var(--sky);color:var(--deep);}
+
+.paths{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px;margin-top:6px;}
+.path{background:var(--frost);border:1.5px solid var(--ice);border-radius:10px;padding:10px 12px;
+  display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.path .nm{font-size:13px;font-weight:700;color:var(--deep);}
+.path .ct{font-size:13px;font-weight:900;color:var(--slate);}
+.path.err{background:#FEF2F2;border-color:#FECACA;}
+.path.err .ct{color:var(--danger);font-size:11px;}
+
+.log{margin-top:14px;background:#0F172A;color:#CBD5E1;border-radius:11px;padding:13px 15px;
+  font-size:12px;line-height:2;max-height:230px;overflow-y:auto;font-family:'Tajawal',sans-serif;}
+.log b{color:#7DD3FC;}
+.log .ok{color:#6EE7B7;}
+.log .bad{color:#FCA5A5;}
+
+.hint{font-size:12px;color:var(--mist);margin-top:12px;line-height:1.9;}
+.hint b{color:var(--slate);}
+</style>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+<script src="atwad-admin-auth.js"></script>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>💾 النسخة الاحتياطية</h1>
+    <p>قراءة مباشرة من Firebase — بلا أي كتابة أو تعديل</p>
+  </div>
+  <a class="back" href="index.html">← الرئيسية</a>
+</div>
+
+<div class="wrap">
+
+  <div class="safe">
+    هذه الصفحة تقرأ فقط ولا تكتب شيئاً في قاعدة البيانات. لا يمكنها إتلاف أو تغيير أي سجل مهما ضغطت من أزرار.
+  </div>
+
+  <div class="card">
+    <h2>محتويات قاعدة البيانات</h2>
+    <p class="sub">اضغط «فحص» لقراءة الأعداد الحالية قبل التنزيل.</p>
+    <div class="paths" id="paths"></div>
+    <button class="btn btn-main" id="scanBtn" onclick="scanAll()" style="margin-top:14px;">🔍 فحص قاعدة البيانات</button>
+  </div>
+
+  <div class="card">
+    <h2>تنزيل النسخة الكاملة</h2>
+    <p class="sub">ملف واحد بصيغة JSON يحتوي كل المسارات، باسم فيه تاريخ اليوم. احفظه في مجلد ثابت على جهازك.</p>
+    <button class="btn btn-main" id="dlBtn" onclick="downloadBackup()" disabled>💾 تنزيل النسخة الكاملة</button>
+    <button class="btn btn-alt" id="csvBtn" onclick="downloadCsvPack()" disabled>📊 تنزيل جداول CSV منفصلة</button>
+  </div>
+
+  <div class="card">
+    <h2>سجل العملية</h2>
+    <div class="log" id="log">في انتظار الفحص…</div>
+    <p class="hint">
+      <b>الخطة الموصى بها:</b> نسخة كل أسبوع في <b>D:\attwad\backups</b>، ونسخ المجلد شهرياً إلى قرص خارجي أو سحابة غير جوجل.
+      الملف نصّي ويمكن فتحه بأي محرر، ويصلح لاستعادة أي سجل يدوياً عند الحاجة.
+    </p>
+  </div>
+
+</div>
+
+<script>
+var PATHS = [
+  { key:'appointments',        label:'المواعيد' },
+  { key:'bookings',            label:'الحجوزات' },
+  { key:'customers',           label:'العملاء' },
+  { key:'workOrders',          label:'أوامر العمل' },
+  { key:'transactions',        label:'القيود المالية' },
+  { key:'reviews',             label:'التقييمات' },
+  { key:'reviewCampaigns',     label:'حملات التقييم' },
+  { key:'appointmentWaitlist', label:'قائمة الانتظار' },
+  { key:'technicians',         label:'الفنيون' },
+  { key:'slotLocks',           label:'أقفال الفترات' },
+  { key:'settings',            label:'الإعدادات' },
+  { key:'publicSettings',      label:'إعدادات عامة' },
+  { key:'notifications',       label:'التنبيهات' },
+  { key:'clients',             label:'clients' },
+  { key:'importLogs',          label:'سجل الاستيراد' }
+];
+
+var db = null;
+var snapshot = {};      // النتيجة الكاملة بعد الفحص
+var scanned = false;
+
+try {
+  if(!firebase.apps.length){
+    firebase.initializeApp({databaseURL:'https://atwad-booking-default-rtdb.firebaseio.com'});
+  }
+  db = firebase.database();
+} catch(err) {
+  console.error('Firebase init:', err);
+}
+
+function esc(v){
+  return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function pad2(n){ return (n<10?'0':'') + n; }
+function stamp(){
+  var d = new Date();
+  return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate()) +
+         '_' + pad2(d.getHours()) + pad2(d.getMinutes());
+}
+function logLine(html){
+  var el = document.getElementById('log');
+  if(el.textContent === 'في انتظار الفحص…') el.innerHTML = '';
+  el.innerHTML += html + '<br>';
+  el.scrollTop = el.scrollHeight;
+}
+function countOf(val){
+  if(val === null || val === undefined) return 0;
+  if(typeof val === 'object') return Object.keys(val).length;
+  return 1;
+}
+
+function renderPaths(){
+  var html = '';
+  PATHS.forEach(function(p){
+    html += '<div class="path" id="p_' + p.key + '">' +
+              '<span class="nm">' + esc(p.label) + '</span>' +
+              '<span class="ct">—</span></div>';
+  });
+  document.getElementById('paths').innerHTML = html;
+}
+
+function scanAll(){
+  if(!db){ logLine('<span class="bad">تعذّر الاتصال بقاعدة البيانات.</span>'); return; }
+  var btn = document.getElementById('scanBtn');
+  btn.disabled = true; btn.textContent = '⏳ جارٍ الفحص…';
+  snapshot = {};
+  document.getElementById('log').innerHTML = '';
+  logLine('<b>بدء الفحص</b> — ' + PATHS.length + ' مساراً');
+
+  var done = 0;
+  PATHS.forEach(function(p){
+    db.ref(p.key).once('value').then(function(snap){
+      var val = snap.val();
+      snapshot[p.key] = val;
+      var n = countOf(val);
+      var box = document.getElementById('p_' + p.key);
+      box.querySelector('.ct').textContent = n;
+      logLine('<span class="ok">✓</span> ' + esc(p.label) + ': ' + n);
+      finish();
+    }).catch(function(err){
+      var box = document.getElementById('p_' + p.key);
+      box.className = 'path err';
+      box.querySelector('.ct').textContent = 'تعذّر';
+      logLine('<span class="bad">✗ ' + esc(p.label) + ' — ' + esc(err.message) + '</span>');
+      finish();
+    });
+  });
+
+  function finish(){
+    done++;
+    if(done < PATHS.length) return;
+    scanned = true;
+    btn.disabled = false; btn.textContent = '🔄 إعادة الفحص';
+    document.getElementById('dlBtn').disabled = false;
+    document.getElementById('csvBtn').disabled = false;
+    var total = 0;
+    Object.keys(snapshot).forEach(function(k){ total += countOf(snapshot[k]); });
+    logLine('<b>اكتمل الفحص</b> — إجمالي السجلات: ' + total + '. يمكنك التنزيل الآن.');
+  }
+}
+
+function saveFile(text, name, type){
+  var blob = new Blob(['\ufeff' + text], {type: type + ';charset=utf-8;'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 4000);
+}
+
+function downloadBackup(){
+  if(!scanned){ alert('شغّل الفحص أولاً.'); return; }
+  var payload = {
+    _meta: {
+      business: 'مؤسسة أطواد لصيانة المكيفات',
+      database: 'atwad-booking-default-rtdb',
+      createdAt: new Date().toISOString(),
+      paths: PATHS.map(function(p){ return p.key; })
+    },
+    data: snapshot
+  };
+  var name = 'atwad-backup-' + stamp() + '.json';
+  saveFile(JSON.stringify(payload, null, 2), name, 'application/json');
+  logLine('<span class="ok">💾 تم تنزيل</span> ' + esc(name));
+}
+
+/** يحوّل مساراً إلى CSV بأعمدة موحّدة من كل الحقول الموجودة */
+function pathToCsv(val){
+  if(!val || typeof val !== 'object') return '';
+  var keys = Object.keys(val);
+  if(!keys.length) return '';
+  var cols = {};
+  keys.forEach(function(k){
+    var row = val[k];
+    if(row && typeof row === 'object'){
+      Object.keys(row).forEach(function(c){ cols[c] = true; });
+    }
+  });
+  var colList = Object.keys(cols);
+  var lines = [['_key'].concat(colList).join(',')];
+  keys.forEach(function(k){
+    var row = val[k] || {};
+    var cells = [k];
+    colList.forEach(function(c){
+      var v = row[c];
+      if(v === null || v === undefined) v = '';
+      else if(typeof v === 'object') v = JSON.stringify(v);
+      v = String(v).replace(/"/g,'""').replace(/\r?\n/g,' ');
+      cells.push('"' + v + '"');
+    });
+    lines.push(cells.join(','));
+  });
+  return lines.join('\n');
+}
+
+function downloadCsvPack(){
+  if(!scanned){ alert('شغّل الفحص أولاً.'); return; }
+  var made = 0;
+  PATHS.forEach(function(p, i){
+    var csv = pathToCsv(snapshot[p.key]);
+    if(!csv) return;
+    made++;
+    // تأخير متدرّج حتى لا يحجب المتصفح التنزيلات المتتابعة
+    setTimeout(function(){
+      saveFile(csv, 'atwad-' + p.key + '-' + stamp() + '.csv', 'text/csv');
+    }, i * 500);
+  });
+  logLine('<span class="ok">📊 جارٍ تنزيل</span> ' + made + ' ملف CSV — وافق على التنزيلات المتعددة إن سألك المتصفح.');
+}
+
+renderPaths();
+var started = false;
+function startOnce(){
+  if(started) return;
+  started = true;
+  logLine('جاهز. اضغط «فحص قاعدة البيانات».');
+}
+window.addEventListener('atwad-admin-auth-ready', startOnce);
+window.__atwadInitPage = startOnce;
+setTimeout(startOnce, 3000);
+</script>
+</body>
+</html>
