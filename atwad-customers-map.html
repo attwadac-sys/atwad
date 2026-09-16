@@ -374,8 +374,19 @@ function toggleRepeat(){
   applyFilters();
 }
 
-window.__atwadInitPage = function(){ loadAll(); };
-if(typeof window.atwadAdminAuth === 'undefined') loadAll();
+/* atwad-admin-auth.js يطلق هذا الحدث بعد نجاح تسجيل الدخول */
+var loadStarted = false;
+function startOnce(){
+  if(loadStarted) return;
+  loadStarted = true;
+  loadAll();
+}
+window.addEventListener('atwad-admin-auth-ready', startOnce);
+window.__atwadInitPage = startOnce;   // توافق مع atwad-auth.js في صفحات أخرى
+
+/* شبكة أمان: إن لم يصل الحدث خلال ثلاث ثوانٍ (نسخة مختلفة من ملف المصادقة)
+   نبدأ القراءة مباشرة — قواعد Firebase هي التي تحمي البيانات في كل الأحوال. */
+setTimeout(startOnce, 3000);
 </script>
 </body>
 </html>
