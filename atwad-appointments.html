@@ -3864,6 +3864,14 @@ function closeCustomerNotice() {
   }
   _customerNoticePhone = '';
   _customerNoticeMessage = '';
+
+  // كان إشعار العميل يحجب قائمة الانتظار فلا تُفتح إطلاقاً بعد الإلغاء.
+  // الآن تُفتح فور إغلاق الإشعار.
+  if(_pendingFreeSlot) {
+    var slot = _pendingFreeSlot;
+    _pendingFreeSlot = null;
+    setTimeout(function(){ openWaitingList(slot); }, 250);
+  }
 }
 
 // ============================================================
@@ -3962,6 +3970,7 @@ function confirmCancel() {
 // ============================================================
 var waitingList = []; // تُحمَّل من Firebase
 var _freeSlotForWaiting = null; // الموعد الشاغر الحالي
+var _pendingFreeSlot    = null; // فترة شاغرة تنتظر إغلاق إشعار العميل
 
 /** تحميل قائمة الانتظار من Firebase */
 function loadWaitingList() {
@@ -4199,10 +4208,14 @@ function showFreeSlot(cancelledAppt) {
   }).sort(function(a,b){ return b._score - a._score; });
 
   if(scored.length) {
-    showToast('🔍 يوجد ' + scored.length + ' عميل في قائمة الانتظار — افتح القائمة للبديل');
+    showToast('🔍 يوجد ' + scored.length + ' عميل في قائمة الانتظار — سنعرضهم بعد إشعار العميل');
     setTimeout(function(){
       var notice = document.getElementById('customerNoticeModal');
-      if(!(notice && notice.classList.contains('open'))) openWaitingList(cancelledAppt);
+      if(notice && notice.classList.contains('open')) {
+        _pendingFreeSlot = cancelledAppt;   // تُفتح فور إغلاق الإشعار
+      } else {
+        openWaitingList(cancelledAppt);
+      }
     }, 800);
   } else {
     showToast('📢 تحرّر وقت: ' + formatDateShort(cancelledAppt.date) + ' — ' + (cancelledAppt.time||''));
