@@ -3380,7 +3380,7 @@ function openDetail(id){
     ${a.notes?`<div style="background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:10px;padding:12px;margin-bottom:14px;font-size:13px;color:#92400E;">📝 ${a.notes}</div>`:''}
     ${a.locationImage?`<div style="margin-bottom:14px;"><div style="font-size:12px;color:var(--mist);margin-bottom:6px;">📸 صورة الموقع</div><img src="${a.locationImage}" style="width:100%;max-height:200px;object-fit:cover;border-radius:10px;border:1.5px solid var(--ice);" onclick="window.open('${a.locationImage}','_blank')"></div>`:''}
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
-      <a href="${atwadWaUrl(a.phone,'مرحباً '+a.client+'،\nتذكير بموعدكم مع مؤسسة أطواد\nالخدمة: '+a.service+'\nالتاريخ: '+formatDateShort(a.date)+'\nالوقت: '+a.time)}" target="_blank" style="flex:1;text-align:center;padding:10px;background:#25D366;color:#fff;border-radius:9px;font-weight:700;text-decoration:none;font-size:13px;min-width:100px;">📲 تذكير</a>
+      <a href="${atwadWaUrl(a.phone, buildReminderMessage(a))}" target="atwadWhatsApp" style="flex:1;text-align:center;padding:10px;background:#25D366;color:#fff;border-radius:9px;font-weight:700;text-decoration:none;font-size:13px;min-width:100px;">📲 تذكير</a>
       <button onclick="sendWhatsAppConfirmation(findAppt('${aId}'))" style="flex:1;padding:10px;background:#DBEAFE;color:#1E40AF;border:none;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;min-width:100px;">✅ تأكيد للعميل</button>
       ${a.tech
         ? `<button onclick="sendToTechnician('${aId}')" style="flex:1;padding:10px;background:#7C3AED;color:#fff;border:none;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;min-width:100px;">📤 إرسال للفني</button>
@@ -3518,11 +3518,57 @@ function removeApptLocally(a){
   }
 }
 
+/** كم موعداً أُلغي سابقاً لنفس رقم الجوال (عدا الموعد الحالي) */
+function countPreviousCancellations(a){
+  if(!a) return 0;
+  var phone = customerNoticePhone(a.phone);
+  if(!phone) return 0;
+  var selfKey = a._fbKey || '';
+  var n = 0;
+  appointments.forEach(function(x){
+    if(String(x.status||'') !== 'cancelled') return;
+    if(x._fbKey && x._fbKey === selfKey) return;
+    if(customerNoticePhone(x.phone) !== phone) return;
+    n++;
+  });
+  return n;
+}
+
+/**
+ * رسالة التذكير تتكيّف مع سجل العميل:
+ * الملتزم يتلقى طلب تأكيد لطيفاً، ومن تكررت إلغاءاته
+ * يتلقى طلباً أوضح مع مهلة رد، حتى لا تُحجز الفترة بلا فائدة.
+ */
+function buildReminderMessage(a){
+  if(!a) return '';
+  var cancels = countPreviousCancellations(a);
+  var lines = [
+    'مرحباً ' + (a.client || '') + '،',
+    'تذكير بموعدكم مع مؤسسة أطواد',
+    'الخدمة: ' + (a.service || '—'),
+    'التاريخ: ' + formatDateShort(a.date),
+    'الوقت: ' + (a.time || '—'),
+    ''
+  ];
+
+  if(cancels >= 2){
+    lines.push('نرجو تأكيد الموعد بالرد بكلمة «تم» قبل موعده بيوم.');
+    lines.push('وفي حال عدم وصول تأكيدكم، سنتيح الفترة لعميل آخر من قائمة الانتظار.');
+    lines.push('ويسعدنا إعادة جدولتكم في أي وقت يناسبكم.');
+  } else if(cancels === 1){
+    lines.push('نرجو تأكيد الموعد بالرد بكلمة «تم».');
+    lines.push('وإن كان الوقت غير مناسب، أخبرونا مبكراً ونعيد جدولته لكم بسهولة.');
+  } else {
+    lines.push('نرجو تأكيد الموعد بالرد بكلمة «تم».');
+    lines.push('وإن أردتم التأجيل أو الإلغاء، أخبرونا مشكورين لنتيح الموعد لعميل آخر.');
+  }
+  return lines.join('\n');
+}
+
 function sendWhatsapp(id){
   const a = findAppt(id);
   if(!a) return;
-  const msg=`مرحباً ${a.client}،\nتذكير بموعدكم مع مؤسسة أطواد\nالخدمة: ${a.service}\nالتاريخ: ${formatDateShort(a.date)}\nالوقت: ${a.time}`;
-  window.open(atwadWaUrl(a.phone, msg),'_blank');
+  openAtwadWa(a.phone, buildReminderMessage(a));
 }
 
 // ============================================================
