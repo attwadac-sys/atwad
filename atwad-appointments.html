@@ -2667,6 +2667,15 @@ function saveAppt(){
           queueCustomerNotice('reschedule', _notifyAfter.phone,
             buildCustomerRescheduleMessage(_oldNotifySnapshot, _notifyAfter));
         }
+
+        // تغيير الحالة إلى «ملغى» من نموذج التعديل كان يترك الفترة مقفلة وهماً،
+        // فتظهر محجوزة رغم أن الموعد ملغى. الآن يسلك نفس مسار زر الإلغاء:
+        // تحرير الأقفال، إشعار العميل، ثم عرض قائمة الانتظار.
+        var _wasCancelled = String(_oldNotifySnapshot.status || '') === 'cancelled';
+        var _nowCancelled = String(data.status || '') === 'cancelled';
+        if(_nowCancelled && !_wasCancelled) {
+          handleCancelledByEdit(_notifyAfter);
+        }
       })
       .catch(function(e){
         endManualSave();
@@ -3898,6 +3907,36 @@ function sendReminder(id) {
 // ============================================================
 var _cancellingId = '';
 var _cancelReason = '';
+
+/**
+ * إلغاء تم عبر تغيير الحالة في نموذج التعديل:
+ * يحرّر الأقفال ويُشعر العميل ويفتح قائمة الانتظار،
+ * تماماً كزر «✕ إلغاء الموعد».
+ */
+function handleCancelledByEdit(appt) {
+  if(!appt) return;
+  var finish = function() {
+    queueCustomerNotice('cancel', appt.phone, buildCustomerCancelMessage(appt));
+    setTimeout(function(){ showFreeSlot(appt); }, 900);
+  };
+  try {
+    var p = releaseSlotLocksForAppt(appt);
+    if(p && typeof p.then === 'function') {
+      p.then(function(){
+        showToast('🔓 تم تحرير فترة الموعد الملغى');
+        finish();
+      }).catch(function(err){
+        showToast('⚠️ أُلغي الموعد لكن تعذّر تحرير الأقفال: ' + err.message);
+        finish();
+      });
+    } else {
+      finish();
+    }
+  } catch(err) {
+    showToast('⚠️ أُلغي الموعد لكن تعذّر تحرير الأقفال: ' + err.message);
+    finish();
+  }
+}
 
 function openCancelModal(id) {
   _cancellingId = id;
