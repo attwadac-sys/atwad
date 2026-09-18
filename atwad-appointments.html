@@ -3492,8 +3492,30 @@ function deleteAppt(id, e){
   const ref = a._source==='bookings' ? 'bookings/'+a._fbKey : 'appointments/'+a._fbKey;
   db.ref(ref).remove()
     .then(function(){ return releaseSlotLocksForAppt(a); })
-    .then(() => showToast('🗑️ تم حذف الموعد'))
+    .then(function(){
+      showToast('🗑️ تم حذف الموعد');
+      // أحياناً يتأخر مُستمع Firebase فتبقى البطاقة ظاهرة بعد الحذف.
+      // نزيلها محلياً ونعيد العرض فوراً بدل انتظار المزامنة.
+      removeApptLocally(a);
+    })
     .catch(e => showToast('❌ خطأ: ' + e.message));
+}
+
+/** إزالة موعد من البيانات المحلية وإعادة رسم العرض فوراً */
+function removeApptLocally(a){
+  if(!a) return;
+  var key = a._fbKey;
+  appointments = appointments.filter(function(x){
+    if(key && x._fbKey === key && x._source === a._source) return false;
+    return true;
+  });
+  try {
+    updateStats();
+    renderWeek();
+    renderList();
+  } catch(err) {
+    console.error('refresh after delete:', err);
+  }
 }
 
 function sendWhatsapp(id){
