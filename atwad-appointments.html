@@ -383,6 +383,20 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
   <div id="weekView" style="display:none;padding:0 22px 30px;">
     <div class="week-grid" id="weekGrid"></div>
   </div>
+  <div id="searchBar" style="display:none;padding:0 22px 12px;">
+    <div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap;background:#fff;border-radius:12px;
+                padding:11px 14px;box-shadow:0 2px 8px rgba(12,59,94,.06);">
+      <input type="search" id="apptSearch" placeholder="ابحث باسم العميل أو رقمه أو الحي أو رقم الحجز"
+             oninput="renderList()"
+             style="flex:1;min-width:210px;font-family:'Tajawal',sans-serif;font-size:14px;padding:10px 12px;
+                    border:1.5px solid var(--line);border-radius:10px;background:var(--frost);color:var(--slate);">
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--slate);cursor:pointer;">
+        <input type="checkbox" id="showCancelled" onchange="renderList()" style="width:16px;height:16px;cursor:pointer;">
+        إظهار الملغاة
+      </label>
+      <span id="searchCount" style="font-size:12px;color:var(--mist);font-weight:700;"></span>
+    </div>
+  </div>
   <div class="list-view" id="listView"></div>
 </div>
 
@@ -1453,8 +1467,28 @@ function renderWeek(){
 
 // ===== LIST VIEW =====
 function renderList(){
-  let appts = appointments.filter(atwadIsVisibleAppointment);
+  var showCancelledEl = document.getElementById('showCancelled');
+  var withCancelled = showCancelledEl ? showCancelledEl.checked : false;
+
+  // الملغاة مخفية افتراضياً؛ مربع «إظهار الملغاة» يعيدها للعرض
+  let appts = appointments.filter(function(a){
+    if(withCancelled && String(a.status||'') === 'cancelled') return true;
+    return atwadIsVisibleAppointment(a);
+  });
   if(techFilter!=='all') appts = appts.filter(a=>a.tech===techFilter);
+
+  var qEl = document.getElementById('apptSearch');
+  var q = qEl ? qEl.value.trim().toLowerCase() : '';
+  if(q){
+    appts = appts.filter(function(a){
+      var hay = [a.client, a.phone, a.district, a.address, a.service, a.ref, a.tech, a.notes]
+        .map(function(v){ return String(v == null ? '' : v); })
+        .join(' ').toLowerCase();
+      return hay.indexOf(q) !== -1;
+    });
+  }
+  var countEl = document.getElementById('searchCount');
+  if(countEl) countEl.textContent = q || withCancelled ? (appts.length + ' نتيجة') : '';
   // داخل اليوم الواحد: تصاعدي حسب الوقت، والمواعيد بلا وقت في آخر يومها
   appts.sort(function(a, b) {
     var dateA = a.date || '';
@@ -1470,7 +1504,9 @@ function renderList(){
   appts.forEach(a=>{ if(!grouped[a.date]) grouped[a.date]=[]; grouped[a.date].push(a); });
   conflictIndex = computeConflictIndex();
   if(Object.keys(grouped).length===0){
-    document.getElementById('listView').innerHTML = `<div style="text-align:center;padding:60px 20px;color:var(--mist);"><div style="font-size:48px;margin-bottom:12px;">📅</div><p style="font-size:15px;">لا توجد مواعيد بعد<br><small>المواعيد ستظهر هنا تلقائياً عند وصول حجوزات جديدة</small></p></div>`;
+    document.getElementById('listView').innerHTML = q
+      ? `<div style="text-align:center;padding:60px 20px;color:var(--mist);"><div style="font-size:48px;margin-bottom:12px;">🔍</div><p style="font-size:15px;">لا نتائج لـ «${q}»<br><small>جرّب جزءاً من الاسم أو الرقم، أو فعّل «إظهار الملغاة»</small></p></div>`
+      : `<div style="text-align:center;padding:60px 20px;color:var(--mist);"><div style="font-size:48px;margin-bottom:12px;">📅</div><p style="font-size:15px;">لا توجد مواعيد بعد<br><small>المواعيد ستظهر هنا تلقائياً عند وصول حجوزات جديدة</small></p></div>`;
     return;
   }
   let html = '';
@@ -1581,6 +1617,8 @@ function switchView(v){
   document.getElementById('vList').classList.toggle('active', v==='list');
   document.getElementById('weekView').style.display = v==='week'?'block':'none';
   document.getElementById('listView').style.display = v==='list'?'block':'none';
+  var sb = document.getElementById('searchBar');
+  if(sb) sb.style.display = v==='list'?'block':'none';
   if(v==='week') renderWeek(); else renderList();
 }
 function changeWeek(dir){ currentWeekOffset+=dir; renderWeek(); }
