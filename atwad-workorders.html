@@ -40,6 +40,8 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 .stat-card.done{border-color:var(--success);}
 .stat-card.incomplete{border-color:#F59E0B;}
 .incomplete-badge{position:absolute;top:7px;left:7px;background:#F59E0B;color:#fff;border-radius:20px;font-size:10px;font-weight:800;padding:2px 7px;}
+.credit-badge{position:absolute;top:7px;left:7px;background:#B91C1C;color:#fff;border-radius:20px;font-size:10px;font-weight:800;padding:2px 8px;}
+.wo-card:has(.incomplete-badge) .credit-badge{top:30px;}
 .wo-card{position:relative;}
 .wo-incomplete-warn{background:#FEF9C3;border:1.5px solid #FDE68A;border-radius:10px;padding:9px 13px;font-size:12px;color:#92400E;margin-bottom:14px;display:none;}
 .wo-incomplete-warn.show{display:block;}
@@ -337,7 +339,15 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
         <div class="form-row">
           <div class="form-group"><label>خصم (ريال)</label><input type="number" id="w_discount" placeholder="0" min="0" value="0" oninput="updateInvoice()"></div>
           <div class="form-group"><label>طريقة الدفع</label>
-            <select id="w_payment"><option value="كاش">💵 كاش</option><option value="تحويل">🏦 تحويل بنكي</option><option value="مدى">💳 مدى</option></select>
+            <select id="w_payment" onchange="onPaymentChange(this.value)"><option value="كاش">💵 كاش</option><option value="تحويل">🏦 تحويل بنكي</option><option value="مدى">💳 مدى</option><option value="آجل">⏳ آجل (مديونية)</option></select>
+          </div>
+        </div>
+        <div class="form-row" id="dueRow" style="display:none;">
+          <div class="form-group"><label>موعد السداد المتوقع</label>
+            <input type="date" id="w_due_date">
+          </div>
+          <div class="form-group"><label>ملاحظة المديونية</label>
+            <input type="text" id="w_due_note" placeholder="مثال: السداد عند نزول الراتب">
           </div>
         </div>
         <div class="invoice-preview">
@@ -831,6 +841,72 @@ function setFilter(f, btn){
 }
 
 // ===== RENDER =====
+/** يُظهر حقول المديونية عند اختيار الدفع الآجل فقط */
+function onPaymentChange(value){
+  var row=document.getElementById('dueRow');
+  if(row) row.style.display = (value==='آجل') ? 'flex' : 'none';
+}
+
+/**
+ * يزامن المديونية مع الإدارة المالية.
+ * أمر العمل الآجل يُنشئ قيد إيراد بحالة «مؤجل» في transactions،
+ * فيظهر تلقائياً في قسم الذمم المدينة. وعند تغيير طريقة الدفع
+ * يُحذف القيد المرتبط ما دام لم يُحصّل منه شيء.
+ */
+function syncCreditToFinance(w){
+  if(typeof db==='undefined' || !db || !w || !w.id) return;
+  db.ref('transactions').once('value').then(function(snap){
+    var existingKey = null, existing = null;
+    snap.forEach(function(child){
+      var t = child.val();
+      if(t && t.woId === w.id){ existingKey = child.key; existing = t; }
+    });
+
+    // الدفع لم يعد آجلاً: نحذف القيد ما لم يكن قد حُصّل منه مبلغ
+    if(w.payment !== 'آجل'){
+      if(existingKey && !(existing && Number(existing.paidAmount) > 0)){
+        db.ref('transactions/' + existingKey).remove();
+      }
+      return;
+    }
+
+    var amount = Number(w.total) || 0;
+    if(amount <= 0) return;   // لا نُنشئ ذمّة بمبلغ صفر
+
+    var entry = {
+      id: existing && existing.id ? existing.id : ('F' + Date.now().toString().slice(-7)),
+      type: 'income',
+      amount: amount,
+      desc: 'أمر عمل ' + w.id + ' — ' + (w.service || 'خدمة'),
+      date: w.date || new Date().toISOString().slice(0,10),
+      category: 'خدمة',
+      method: 'كاش',
+      party: w.client || '',
+      status: 'مؤجل',
+      dueType: w.dueDate ? 'specific' : 'open',
+      payments: existing && existing.payments ? existing.payments : [],
+      paidAmount: existing && existing.paidAmount ? existing.paidAmount : 0,
+      woId: w.id,
+      createdAt: existing && existing.createdAt ? existing.createdAt : new Date().toISOString()
+    };
+    if(w.dueDate) entry.dueDate = w.dueDate;
+    if(w.dueNote) entry.paymentNote = w.dueNote;
+
+    if(existingKey){
+      db.ref('transactions/' + existingKey).update(entry);
+    } else {
+      db.ref('transactions').push().set(entry);
+    }
+  }).catch(function(err){
+    console.error('[workorders] تعذّر مزامنة المديونية مع المالية:', err);
+  });
+}
+
+/** يرجع true إذا كان أمر العمل مديونية غير محصّلة */
+function isCredit(w){
+  return w && w.payment==='آجل' && w.paymentSettled!==true;
+}
+
 function renderWOs(search=''){
   let list = workOrders.slice();
   if(currentFilter !== 'all') list = list.filter(w=>w.status===currentFilter);
@@ -860,6 +936,7 @@ function renderWOs(search=''){
     return `
       <div class="wo-card s-${w.status||'open'}" onclick="openWODetail('${w.id}')">
       ${incomplete ? '<span class="incomplete-badge">⚠️ ناقص</span>' : ''}
+      ${isCredit(w) ? '<span class="credit-badge">⏳ آجل' + (w.dueDate ? ' · '+escapeHTML(fmtDate(w.dueDate)) : '') + '</span>' : ''}
       <div class="wo-header">
         <span class="wo-id">${escapeHTML(w.id)}</span>
         <span class="wo-status ${sMap[w.status||'open']}">${sLabel[w.status||'open']}</span>
@@ -904,6 +981,9 @@ function openNewWO(){
   document.getElementById('w_parts_cost').value='0';
   document.getElementById('w_discount').value='0';
   document.getElementById('w_payment').value='كاش';
+  var dd=document.getElementById('w_due_date'); if(dd) dd.value='';
+  var dn=document.getElementById('w_due_note'); if(dn) dn.value='';
+  onPaymentChange('كاش');
   ['pb1','pb2','pb3','pa1','pa2','pa3'].forEach(id=>{ const b=document.getElementById(id); if(b){ const imgs=b.querySelectorAll('img'); imgs.forEach(i=>i.remove()); }});
   document.querySelectorAll('.star').forEach(s=>s.classList.remove('active'));
   document.getElementById('ratingLabel').textContent='';
@@ -930,6 +1010,9 @@ function openWODetail(id){
   document.getElementById('w_problem').value = w.problem || '';
   document.getElementById('w_parts').value   = w.parts   || '';
   document.getElementById('w_payment').value = w.payment || 'كاش';
+  var dd2=document.getElementById('w_due_date'); if(dd2) dd2.value = w.dueDate || '';
+  var dn2=document.getElementById('w_due_note'); if(dn2) dn2.value = w.dueNote || '';
+  onPaymentChange(w.payment || 'كاش');
 
   // الأسعار مباشرة من السجل
   setNumericInputValue('w_price',      w.price    || 0);
@@ -1023,6 +1106,10 @@ function saveWO(){
     parts: document.getElementById('w_parts').value.trim(),
     price, partsCost: parts, discount: disc, total,
     payment: document.getElementById('w_payment').value,
+    dueDate: document.getElementById('w_payment').value==='آجل'
+      ? (document.getElementById('w_due_date').value||'') : '',
+    dueNote: document.getElementById('w_payment').value==='آجل'
+      ? document.getElementById('w_due_note').value.trim() : '',
     sig: getSigData(),
     createdAt: new Date().toISOString()
   };
@@ -1038,6 +1125,7 @@ function saveWO(){
   document.getElementById('successWONum').querySelector('div:last-child').textContent = id;
   document.getElementById('invNum').textContent = id;
   saveData(); updateStats(); renderWOs();
+  syncCreditToFinance(editingWO ? workOrders[workOrders.findIndex(function(x){return x.id===editingWO;})] : data);
 }
 
 function finalizeWO(){
