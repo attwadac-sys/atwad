@@ -390,10 +390,13 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
              oninput="renderList()"
              style="flex:1;min-width:210px;font-family:'Tajawal',sans-serif;font-size:14px;padding:10px 12px;
                     border:1.5px solid var(--line);border-radius:10px;background:var(--frost);color:var(--slate);">
-      <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--slate);cursor:pointer;">
-        <input type="checkbox" id="showCancelled" onchange="renderList()" style="width:16px;height:16px;cursor:pointer;">
-        إظهار الملغاة
-      </label>
+      <select id="cancelFilter" onchange="renderList()"
+              style="font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;padding:10px 10px;
+                     border:1.5px solid var(--line);border-radius:10px;background:#fff;color:var(--slate);cursor:pointer;">
+        <option value="active">النشطة فقط</option>
+        <option value="all">الكل (مع الملغاة)</option>
+        <option value="cancelled">الملغاة فقط</option>
+      </select>
       <span id="searchCount" style="font-size:12px;color:var(--mist);font-weight:700;"></span>
     </div>
   </div>
@@ -1467,12 +1470,14 @@ function renderWeek(){
 
 // ===== LIST VIEW =====
 function renderList(){
-  var showCancelledEl = document.getElementById('showCancelled');
-  var withCancelled = showCancelledEl ? showCancelledEl.checked : false;
+  var cfEl = document.getElementById('cancelFilter');
+  var cancelMode = cfEl ? cfEl.value : 'active';   // active | all | cancelled
 
-  // الملغاة مخفية افتراضياً؛ مربع «إظهار الملغاة» يعيدها للعرض
+  // الملغاة مخفية افتراضياً؛ القائمة المنسدلة تتحكم بإظهارها أو عرضها وحدها
   let appts = appointments.filter(function(a){
-    if(withCancelled && String(a.status||'') === 'cancelled') return true;
+    var isCancelled = String(a.status||'') === 'cancelled';
+    if(cancelMode === 'cancelled') return isCancelled;
+    if(cancelMode === 'all') return isCancelled || atwadIsVisibleAppointment(a);
     return atwadIsVisibleAppointment(a);
   });
   if(techFilter!=='all') appts = appts.filter(a=>a.tech===techFilter);
@@ -1488,7 +1493,16 @@ function renderList(){
     });
   }
   var countEl = document.getElementById('searchCount');
-  if(countEl) countEl.textContent = q || withCancelled ? (appts.length + ' نتيجة') : '';
+  if(countEl){
+    var cancelledTotal = appointments.filter(function(a){ return String(a.status||'') === 'cancelled'; }).length;
+    if(cancelMode === 'cancelled'){
+      countEl.textContent = appts.length + ' موعد ملغى من أصل ' + cancelledTotal;
+    } else if(q || cancelMode === 'all'){
+      countEl.textContent = appts.length + ' نتيجة' + (cancelledTotal ? ' · ' + cancelledTotal + ' ملغى إجمالاً' : '');
+    } else {
+      countEl.textContent = '';
+    }
+  }
   // داخل اليوم الواحد: تصاعدي حسب الوقت، والمواعيد بلا وقت في آخر يومها
   appts.sort(function(a, b) {
     var dateA = a.date || '';
@@ -1504,6 +1518,11 @@ function renderList(){
   appts.forEach(a=>{ if(!grouped[a.date]) grouped[a.date]=[]; grouped[a.date].push(a); });
   conflictIndex = computeConflictIndex();
   if(Object.keys(grouped).length===0){
+    if(cancelMode === 'cancelled' && !q){
+      document.getElementById('listView').innerHTML =
+        '<div style="text-align:center;padding:60px 20px;color:var(--mist);"><div style="font-size:48px;margin-bottom:12px;">✅</div><p style="font-size:15px;">لا توجد مواعيد ملغاة</p></div>';
+      return;
+    }
     document.getElementById('listView').innerHTML = q
       ? `<div style="text-align:center;padding:60px 20px;color:var(--mist);"><div style="font-size:48px;margin-bottom:12px;">🔍</div><p style="font-size:15px;">لا نتائج لـ «${q}»<br><small>جرّب جزءاً من الاسم أو الرقم، أو فعّل «إظهار الملغاة»</small></p></div>`
       : `<div style="text-align:center;padding:60px 20px;color:var(--mist);"><div style="font-size:48px;margin-bottom:12px;">📅</div><p style="font-size:15px;">لا توجد مواعيد بعد<br><small>المواعيد ستظهر هنا تلقائياً عند وصول حجوزات جديدة</small></p></div>`;
@@ -1541,6 +1560,9 @@ function renderList(){
           ${isBooking?'<span class="source-badge source-firebase">📱 حجز إلكتروني</span>':'<span class="source-badge source-local">✏️ يدوي</span>'}
           ${renderConflictBadge(a)}
           ${renderTechnicianNotificationBadge(a)}
+          ${String(a.status||'')==='cancelled' && a.cancelReason
+            ? `<div style="font-size:11px;color:#991B1B;background:#FEE2E2;border-radius:7px;padding:3px 9px;margin-top:5px;display:inline-block;">✕ سبب الإلغاء: ${atwadEsc(a.cancelReason)}${a.cancelledAt?' · '+String(a.cancelledAt).slice(0,10):''}</div>`
+            : ''}
         </div>
         <div class="appt-meta">
           <span class="status-pill ${sv.pill}">${sv.icon} ${atwadEsc(sv.label)}</span>
