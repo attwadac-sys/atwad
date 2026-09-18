@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم المالية - أطواد</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js"></script>
+    <style>
+        :root {
+            --primary: #FF6B35;
+            --secondary: #004E89;
+            --success: #1CAD59;
+            --danger: #D62839;
+            --warning: #F77F00;
+            --light: #ECEFF1;
+            --dark: #263238;
+            --text: #37474F;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .controls {
+            background: var(--light);
+            padding: 20px;
+            border-bottom: 2px solid #e0e0e0;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: flex-end;
+        }
+        
+        .control-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .control-group label {
+            font-weight: 600;
+            color: var(--secondary);
+        }
+        
+        .control-group input {
+            padding: 10px;
+            border: 2px solid var(--primary);
+            border-radius: 6px;
+            font-size: 1em;
+        }
+        
+        .control-group button {
+            padding: 10px 20px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .control-group button:hover {
+            background: var(--secondary);
+            transform: translateY(-2px);
+        }
+        
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            background: white;
+        }
+        
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .metric-card.income {
+            background: linear-gradient(135deg, #1CAD59 0%, #0d7a3a 100%);
+        }
+        
+        .metric-card.expense {
+            background: linear-gradient(135deg, #D62839 0%, #a01e2a 100%);
+        }
+        
+        .metric-card.profit {
+            background: linear-gradient(135deg, #FF6B35 0%, #d94413 100%);
+        }
+        
+        .metric-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+        
+        .metric-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .metric-currency {
+            font-size: 0.8em;
+            opacity: 0.8;
+        }
+        
+        .charts-section {
+            padding: 30px;
+            background: white;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+        }
+        
+        .chart-container {
+            background: var(--light);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        
+        .chart-container h3 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: var(--secondary);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--primary);
+            font-size: 1.2em;
+        }
+        
+        .error {
+            padding: 20px;
+            background: #ffebee;
+            color: var(--danger);
+            border-radius: 8px;
+            margin: 20px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+        
+        .empty-state svg {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.8em;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .control-group {
+                flex-direction: column;
+            }
+            
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📊 لوحة التحكم المالية</h1>
+            <p>مؤسسة أطواد الحجاز لصيانة وتنظيف المكيفات</p>
+        </header>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label>من:</label>
+                <input type="date" id="startDate">
+            </div>
+            <div class="control-group">
+                <label>إلى:</label>
+                <input type="date" id="endDate">
+            </div>
+            <div class="control-group">
+                <button onclick="loadData()">🔄 تحديث البيانات</button>
+            </div>
+        </div>
+        
+        <div id="metricsContainer" class="metrics">
+            <div class="loading">⏳ جاري تحميل البيانات...</div>
+        </div>
+        
+        <div id="chartsContainer" class="charts-section"></div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAjq2PVCkAVYwqpIpKIGx01LkbCB3TmW6w",
+            authDomain: "atwad-booking.firebaseapp.com",
+            databaseURL: "https://atwad-booking-default-rtdb.firebaseio.com",
+            projectId: "atwad-booking",
+            storageBucket: "atwad-booking.firebasestorage.app",
+            messagingSenderId: "110922546416",
+            appId: "1:110922546416:web:d8cd48aa90f2d6ce9cd635"
+        };
+
+        let db;
+        let charts = {};
+
+        try {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.database();
+        } catch (error) {
+            console.error("Firebase initialization error:", error);
+        }
+
+        function setDefaultDates() {
+            const today = new Date();
+            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+            
+            document.getElementById('startDate').valueAsDate = firstDay;
+            document.getElementById('endDate').valueAsDate = today;
+        }
+
+        async function loadData() {
+            const startDate = new Date(document.getElementById('startDate').value);
+            const endDate = new Date(document.getElementById('endDate').value);
+            
+            endDate.setHours(23, 59, 59, 999);
+            
+            try {
+                const snapshot = await db.ref('transactions').get();
+                const transactions = snapshot.val() || {};
+                
+                const filtered = Object.values(transactions).filter(t => {
+                    if (!t.date) return false;
+                    let txDate;
+                    if (typeof t.date === 'number') {
+                        txDate = new Date(t.date);
+                    } else {
+                        txDate = new Date(t.date);
+                    }
+                    return txDate >= startDate && txDate <= endDate;
+                });
+
+                if (filtered.length === 0) {
+                    document.getElementById('metricsContainer').innerHTML = 
+                        '<div class="empty-state"><p>لا توجد بيانات في هذه الفترة</p></div>';
+                    document.getElementById('chartsContainer').innerHTML = '';
+                    return;
+                }
+
+                calculateAndDisplay(filtered, startDate, endDate);
+            } catch (error) {
+                document.getElementById('metricsContainer').innerHTML = 
+                    '<div class="error">❌ خطأ في تحميل البيانات: ' + error.message + '</div>';
+            }
+        }
+
+        function calculateAndDisplay(transactions, startDate, endDate) {
+            const totalIncome = transactions
+                .filter(t => t.type === 'income' || t.type === 'دخل')
+                .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+
+            const totalExpense = transactions
+                .filter(t => t.type === 'expense' || t.type === 'مصروف')
+                .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+
+            const netProfit = totalIncome - totalExpense;
+
+            displayMetrics(totalIncome, totalExpense, netProfit);
+            displayCharts(transactions, startDate, endDate);
+        }
+
+        function displayMetrics(income, expense, profit) {
+            document.getElementById('metricsContainer').innerHTML = `
+                <div class="metric-card income">
+                    <div class="metric-label">إجمالي الدخل</div>
+                    <div class="metric-value">${income.toFixed(2)}</div>
+                    <div class="metric-currency">ريال سعودي</div>
+                </div>
+                <div class="metric-card expense">
+                    <div class="metric-label">إجمالي المصاريف</div>
+                    <div class="metric-value">${expense.toFixed(2)}</div>
+                    <div class="metric-currency">ريال سعودي</div>
+                </div>
+                <div class="metric-card profit">
+                    <div class="metric-label">الربح الصافي</div>
+                    <div class="metric-value">${profit.toFixed(2)}</div>
+                    <div class="metric-currency">ريال سعودي</div>
+                </div>
+            `;
+        }
+
+        function displayCharts(transactions, startDate, endDate) {
+            const chartsContainer = document.getElementById('chartsContainer');
+            chartsContainer.innerHTML = '';
+
+            // Group by date
+            const dailyData = {};
+            transactions.forEach(t => {
+                let date = new Date(t.date);
+                const dateStr = date.toISOString().split('T')[0];
+                if (!dailyData[dateStr]) {
+                    dailyData[dateStr] = { income: 0, expense: 0 };
+                }
+                if (t.type === 'income' || t.type === 'دخل') {
+                    dailyData[dateStr].income += parseFloat(t.amount) || 0;
+                } else {
+                    dailyData[dateStr].expense += parseFloat(t.amount) || 0;
+                }
+            });
+
+            const sortedDates = Object.keys(dailyData).sort();
+            const incomes = sortedDates.map(d => dailyData[d].income);
+            const expenses = sortedDates.map(d => dailyData[d].expense);
+
+            // Chart 1: Income vs Expense
+            const chartDiv1 = document.createElement('div');
+            chartDiv1.className = 'chart-container';
+            chartDiv1.innerHTML = '<h3>الدخل مقابل المصاريف</h3><canvas id="lineChart"></canvas>';
+            chartsContainer.appendChild(chartDiv1);
+
+            setTimeout(() => {
+                const ctx1 = document.getElementById('lineChart').getContext('2d');
+                if (charts.lineChart) charts.lineChart.destroy();
+                charts.lineChart = new Chart(ctx1, {
+                    type: 'line',
+                    data: {
+                        labels: sortedDates,
+                        datasets: [
+                            {
+                                label: 'الدخل',
+                                data: incomes,
+                                borderColor: '#1CAD59',
+                                backgroundColor: 'rgba(28, 173, 89, 0.1)',
+                                tension: 0.4
+                            },
+                            {
+                                label: 'المصاريف',
+                                data: expenses,
+                                borderColor: '#D62839',
+                                backgroundColor: 'rgba(214, 40, 57, 0.1)',
+                                tension: 0.4
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: { position: 'top' }
+                        },
+                        scales: {
+                            y: { beginAtZero: true }
+                        }
+                    }
+                });
+            }, 100);
+
+            // Chart 2: Summary Pie
+            const totalIncome = incomes.reduce((a, b) => a + b, 0);
+            const totalExpense = expenses.reduce((a, b) => a + b, 0);
+            
+            const chartDiv2 = document.createElement('div');
+            chartDiv2.className = 'chart-container';
+            chartDiv2.innerHTML = '<h3>توزيع المبالغ</h3><canvas id="pieChart"></canvas>';
+            chartsContainer.appendChild(chartDiv2);
+
+            setTimeout(() => {
+                const ctx2 = document.getElementById('pieChart').getContext('2d');
+                if (charts.pieChart) charts.pieChart.destroy();
+                charts.pieChart = new Chart(ctx2, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['الدخل', 'المصاريف'],
+                        datasets: [{
+                            data: [totalIncome, totalExpense],
+                            backgroundColor: ['#1CAD59', '#D62839'],
+                            borderColor: ['#0d7a3a', '#a01e2a'],
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true
+                    }
+                });
+            }, 100);
+        }
+
+        setDefaultDates();
+        loadData();
+    </script>
+</body>
+</html>
