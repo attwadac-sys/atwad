@@ -40,13 +40,14 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 .btn-add:hover{transform:translateY(-1px);}
 
 /* BIG KPI ROW */
-.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;padding:20px 22px 0;}
+.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;padding:20px 22px 0;}
 .kpi-card{background:#fff;border-radius:18px;padding:20px 22px;box-shadow:0 2px 14px rgba(0,0,0,.06);position:relative;overflow:hidden;}
 .kpi-card::before{content:'';position:absolute;top:-20px;left:-20px;width:80px;height:80px;border-radius:50%;opacity:.08;}
 .kpi-card.revenue::before{background:var(--sky);}
 .kpi-card.expense::before{background:var(--danger);}
 .kpi-card.profit::before{background:var(--success);}
 .kpi-card.pending::before{background:var(--warning);}
+.kpi-card.billed::before{background:#7C3AED;}
 .kpi-icon{font-size:28px;margin-bottom:10px;}
 .kpi-num{font-size:28px;font-weight:800;color:var(--deep);line-height:1;}
 .kpi-label{font-size:12px;color:var(--mist);margin-top:4px;font-weight:500;}
@@ -226,6 +227,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 @media(max-width:900px){
   .sidebar{display:none;}.main{margin-right:0;}
   .kpi-row{grid-template-columns:1fr 1fr;}
+  .kpi-row .kpi-card.billed{grid-column:1 / -1;}
   .charts-row,.tables-row{grid-template-columns:1fr;}
   .period-tabs{display:none;}
   .rec-kpi-row{grid-template-columns:repeat(3,1fr);}
@@ -298,7 +300,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
     <div class="kpi-card revenue">
       <div class="kpi-icon">💵</div>
       <div class="kpi-num" id="kRevenue">0</div>
-      <div class="kpi-label">إجمالي الإيرادات (ريال)</div>
+      <div class="kpi-label">المحصّل نقداً (ريال)</div>
       <div class="kpi-change up" id="kRevenueChange">—</div>
       <div class="kpi-bar"><div class="kpi-bar-fill" id="kRevenueBar" style="width:0%"></div></div>
     </div>
@@ -315,6 +317,13 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
       <div class="kpi-label">صافي الربح (ريال)</div>
       <div class="kpi-change up" id="kProfitChange">—</div>
       <div class="kpi-bar"><div class="kpi-bar-fill" id="kProfitBar" style="width:0%;background:var(--success)"></div></div>
+    </div>
+    <div class="kpi-card billed">
+      <div class="kpi-icon">🧾</div>
+      <div class="kpi-num" id="kBilled">0</div>
+      <div class="kpi-label">إجمالي المبيعات (ريال)</div>
+      <div class="kpi-change" id="kBilledRate" style="color:#7C3AED;">—</div>
+      <div class="kpi-bar"><div class="kpi-bar-fill" id="kBilledBar" style="width:0%;background:#7C3AED"></div></div>
     </div>
     <div class="kpi-card pending">
       <div class="kpi-icon">⚠️</div>
@@ -731,7 +740,15 @@ function calcKPIs(){
     return s + ((parseFloat(e.amount)||0) - paid);
   }, 0);
 
-  var max = Math.max(revenue, 1);
+  // إجمالي المبيعات بالاستحقاق: كل ما فُوتر في الفترة، محصّلاً كان أو مؤجلاً
+  var billed = income.reduce(function(s,e){ return s + (parseFloat(e.amount)||0); }, 0);
+  var collectRate = billed > 0 ? Math.round(revenue / billed * 100) : 0;
+
+  var max = Math.max(revenue, billed, 1);
+  document.getElementById('kBilled').textContent     = fmt(billed) + ' ﷼';
+  document.getElementById('kBilledRate').textContent = billed > 0
+    ? ('حُصّل منها ' + collectRate + '٪') : '—';
+  document.getElementById('kBilledBar').style.width  = Math.min(100, billed/max*100) + '%';
   document.getElementById('kRevenue').textContent    = fmt(revenue) + ' ﷼';
   document.getElementById('kExpense').textContent    = fmt(totalExp) + ' ﷼';
   document.getElementById('kProfit').textContent     = fmt(profit) + ' ﷼';
