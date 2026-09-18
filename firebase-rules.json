@@ -1,0 +1,284 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "customers": {
+      ".read": "auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802'",
+      ".write": "auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802'",
+      "$customerId": {
+        ".write": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (newData.exists() && $customerId.matches(/^05[0-9]{8}$/) && newData.child('phone').val() === $customerId && root.child('bookings').child(newData.child('lastBookingKey').val()).child('phone').val() === $customerId)",
+        ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (newData.hasChildren(['phone','lastBookingKey','updatedAt']))",
+        "phone": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (newData.isString() && newData.val().matches(/^05[0-9]{8}$/))"
+        },
+        "lastBookingKey": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (newData.isString() && newData.val().length <= 80)"
+        },
+        "name": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (newData.isString() && newData.val().length <= 100)"
+        },
+        "city": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (newData.isString() && newData.val().length <= 80)"
+        },
+        "mapsLink": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (newData.isString() && newData.val().length <= 500)"
+        },
+        "lastService": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (newData.isString() && newData.val().length <= 100)"
+        },
+        "lastBookingRef": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (newData.isString() && newData.val().length <= 30)"
+        },
+        "lastBookingDate": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (newData.isString() && newData.val().length <= 20)"
+        },
+        "updatedAt": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (newData.isString() && newData.val().length <= 40)"
+        },
+        "source": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (newData.isString() && newData.val().length <= 40)"
+        },
+        "lat": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (newData.isNumber())"
+        },
+        "lng": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (newData.isNumber())"
+        },
+        "$other": {
+          ".validate": "auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802'"
+        }
+      }
+    },
+    "clients": {
+      ".read": "auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802'",
+      ".write": "auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802'"
+    },
+    "publicSettings": {
+      ".read": true,
+      ".write": "auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802'"
+    },
+    "appointments": {
+      ".read": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2')",
+      ".write": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2')",
+      ".indexOn": [
+        "date"
+      ]
+    },
+    "appointmentWaitlist": {
+      ".read": "auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802'",
+      ".write": "auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802'"
+    },
+    "workOrders": {
+      ".read": "auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802'",
+      ".write": "auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802'"
+    },
+    "transactions": {
+      ".read": "auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802'",
+      ".write": "auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802'"
+    },
+    "reviewCampaigns": {
+      ".read": "auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802'",
+      ".write": "auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802'"
+    },
+    "notifications": {
+      ".read": "auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802'",
+      ".write": "auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802'"
+    },
+    "settings": {
+      ".read": "auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802'",
+      ".write": "auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802'"
+    },
+    "importLogs": {
+      ".read": "auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802'",
+      ".write": "auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802'"
+    },
+    "technicians": {
+      ".read": "auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802'",
+      ".write": "auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802'",
+      "$technicianId": {
+        ".validate": "newData.hasChildren(['displayName','active']) && (!newData.child('phone').exists() || newData.child('phone').isString()) && newData.child('displayName').isString() && newData.child('active').isBoolean()"
+      }
+    },
+    "slotLocks": {
+      ".read": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2')",
+      ".write": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2')",
+      "$date": {
+        ".read": true,
+        ".validate": "$date.matches(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/)",
+        "$block": {
+          ".write": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (!data.exists() && newData.exists() && newData.child('ownerKey').val() === 'bookings:' + newData.child('bookingKey').val() && newData.parent().parent().parent().child('bookings').child(newData.child('bookingKey').val()).child('date').val() === $date && newData.parent().parent().parent().child('bookings').child(newData.child('bookingKey').val()).child('lockBlocks').child($block).val() === true)",
+          ".validate": "$date.matches(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/) && $block.matches(/^[0-9]{4}$/) && newData.hasChildren(['bookingKey','ownerKey','createdAt'])",
+          "bookingKey": {
+            ".validate": "newData.isString() && newData.val().length >= 3 && newData.val().length <= 80"
+          },
+          "ownerKey": {
+            ".validate": "newData.isString() && ((auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2') && newData.val().matches(/^(bookings|appointments):[A-Za-z0-9_-]{3,80}$/)) || (auth == null && newData.val() === 'bookings:' + newData.parent().child('bookingKey').val()))"
+          },
+          "createdAt": {
+            ".validate": "newData.isNumber() || (auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2'))"
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      }
+    },
+    "bookings": {
+      ".read": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2')",
+      ".indexOn": [
+        "date"
+      ],
+      "$bookingId": {
+        ".read": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2')",
+        ".write": "(auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2')) || (!data.exists() && newData.exists())",
+        ".validate": "(auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2')) || newData.hasChildren(['ref','client','phone','service','date','time','createdAt','startBlock','endBlock','lockBlocks'])",
+        "ref": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (newData.isString() && newData.val().length >= 3 && newData.val().length <= 30)"
+        },
+        "client": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (newData.isString() && newData.val().length >= 1 && newData.val().length <= 100)"
+        },
+        "phone": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (newData.isString() && newData.val().length >= 9 && newData.val().length <= 16)"
+        },
+        "service": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (newData.isString() && newData.val().length >= 1 && newData.val().length <= 100)"
+        },
+        "date": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (newData.isString() && newData.val().matches(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/))"
+        },
+        "time": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (newData.isString() && newData.val().length >= 3 && newData.val().length <= 20)"
+        },
+        "createdAt": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || newData.isString()"
+        },
+        "units": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (newData.isNumber() && newData.val() >= 1 && newData.val() <= 50)"
+        },
+        "city": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (newData.isString() && newData.val().length <= 80)"
+        },
+        "district": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (newData.isString() && newData.val().length <= 80)"
+        },
+        "mapsLink": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (newData.isString() && newData.val().length <= 500)"
+        },
+        "locationImage": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (newData.isString() && newData.val().length <= 200000)"
+        },
+        "duration": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (newData.isNumber() && newData.val() >= 0 && newData.val() <= 480)"
+        },
+        "startBlock": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (newData.isString() && ((newData.val() === '0800' && newData.parent().child('time').val() === '8:00 - 10:00') || (newData.val() === '1000' && newData.parent().child('time').val() === '10:00 - 12:00') || (newData.val() === '1200' && newData.parent().child('time').val() === '12:00 - 14:00') || (newData.val() === '1400' && newData.parent().child('time').val() === '14:00 - 16:00') || (newData.val() === '1600' && newData.parent().child('time').val() === '16:00 - 18:00') || (newData.val() === '1800' && newData.parent().child('time').val() === '18:00 - 20:00')))"
+        },
+        "endBlock": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (newData.isString() && ((newData.parent().child('startBlock').val() === '0800' && newData.val() === '0830') || (newData.parent().child('startBlock').val() === '0800' && newData.val() === '0900') || (newData.parent().child('startBlock').val() === '0800' && newData.val() === '0930') || (newData.parent().child('startBlock').val() === '0800' && newData.val() === '1000') || (newData.parent().child('startBlock').val() === '0800' && newData.val() === '1030') || (newData.parent().child('startBlock').val() === '0800' && newData.val() === '1100') || (newData.parent().child('startBlock').val() === '0800' && newData.val() === '1130') || (newData.parent().child('startBlock').val() === '0800' && newData.val() === '1200') || (newData.parent().child('startBlock').val() === '1000' && newData.val() === '1030') || (newData.parent().child('startBlock').val() === '1000' && newData.val() === '1100') || (newData.parent().child('startBlock').val() === '1000' && newData.val() === '1130') || (newData.parent().child('startBlock').val() === '1000' && newData.val() === '1200') || (newData.parent().child('startBlock').val() === '1000' && newData.val() === '1230') || (newData.parent().child('startBlock').val() === '1000' && newData.val() === '1300') || (newData.parent().child('startBlock').val() === '1000' && newData.val() === '1330') || (newData.parent().child('startBlock').val() === '1000' && newData.val() === '1400') || (newData.parent().child('startBlock').val() === '1200' && newData.val() === '1230') || (newData.parent().child('startBlock').val() === '1200' && newData.val() === '1300') || (newData.parent().child('startBlock').val() === '1200' && newData.val() === '1330') || (newData.parent().child('startBlock').val() === '1200' && newData.val() === '1400') || (newData.parent().child('startBlock').val() === '1200' && newData.val() === '1430') || (newData.parent().child('startBlock').val() === '1200' && newData.val() === '1500') || (newData.parent().child('startBlock').val() === '1200' && newData.val() === '1530') || (newData.parent().child('startBlock').val() === '1200' && newData.val() === '1600') || (newData.parent().child('startBlock').val() === '1400' && newData.val() === '1430') || (newData.parent().child('startBlock').val() === '1400' && newData.val() === '1500') || (newData.parent().child('startBlock').val() === '1400' && newData.val() === '1530') || (newData.parent().child('startBlock').val() === '1400' && newData.val() === '1600') || (newData.parent().child('startBlock').val() === '1400' && newData.val() === '1630') || (newData.parent().child('startBlock').val() === '1400' && newData.val() === '1700') || (newData.parent().child('startBlock').val() === '1400' && newData.val() === '1730') || (newData.parent().child('startBlock').val() === '1400' && newData.val() === '1800') || (newData.parent().child('startBlock').val() === '1600' && newData.val() === '1630') || (newData.parent().child('startBlock').val() === '1600' && newData.val() === '1700') || (newData.parent().child('startBlock').val() === '1600' && newData.val() === '1730') || (newData.parent().child('startBlock').val() === '1600' && newData.val() === '1800') || (newData.parent().child('startBlock').val() === '1600' && newData.val() === '1830') || (newData.parent().child('startBlock').val() === '1600' && newData.val() === '1900') || (newData.parent().child('startBlock').val() === '1600' && newData.val() === '1930') || (newData.parent().child('startBlock').val() === '1600' && newData.val() === '2000') || (newData.parent().child('startBlock').val() === '1800' && newData.val() === '1830') || (newData.parent().child('startBlock').val() === '1800' && newData.val() === '1900') || (newData.parent().child('startBlock').val() === '1800' && newData.val() === '1930') || (newData.parent().child('startBlock').val() === '1800' && newData.val() === '2000')))"
+        },
+        "lockBlocks": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || ((newData.parent().child('startBlock').val() === '0800' && newData.parent().child('endBlock').val() === '0830' && newData.hasChildren(['0800'])) || (newData.parent().child('startBlock').val() === '0800' && newData.parent().child('endBlock').val() === '0900' && newData.hasChildren(['0800','0830'])) || (newData.parent().child('startBlock').val() === '0800' && newData.parent().child('endBlock').val() === '0930' && newData.hasChildren(['0800','0830','0900'])) || (newData.parent().child('startBlock').val() === '0800' && newData.parent().child('endBlock').val() === '1000' && newData.hasChildren(['0800','0830','0900','0930'])) || (newData.parent().child('startBlock').val() === '0800' && newData.parent().child('endBlock').val() === '1030' && newData.hasChildren(['0800','0830','0900','0930','1000'])) || (newData.parent().child('startBlock').val() === '0800' && newData.parent().child('endBlock').val() === '1100' && newData.hasChildren(['0800','0830','0900','0930','1000','1030'])) || (newData.parent().child('startBlock').val() === '0800' && newData.parent().child('endBlock').val() === '1130' && newData.hasChildren(['0800','0830','0900','0930','1000','1030','1100'])) || (newData.parent().child('startBlock').val() === '0800' && newData.parent().child('endBlock').val() === '1200' && newData.hasChildren(['0800','0830','0900','0930','1000','1030','1100','1130'])) || (newData.parent().child('startBlock').val() === '1000' && newData.parent().child('endBlock').val() === '1030' && newData.hasChildren(['1000'])) || (newData.parent().child('startBlock').val() === '1000' && newData.parent().child('endBlock').val() === '1100' && newData.hasChildren(['1000','1030'])) || (newData.parent().child('startBlock').val() === '1000' && newData.parent().child('endBlock').val() === '1130' && newData.hasChildren(['1000','1030','1100'])) || (newData.parent().child('startBlock').val() === '1000' && newData.parent().child('endBlock').val() === '1200' && newData.hasChildren(['1000','1030','1100','1130'])) || (newData.parent().child('startBlock').val() === '1000' && newData.parent().child('endBlock').val() === '1230' && newData.hasChildren(['1000','1030','1100','1130','1200'])) || (newData.parent().child('startBlock').val() === '1000' && newData.parent().child('endBlock').val() === '1300' && newData.hasChildren(['1000','1030','1100','1130','1200','1230'])) || (newData.parent().child('startBlock').val() === '1000' && newData.parent().child('endBlock').val() === '1330' && newData.hasChildren(['1000','1030','1100','1130','1200','1230','1300'])) || (newData.parent().child('startBlock').val() === '1000' && newData.parent().child('endBlock').val() === '1400' && newData.hasChildren(['1000','1030','1100','1130','1200','1230','1300','1330'])) || (newData.parent().child('startBlock').val() === '1200' && newData.parent().child('endBlock').val() === '1230' && newData.hasChildren(['1200'])) || (newData.parent().child('startBlock').val() === '1200' && newData.parent().child('endBlock').val() === '1300' && newData.hasChildren(['1200','1230'])) || (newData.parent().child('startBlock').val() === '1200' && newData.parent().child('endBlock').val() === '1330' && newData.hasChildren(['1200','1230','1300'])) || (newData.parent().child('startBlock').val() === '1200' && newData.parent().child('endBlock').val() === '1400' && newData.hasChildren(['1200','1230','1300','1330'])) || (newData.parent().child('startBlock').val() === '1200' && newData.parent().child('endBlock').val() === '1430' && newData.hasChildren(['1200','1230','1300','1330','1400'])) || (newData.parent().child('startBlock').val() === '1200' && newData.parent().child('endBlock').val() === '1500' && newData.hasChildren(['1200','1230','1300','1330','1400','1430'])) || (newData.parent().child('startBlock').val() === '1200' && newData.parent().child('endBlock').val() === '1530' && newData.hasChildren(['1200','1230','1300','1330','1400','1430','1500'])) || (newData.parent().child('startBlock').val() === '1200' && newData.parent().child('endBlock').val() === '1600' && newData.hasChildren(['1200','1230','1300','1330','1400','1430','1500','1530'])) || (newData.parent().child('startBlock').val() === '1400' && newData.parent().child('endBlock').val() === '1430' && newData.hasChildren(['1400'])) || (newData.parent().child('startBlock').val() === '1400' && newData.parent().child('endBlock').val() === '1500' && newData.hasChildren(['1400','1430'])) || (newData.parent().child('startBlock').val() === '1400' && newData.parent().child('endBlock').val() === '1530' && newData.hasChildren(['1400','1430','1500'])) || (newData.parent().child('startBlock').val() === '1400' && newData.parent().child('endBlock').val() === '1600' && newData.hasChildren(['1400','1430','1500','1530'])) || (newData.parent().child('startBlock').val() === '1400' && newData.parent().child('endBlock').val() === '1630' && newData.hasChildren(['1400','1430','1500','1530','1600'])) || (newData.parent().child('startBlock').val() === '1400' && newData.parent().child('endBlock').val() === '1700' && newData.hasChildren(['1400','1430','1500','1530','1600','1630'])) || (newData.parent().child('startBlock').val() === '1400' && newData.parent().child('endBlock').val() === '1730' && newData.hasChildren(['1400','1430','1500','1530','1600','1630','1700'])) || (newData.parent().child('startBlock').val() === '1400' && newData.parent().child('endBlock').val() === '1800' && newData.hasChildren(['1400','1430','1500','1530','1600','1630','1700','1730'])) || (newData.parent().child('startBlock').val() === '1600' && newData.parent().child('endBlock').val() === '1630' && newData.hasChildren(['1600'])) || (newData.parent().child('startBlock').val() === '1600' && newData.parent().child('endBlock').val() === '1700' && newData.hasChildren(['1600','1630'])) || (newData.parent().child('startBlock').val() === '1600' && newData.parent().child('endBlock').val() === '1730' && newData.hasChildren(['1600','1630','1700'])) || (newData.parent().child('startBlock').val() === '1600' && newData.parent().child('endBlock').val() === '1800' && newData.hasChildren(['1600','1630','1700','1730'])) || (newData.parent().child('startBlock').val() === '1600' && newData.parent().child('endBlock').val() === '1830' && newData.hasChildren(['1600','1630','1700','1730','1800'])) || (newData.parent().child('startBlock').val() === '1600' && newData.parent().child('endBlock').val() === '1900' && newData.hasChildren(['1600','1630','1700','1730','1800','1830'])) || (newData.parent().child('startBlock').val() === '1600' && newData.parent().child('endBlock').val() === '1930' && newData.hasChildren(['1600','1630','1700','1730','1800','1830','1900'])) || (newData.parent().child('startBlock').val() === '1600' && newData.parent().child('endBlock').val() === '2000' && newData.hasChildren(['1600','1630','1700','1730','1800','1830','1900','1930'])) || (newData.parent().child('startBlock').val() === '1800' && newData.parent().child('endBlock').val() === '1830' && newData.hasChildren(['1800'])) || (newData.parent().child('startBlock').val() === '1800' && newData.parent().child('endBlock').val() === '1900' && newData.hasChildren(['1800','1830'])) || (newData.parent().child('startBlock').val() === '1800' && newData.parent().child('endBlock').val() === '1930' && newData.hasChildren(['1800','1830','1900'])) || (newData.parent().child('startBlock').val() === '1800' && newData.parent().child('endBlock').val() === '2000' && newData.hasChildren(['1800','1830','1900','1930'])))",
+          "$block": {
+            ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (newData.val() === true && newData.parent().parent().parent().parent().child('slotLocks').child(newData.parent().parent().child('date').val()).child($block).child('bookingKey').val() === $bookingId)"
+          }
+        },
+        "servicePrice": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (newData.isNumber() && newData.val() >= 0)"
+        },
+        "problemCodes": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || newData.hasChildren() || newData.isString()"
+        },
+        "problemLabels": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || newData.hasChildren() || newData.isString()"
+        },
+        "problemDescriptionSummary": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (newData.isString() && newData.val().length <= 500)"
+        },
+        "problemDescription": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (newData.isString() && newData.val().length <= 1000)"
+        },
+        "acOperatingStatus": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (newData.isString() && newData.val().length <= 50)"
+        },
+        "previousRepairStatus": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (newData.isString() && newData.val().length <= 10)"
+        },
+        "previousRepairDetails": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (newData.isString() && newData.val().length <= 500)"
+        },
+        "visitedBefore": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (newData.isString() && newData.val().length <= 10)"
+        },
+        "previousTechnicianSolved": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (newData.isString() && newData.val().length <= 10)"
+        },
+        "priority": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (newData.isString() && newData.val().length <= 20)"
+        },
+        "requiredTools": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || newData.hasChildren() || newData.isString()"
+        },
+        "estimatedInspection": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || newData.isNumber()"
+        },
+        "recommendations": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || newData.hasChildren()"
+        },
+        "lat": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || newData.isNumber()"
+        },
+        "lng": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || newData.isNumber()"
+        },
+        "accuracy": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || newData.isNumber()"
+        },
+        "locationVerified": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || newData.isBoolean()"
+        },
+        "needsServiceAreaReview": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || newData.isBoolean()"
+        },
+        "serviceAreaNote": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (newData.isString() && newData.val().length <= 200)"
+        },
+        "otherServiceText": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (newData.isString() && newData.val().length <= 200)"
+        },
+        "$other": {
+          ".validate": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2')"
+        }
+      }
+    },
+    "reviews": {
+      ".read": "auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802'",
+      "$reviewId": {
+        ".read": "auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802'",
+        ".write": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (!data.exists() && newData.exists())",
+        ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || newData.hasChildren(['customerName','rating','timestamp'])",
+        "customerName": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (newData.isString() && newData.val().length >= 1 && newData.val().length <= 100)"
+        },
+        "rating": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (newData.isNumber() && newData.val() >= 1 && newData.val() <= 5)"
+        },
+        "service": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (newData.isString() && newData.val().length <= 100)"
+        },
+        "text": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (newData.isString() && newData.val().length <= 1000)"
+        },
+        "recommend": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (newData.isString() && (newData.val() === 'yes' || newData.val() === 'no' || newData.val() === 'maybe'))"
+        },
+        "timestamp": {
+          ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || newData.isNumber()"
+        },
+        "$other": {
+          ".validate": "auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802'"
+        }
+      }
+    }
+  }
+}
