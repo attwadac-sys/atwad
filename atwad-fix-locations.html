@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مؤسسة أطواد — تصحيح مواقع العملاء</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
+:root{
+  --deep:#0C3B5E; --steel:#1E5F8A; --sky:#0EA5E9; --ice:#E8F4FD; --frost:#F0F9FF;
+  --slate:#334155; --mist:#94A3B8; --line:#E2E8F0;
+  --success:#10B981; --warning:#F59E0B; --danger:#EF4444;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);padding-bottom:50px;}
+
+.header{background:linear-gradient(135deg,var(--deep),var(--steel),var(--sky));color:#fff;padding:22px 18px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.header h1{font-size:19px;font-weight:900;}
+.header p{font-size:12px;opacity:.88;margin-top:4px;}
+.back{background:rgba(255,255,255,.16);border:1.5px solid rgba(255,255,255,.35);color:#fff;
+  font-family:'Tajawal',sans-serif;font-weight:800;font-size:13px;padding:7px 14px;border-radius:9px;
+  text-decoration:none;white-space:nowrap;}
+.wrap{max-width:820px;margin:0 auto;padding:0 14px;}
+
+.bar{background:#fff;border-radius:14px;box-shadow:0 2px 10px rgba(12,59,94,.07);
+  margin-top:-12px;padding:13px 15px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.bar input[type=search]{flex:1;min-width:190px;font-family:'Tajawal',sans-serif;font-size:14px;
+  padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;background:var(--frost);}
+.bar input:focus{outline:none;border-color:var(--sky);background:#fff;}
+.stat{font-size:13px;font-weight:800;color:var(--deep);}
+.stat b{font-size:19px;color:var(--danger);}
+
+.how{background:#EFF6FF;border:1.5px solid #BFDBFE;color:#1E40AF;border-radius:13px;
+  padding:13px 16px;font-size:13px;line-height:2;margin-top:13px;}
+.how b{color:var(--deep);}
+
+.card{background:#fff;border-radius:13px;box-shadow:0 1px 6px rgba(12,59,94,.06);
+  padding:14px 16px;margin-top:10px;border-inline-start:5px solid var(--warning);}
+.card.done{border-inline-start-color:var(--success);background:#F0FDF4;}
+.card .nm{font-size:16px;font-weight:900;color:var(--deep);}
+.card .meta{font-size:12.5px;color:var(--mist);margin-top:4px;line-height:1.8;}
+.card .meta b{color:var(--slate);}
+.row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+.row input{flex:1;min-width:200px;font-family:'Tajawal',sans-serif;font-size:13.5px;
+  padding:11px 12px;border:1.5px solid var(--line);border-radius:10px;background:var(--frost);
+  direction:ltr;text-align:left;}
+.row input:focus{outline:none;border-color:var(--sky);background:#fff;}
+.row button{font-family:'Tajawal',sans-serif;font-weight:800;font-size:13.5px;
+  padding:11px 20px;border-radius:10px;border:none;background:var(--deep);color:#fff;cursor:pointer;}
+.row button:hover{background:var(--steel);}
+.row button:disabled{background:var(--mist);cursor:not-allowed;}
+.msg{font-size:12.5px;font-weight:700;margin-top:8px;line-height:1.8;display:none;}
+.msg.ok{color:#065F46;display:block;}
+.msg.bad{color:#991B1B;display:block;}
+.msg.info{color:#92400E;display:block;}
+
+.empty{text-align:center;padding:50px 20px;color:var(--mist);font-size:14.5px;line-height:1.9;}
+.wa{display:inline-block;margin-top:8px;font-size:12.5px;font-weight:800;color:#15803D;
+  background:#DCFCE7;border-radius:8px;padding:7px 13px;text-decoration:none;}
+</style>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+<script src="atwad-admin-auth.js"></script>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>📍 تصحيح مواقع العملاء</h1>
+    <p>العملاء الذين لا تظهر مواقعهم على الخريطة</p>
+  </div>
+  <a class="back" href="atwad-customers-map.html">← الخريطة</a>
+</div>
+
+<div class="wrap">
+
+  <div class="bar">
+    <input type="search" id="q" placeholder="ابحث باسم العميل أو رقمه" oninput="render()">
+    <span class="stat">بلا موقع: <b id="count">—</b></span>
+  </div>
+
+  <div class="how">
+    الصق في الحقل <b>رابط خرائط يحتوي إحداثيات</b> أو <b>الرقمين مفصولين بفاصلة</b> مثل
+    <span style="direction:ltr;display:inline-block;">21.6907773, 39.1205209</span>
+    — ويُحفظ الموقع في <b>كل مواعيد العميل</b> دفعة واحدة.
+    الروابط المختصرة <span style="direction:ltr;display:inline-block;">maps.app.goo.gl</span> لا تُقبل لأنها بلا إحداثيات.
+  </div>
+
+  <div id="list"><div class="empty">⏳ جارٍ قراءة البيانات…</div></div>
+</div>
+
+<script>
+var db = null;
+try {
+  if(!firebase.apps.length){
+    firebase.initializeApp({databaseURL:'https://atwad-booking-default-rtdb.firebaseio.com'});
+  }
+  db = firebase.database();
+} catch(err) {
+  console.error('Firebase init:', err);
+}
+
+var records = [];     // كل المواعيد والحجوزات
+var missing = [];     // العملاء بلا موقع، مجمّعين بالجوال
+
+function esc(v){
+  return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function normPhone(p){
+  var s = String(p || '').replace(/[^0-9]/g,'');
+  if(s.indexOf('966') === 0) s = '0' + s.slice(3);
+  return s;
+}
+function validCoords(lat, lng){
+  return isFinite(lat) && isFinite(lng) && lat > 15 && lat < 33 && lng > 33 && lng < 56;
+}
+/** يستخرج الإحداثيات من حقول السجل أو من رابط الخرائط */
+function coordsOf(rec){
+  var lat = Number(rec.lat), lng = Number(rec.lng);
+  if(validCoords(lat, lng)) return [lat, lng];
+  var link = String(rec.mapsLink || rec.locationUrl || rec.mapLink || '');
+  if(!link) return null;
+  return parseCoords(link);
+}
+/** يقبل: رابط طويل بإحداثيات، أو "رقم، رقم" */
+function parseCoords(text){
+  var t = String(text || '').trim();
+  if(!t) return null;
+  var pats = [
+    /destination=(-?\d+\.\d+)(?:,|%2[Cc])(-?\d+\.\d+)/,
+    /[?&](?:q|daddr|ll|sll)=(-?\d+\.\d+)(?:,|%2[Cc])(-?\d+\.\d+)/,
+    /@(-?\d+\.\d+),(-?\d+\.\d+)/,
+    /^\s*(-?\d{1,2}\.\d{3,})\s*[,،]\s*(-?\d{2}\.\d{3,})\s*$/,
+    /(-?\d{1,2}\.\d{4,}),\s*(-?\d{2}\.\d{4,})/
+  ];
+  for(var i = 0; i < pats.length; i++){
+    var m = t.match(pats[i]);
+    if(m){
+      var a = Number(m[1]), b = Number(m[2]);
+      if(validCoords(a, b)) return [a, b];
+    }
+  }
+  return null;
+}
+
+function loadAll(){
+  if(!db){
+    document.getElementById('list').innerHTML = '<div class="empty">⚠️ تعذّر الاتصال بقاعدة البيانات</div>';
+    return;
+  }
+  records = [];
+  db.ref('appointments').once('value').then(function(snap){
+    snap.forEach(function(c){
+      var v = c.val() || {};
+      v._key = c.key; v._src = 'appointments';
+      records.push(v);
+    });
+    return db.ref('bookings').once('value');
+  }).then(function(snap2){
+    snap2.forEach(function(c){
+      var v = c.val() || {};
+      v._key = c.key; v._src = 'bookings';
+      records.push(v);
+    });
+    buildMissing();
+    render();
+  }).catch(function(err){
+    document.getElementById('list').innerHTML =
+      '<div class="empty">⚠️ تعذّر تحميل البيانات: ' + esc(err.message) + '</div>';
+  });
+}
+
+function buildMissing(){
+  var byPhone = {};
+  records.forEach(function(r){
+    var phone = normPhone(r.phone);
+    if(!phone) return;
+    if(!byPhone[phone]){
+      byPhone[phone] = { phone:phone, name:'', lastDate:'', total:0, keys:[], hasCoords:false, district:'', address:'' };
+    }
+    var c = byPhone[phone];
+    c.total++;
+    c.keys.push({ key:r._key, src:r._src });
+    if(coordsOf(r)) c.hasCoords = true;
+    var d = String(r.date || '');
+    if(d >= c.lastDate){
+      c.lastDate = d;
+      var n = String(r.client || r.name || '').trim();
+      if(n) c.name = n;
+      if(r.district) c.district = String(r.district);
+      if(r.address)  c.address  = String(r.address);
+    }
+  });
+
+  missing = [];
+  Object.keys(byPhone).forEach(function(k){
+    if(!byPhone[k].hasCoords) missing.push(byPhone[k]);
+  });
+  // الأحدث موعداً أولاً — الأولوية لمن سيُخدم قريباً
+  missing.sort(function(a,b){ return a.lastDate < b.lastDate ? 1 : -1; });
+}
+
+function render(){
+  var q = document.getElementById('q').value.trim();
+  var list = missing.filter(function(c){
+    if(!q) return true;
+    return (c.name + ' ' + c.phone + ' ' + c.district).indexOf(q) !== -1;
+  });
+
+  document.getElementById('count').textContent = missing.length;
+
+  if(!missing.length){
+    document.getElementById('list').innerHTML =
+      '<div class="empty">✅ كل العملاء لديهم مواقع دقيقة.</div>';
+    return;
+  }
+  if(!list.length){
+    document.getElementById('list').innerHTML = '<div class="empty">لا نتائج للبحث.</div>';
+    return;
+  }
+
+  var html = '';
+  list.forEach(function(c){
+    var waMsg = 'مرحباً ' + c.name + '،\nنحتاج موقعك الدقيق ليصل الفني إليك مباشرة.\n' +
+                'افتح هذا الرابط واضغط زر تحديد الموقع:\n' +
+                'https://attwadac-sys.github.io/atwad/atwad-location.html';
+    html += '<div class="card" id="c_' + esc(c.phone) + '">' +
+      '<div class="nm">' + esc(c.name || 'بلا اسم') + '</div>' +
+      '<div class="meta">' + esc(c.phone) +
+        (c.district ? ' · <b>' + esc(c.district) + '</b>' : '') +
+        ' · ' + c.total + ' موعد' +
+        (c.lastDate ? ' · آخر موعد ' + esc(c.lastDate) : '') +
+      '</div>' +
+      '<div class="row">' +
+        '<input type="text" id="in_' + esc(c.phone) + '" placeholder="الصق الرابط أو الإحداثيات هنا">' +
+        '<button id="btn_' + esc(c.phone) + '" onclick="saveLocation(\'' + esc(c.phone) + '\')">حفظ</button>' +
+      '</div>' +
+      '<div class="msg" id="m_' + esc(c.phone) + '"></div>' +
+      '<a class="wa" target="_blank" rel="noopener" href="https://wa.me/966' + esc(c.phone.replace(/^0/,'')) +
+        '?text=' + encodeURIComponent(waMsg) + '">📲 اطلب الموقع من العميل</a>' +
+    '</div>';
+  });
+  document.getElementById('list').innerHTML = html;
+}
+
+function setMsg(phone, cls, text){
+  var el = document.getElementById('m_' + phone);
+  if(!el) return;
+  el.className = 'msg ' + cls;
+  el.textContent = text;
+}
+
+function saveLocation(phone){
+  var input = document.getElementById('in_' + phone);
+  var btn   = document.getElementById('btn_' + phone);
+  var raw   = input.value.trim();
+
+  if(!raw){ setMsg(phone, 'bad', 'الصق الرابط أو الإحداثيات أولاً.'); return; }
+
+  if(/maps\.app\.goo\.gl|goo\.gl\/maps/.test(raw)){
+    setMsg(phone, 'info',
+      'هذا رابط مختصر بلا إحداثيات. افتحه في شريط عنوان المتصفح، ثم انسخ الرقمين بعد علامة @ والصقهما هنا.');
+    return;
+  }
+
+  var c = parseCoords(raw);
+  if(!c){
+    setMsg(phone, 'bad', 'لم أجد إحداثيات صالحة. الصيغة المقبولة: 21.690777, 39.120520');
+    return;
+  }
+
+  var cust = missing.filter(function(x){ return x.phone === phone; })[0];
+  if(!cust){ setMsg(phone, 'bad', 'تعذّر العثور على سجل العميل.'); return; }
+
+  var mapsLink = 'https://www.google.com/maps/dir/?api=1&destination=' +
+                 c[0].toFixed(7) + ',' + c[1].toFixed(7);
+
+  btn.disabled = true;
+  btn.textContent = '⏳ جارٍ الحفظ…';
+  setMsg(phone, 'info', 'يُحفظ في ' + cust.keys.length + ' موعد…');
+
+  var jobs = cust.keys.map(function(k){
+    return db.ref(k.src + '/' + k.key).update({
+      lat: c[0],
+      lng: c[1],
+      mapsLink: mapsLink,
+      locationVerified: true,
+      locationUpdatedAt: new Date().toISOString()
+    });
+  });
+
+  Promise.all(jobs).then(function(){
+    var card = document.getElementById('c_' + phone);
+    if(card) card.className = 'card done';
+    btn.textContent = '✓ حُفظ';
+    setMsg(phone, 'ok', 'تم الحفظ في ' + cust.keys.length + ' موعد — سيظهر على الخريطة فوراً.');
+    // إزالته من القائمة دون إعادة رسم كامل حتى لا تضيع بقية الحقول
+    missing = missing.filter(function(x){ return x.phone !== phone; });
+    document.getElementById('count').textContent = missing.length;
+  }).catch(function(err){
+    btn.disabled = false;
+    btn.textContent = 'حفظ';
+    setMsg(phone, 'bad', 'تعذّر الحفظ: ' + err.message);
+  });
+}
+
+var started = false;
+function startOnce(){
+  if(started) return;
+  started = true;
+  loadAll();
+}
+window.addEventListener('atwad-admin-auth-ready', startOnce);
+window.__atwadInitPage = startOnce;
+setTimeout(startOnce, 3000);
+</script>
+</body>
+</html>
