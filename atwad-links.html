@@ -25,19 +25,44 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);padd
   border:1.5px solid var(--line);border-radius:10px;background:var(--frost);color:var(--slate);}
 .search input:focus{outline:none;border-color:var(--sky);background:#fff;}
 
-h2{font-size:15px;font-weight:900;color:var(--deep);margin:22px 0 10px;
-  display:flex;align-items:center;gap:8px;}
-h2 .tag{font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px;background:var(--ice);color:var(--steel);}
-h2 .tag.warn{background:#FEF3C7;color:#92400E;}
-h2 .tag.danger{background:#FEE2E2;color:#991B1B;}
+/* لكل قسم لونه: يميّزه بالعين قبل قراءة العنوان */
+.group{margin-top:24px;border-radius:16px;padding:14px;border:1.5px solid;}
+.group.g-customer{background:#EFF6FF;border-color:#BFDBFE;}
+.group.g-manual  {background:#FFFBEB;border-color:#FDE68A;}
+.group.g-admin   {background:#F0F9FF;border-color:#BAE6FD;}
+.group.g-tech    {background:#F5F3FF;border-color:#DDD6FE;}
+.group.g-tool    {background:#ECFDF5;border-color:#A7F3D0;}
+.group.g-ext     {background:#F8FAFC;border-color:#E2E8F0;}
+.group.g-old     {background:#FEF2F2;border-color:#FECACA;}
 
-.item{background:#fff;border-radius:13px;box-shadow:0 1px 6px rgba(12,59,94,.06);
-  padding:14px 16px;margin-bottom:9px;border-inline-start:4px solid var(--sky);}
-.item.admin{border-inline-start-color:var(--deep);}
-.item.tech{border-inline-start-color:var(--purple);}
-.item.tool{border-inline-start-color:var(--success);}
-.item.care{border-inline-start-color:var(--warning);}
-.item.ext{border-inline-start-color:var(--mist);}
+h2{font-size:16px;font-weight:900;margin:0 0 12px;display:flex;align-items:center;gap:9px;flex-wrap:wrap;}
+.g-customer h2{color:#1D4ED8;}
+.g-manual   h2{color:#B45309;}
+.g-admin    h2{color:var(--deep);}
+.g-tech     h2{color:#6D28D9;}
+.g-tool     h2{color:#047857;}
+.g-ext      h2{color:#475569;}
+.g-old      h2{color:#B91C1C;}
+
+h2 .tag{font-size:11px;font-weight:800;padding:3px 11px;border-radius:20px;
+  background:rgba(255,255,255,.85);border:1px solid rgba(0,0,0,.08);color:inherit;}
+
+.item{background:#fff;border-radius:12px;box-shadow:0 1px 5px rgba(12,59,94,.07);
+  padding:13px 15px;margin-bottom:8px;border-inline-start:5px solid var(--sky);}
+.item:last-child{margin-bottom:0;}
+.g-customer .item{border-inline-start-color:#2563EB;}
+.g-manual   .item{border-inline-start-color:#F59E0B;}
+.g-admin    .item{border-inline-start-color:var(--deep);}
+.g-tech     .item{border-inline-start-color:#8B5CF6;}
+.g-tool     .item{border-inline-start-color:#10B981;}
+.g-ext      .item{border-inline-start-color:#94A3B8;}
+.g-old      .item{border-inline-start-color:#EF4444;}
+
+.g-customer .item .name{color:#1D4ED8;}
+.g-manual   .item .name{color:#B45309;}
+.g-tech     .item .name{color:#6D28D9;}
+.g-tool     .item .name{color:#047857;}
+.g-old      .item .name{color:#B91C1C;}
 
 .item .top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
 .item .name{font-size:15.5px;font-weight:900;color:var(--deep);}
@@ -50,6 +75,12 @@ h2 .tag.danger{background:#FEE2E2;color:#991B1B;}
   padding:8px 14px;border-radius:9px;border:1.5px solid var(--line);background:#fff;
   color:var(--slate);cursor:pointer;text-decoration:none;}
 .acts a.open{background:var(--deep);color:#fff;border-color:var(--deep);}
+.g-customer .acts a.open{background:#2563EB;border-color:#2563EB;}
+.g-manual   .acts a.open{background:#D97706;border-color:#D97706;}
+.g-tech     .acts a.open{background:#7C3AED;border-color:#7C3AED;}
+.g-tool     .acts a.open{background:#059669;border-color:#059669;}
+.g-ext      .acts a.open{background:#64748B;border-color:#64748B;}
+.g-old      .acts a.open{background:#DC2626;border-color:#DC2626;}
 .acts a:hover, .acts button:hover{border-color:var(--sky);}
 
 .warn-box{background:#FEF3C7;border:1.5px solid #FCD34D;color:#92400E;border-radius:12px;
@@ -88,7 +119,7 @@ var BASE = 'https://attwadac-sys.github.io/atwad/';
 
 var GROUPS = [
   {
-    title: 'للعملاء', tag: 'يُرسل للعملاء', cls: '',
+    title: '👥 للعملاء', tag: 'يُرسل للعملاء', cls: 'g-customer',
     items: [
       { n:'حجز موعد', d:'الرابط الرسمي — ضعه في واتساب وسناب وتويتر وخرائط جوجل', u:'atwad-booking.html', k:'booking' },
       { n:'شرح خطوات الحجز', d:'صفحة توضيحية للعميل المتردد', u:'atwad-booking-explainer.html' },
@@ -96,7 +127,7 @@ var GROUPS = [
     ]
   },
   {
-    title: 'يُرسل يدوياً فقط', tag: 'لا يُعلن', cls: 'care', warn:
+    title: '✋ يُرسل يدوياً فقط', tag: 'لا يُعلن', cls: 'g-manual', warn:
       'هذان الرابطان استثناء للحالات الخاصة. لا تضعيهما في أي حساب أو إعلان، وإلا تحوّل العملاء إليهما وفقدتِ مزايا الحجز الإلكتروني.',
     items: [
       { n:'طلب موعد مبسّط', d:'ست حقول وفترات متاحة حقيقية — لكبار السن ومن يعجز عن الحجز. يصلك عبر واتساب ولا يحجز الفترة', u:'atwad-quick-request.html' },
@@ -104,7 +135,7 @@ var GROUPS = [
     ]
   },
   {
-    title: 'الإدارة', tag: 'يحتاج تسجيل دخول', cls: 'admin',
+    title: '🗂️ الإدارة', tag: 'يحتاج تسجيل دخول', cls: 'g-admin',
     items: [
       { n:'الصفحة الرئيسية', d:'مركز التحكم', u:'index.html' },
       { n:'إدارة المواعيد', d:'التقويم، الحجوزات، قائمة الانتظار، البحث والملغاة', u:'atwad-appointments.html' },
@@ -119,14 +150,14 @@ var GROUPS = [
     ]
   },
   {
-    title: 'الفني', tag: '', cls: 'tech',
+    title: '🔧 الفني', tag: '', cls: 'g-tech',
     items: [
       { n:'بوابة الفني', d:'مواعيد اليوم والدبوس والواتساب', u:'atwad-technician.html' },
       { n:'مالية الفني', d:'', u:'atwad-technician-finance.html' }
     ]
   },
   {
-    title: 'أدوات', tag: '', cls: 'tool',
+    title: '🧰 أدوات', tag: '', cls: 'g-tool',
     items: [
       { n:'النسخة الاحتياطية', d:'قراءة فقط — شغّلها أسبوعياً واحفظ الملف في D:\\attwad\\backups', u:'atwad-backup-v2.html' },
       { n:'مصروف الوقود', d:'تسجيل التعبئة والعداد، عربي وإنجليزي', u:'atwad-fuel-bilingual.html' },
@@ -135,7 +166,7 @@ var GROUPS = [
     ]
   },
   {
-    title: 'خارج المستودع', tag: '', cls: 'ext',
+    title: '🌐 خارج المستودع', tag: '', cls: 'g-ext',
     items: [
       { n:'مستودع الشيفرة', d:'GitHub — خاص', u:'https://github.com/attwadac-sys/atwad', abs:true },
       { n:'رفع ملف جديد', d:'اسحب الملف ثم Commit changes', u:'https://github.com/attwadac-sys/atwad/upload/main', abs:true },
@@ -145,7 +176,7 @@ var GROUPS = [
     ]
   },
   {
-    title: 'نسخة تراجع', tag: 'لا تُرسل لأحد', cls: 'ext',
+    title: '🗄️ نسخة تراجع', tag: 'لا تُرسل لأحد', cls: 'g-old',
     items: [
       { n:'الصفحة الرئيسية السابقة', d:'احذفها بعد أسبوع من الاستقرار', u:'index-old.html' }
     ]
@@ -160,14 +191,14 @@ function esc(v){
 function render(){
   var html = '';
   GROUPS.forEach(function(g, gi){
-    html += '<div class="group" data-group="' + gi + '">';
+    html += '<div class="group ' + (g.cls || '') + '" data-group="' + gi + '">';
     html += '<h2>' + esc(g.title) +
-            (g.tag ? '<span class="tag' + (g.cls === 'care' ? ' warn' : '') + '">' + esc(g.tag) + '</span>' : '') +
+            (g.tag ? '<span class="tag">' + esc(g.tag) + '</span>' : '') +
             '</h2>';
     if(g.warn) html += '<div class="warn-box">⚠️ ' + esc(g.warn) + '</div>';
     g.items.forEach(function(it){
       var full = it.abs ? it.u : (BASE + it.u);
-      html += '<div class="item ' + (g.cls || '') + '" data-name="' + esc(it.n + ' ' + (it.d||'') + ' ' + it.u) + '">' +
+      html += '<div class="item" data-name="' + esc(it.n + ' ' + (it.d||'') + ' ' + it.u) + '">' +
                 '<div class="top"><span class="name">' + esc(it.n) + '</span></div>' +
                 (it.d ? '<div class="desc">' + esc(it.d) + '</div>' : '') +
                 '<div class="url">' + esc(full) + '</div>' +
