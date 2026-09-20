@@ -29,10 +29,15 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(160deg,var(--de
 .field input:focus, .field select:focus{outline:none;border-color:var(--sky);background:#fff;}
 .field .hint{font-size:12px;color:var(--mist);margin-top:5px;}
 
-.choices{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.choice{border:2px solid var(--line);border-radius:12px;padding:14px 10px;text-align:center;
-  font-size:15px;font-weight:800;color:var(--slate);background:var(--frost);cursor:pointer;}
-.choice.on{border-color:var(--sky);background:var(--ice);color:var(--deep);}
+.slots{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;}
+.slot{border:2px solid var(--line);border-radius:12px;padding:12px 6px;text-align:center;
+  font-size:14px;font-weight:800;color:var(--slate);background:var(--frost);cursor:pointer;line-height:1.6;}
+.slot small{display:block;font-size:10px;font-weight:700;color:var(--success);margin-top:3px;}
+.slot.on{border-color:var(--sky);background:var(--ice);color:var(--deep);}
+.slot.off{background:#F8FAFC;color:var(--mist);cursor:not-allowed;border-style:dashed;}
+.slot.off small{color:var(--danger);}
+.slots-empty{grid-column:1/-1;text-align:center;padding:22px 10px;color:var(--mist);font-size:13.5px;font-weight:700;}
+@media(max-width:380px){ .slots{grid-template-columns:repeat(2,1fr);} }
 
 .send{width:100%;background:var(--wa);color:#fff;border:none;font-family:'Tajawal',sans-serif;
   font-weight:900;font-size:18px;padding:18px;border-radius:14px;cursor:pointer;margin-top:6px;}
@@ -91,24 +96,26 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(160deg,var(--de
     </div>
 
     <div class="field">
-      <label for="f_day">اليوم المفضل</label>
-      <input type="date" id="f_day">
+      <label for="f_day">اليوم المطلوب <span class="req">*</span></label>
+      <input type="date" id="f_day" onchange="loadSlots()">
+      <div class="hint" id="dayHint">اختر اليوم لتظهر الفترات المتاحة فعلاً</div>
     </div>
 
     <div class="field">
-      <label>الفترة المفضلة</label>
-      <div class="choices">
-        <div class="choice" id="c_am" onclick="pickPeriod('صباحاً')">☀️ صباحاً</div>
-        <div class="choice" id="c_pm" onclick="pickPeriod('مساءً')">🌙 مساءً</div>
+      <label>الفترة المتاحة <span class="req">*</span></label>
+      <div class="slots" id="slots">
+        <div class="slots-empty">اختر اليوم أولاً</div>
       </div>
+      <div class="hint">يمكنك اختيار فترة واحدة أو فترتين كبديل.</div>
     </div>
 
     <button class="send" onclick="sendRequest()">📲 إرسال الطلب عبر واتساب</button>
 
     <div class="note">
       <b>ما الذي يحدث بعد الإرسال؟</b><br>
-      يصلنا طلبك، ونتصل بك لتأكيد الموعد والفترة المتاحة.
-      الموعد لا يُعتمد إلا بعد اتصالنا بك.
+      يصلنا طلبك، ونتصل بك لتأكيد الموعد.
+      الفترات المعروضة متاحة الآن، لكن <b>الموعد لا يُحجز إلا بعد اتصالنا بك</b> —
+      ولهذا يفيدك اختيار فترة بديلة.
     </div>
   </div>
 
@@ -117,12 +124,134 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(160deg,var(--de
 
 <script>
 var BUSINESS_PHONE = '966509720382';
-var period = '';
+var DB = 'https://atwad-booking-default-rtdb.firebaseio.com';
+var SLOTS = [
+  {t:'8:00 - 10:00',  start:480,  ar:'8-10 ص',  icon:'🌅'},
+  {t:'10:00 - 12:00', start:600,  ar:'10-12 ص', icon:'☀️'},
+  {t:'12:00 - 14:00', start:720,  ar:'12-2 م',  icon:'🕛'},
+  {t:'14:00 - 16:00', start:840,  ar:'2-4 م',   icon:'🕑'},
+  {t:'16:00 - 18:00', start:960,  ar:'4-6 م',   icon:'🌤️'},
+  {t:'18:00 - 20:00', start:1080, ar:'6-8 م',   icon:'🌙'}
+];
+var SLOT_WINDOW = 120;      // نافذة الفترة بالدقائق
+var ADVANCE_MINUTES = 120;  // لا يُعرض موعد يبدأ خلال ساعتين
+var chosen = [];            // الفترات المختارة (واحدة أو اثنتان)
+var loadSeq = 0;
 
-function pickPeriod(v){
-  period = (period === v) ? '' : v;
-  document.getElementById('c_am').className = (period === 'صباحاً') ? 'choice on' : 'choice';
-  document.getElementById('c_pm').className = (period === 'مساءً')  ? 'choice on' : 'choice';
+function nowSaudiMinutes(){
+  var parts = new Intl.DateTimeFormat('en-US', {
+    timeZone:'Asia/Riyadh', hour:'numeric', minute:'numeric', hour12:false
+  }).formatToParts(new Date());
+  var h = parseInt(parts.find(function(p){ return p.type==='hour'; }).value, 10);
+  var m = parseInt(parts.find(function(p){ return p.type==='minute'; }).value, 10);
+  return h*60 + m;
+}
+function todaySaudiDate(){
+  var parts = new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Riyadh',year:'numeric',month:'2-digit',day:'2-digit'})
+    .formatToParts(new Date());
+  var o = {};
+  parts.forEach(function(p){ if(p.type!=='literal') o[p.type]=p.value; });
+  return o.year+'-'+o.month+'-'+o.day;
+}
+function blocksBetween(start,end){
+  var out = [];
+  for(var m = Math.floor(start/30)*30; m < end && m < 1440; m += 30){
+    out.push(String(Math.floor(m/60)).padStart(2,'0') + String(m%60).padStart(2,'0'));
+  }
+  return out;
+}
+
+function slotsMessage(html, cls){
+  document.getElementById('slots').innerHTML =
+    '<div class="slots-empty"' + (cls ? ' style="color:' + cls + ';"' : '') + '>' + html + '</div>';
+}
+
+/** يقرأ الأقفال الحقيقية من Firebase ويعرض الفترات المتاحة فقط */
+function loadSlots(){
+  var date = document.getElementById('f_day').value;
+  chosen = [];
+  if(!date){ slotsMessage('اختر اليوم أولاً'); return; }
+
+  var d = new Date(date + 'T00:00:00');
+  if(d.getDay() === 5){
+    slotsMessage('الجمعة خارج أيام العمل — اختر يوماً آخر', '#991B1B');
+    return;
+  }
+
+  var seq = ++loadSeq;
+  slotsMessage('⏳ جارٍ قراءة الفترات المتاحة…');
+
+  fetch(DB + '/slotLocks/' + encodeURIComponent(date) + '.json', {cache:'no-store'})
+    .then(function(r){
+      if(!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
+    .then(function(locks){
+      if(seq !== loadSeq) return;
+      var booked = {};
+      Object.keys(locks || {}).forEach(function(k){
+        if(/^\d{4}$/.test(k)) booked[k] = true;
+      });
+      renderSlots(booked, date);
+    })
+    .catch(function(err){
+      if(seq !== loadSeq) return;
+      // فشل آمن: لا نعرض فترات قد تكون محجوزة
+      slotsMessage('تعذّر قراءة الفترات. <br><button type="button" onclick="loadSlots()" ' +
+        'style="margin-top:8px;padding:9px 16px;border:none;border-radius:9px;background:#0EA5E9;' +
+        'color:#fff;font-family:inherit;font-weight:800;cursor:pointer;">إعادة المحاولة</button>', '#92400E');
+    });
+}
+
+function renderSlots(booked, date){
+  var grid = document.getElementById('slots');
+  grid.innerHTML = '';
+  var isToday = (date === todaySaudiDate());
+  var nowM = isToday ? nowSaudiMinutes() : 0;
+  var any = false;
+
+  SLOTS.forEach(function(sl){
+    var end = sl.start + SLOT_WINDOW;
+    var conflict = blocksBetween(sl.start, end).some(function(b){ return !!booked[b]; });
+    var past = isToday && (sl.start < nowM + ADVANCE_MINUTES);
+
+    var div = document.createElement('div');
+    if(conflict || past){
+      div.className = 'slot off';
+      div.innerHTML = sl.icon + '<br>' + sl.ar + '<small>' + (conflict ? 'محجوز' : 'انتهى الوقت') + '</small>';
+    } else {
+      any = true;
+      div.className = 'slot';
+      div.innerHTML = sl.icon + '<br>' + sl.ar + '<small>متاح</small>';
+      div.onclick = (function(t, el){ return function(){ toggleSlot(t, el); }; })(sl.t, div);
+    }
+    grid.appendChild(div);
+  });
+
+  if(!any){
+    var note = document.createElement('div');
+    note.className = 'slots-empty';
+    note.style.color = '#92400E';
+    note.textContent = 'لا توجد فترات متاحة في هذا اليوم — جرّب يوماً آخر';
+    grid.appendChild(note);
+  }
+}
+
+/** يسمح باختيار فترتين كحد أقصى: الأساسية وبديلة */
+function toggleSlot(t, el){
+  var i = chosen.indexOf(t);
+  if(i !== -1){
+    chosen.splice(i, 1);
+    el.className = 'slot';
+  } else {
+    if(chosen.length >= 2){
+      showErr('يمكنك اختيار فترتين كحد أقصى.');
+      return;
+    }
+    chosen.push(t);
+    el.className = 'slot on';
+    clearErr();
+  }
 }
 
 function showErr(msg){
@@ -162,6 +291,9 @@ function sendRequest(){
   var district = document.getElementById('f_district').value.trim();
   var day      = document.getElementById('f_day').value;
 
+  if(!day){ showErr('اختر اليوم المطلوب.'); return; }
+  if(!chosen.length){ showErr('اختر فترة متاحة واحدة على الأقل.'); return; }
+
   if(name.length < 2){ showErr('اكتب الاسم من فضلك.'); return; }
 
   var phone = normalizePhone(phoneRaw);
@@ -182,8 +314,9 @@ function sendRequest(){
   lines.push('الخدمة: ' + service);
   if(units)  lines.push('عدد المكيفات: ' + units);
   lines.push('الحي: ' + district);
-  if(day)    lines.push('اليوم المفضل: ' + formatDay(day));
-  if(period) lines.push('الفترة المفضلة: ' + period);
+  lines.push('اليوم: ' + formatDay(day));
+  lines.push('الفترة: ' + chosen[0]);
+  if(chosen[1]) lines.push('بديل: ' + chosen[1]);
   lines.push('');
   lines.push('أرجو التواصل معي لتأكيد الموعد.');
 
