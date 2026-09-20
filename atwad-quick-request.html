@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مؤسسة أطواد — طلب موعد</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
+:root{
+  --deep:#0C3B5E; --steel:#1E5F8A; --sky:#0EA5E9; --ice:#E8F4FD; --frost:#F0F9FF;
+  --slate:#334155; --mist:#94A3B8; --line:#E2E8F0; --danger:#EF4444; --wa:#25D366;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Tajawal',sans-serif;background:linear-gradient(160deg,var(--deep),var(--steel) 45%,var(--sky));
+  color:var(--slate);min-height:100vh;padding:16px;display:flex;align-items:flex-start;justify-content:center;}
+.card{background:#fff;border-radius:20px;box-shadow:0 18px 50px rgba(5,30,55,.28);
+  width:100%;max-width:460px;overflow:hidden;margin:auto;}
+.head{background:linear-gradient(135deg,var(--deep),var(--sky));color:#fff;padding:24px 22px;text-align:center;}
+.head h1{font-size:21px;font-weight:900;}
+.head p{font-size:13.5px;opacity:.92;margin-top:6px;line-height:1.8;}
+.body{padding:20px 20px 24px;}
+
+.field{margin-bottom:16px;}
+.field label{display:block;font-size:14px;font-weight:800;color:var(--deep);margin-bottom:7px;}
+.field .req{color:var(--danger);}
+.field input, .field select{
+  width:100%;font-family:'Tajawal',sans-serif;font-size:17px;padding:14px;
+  border:2px solid var(--line);border-radius:12px;color:var(--slate);background:var(--frost);}
+.field input:focus, .field select:focus{outline:none;border-color:var(--sky);background:#fff;}
+.field .hint{font-size:12px;color:var(--mist);margin-top:5px;}
+
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.choice{border:2px solid var(--line);border-radius:12px;padding:14px 10px;text-align:center;
+  font-size:15px;font-weight:800;color:var(--slate);background:var(--frost);cursor:pointer;}
+.choice.on{border-color:var(--sky);background:var(--ice);color:var(--deep);}
+
+.send{width:100%;background:var(--wa);color:#fff;border:none;font-family:'Tajawal',sans-serif;
+  font-weight:900;font-size:18px;padding:18px;border-radius:14px;cursor:pointer;margin-top:6px;}
+.send:hover{background:#1FB855;}
+.err{background:#FEE2E2;border:1.5px solid #FCA5A5;color:#991B1B;border-radius:12px;
+  padding:12px 14px;font-size:14px;font-weight:700;margin-bottom:14px;display:none;}
+.note{margin-top:16px;background:var(--frost);border:1.5px solid var(--ice);border-radius:12px;
+  padding:13px 15px;font-size:13px;line-height:1.9;color:var(--slate);}
+.note b{color:var(--deep);}
+.foot{text-align:center;padding:14px;font-size:12px;color:var(--mist);border-top:1px solid var(--line);}
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="head">
+    <h1>طلب موعد</h1>
+    <p>مؤسسة أطواد لصيانة المكيفات<br>املأ البيانات ثم اضغط الزر الأخضر — ونتصل بك لتأكيد الموعد</p>
+  </div>
+
+  <div class="body">
+    <div class="err" id="err"></div>
+
+    <div class="field">
+      <label for="f_name">الاسم <span class="req">*</span></label>
+      <input type="text" id="f_name" maxlength="60" placeholder="الاسم الكامل" autocomplete="name">
+    </div>
+
+    <div class="field">
+      <label for="f_phone">رقم الجوال <span class="req">*</span></label>
+      <input type="tel" id="f_phone" maxlength="15" inputmode="numeric" placeholder="05xxxxxxxx" autocomplete="tel">
+    </div>
+
+    <div class="field">
+      <label for="f_service">الخدمة المطلوبة <span class="req">*</span></label>
+      <select id="f_service">
+        <option value="">-- اختر الخدمة --</option>
+        <option>غسيل مكيفات</option>
+        <option>صيانة مكيف</option>
+        <option>تنظيف الوحدة الداخلية</option>
+        <option>تنظيف الوحدة الخارجية</option>
+        <option>إعادة فحص</option>
+        <option>غير متأكد — أحتاج استشارة</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="f_units">عدد المكيفات</label>
+      <input type="number" id="f_units" min="1" max="50" inputmode="numeric" placeholder="مثال: 4">
+      <div class="hint">اتركه فارغاً إن لم تكن متأكداً</div>
+    </div>
+
+    <div class="field">
+      <label for="f_district">الحي <span class="req">*</span></label>
+      <input type="text" id="f_district" maxlength="40" placeholder="مثال: أبحر الشمالية">
+    </div>
+
+    <div class="field">
+      <label for="f_day">اليوم المفضل</label>
+      <input type="date" id="f_day">
+    </div>
+
+    <div class="field">
+      <label>الفترة المفضلة</label>
+      <div class="choices">
+        <div class="choice" id="c_am" onclick="pickPeriod('صباحاً')">☀️ صباحاً</div>
+        <div class="choice" id="c_pm" onclick="pickPeriod('مساءً')">🌙 مساءً</div>
+      </div>
+    </div>
+
+    <button class="send" onclick="sendRequest()">📲 إرسال الطلب عبر واتساب</button>
+
+    <div class="note">
+      <b>ما الذي يحدث بعد الإرسال؟</b><br>
+      يصلنا طلبك، ونتصل بك لتأكيد الموعد والفترة المتاحة.
+      الموعد لا يُعتمد إلا بعد اتصالنا بك.
+    </div>
+  </div>
+
+  <div class="foot">مؤسسة أطواد لصيانة المكيفات</div>
+</div>
+
+<script>
+var BUSINESS_PHONE = '966509720382';
+var period = '';
+
+function pickPeriod(v){
+  period = (period === v) ? '' : v;
+  document.getElementById('c_am').className = (period === 'صباحاً') ? 'choice on' : 'choice';
+  document.getElementById('c_pm').className = (period === 'مساءً')  ? 'choice on' : 'choice';
+}
+
+function showErr(msg){
+  var el = document.getElementById('err');
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.scrollIntoView({behavior:'smooth', block:'center'});
+}
+function clearErr(){ document.getElementById('err').style.display = 'none'; }
+
+/** 05xxxxxxxx أو 5xxxxxxxx أو +9665xxxxxxxx */
+function normalizePhone(raw){
+  var p = String(raw || '').replace(/[^0-9]/g,'');
+  if(p.indexOf('00966') === 0) p = p.slice(5);
+  else if(p.indexOf('966') === 0) p = p.slice(3);
+  if(p.indexOf('0') === 0) p = p.slice(1);
+  return (p.length === 9 && p.indexOf('5') === 0) ? '0' + p : '';
+}
+
+function formatDay(iso){
+  if(!iso) return '';
+  var months = ['يناير','فبراير','مارس','أبريل','مايو','يونيو',
+                'يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  var days = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+  var d = new Date(iso + 'T00:00:00');
+  if(isNaN(d.getTime())) return iso;
+  return days[d.getDay()] + ' ' + d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+}
+
+function sendRequest(){
+  clearErr();
+
+  var name     = document.getElementById('f_name').value.trim();
+  var phoneRaw = document.getElementById('f_phone').value.trim();
+  var service  = document.getElementById('f_service').value;
+  var units    = document.getElementById('f_units').value.trim();
+  var district = document.getElementById('f_district').value.trim();
+  var day      = document.getElementById('f_day').value;
+
+  if(name.length < 2){ showErr('اكتب الاسم من فضلك.'); return; }
+
+  var phone = normalizePhone(phoneRaw);
+  if(!phone){ showErr('رقم الجوال غير صحيح. اكتبه بصيغة 05 متبوعة بثمانية أرقام.'); return; }
+
+  if(!service){ showErr('اختر الخدمة المطلوبة.'); return; }
+  if(district.length < 2){ showErr('اكتب اسم الحي من فضلك.'); return; }
+
+  if(units){
+    var u = Number(units);
+    if(!isFinite(u) || u < 1 || u > 50){ showErr('عدد المكيفات غير صحيح.'); return; }
+  }
+
+  var lines = [];
+  lines.push('طلب موعد جديد');
+  lines.push('الاسم: ' + name);
+  lines.push('الجوال: ' + phone);
+  lines.push('الخدمة: ' + service);
+  if(units)  lines.push('عدد المكيفات: ' + units);
+  lines.push('الحي: ' + district);
+  if(day)    lines.push('اليوم المفضل: ' + formatDay(day));
+  if(period) lines.push('الفترة المفضلة: ' + period);
+  lines.push('');
+  lines.push('أرجو التواصل معي لتأكيد الموعد.');
+
+  var url = 'https://wa.me/' + BUSINESS_PHONE + '?text=' + encodeURIComponent(lines.join('\n'));
+  window.open(url, '_blank');
+}
+
+// لا يقبل تاريخاً في الماضي
+(function(){
+  var d = new Date();
+  var p = function(n){ return (n<10?'0':'') + n; };
+  document.getElementById('f_day').min = d.getFullYear() + '-' + p(d.getMonth()+1) + '-' + p(d.getDate());
+})();
+</script>
+</body>
+</html>
