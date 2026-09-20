@@ -174,11 +174,18 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);min-
   <!-- طريقة الدفع -->
   <div class="form-group">
     <label>💳 طريقة الدفع</label>
-    <select id="f_method">
+    <select id="f_method" onchange="onMethodChange()">
       <option value="كاش">💵 كاش</option>
       <option value="تحويل">🏦 تحويل بنكي</option>
       <option value="مدى">💳 مدى</option>
+      <option value="آجل">🕐 آجل — لم يُدفع بعد</option>
     </select>
+    <div id="deferredNote" style="display:none;margin-top:9px;background:#FEF3C7;
+         border:1.5px solid #FCD34D;color:#92400E;border-radius:10px;padding:10px 12px;
+         font-size:12.5px;font-weight:700;line-height:1.8;">
+      سيُسجَّل المبلغ <b>مستحقاً على العميل</b> ولن يُحتسب مقبوضاً.
+      أبلغ الإدارة بموعد السداد المتفق عليه.
+    </div>
   </div>
 
   <button class="btn-save" id="btnSave" onclick="saveEntry()">✅ حفظ العملية</button>
@@ -230,12 +237,19 @@ function selType(type) {
 }
 
 // ===== حفظ العملية =====
+/** تنبيه الآجل يظهر فقط عند اختياره */
+function onMethodChange(){
+  var el = document.getElementById('deferredNote');
+  if(el) el.style.display = (document.getElementById('f_method').value === 'آجل') ? 'block' : 'none';
+}
+
 function saveEntry() {
   var amount = parseFloat(document.getElementById('f_amount').value);
   var desc   = document.getElementById('f_desc').value.trim();
   var date   = document.getElementById('f_date').value;
   var tech   = document.getElementById('f_tech').value;
   var method = document.getElementById('f_method').value;
+  var isDeferred = (method === 'آجل');
 
   if(!amount || amount <= 0) { showToast('❌ أدخل مبلغاً صحيحاً'); return; }
   if(!desc)                  { showToast('❌ أدخل البيان');          return; }
@@ -249,9 +263,10 @@ function saveEntry() {
     desc:        desc,
     date:        date,                  // YYYY-MM-DD ميلادي
     method:      method,
-    status:      'مدفوع',              // الفني يسجل فقط ما تم استلامه/دفعه فعلياً
-    paidAmount:  currentType === 'income' ? amount : 0,
-    payments:    currentType === 'income'
+    // الآجل يُسجَّل مستحقاً لا مقبوضاً، فلا يتضخم دخل اليوم بمبالغ لم تصل
+    status:      isDeferred ? 'غير مدفوع' : 'مدفوع',
+    paidAmount:  (currentType === 'income' && !isDeferred) ? amount : 0,
+    payments:    (currentType === 'income' && !isDeferred)
       ? [{id:'P'+Date.now(), amount:amount, date:date, method:method, note:'تسجيل فني'}]
       : [],
     // حقول المصدر — لا تتعارض مع البيانات الحالية
@@ -305,6 +320,7 @@ function resetForm() {
   document.getElementById('f_party').value  = '';
   document.getElementById('f_date').value   = todayDate();
   document.getElementById('f_method').value = 'كاش';
+  onMethodChange();
   selType('income');
   document.getElementById('f_amount').focus();
 }
@@ -338,7 +354,9 @@ function loadTodayEntries() {
       return '<div class="today-item">' +
         '<div>' +
           '<div class="ti-desc">' + (v.desc||'—') + '</div>' +
-          '<div class="ti-meta">' + (v.method||'كاش') + (v.party ? ' · ' + v.party : '') + '</div>' +
+          '<div class="ti-meta">' + (v.method||'كاش') +
+            (v.status === 'غير مدفوع' ? ' · <b style="color:#B45309;">لم يُحصَّل</b>' : '') +
+            (v.party ? ' · ' + v.party : '') + '</div>' +
         '</div>' +
         '<div class="ti-amt ' + (isIncome?'in':'out') + '">' +
           (isIncome ? '+' : '-') + fmtAmt(v.amount) + ' ﷼' +
