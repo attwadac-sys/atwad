@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مؤسسة أطواد — مشاركة الموقع</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
+:root{
+  --deep:#0C3B5E; --steel:#1E5F8A; --sky:#0EA5E9; --ice:#E8F4FD; --frost:#F0F9FF;
+  --slate:#334155; --mist:#94A3B8; --line:#E2E8F0;
+  --success:#10B981; --warning:#F59E0B; --danger:#EF4444; --wa:#25D366;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Tajawal',sans-serif;background:linear-gradient(160deg,var(--deep),var(--steel) 45%,var(--sky));
+  color:var(--slate);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:18px;}
+.card{background:#fff;border-radius:20px;box-shadow:0 18px 50px rgba(5,30,55,.28);
+  width:100%;max-width:440px;overflow:hidden;}
+.head{background:linear-gradient(135deg,var(--deep),var(--sky));color:#fff;padding:24px 22px;text-align:center;}
+.head h1{font-size:20px;font-weight:900;}
+.head p{font-size:13px;opacity:.9;margin-top:5px;line-height:1.7;}
+.body{padding:22px;}
+.why{background:var(--frost);border:1.5px solid var(--ice);border-radius:13px;padding:14px 16px;
+  font-size:14px;line-height:1.9;color:var(--slate);}
+.why b{color:var(--deep);}
+.btn{width:100%;border:none;font-family:'Tajawal',sans-serif;font-weight:900;font-size:17px;
+  padding:17px;border-radius:14px;cursor:pointer;margin-top:16px;}
+.btn-main{background:var(--deep);color:#fff;}
+.btn-main:hover{background:var(--steel);}
+.btn-main:disabled{background:var(--mist);cursor:not-allowed;}
+.btn-wa{background:var(--wa);color:#fff;text-decoration:none;display:none;text-align:center;}
+.state{margin-top:16px;border-radius:13px;padding:14px 16px;font-size:14px;font-weight:700;line-height:1.9;display:none;}
+.state.ok{background:#D1FAE5;border:1.5px solid #6EE7B7;color:#065F46;display:block;}
+.state.err{background:#FEE2E2;border:1.5px solid #FCA5A5;color:#991B1B;display:block;}
+.state.wait{background:#FEF3C7;border:1.5px solid #FCD34D;color:#92400E;display:block;}
+.coords{font-family:monospace;font-size:13px;background:#fff;border:1px dashed var(--line);
+  border-radius:9px;padding:8px 10px;margin-top:8px;direction:ltr;text-align:center;}
+.accuracy{font-size:12px;color:var(--mist);margin-top:6px;font-weight:600;}
+.tips{margin-top:18px;font-size:12.5px;color:var(--mist);line-height:2;}
+.tips b{color:var(--slate);}
+.foot{text-align:center;padding:14px;font-size:12px;color:var(--mist);border-top:1px solid var(--line);}
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="head">
+    <h1>📍 مشاركة موقعك</h1>
+    <p>مؤسسة أطواد لصيانة المكيفات<br>ليصل الفني إلى بابكم مباشرة بلا اتصال</p>
+  </div>
+
+  <div class="body">
+    <div class="why">
+      اضغط الزر أدناه <b>وأنت في المنزل</b>، ثم اسمح للمتصفح بالوصول إلى الموقع.
+      سيُرسل الموقع إلينا عبر واتساب بضغطة واحدة.
+    </div>
+
+    <button class="btn btn-main" id="shareBtn" onclick="shareLocation()">📍 تحديد موقعي</button>
+    <a class="btn btn-wa" id="waBtn" href="#" target="_blank" rel="noopener">📲 إرسال الموقع عبر واتساب</a>
+
+    <div class="state" id="state"></div>
+
+    <div class="tips">
+      <b>إن لم يعمل الزر:</b><br>
+      • تأكد من تفعيل خدمة الموقع في جهازك.<br>
+      • جرّب من متصفح الجوال لا من داخل تطبيق آخر.<br>
+      • أو أرسل موقعك مباشرة من واتساب: مشبك الورق ← الموقع ← الموقع الحالي.
+    </div>
+  </div>
+
+  <div class="foot">مؤسسة أطواد — لا نحفظ موقعك إلا لتنفيذ خدمتكم</div>
+</div>
+
+<script>
+var BUSINESS_PHONE = '966509720382';   // رقم أطواد بالصيغة الدولية
+
+function qs(name){
+  var m = new RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
+  return m ? decodeURIComponent(m[1].replace(/\+/g, ' ')) : '';
+}
+
+function setState(cls, html){
+  var el = document.getElementById('state');
+  el.className = 'state ' + cls;
+  el.innerHTML = html;
+}
+
+function shareLocation(){
+  var btn = document.getElementById('shareBtn');
+
+  if(!navigator.geolocation){
+    setState('err', 'المتصفح لا يدعم تحديد الموقع. أرسل موقعك من واتساب مباشرة.');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ جارٍ تحديد الموقع…';
+  setState('wait', 'اسمح للمتصفح بالوصول إلى موقعك عند ظهور السؤال…');
+
+  navigator.geolocation.getCurrentPosition(function(pos){
+    var lat = pos.coords.latitude;
+    var lng = pos.coords.longitude;
+    var acc = Math.round(pos.coords.accuracy || 0);
+
+    // رابط يحمل الإحداثيات صراحة — لا رابط مختصر
+    var mapsLink = 'https://www.google.com/maps/dir/?api=1&destination=' +
+                   lat.toFixed(7) + ',' + lng.toFixed(7);
+
+    var name = qs('name');
+    var lines = [];
+    lines.push('موقع منزلي لموعد مؤسسة أطواد');
+    if(name) lines.push('الاسم: ' + name);
+    lines.push('الموقع: ' + mapsLink);
+    lines.push('دقة التحديد: ' + acc + ' متر');
+
+    var waUrl = 'https://wa.me/' + BUSINESS_PHONE + '?text=' + encodeURIComponent(lines.join('\n'));
+    var wa = document.getElementById('waBtn');
+    wa.href = waUrl;
+    wa.style.display = 'block';
+
+    var quality = acc <= 50
+      ? '<span style="color:#065F46;">دقة ممتازة</span>'
+      : (acc <= 200 ? 'دقة مقبولة' : '<span style="color:#92400E;">دقة ضعيفة — جرّب قرب النافذة أو خارج المبنى</span>');
+
+    setState('ok',
+      '✅ تم تحديد موقعك.' +
+      '<div class="coords">' + lat.toFixed(7) + ', ' + lng.toFixed(7) + '</div>' +
+      '<div class="accuracy">± ' + acc + ' متر · ' + quality + '</div>' +
+      'اضغط الزر الأخضر لإرسال الموقع إلينا.');
+
+    btn.disabled = false;
+    btn.textContent = '🔄 إعادة التحديد';
+  }, function(err){
+    btn.disabled = false;
+    btn.textContent = '📍 تحديد موقعي';
+
+    var msg;
+    if(err.code === 1){
+      msg = 'لم يُسمح بالوصول إلى الموقع. فعّل الإذن من إعدادات المتصفح ثم أعد المحاولة، أو أرسل موقعك من واتساب مباشرة.';
+    } else if(err.code === 2){
+      msg = 'تعذّر تحديد الموقع. تأكد من تفعيل خدمة الموقع في جهازك.';
+    } else if(err.code === 3){
+      msg = 'انتهت المهلة قبل تحديد الموقع. أعد المحاولة في مكان أفضل للإشارة.';
+    } else {
+      msg = 'تعذّر تحديد الموقع: ' + (err.message || 'خطأ غير معروف');
+    }
+    setState('err', msg);
+  }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
+}
+</script>
+</body>
+</html>
