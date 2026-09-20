@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>أطواد — روابط الفني</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
+:root{
+  --deep:#0C3B5E; --steel:#1E5F8A; --sky:#0EA5E9; --ice:#E8F4FD; --frost:#F0F9FF;
+  --slate:#334155; --mist:#94A3B8; --line:#E2E8F0;
+  --success:#10B981; --purple:#8B5CF6; --wa:#25D366;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);padding-bottom:40px;}
+
+.header{background:linear-gradient(135deg,var(--deep),var(--steel),var(--sky));color:#fff;
+  padding:26px 20px;text-align:center;}
+.header h1{font-size:23px;font-weight:900;}
+.header p{font-size:13.5px;opacity:.9;margin-top:6px;}
+.wrap{max-width:520px;margin:0 auto;padding:0 14px;}
+
+.group{margin-top:20px;border-radius:16px;padding:14px;border:1.5px solid;}
+.group.g-work {background:#F5F3FF;border-color:#DDD6FE;}
+.group.g-money{background:#ECFDF5;border-color:#A7F3D0;}
+.group.g-help {background:#EFF6FF;border-color:#BFDBFE;}
+
+.group h2{font-size:16px;font-weight:900;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.g-work  h2{color:#6D28D9;}
+.g-money h2{color:#047857;}
+.g-help  h2{color:#1D4ED8;}
+
+.item{background:#fff;border-radius:13px;box-shadow:0 1px 5px rgba(12,59,94,.07);
+  padding:15px;margin-bottom:9px;border-inline-start:5px solid var(--sky);}
+.item:last-child{margin-bottom:0;}
+.g-work  .item{border-inline-start-color:#8B5CF6;}
+.g-money .item{border-inline-start-color:#10B981;}
+.g-help  .item{border-inline-start-color:#2563EB;}
+
+.item .name{font-size:17px;font-weight:900;color:var(--deep);}
+.item .desc{font-size:13px;color:var(--mist);margin-top:5px;line-height:1.8;}
+.item a.open{display:block;text-align:center;margin-top:11px;padding:14px;border-radius:11px;
+  font-size:16px;font-weight:900;text-decoration:none;color:#fff;background:var(--deep);}
+.g-work  .item a.open{background:#7C3AED;}
+.g-money .item a.open{background:#059669;}
+.g-help  .item a.open{background:#2563EB;}
+.item a.wa{background:var(--wa) !important;}
+
+.tips{background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:16px;margin-top:20px;}
+.tips h3{font-size:15px;font-weight:900;color:var(--deep);margin-bottom:10px;}
+.tips ol{margin-inline-start:18px;font-size:13.5px;line-height:2.1;color:var(--slate);}
+.tips b{color:var(--deep);}
+
+.foot{text-align:center;padding:22px 14px;font-size:12px;color:var(--mist);line-height:1.9;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🔧 روابط الفني</h1>
+  <p>مؤسسة أطواد لصيانة المكيفات<br>احفظ هذه الصفحة في شاشة جوالك الرئيسية</p>
+</div>
+
+<div class="wrap">
+
+  <div class="group g-work">
+    <h2>🔧 العمل اليومي</h2>
+
+    <div class="item">
+      <div class="name">مواعيدي اليوم</div>
+      <div class="desc">قائمة مواعيد اليوم بالترتيب، مع دبوس موقع العميل وزر واتساب وزر «إتمام» بعد انتهاء العمل</div>
+      <a class="open" href="https://attwadac-sys.github.io/atwad/atwad-technician.html" target="_blank" rel="noopener">فتح مواعيدي</a>
+    </div>
+  </div>
+
+  <div class="group g-money">
+    <h2>💰 المالية</h2>
+
+    <div class="item">
+      <div class="name">مستحقاتي</div>
+      <div class="desc">الأعمال المنفّذة والمبالغ المستحقة</div>
+      <a class="open" href="https://attwadac-sys.github.io/atwad/atwad-technician-finance.html" target="_blank" rel="noopener">فتح المالية</a>
+    </div>
+  </div>
+
+  <div class="group g-help">
+    <h2>📞 التواصل</h2>
+
+    <div class="item">
+      <div class="name">الإدارة — واتساب</div>
+      <div class="desc">للاستفسار عن موعد، أو إبلاغ تأخير، أو مشكلة في الموقع</div>
+      <a class="open wa" href="https://wa.me/966509720382" target="_blank" rel="noopener">مراسلة الإدارة</a>
+    </div>
+  </div>
+
+  <div class="tips">
+    <h3>تذكير سريع</h3>
+    <ol>
+      <li>افتح <b>مواعيدي اليوم</b> كل صباح قبل الانطلاق.</li>
+      <li>اضغط <b>🗺️ خريطة</b> للوصول إلى موقع العميل. وإن ظهر <b>«لا يوجد دبوس»</b> فأبلغ الإدارة قبل الخروج.</li>
+      <li>اضغط <b>واتساب</b> لإبلاغ العميل قبل وصولك.</li>
+      <li>اضغط <b>✓ إتمام</b> فور انتهاء العمل — لا في آخر اليوم.</li>
+      <li>أي تأخير عن الموعد: أبلغ الإدارة فوراً لإعادة الترتيب.</li>
+    </ol>
+  </div>
+
+  <div class="foot">
+    مؤسسة أطواد لصيانة المكيفات<br>
+    هذه الصفحة للفنيين فقط
+  </div>
+</div>
+
+</body>
+</html>
