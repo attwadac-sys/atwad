@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مؤسسة أطواد — دليل الروابط</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
+:root{
+  --deep:#0C3B5E; --steel:#1E5F8A; --sky:#0EA5E9; --ice:#E8F4FD; --frost:#F0F9FF;
+  --slate:#334155; --mist:#94A3B8; --line:#E2E8F0;
+  --success:#10B981; --warning:#F59E0B; --danger:#EF4444; --purple:#8B5CF6;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);padding-bottom:50px;}
+
+.header{background:linear-gradient(135deg,var(--deep),var(--steel),var(--sky));color:#fff;padding:26px 20px;}
+.header h1{font-size:22px;font-weight:900;}
+.header p{font-size:13px;opacity:.88;margin-top:5px;}
+.wrap{max-width:820px;margin:0 auto;padding:0 14px;}
+
+.search{background:#fff;border-radius:14px;box-shadow:0 2px 10px rgba(12,59,94,.07);
+  margin-top:-14px;padding:12px 14px;display:flex;gap:10px;align-items:center;}
+.search input{flex:1;font-family:'Tajawal',sans-serif;font-size:15px;padding:11px 13px;
+  border:1.5px solid var(--line);border-radius:10px;background:var(--frost);color:var(--slate);}
+.search input:focus{outline:none;border-color:var(--sky);background:#fff;}
+
+h2{font-size:15px;font-weight:900;color:var(--deep);margin:22px 0 10px;
+  display:flex;align-items:center;gap:8px;}
+h2 .tag{font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px;background:var(--ice);color:var(--steel);}
+h2 .tag.warn{background:#FEF3C7;color:#92400E;}
+h2 .tag.danger{background:#FEE2E2;color:#991B1B;}
+
+.item{background:#fff;border-radius:13px;box-shadow:0 1px 6px rgba(12,59,94,.06);
+  padding:14px 16px;margin-bottom:9px;border-inline-start:4px solid var(--sky);}
+.item.admin{border-inline-start-color:var(--deep);}
+.item.tech{border-inline-start-color:var(--purple);}
+.item.tool{border-inline-start-color:var(--success);}
+.item.care{border-inline-start-color:var(--warning);}
+.item.ext{border-inline-start-color:var(--mist);}
+
+.item .top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.item .name{font-size:15.5px;font-weight:900;color:var(--deep);}
+.item .desc{font-size:12.5px;color:var(--mist);margin-top:4px;line-height:1.8;}
+.item .url{font-size:12px;color:var(--steel);direction:ltr;text-align:left;margin-top:8px;
+  background:var(--frost);border:1px solid var(--ice);border-radius:8px;padding:7px 9px;
+  word-break:break-all;font-family:monospace;}
+.acts{display:flex;gap:7px;margin-top:9px;flex-wrap:wrap;}
+.acts a, .acts button{font-family:'Tajawal',sans-serif;font-size:12.5px;font-weight:800;
+  padding:8px 14px;border-radius:9px;border:1.5px solid var(--line);background:#fff;
+  color:var(--slate);cursor:pointer;text-decoration:none;}
+.acts a.open{background:var(--deep);color:#fff;border-color:var(--deep);}
+.acts a:hover, .acts button:hover{border-color:var(--sky);}
+
+.warn-box{background:#FEF3C7;border:1.5px solid #FCD34D;color:#92400E;border-radius:12px;
+  padding:12px 15px;font-size:13px;font-weight:700;line-height:1.9;margin-bottom:10px;}
+.foot{text-align:center;padding:22px 14px;font-size:12px;color:var(--mist);line-height:1.9;}
+.hidden{display:none;}
+@media print{ .search,.acts{display:none;} body{background:#fff;} }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="wrap" style="padding:0;">
+    <h1>🔗 دليل روابط نظام أطواد</h1>
+    <p>كل صفحات النظام في مكان واحد — اضغط «فتح» أو «نسخ»</p>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="search">
+    <input type="search" id="q" placeholder="ابحث باسم الصفحة…" oninput="filterItems()">
+    <span id="count" style="font-size:12px;color:var(--mist);font-weight:700;"></span>
+  </div>
+
+  <div id="list"></div>
+
+  <div class="foot">
+    مؤسسة أطواد لصيانة المكيفات<br>
+    الروابط تعمل على أي جهاز — احفظ هذه الصفحة في مفضلتك
+  </div>
+</div>
+
+<script>
+var BASE = 'https://attwadac-sys.github.io/atwad/';
+
+var GROUPS = [
+  {
+    title: 'للعملاء', tag: 'يُرسل للعملاء', cls: '',
+    items: [
+      { n:'حجز موعد', d:'الرابط الرسمي — ضعه في واتساب وسناب وتويتر وخرائط جوجل', u:'atwad-booking.html', k:'booking' },
+      { n:'شرح خطوات الحجز', d:'صفحة توضيحية للعميل المتردد', u:'atwad-booking-explainer.html' },
+      { n:'تقييم الخدمة', d:'يُرسل بعد إتمام الموعد', u:'atwad-reviews.html' }
+    ]
+  },
+  {
+    title: 'يُرسل يدوياً فقط', tag: 'لا يُعلن', cls: 'care', warn:
+      'هذان الرابطان استثناء للحالات الخاصة. لا تضعيهما في أي حساب أو إعلان، وإلا تحوّل العملاء إليهما وفقدتِ مزايا الحجز الإلكتروني.',
+    items: [
+      { n:'طلب موعد مبسّط', d:'ست حقول وفترات متاحة حقيقية — لكبار السن ومن يعجز عن الحجز. يصلك عبر واتساب ولا يحجز الفترة', u:'atwad-quick-request.html' },
+      { n:'مشاركة الموقع', d:'يضغط العميل زراً فيرسل موقعه بإحداثيات دقيقة — بديل الروابط المختصرة', u:'atwad-location.html' }
+    ]
+  },
+  {
+    title: 'الإدارة', tag: 'يحتاج تسجيل دخول', cls: 'admin',
+    items: [
+      { n:'الصفحة الرئيسية', d:'مركز التحكم', u:'index.html' },
+      { n:'إدارة المواعيد', d:'التقويم، الحجوزات، قائمة الانتظار، البحث والملغاة', u:'atwad-appointments.html' },
+      { n:'أوامر العمل', d:'', u:'atwad-workorders.html' },
+      { n:'العملاء', d:'', u:'atwad-customers.html' },
+      { n:'خريطة العملاء', d:'كل المواقع على خريطة واحدة، ووضع «مواعيد يوم» بمسار الفني', u:'atwad-customers-map.html' },
+      { n:'الإدارة المالية', d:'', u:'atwad-finance.html' },
+      { n:'التقارير', d:'', u:'atwad-reports.html' },
+      { n:'التحليلات', d:'أداء الفنيين وولاء العملاء', u:'atwad-analytics.html' },
+      { n:'إدارة التقييمات', d:'', u:'atwad-reviews-admin.html' },
+      { n:'معاينة عملاء الحجز', d:'', u:'atwad-booking-customers-preview.html' }
+    ]
+  },
+  {
+    title: 'الفني', tag: '', cls: 'tech',
+    items: [
+      { n:'بوابة الفني', d:'مواعيد اليوم والدبوس والواتساب', u:'atwad-technician.html' },
+      { n:'مالية الفني', d:'', u:'atwad-technician-finance.html' }
+    ]
+  },
+  {
+    title: 'أدوات', tag: '', cls: 'tool',
+    items: [
+      { n:'النسخة الاحتياطية', d:'قراءة فقط — شغّلها أسبوعياً واحفظ الملف في D:\\attwad\\backups', u:'atwad-backup-v2.html' },
+      { n:'مصروف الوقود', d:'تسجيل التعبئة والعداد، عربي وإنجليزي', u:'atwad-fuel-bilingual.html' },
+      { n:'استيراد العملاء من إكسل', d:'', u:'atwad-import-excel.html' },
+      { n:'تسجيل الدخول', d:'', u:'atwad-login.html' }
+    ]
+  },
+  {
+    title: 'خارج المستودع', tag: '', cls: 'ext',
+    items: [
+      { n:'مستودع الشيفرة', d:'GitHub — خاص', u:'https://github.com/attwadac-sys/atwad', abs:true },
+      { n:'رفع ملف جديد', d:'اسحب الملف ثم Commit changes', u:'https://github.com/attwadac-sys/atwad/upload/main', abs:true },
+      { n:'قاعدة البيانات', d:'Firebase — البيانات والقواعد', u:'https://console.firebase.google.com/project/atwad-booking/database', abs:true },
+      { n:'أمان حساب جوجل', d:'التحقق بخطوتين والرموز الاحتياطية', u:'https://myaccount.google.com/security', abs:true },
+      { n:'أمان حساب GitHub', d:'ما زال يحتاج كلمة مرور وتحقق بخطوتين', u:'https://github.com/settings/security', abs:true }
+    ]
+  },
+  {
+    title: 'نسخة تراجع', tag: 'لا تُرسل لأحد', cls: 'ext',
+    items: [
+      { n:'الصفحة الرئيسية السابقة', d:'احذفها بعد أسبوع من الاستقرار', u:'index-old.html' }
+    ]
+  }
+];
+
+function esc(v){
+  return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function render(){
+  var html = '';
+  GROUPS.forEach(function(g, gi){
+    html += '<div class="group" data-group="' + gi + '">';
+    html += '<h2>' + esc(g.title) +
+            (g.tag ? '<span class="tag' + (g.cls === 'care' ? ' warn' : '') + '">' + esc(g.tag) + '</span>' : '') +
+            '</h2>';
+    if(g.warn) html += '<div class="warn-box">⚠️ ' + esc(g.warn) + '</div>';
+    g.items.forEach(function(it){
+      var full = it.abs ? it.u : (BASE + it.u);
+      html += '<div class="item ' + (g.cls || '') + '" data-name="' + esc(it.n + ' ' + (it.d||'') + ' ' + it.u) + '">' +
+                '<div class="top"><span class="name">' + esc(it.n) + '</span></div>' +
+                (it.d ? '<div class="desc">' + esc(it.d) + '</div>' : '') +
+                '<div class="url">' + esc(full) + '</div>' +
+                '<div class="acts">' +
+                  '<a class="open" href="' + esc(full) + '" target="_blank" rel="noopener">فتح</a>' +
+                  '<button data-url="' + esc(full) + '" onclick="copyUrl(this)">نسخ الرابط</button>' +
+                '</div>' +
+              '</div>';
+    });
+    html += '</div>';
+  });
+  document.getElementById('list').innerHTML = html;
+  updateCount();
+}
+
+function copyUrl(btn){
+  var url = btn.getAttribute('data-url') || '';
+  var done = function(){
+    var old = btn.textContent;
+    btn.textContent = '✓ نُسخ';
+    setTimeout(function(){ btn.textContent = old; }, 1400);
+  };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(done).catch(function(){ window.prompt('انسخ الرابط:', url); });
+  } else {
+    window.prompt('انسخ الرابط:', url);
+  }
+}
+
+function filterItems(){
+  var q = document.getElementById('q').value.trim().toLowerCase();
+  var items = document.querySelectorAll('.item');
+  for(var i = 0; i < items.length; i++){
+    var hay = (items[i].getAttribute('data-name') || '').toLowerCase();
+    items[i].className = items[i].className.replace(' hidden','');
+    if(q && hay.indexOf(q) === -1) items[i].className += ' hidden';
+  }
+  // إخفاء عنوان أي قسم لم يبق فيه شيء
+  var groups = document.querySelectorAll('.group');
+  for(var g = 0; g < groups.length; g++){
+    var visible = groups[g].querySelectorAll('.item:not(.hidden)').length;
+    groups[g].style.display = visible ? 'block' : 'none';
+  }
+  updateCount();
+}
+
+function updateCount(){
+  var n = document.querySelectorAll('.item:not(.hidden)').length;
+  document.getElementById('count').textContent = n + ' رابط';
+}
+
+render();
+</script>
+</body>
+</html>
