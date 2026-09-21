@@ -279,6 +279,25 @@
           ".validate": "auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802'"
         }
       }
+    },
+    "odometerLogs": {
+      ".read": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2')",
+      ".write": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2')",
+      "$date": {
+        ".validate": "$date.matches(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/) && newData.hasChildren(['reading','at'])",
+        "reading": {
+          ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() < 10000000"
+        },
+        "at": {
+          ".validate": "newData.isString() && newData.val().length <= 40"
+        },
+        "by": {
+          ".validate": "newData.isString() && newData.val().length <= 40"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
     }
   }
 }

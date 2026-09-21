@@ -104,6 +104,21 @@ body{font-family:'Cairo',sans-serif;background:#F1F5F9;color:var(--slate);min-he
 .day-header{font-size:13px;font-weight:700;color:var(--mist);margin-bottom:8px;margin-top:4px;padding-right:4px;display:flex;align-items:center;gap:6px;}
 .day-count{background:var(--ice);color:var(--sky);padding:2px 8px;border-radius:10px;font-size:11px;}
 .today-tag{background:var(--sky);color:#fff;padding:2px 8px;border-radius:10px;font-size:11px;}
+
+.odo-card{margin:14px 16px 0;background:#fff;border-radius:14px;padding:14px 16px;
+  box-shadow:0 2px 8px rgba(0,0,0,.06);border-inline-start:5px solid #8B5CF6;}
+.odo-title{font-size:15px;font-weight:900;color:#0C3B5E;}
+.odo-sub{font-size:12px;color:#94A3B8;margin-top:4px;line-height:1.7;}
+.odo-row{display:flex;gap:8px;margin-top:10px;}
+.odo-row input{flex:1;font-family:inherit;font-size:16px;padding:11px 12px;border:1.5px solid #E2E8F0;
+  border-radius:10px;background:#F0F9FF;direction:ltr;text-align:center;}
+.odo-row input:focus{outline:none;border-color:#0EA5E9;}
+.odo-row button{font-family:inherit;font-weight:800;font-size:14px;padding:11px 20px;border:none;
+  border-radius:10px;background:#7C3AED;color:#fff;cursor:pointer;}
+.odo-row button:disabled{background:#94A3B8;}
+.odo-msg{font-size:12.5px;font-weight:700;margin-top:8px;display:none;line-height:1.8;}
+.odo-msg.ok{display:block;color:#065F46;}
+.odo-msg.bad{display:block;color:#991B1B;}
 </style><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
@@ -156,6 +171,16 @@ body{font-family:'Cairo',sans-serif;background:#F1F5F9;color:var(--slate);min-he
 </div>
 
 <!-- FILTER TABS -->
+<div class="odo-card" id="odoCard">
+  <div class="odo-title">🚗 قراءة العداد نهاية اليوم</div>
+  <div class="odo-sub" id="odoLast">سجّل قراءة عداد السيارة بعد آخر موعد</div>
+  <div class="odo-row">
+    <input type="number" id="odoInput" inputmode="numeric" min="0" placeholder="مثال: 370980">
+    <button onclick="saveOdometer()" id="odoBtn">حفظ</button>
+  </div>
+  <div class="odo-msg" id="odoMsg"></div>
+</div>
+
 <div class="tabs">
   <button class="tab active" onclick="filterAppts('today',this)">اليوم</button>
   <button class="tab" onclick="filterAppts('week',this)">الأسبوع</button>
@@ -681,6 +706,69 @@ function showToast(msg) {
 // تهيئة
 updateDate();
 
-window.__atwadInitPage = function(user) { console.log("[technician] مسجّل:", user.email); if(typeof syncFromFirebase==="function") syncFromFirebase(); else if(typeof loadData==="function") loadData(); };
+
+/* ===== قراءة العداد اليومية =====
+   تُحفظ في odometerLogs/<التاريخ>، وتُقارن الإدارة الفرق بين يومين
+   بالمسار التقديري لمواعيد اليوم على الخريطة. */
+var _lastOdo = null;   // آخر قراءة قبل اليوم: {date, reading}
+
+function loadLastOdometer(){
+  if(!db) return;
+  db.ref('odometerLogs').orderByKey().limitToLast(10).once('value').then(function(snap){
+    var t = today(), prev = null, todays = null;
+    snap.forEach(function(c){
+      var v = c.val() || {};
+      if(c.key < t) prev = { date:c.key, reading:Number(v.reading) };
+      if(c.key === t) todays = Number(v.reading);
+    });
+    _lastOdo = prev;
+    var el = document.getElementById('odoLast');
+    if(!el) return;
+    if(todays !== null){
+      el.innerHTML = '✅ سُجّلت قراءة اليوم: <b>' + todays.toLocaleString('en-US') + '</b> — يمكنك تعديلها';
+      document.getElementById('odoInput').value = todays;
+    } else if(prev){
+      el.innerHTML = 'آخر قراءة: <b>' + prev.reading.toLocaleString('en-US') + '</b> بتاريخ ' + prev.date;
+    }
+  }).catch(function(err){ console.error('odometer read:', err); });
+}
+
+function saveOdometer(){
+  var input = document.getElementById('odoInput');
+  var btn = document.getElementById('odoBtn');
+  var msg = document.getElementById('odoMsg');
+  var val = Number(input.value);
+
+  msg.className = 'odo-msg';
+  if(!input.value || !isFinite(val) || val <= 0){
+    msg.className = 'odo-msg bad'; msg.textContent = 'اكتب قراءة العداد الكلي (لا عداد الرحلة).'; return;
+  }
+  if(_lastOdo && val < _lastOdo.reading){
+    msg.className = 'odo-msg bad';
+    msg.textContent = 'القراءة أقل من آخر قراءة (' + _lastOdo.reading.toLocaleString('en-US') + '). تأكد من الرقم.';
+    return;
+  }
+  if(_lastOdo && val - _lastOdo.reading > 600){
+    if(!confirm('المسافة منذ آخر قراءة ' + (val - _lastOdo.reading) + ' كم. هل الرقم صحيح؟')) return;
+  }
+  if(!db){ msg.className = 'odo-msg bad'; msg.textContent = 'قاعدة البيانات غير متاحة.'; return; }
+
+  btn.disabled = true; btn.textContent = '⏳';
+  db.ref('odometerLogs/' + today()).set({
+    reading: val,
+    at: new Date().toISOString(),
+    by: currentTechAr || currentTech || 'فني'
+  }).then(function(){
+    btn.disabled = false; btn.textContent = 'حفظ';
+    var km = _lastOdo ? (val - _lastOdo.reading) : null;
+    msg.className = 'odo-msg ok';
+    msg.textContent = '✅ حُفظت القراءة' + (km !== null ? ' — مسافة اليوم: ' + km + ' كم' : '');
+    loadLastOdometer();
+  }).catch(function(err){
+    btn.disabled = false; btn.textContent = 'حفظ';
+    msg.className = 'odo-msg bad'; msg.textContent = 'تعذّر الحفظ: ' + err.message;
+  });
+}
+window.__atwadInitPage = function(user) { console.log("[technician] مسجّل:", user.email); if(typeof syncFromFirebase==="function") syncFromFirebase(); else if(typeof loadData==="function") loadData(); loadLastOdometer(); };
 
 </script>

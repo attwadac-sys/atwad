@@ -50,6 +50,12 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);disp
 .tag.repeat{background:#D1FAE5;color:#065F46;}
 .tag.new{background:#FEF3C7;color:#92400E;}
 .empty{text-align:center;padding:40px 16px;color:var(--mist);font-size:14px;}
+.km-box{margin:10px;border-radius:12px;background:var(--frost);border:1.5px solid var(--ice);padding:12px 14px;}
+.km-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:4px 0;}
+.km-row b{font-size:17px;font-weight:900;color:var(--deep);}
+.km-row.gap b{color:#B45309;}
+.km-row.ok b{color:#047857;}
+.km-note{font-size:11px;color:var(--mist);margin-top:6px;line-height:1.7;}
 
 .pin-label{background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:7px;
   padding:1px 6px;font-family:'Tajawal',sans-serif;font-size:11px;font-weight:800;color:var(--deep);
@@ -98,6 +104,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);disp
   </select>
   <button class="chip" id="dayChip" onclick="toggleDayMode()">مواعيد يوم</button>
   <input type="date" id="dayPick" style="display:none;font-family:'Tajawal',sans-serif;font-size:13px;padding:8px 10px;border:1.5px solid var(--line);border-radius:10px;" onchange="applyFilters()">
+  <button class="chip" id="baseChip" onclick="setBase()" style="display:none;">📌 نقطة الانطلاق</button>
   <button class="chip on" id="labelChip" onclick="toggleLabels()">الأسماء ظاهرة</button>
   <button class="chip" id="repeatChip" onclick="toggleRepeat()">المتكررون فقط</button>
   <span class="counts" id="counts">جارٍ التحميل…</span>
@@ -328,6 +335,7 @@ function toggleDayMode(){
   var pick = document.getElementById('dayPick');
   chip.className = dayMode ? 'chip on' : 'chip';
   pick.style.display = dayMode ? 'inline-block' : 'none';
+  document.getElementById('baseChip').style.display = dayMode ? 'inline-block' : 'none';
   ['districtSel','periodSel','repeatChip'].forEach(function(id){
     var el = document.getElementById(id);
     if(el){ el.disabled = dayMode; el.style.opacity = dayMode ? '.45' : '1'; }
@@ -408,13 +416,132 @@ function drawDayMarkers(list){
   if(bounds.length) map.fitBounds(bounds, { padding:[50,50], maxZoom:15 });
 }
 
+/* ===== المسافة: تقدير المسار مقابل العداد الفعلي ===== */
+var BASE_KEY = 'atwad_tech_base';
+var kmSeq = 0;
+
+function getBase(){
+  try {
+    var raw = window.localStorage.getItem(BASE_KEY);
+    if(!raw) return null;
+    var b = JSON.parse(raw);
+    return (b && validCoords(b[0], b[1])) ? b : null;
+  } catch(err) { return null; }
+}
+function setBase(){
+  var cur = getBase();
+  var v = window.prompt(
+    'نقطة انطلاق الفني وعودته (المستودع أو السكن).\n' +
+    'الصق الإحداثيات مثل: 21.7815556, 39.1015\nأو اتركه فارغاً لحذفها.',
+    cur ? (cur[0] + ', ' + cur[1]) : '');
+  if(v === null) return;
+  v = v.trim();
+  try {
+    if(!v){ window.localStorage.removeItem(BASE_KEY); }
+    else {
+      var c = coordsOf({ mapsLink: v });
+      if(!c){ alert('لم أجد إحداثيات صالحة.'); return; }
+      window.localStorage.setItem(BASE_KEY, JSON.stringify(c));
+    }
+  } catch(err) { alert('تعذّر الحفظ في المتصفح: ' + err.message); return; }
+  applyFilters();
+}
+
+/** مسافة بخط مستقيم بالكيلومتر */
+function haversine(a, b){
+  var R = 6371, toR = Math.PI/180;
+  var dLat = (b[0]-a[0])*toR, dLng = (b[1]-a[1])*toR;
+  var x = Math.sin(dLat/2)*Math.sin(dLat/2) +
+          Math.cos(a[0]*toR)*Math.cos(b[0]*toR)*Math.sin(dLng/2)*Math.sin(dLng/2);
+  return 2*R*Math.asin(Math.sqrt(x));
+}
+
+/** طول المسار بالطرق الفعلية عبر OSRM، مع بديل تقديري إن تعذّر */
+function routeKm(points){
+  if(points.length < 2) return Promise.resolve({ km:0, exact:true });
+  var coords = points.map(function(p){ return p[1] + ',' + p[0]; }).join(';');
+  var url = 'https://router.project-osrm.org/route/v1/driving/' + coords + '?overview=false';
+  return fetch(url).then(function(r){
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  }).then(function(j){
+    if(!j.routes || !j.routes.length) throw new Error('no route');
+    return { km: j.routes[0].distance / 1000, exact:true };
+  }).catch(function(){
+    // بديل: خط مستقيم × 1.35 لتعرّج الطرق داخل المدن
+    var t = 0;
+    for(var i = 1; i < points.length; i++) t += haversine(points[i-1], points[i]);
+    return { km: t * 1.35, exact:false };
+  });
+}
+
+/** قراءة العداد لليوم المحدد وآخر قراءة قبله */
+function odometerFor(day){
+  if(!db) return Promise.resolve(null);
+  return db.ref('odometerLogs').orderByKey().endAt(day).limitToLast(2).once('value')
+    .then(function(snap){
+      var rows = [];
+      snap.forEach(function(c){ rows.push({ date:c.key, reading:Number((c.val()||{}).reading) }); });
+      var cur = rows.filter(function(r){ return r.date === day; })[0];
+      var prev = rows.filter(function(r){ return r.date < day; }).pop();
+      if(!cur || !prev) return { cur:cur || null, prev:prev || null, km:null };
+      return { cur:cur, prev:prev, km: cur.reading - prev.reading };
+    })
+    .catch(function(err){ console.error('odometer:', err); return null; });
+}
+
+function renderKm(list, day){
+  var seq = ++kmSeq;
+  var box = document.getElementById('kmBox');
+  if(!box) return;
+  var base = getBase();
+  var pts = list.map(function(a){ return a.pos; });
+  if(base && pts.length){ pts.unshift(base); pts.push(base); }
+
+  box.innerHTML = '<div class="km-note">⏳ جارٍ حساب المسافة…</div>';
+
+  Promise.all([routeKm(pts), odometerFor(day)]).then(function(res){
+    if(seq !== kmSeq) return;
+    var est = res[0], odo = res[1];
+    var estKm = Math.round(est.km);
+    var html = '<div class="km-row"><span>🗺️ المسار التقديري</span><b>' + estKm + ' كم</b></div>';
+
+    if(odo && odo.km !== null){
+      var span = Math.round((new Date(day) - new Date(odo.prev.date)) / 86400000);
+      html += '<div class="km-row"><span>🚗 العداد الفعلي</span><b>' + odo.km + ' كم</b></div>';
+      var gap = odo.km - estKm;
+      if(span > 1){
+        html += '<div class="km-note">⚠️ آخر قراءة سابقة قبل ' + span + ' أيام، فالعداد يشمل أياماً لم تُسجّل. المقارنة غير دقيقة.</div>';
+      } else {
+        var cls = Math.abs(gap) <= Math.max(10, estKm * 0.25) ? 'ok' : 'gap';
+        html += '<div class="km-row ' + cls + '"><span>الفرق</span><b>' + (gap > 0 ? '+' : '') + gap + ' كم</b></div>';
+        if(cls === 'gap' && gap > 0){
+          html += '<div class="km-note">مسافة زائدة عن مسار المواعيد — قد تكون مشاوير قطع غيار أو غداء أو تنقلات غير مسجّلة.</div>';
+        }
+      }
+    } else if(odo && odo.cur){
+      html += '<div class="km-note">🚗 سُجّلت قراءة العداد اليوم، لكن لا قراءة سابقة للمقارنة.</div>';
+    } else {
+      html += '<div class="km-note">🚗 لم يسجّل الفني قراءة العداد لهذا اليوم بعد.</div>';
+    }
+
+    html += '<div class="km-note">' +
+      (est.exact ? 'المسار محسوب على الطرق الفعلية.' : 'تعذّر حساب الطرق — التقدير بخط مستقيم مع معامل تعرّج.') +
+      (base ? ' يشمل الذهاب من نقطة الانطلاق والعودة إليها.' : ' <b>بلا نقطة انطلاق</b> — اضغط «📌 نقطة الانطلاق» لاحتساب الذهاب والعودة.') +
+      (list.length ? '' : '') + '</div>';
+    box.innerHTML = html;
+  });
+}
+
 function renderDaySide(list){
   var el = document.getElementById('side');
+  var day = document.getElementById('dayPick').value || todayIso();
   if(!list.length){
-    el.innerHTML = '<div class="empty">لا مواعيد بموقع دقيق في هذا اليوم.</div>';
+    el.innerHTML = '<div id="kmBox" class="km-box"></div><div class="empty">لا مواعيد بموقع دقيق في هذا اليوم.</div>';
+    renderKm(list, day);
     return;
   }
-  var html = '';
+  var html = '<div id="kmBox" class="km-box"></div>';
   list.forEach(function(a, i){
     html += '<div class="cust" id="row_' + esc(a.phone) + '" onclick="highlight(\'' + esc(a.phone) + '\',true)">' +
       '<div class="nm">' + (i+1) + '. ' + esc(a.name) + '</div>' +
@@ -426,6 +553,7 @@ function renderDaySide(list){
       '</div></div>';
   });
   el.innerHTML = html;
+  renderKm(list, day);
 }
 
 function applyFilters(){
