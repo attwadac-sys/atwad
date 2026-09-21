@@ -14,7 +14,9 @@
 body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);min-height:100vh;}
 
 /* HEADER */
-.header{background:linear-gradient(135deg,var(--deep),#0e5fa8,var(--sky));padding:16px 20px;text-align:center;}
+.header{background:linear-gradient(135deg,var(--deep),#0e5fa8,var(--sky));padding:16px 20px;text-align:center;position:relative;}
+.lang-btn{position:absolute;top:12px;inset-inline-start:12px;background:rgba(255,255,255,.18);border:1.5px solid rgba(255,255,255,.4);
+  color:#fff;font-family:inherit;font-weight:800;font-size:12px;padding:6px 12px;border-radius:9px;cursor:pointer;white-space:nowrap;}
 .header h1{color:#fff;font-size:18px;font-weight:900;margin-bottom:2px;}
 .header p{color:rgba(255,255,255,.75);font-size:12px;}
 
@@ -100,100 +102,101 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);min-
 <body>
 
 <div class="header">
-  <h1>💰 تسجيل العمليات المالية</h1>
-  <p>مؤسسة أطواد لصيانة المكيفات</p>
+  <button class="lang-btn" id="langBtn" onclick="toggleLang()">English</button>
+  <h1 data-i18n="title">💰 تسجيل العمليات المالية</h1>
+  <p data-i18n="org">مؤسسة أطواد لصيانة المكيفات</p>
 </div>
 
 <!-- رسالة النجاح -->
 <div class="success-banner" id="successBanner">
   <div class="icon">✅</div>
-  <p id="successText">تم حفظ العملية بنجاح</p>
+  <p id="successText" data-i18n="savedOk">تم حفظ العملية بنجاح</p>
   <small id="successDetail"></small>
 </div>
 
 <!-- النموذج -->
 <div class="card">
-  <div class="card-title">📋 بيانات العملية</div>
+  <div class="card-title" data-i18n="cardData">📋 بيانات العملية</div>
 
   <!-- نوع العملية -->
   <div class="type-row">
-    <button class="type-btn income sel" id="btnIncome" onclick="selType('income')">💵 دخل</button>
-    <button class="type-btn expense" id="btnExpense" onclick="selType('expense')">💸 مصروف</button>
+    <button class="type-btn income sel" id="btnIncome" onclick="selType('income')" data-i18n="income">💵 دخل</button>
+    <button class="type-btn expense" id="btnExpense" onclick="selType('expense')" data-i18n="expense">💸 مصروف</button>
   </div>
 
   <!-- اسم الفني -->
   <div class="form-group">
-    <label>👷 الفني</label>
+    <label data-i18n="lblTech">👷 الفني</label>
     <select id="f_tech">
-      <option value="أحمد">أحمد</option>
-      <option value="شعيب">شعيب</option>
-      <option value="سهيل">سهيل</option>
+      <option value="أحمد" data-i18n="techAbrar">أحمد</option>
+      <option value="شعيب" data-i18n="techShoib">شعيب</option>
+      <option value="سهيل" data-i18n="techSuhail">سهيل</option>
     </select>
   </div>
 
   <!-- التاريخ والمبلغ -->
   <div class="two-col">
     <div class="form-group">
-      <label>📅 التاريخ</label>
+      <label data-i18n="lblDate">📅 التاريخ</label>
       <input type="date" id="f_date">
     </div>
     <div class="form-group">
-      <label>💵 المبلغ (ريال) *</label>
+      <label data-i18n="lblAmount">💵 المبلغ (ريال) *</label>
       <input type="number" id="f_amount" placeholder="0" min="0" inputmode="decimal">
     </div>
   </div>
 
   <!-- البيان -->
   <div class="form-group">
-    <label>📝 البيان / الوصف *</label>
-    <input type="text" id="f_desc" placeholder="مثال: تنظيف مكيف — خالد الأحمدي">
+    <label data-i18n="lblDesc">📝 البيان / الوصف *</label>
+    <input type="text" id="f_desc" placeholder="مثال: تنظيف مكيف — خالد الأحمدي" data-i18n-ph="phDesc">
   </div>
 
   <!-- اسم العميل — يظهر عند الدخل فقط -->
   <div class="form-group" id="partyGroup">
-    <label>👤 اسم العميل</label>
-    <input type="text" id="f_party" placeholder="اختياري">
+    <label data-i18n="lblParty">👤 اسم العميل</label>
+    <input type="text" id="f_party" placeholder="اختياري" data-i18n-ph="phOptional">
   </div>
 
   <!-- فئة المصروف — تظهر عند المصروف فقط -->
   <div class="form-group hidden" id="categoryGroup">
-    <label>🗂 فئة المصروف *</label>
+    <label data-i18n="lblCat">🗂 فئة المصروف *</label>
     <select id="f_category">
-      <option value="قطع غيار">🔩 قطع غيار</option>
-      <option value="وقود">⛽ وقود</option>
-      <option value="طعام">🍽 طعام</option>
-      <option value="إعلانات">📢 إعلانات</option>
-      <option value="صيانة سيارة">🚗 صيانة سيارة</option>
-      <option value="رواتب">👷 رواتب</option>
-      <option value="إيجار">🏠 إيجار</option>
-      <option value="تأمين">🛡 تأمين</option>
-      <option value="أخرى">📦 أخرى</option>
+      <option value="قطع غيار" data-i18n="c_parts">🔩 قطع غيار</option>
+      <option value="وقود" data-i18n="c_fuel">⛽ وقود</option>
+      <option value="طعام" data-i18n="c_food">🍽 طعام</option>
+      <option value="إعلانات" data-i18n="c_ads">📢 إعلانات</option>
+      <option value="صيانة سيارة" data-i18n="c_car">🚗 صيانة سيارة</option>
+      <option value="رواتب" data-i18n="c_salary">👷 رواتب</option>
+      <option value="إيجار" data-i18n="c_rent">🏠 إيجار</option>
+      <option value="تأمين" data-i18n="c_ins">🛡 تأمين</option>
+      <option value="أخرى" data-i18n="c_other">📦 أخرى</option>
     </select>
   </div>
 
   <!-- طريقة الدفع -->
   <div class="form-group">
-    <label>💳 طريقة الدفع</label>
+    <label data-i18n="lblMethod">💳 طريقة الدفع</label>
     <select id="f_method" onchange="onMethodChange()">
-      <option value="كاش">💵 كاش</option>
-      <option value="تحويل">🏦 تحويل بنكي</option>
-      <option value="مدى">💳 مدى</option>
-      <option value="آجل">🕐 آجل — لم يُدفع بعد</option>
+      <option value="كاش" data-i18n="m_cash">💵 كاش</option>
+      <option value="تحويل" data-i18n="m_transfer">🏦 تحويل بنكي</option>
+      <option value="مدى" data-i18n="m_mada">💳 مدى</option>
+      <option value="آجل" data-i18n="m_deferred">🕐 آجل — لم يُدفع بعد</option>
     </select>
     <div id="deferredNote" style="display:none;margin-top:9px;background:#FEF3C7;
          border:1.5px solid #FCD34D;color:#92400E;border-radius:10px;padding:10px 12px;
          font-size:12.5px;font-weight:700;line-height:1.8;">
-      سيُسجَّل المبلغ <b>مستحقاً على العميل</b> ولن يُحتسب مقبوضاً.
-      أبلغ الإدارة بموعد السداد المتفق عليه.
+      <span data-i18n-html="deferredNote">سيُسجَّل المبلغ <b>مستحقاً على العميل</b> ولن يُحتسب مقبوضاً.
+      أبلغ الإدارة بموعد السداد المتفق عليه.</span>
     </div>
   </div>
 
-  <button class="btn-save" id="btnSave" onclick="saveEntry()">✅ حفظ العملية</button>
+  <button class="btn-save" id="btnSave" onclick="saveEntry()" data-i18n="saveBtn">✅ حفظ العملية</button>
 </div>
 
 <!-- سجل عمليات اليوم -->
 <div class="card">
-  <div class="card-title">🗓 عمليات اليوم</div>
+  <div class="card-title" data-i18n="todayOps">🗓 عمليات اليوم</div>
   <div class="today-list" id="todayList">
     <div style="text-align:center;padding:20px;color:var(--mist);font-size:13px;">لا توجد عمليات مسجلة اليوم بعد.</div>
   </div>
@@ -204,6 +207,78 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);min-
 <script>
 // ===== Firebase =====
 var db = window.db; // من atwad-firebase.js — لا تهيئة محلية
+/* ===== اللغة: عربي / English =====
+   القيم المخزّنة (طريقة الدفع، الفئة، اسم الفني) تبقى عربية كما هي،
+   فلا تتغير التقارير المالية — الترجمة للعرض فقط. */
+var I18N = {
+  ar: {
+    title:'💰 تسجيل العمليات المالية', org:'مؤسسة أطواد لصيانة المكيفات', savedOk:'تم حفظ العملية بنجاح',
+    cardData:'📋 بيانات العملية', income:'💵 دخل', expense:'💸 مصروف',
+    lblTech:'👷 الفني', techAbrar:'أحمد', techShoib:'شعيب', techSuhail:'سهيل',
+    lblDate:'📅 التاريخ', lblAmount:'💵 المبلغ (ريال) *', lblDesc:'📝 البيان / الوصف *',
+    phDesc:'مثال: تنظيف مكيف — خالد الأحمدي', lblParty:'👤 اسم العميل', phOptional:'اختياري',
+    lblCat:'🗂 فئة المصروف *', c_parts:'🔩 قطع غيار', c_fuel:'⛽ وقود', c_food:'🍽 طعام', c_ads:'📢 إعلانات',
+    c_car:'🚗 صيانة سيارة', c_salary:'👷 رواتب', c_rent:'🏠 إيجار', c_ins:'🛡 تأمين', c_other:'📦 أخرى',
+    lblMethod:'💳 طريقة الدفع', m_cash:'💵 كاش', m_transfer:'🏦 تحويل بنكي', m_mada:'💳 مدى',
+    m_deferred:'🕐 آجل — لم يُدفع بعد',
+    deferredNote:'سيُسجَّل المبلغ <b>مستحقاً على العميل</b> ولن يُحتسب مقبوضاً. أبلغ الإدارة بموعد السداد المتفق عليه.',
+    saveBtn:'✅ حفظ العملية', todayOps:'🗓 عمليات اليوم', noOps:'لا توجد عمليات مسجلة اليوم بعد.',
+    errAmount:'❌ أدخل مبلغاً صحيحاً', errDesc:'❌ أدخل البيان', errDate:'❌ اختر التاريخ',
+    errFb:'❌ Firebase غير متاح', saving:'⏳ جاري الحفظ...',
+    savedIncome:'تم حفظ الدخل بنجاح ✅', savedExpense:'تم حفظ المصروف بنجاح ✅',
+    errSave:'❌ خطأ في الحفظ: ', uncollected:'لم يُحصَّل', currency:'﷼',
+    mv_كاش:'كاش', 'mv_تحويل':'تحويل بنكي', 'mv_مدى':'مدى', 'mv_آجل':'آجل',
+    other:'English'
+  },
+  en: {
+    title:'💰 Record transactions', org:'Atwad AC Maintenance', savedOk:'Transaction saved',
+    cardData:'📋 Transaction details', income:'💵 Income', expense:'💸 Expense',
+    lblTech:'👷 Technician', techAbrar:'Ahmed', techShoib:'Shoaib', techSuhail:'Suhail',
+    lblDate:'📅 Date', lblAmount:'💵 Amount (SAR) *', lblDesc:'📝 Description *',
+    phDesc:'e.g. AC cleaning — Khalid Al-Ahmadi', lblParty:'👤 Customer name', phOptional:'Optional',
+    lblCat:'🗂 Expense category *', c_parts:'🔩 Spare parts', c_fuel:'⛽ Fuel', c_food:'🍽 Food', c_ads:'📢 Advertising',
+    c_car:'🚗 Vehicle maintenance', c_salary:'👷 Salaries', c_rent:'🏠 Rent', c_ins:'🛡 Insurance', c_other:'📦 Other',
+    lblMethod:'💳 Payment method', m_cash:'💵 Cash', m_transfer:'🏦 Bank transfer', m_mada:'💳 Mada',
+    m_deferred:'🕐 Deferred — not paid yet',
+    deferredNote:'The amount will be recorded as <b>owed by the customer</b>, not as received. Tell the office the agreed payment date.',
+    saveBtn:'✅ Save transaction', todayOps:"🗓 Today's transactions", noOps:'No transactions recorded today yet.',
+    errAmount:'❌ Enter a valid amount', errDesc:'❌ Enter a description', errDate:'❌ Choose the date',
+    errFb:'❌ Firebase unavailable', saving:'⏳ Saving...',
+    savedIncome:'Income saved ✅', savedExpense:'Expense saved ✅',
+    errSave:'❌ Save error: ', uncollected:'not collected', currency:'SAR',
+    mv_كاش:'Cash', 'mv_تحويل':'Bank transfer', 'mv_مدى':'Mada', 'mv_آجل':'Deferred',
+    other:'عربي'
+  }
+};
+var LANG = 'ar';
+try {
+  var _sl = window.localStorage.getItem('atwad_tech_finance_lang');
+  if(_sl === 'en' || _sl === 'ar') LANG = _sl;
+} catch(err) { /* التخزين معطّل — نبدأ بالعربية */ }
+function t(k){ return I18N[LANG][k]; }
+function methodLabel(v){ var x = I18N[LANG]['mv_' + (v || 'كاش')]; return x || v || ''; }
+
+function applyStaticLang(){
+  document.documentElement.lang = LANG;
+  document.documentElement.dir = (LANG === 'ar') ? 'rtl' : 'ltr';
+  document.title = (LANG === 'ar') ? 'أطواد — مالية الفني' : 'Atwad — Technician finance';
+  var n = document.querySelectorAll('[data-i18n]');
+  for(var i = 0; i < n.length; i++){ var v = t(n[i].getAttribute('data-i18n')); if(v !== undefined) n[i].textContent = v; }
+  var h = document.querySelectorAll('[data-i18n-html]');
+  for(var j = 0; j < h.length; j++){ h[j].innerHTML = t(h[j].getAttribute('data-i18n-html')); }
+  var p = document.querySelectorAll('[data-i18n-ph]');
+  for(var k = 0; k < p.length; k++){ p[k].placeholder = t(p[k].getAttribute('data-i18n-ph')); }
+  var lb = document.getElementById('langBtn'); if(lb) lb.textContent = t('other');
+}
+function toggleLang(){
+  LANG = (LANG === 'ar') ? 'en' : 'ar';
+  try { window.localStorage.setItem('atwad_tech_finance_lang', LANG); }
+  catch(err) { /* تبقى اللغة لهذه الجلسة فقط */ }
+  applyStaticLang();
+  loadTodayEntries();
+}
+applyStaticLang();
+
 
 // ===== مساعدات =====
 function todayDate() {
@@ -251,9 +326,9 @@ function saveEntry() {
   var method = document.getElementById('f_method').value;
   var isDeferred = (method === 'آجل');
 
-  if(!amount || amount <= 0) { showToast('❌ أدخل مبلغاً صحيحاً'); return; }
-  if(!desc)                  { showToast('❌ أدخل البيان');          return; }
-  if(!date)                  { showToast('❌ اختر التاريخ');         return; }
+  if(!amount || amount <= 0) { showToast(t('errAmount')); return; }
+  if(!desc)                  { showToast(t('errDesc'));          return; }
+  if(!date)                  { showToast(t('errDate'));         return; }
 
   // ===== بنية transaction متوافقة مع atwad-finance.html =====
   var entry = {
@@ -288,15 +363,14 @@ function saveEntry() {
     entry.party    = '';
   }
 
-  if(!db) { showToast('❌ Firebase غير متاح'); return; }
+  if(!db) { showToast(t('errFb')); return; }
 
   var btn = document.getElementById('btnSave');
-  btn.disabled = true; btn.textContent = '⏳ جاري الحفظ...';
+  btn.disabled = true; btn.textContent = t('saving');
 
   db.ref('transactions').push(entry).then(function() {
     // نجاح
-    var typeLabel = currentType === 'income' ? 'دخل' : 'مصروف';
-    document.getElementById('successText').textContent = 'تم حفظ الـ' + typeLabel + ' بنجاح ✅';
+    document.getElementById('successText').textContent = currentType === 'income' ? t('savedIncome') : t('savedExpense');
     document.getElementById('successDetail').textContent =
       fmtAmt(amount) + ' ﷼ — ' + desc + ' — ' + fmtDate(date);
     document.getElementById('successBanner').classList.add('show');
@@ -307,9 +381,9 @@ function saveEntry() {
     resetForm();
     loadTodayEntries();
   }).catch(function(e) {
-    showToast('❌ خطأ في الحفظ: ' + e.message);
+    showToast(t('errSave') + e.message);
   }).finally(function() {
-    btn.disabled = false; btn.textContent = '✅ حفظ العملية';
+    btn.disabled = false; btn.textContent = t('saveBtn');
   });
 }
 
@@ -345,7 +419,7 @@ function loadTodayEntries() {
 
     var list = document.getElementById('todayList');
     if(!items.length) {
-      list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--mist);font-size:13px;">لا توجد عمليات مسجلة اليوم بعد.</div>';
+      list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--mist);font-size:13px;">' + t('noOps') + '</div>';
       return;
     }
 
@@ -354,12 +428,12 @@ function loadTodayEntries() {
       return '<div class="today-item">' +
         '<div>' +
           '<div class="ti-desc">' + (v.desc||'—') + '</div>' +
-          '<div class="ti-meta">' + (v.method||'كاش') +
-            (v.status === 'غير مدفوع' ? ' · <b style="color:#B45309;">لم يُحصَّل</b>' : '') +
+          '<div class="ti-meta">' + methodLabel(v.method) +
+            (v.status === 'غير مدفوع' ? ' · <b style="color:#B45309;">' + t('uncollected') + '</b>' : '') +
             (v.party ? ' · ' + v.party : '') + '</div>' +
         '</div>' +
         '<div class="ti-amt ' + (isIncome?'in':'out') + '">' +
-          (isIncome ? '+' : '-') + fmtAmt(v.amount) + ' ﷼' +
+          (isIncome ? '+' : '-') + fmtAmt(v.amount) + ' ' + t('currency') +
         '</div>' +
       '</div>';
     }).join('');
