@@ -543,7 +543,7 @@ function renderAppts() {
       const aId = a.id || a._fbKey;
       const initial = (a.client||'ع')[0];
       const badgeClass = STATUS_BADGES[a.status||'pending'];
-      const statusLabel = statusLabel(a.status||'pending');
+      const stLabel = statusLabel(a.status||'pending');
       const isDone = a.status === 'done';
 
       html += `<div class="appt-card ${a.status||'pending'}" id="card-${aId}">
@@ -556,7 +556,7 @@ function renderAppts() {
             </div>
           </div>
           <div>
-            <span class="status-badge ${badgeClass}">${statusLabel}</span>
+            <span class="status-badge ${badgeClass}">${stLabel}</span>
           </div>
         </div>
         <div class="card-body">
@@ -805,11 +805,11 @@ var _lastOdo = null;   // آخر قراءة قبل اليوم: {date, reading}
 function loadLastOdometer(){
   if(!db) return;
   db.ref('odometerLogs').orderByKey().limitToLast(10).once('value').then(function(snap){
-    var t = today(), prev = null, todays = null;
+    var tday = today(), prev = null, todays = null;
     snap.forEach(function(c){
       var v = c.val() || {};
-      if(c.key < t) prev = { date:c.key, reading:Number(v.reading) };
-      if(c.key === t) todays = Number(v.reading);
+      if(c.key < tday) prev = { date:c.key, reading:Number(v.reading) };
+      if(c.key === tday) todays = Number(v.reading);
     });
     _lastOdo = prev;
     var el = document.getElementById('odoLast');
