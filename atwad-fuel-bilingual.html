@@ -14,11 +14,13 @@
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);padding-bottom:50px;}
 .header{background:linear-gradient(135deg,var(--deep),var(--steel),var(--sky));color:#fff;padding:20px 18px;
-  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+  display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:nowrap;}
+.header > div{min-width:0;}
 .header h1{font-size:19px;font-weight:900;}
 .header p{font-size:12px;opacity:.85;margin-top:4px;}
 .lang{background:rgba(255,255,255,.16);border:1.5px solid rgba(255,255,255,.35);color:#fff;
-  font-family:'Tajawal',sans-serif;font-weight:800;font-size:13px;padding:7px 14px;border-radius:9px;cursor:pointer;}
+  font-family:'Tajawal',sans-serif;font-weight:800;font-size:13px;padding:7px 14px;border-radius:9px;cursor:pointer;
+  white-space:nowrap;flex-shrink:0;min-width:76px;}
 .lang:hover{background:rgba(255,255,255,.26);}
 .wrap{max-width:880px;margin:0 auto;padding:0 14px;}
 
