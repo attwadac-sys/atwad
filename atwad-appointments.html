@@ -1888,7 +1888,7 @@ function sendWhatsAppConfirmation(appt) {
     'ملاحظة مهمة:\n' +
     'في حال الرغبة في إلغاء الموعد أو تغييره، نأمل إبلاغنا قبل الموعد بـ24 ساعة على الأقل؛ حيث يتم تخصيص وقت الفني وتجهيزه لخدمتكم، والإبلاغ المبكر يتيح لنا خدمة عميل آخر في هذا الوقت.\n\n' +
     'شاكرين لكم تعاونكم وتقديركم لوقت فريق العمل، وشكرًا لثقتكم بمؤسسة أطواد لصيانة المكيفات.';
-  window.open(atwadWaUrl(phone, msg),'_blank');
+  openAtwadWa(phone, msg);
 }
 
 // ============================================================
@@ -3387,6 +3387,7 @@ function openDetail(id){
            <button onclick="copyTaskMessage('${aId}')" style="flex:1;padding:10px;background:#F3F4F6;color:#374151;border:1px solid #D1D5DB;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;min-width:100px;">📋 نسخ المهمة</button>`
         : `<button disabled style="flex:1;padding:10px;background:#E9D5FF;color:#A78BFA;border:none;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:not-allowed;min-width:100px;" title="عيّن فنيًا أولًا">📤 إرسال للفني</button>`}
       <button type="button" onclick="openExactAppointmentLocation('${aId}')" title="فتح دبوس العميل الدقيق أو تحديثه" style="flex:1;padding:10px;background:${detailMapsUrl?'var(--ice)':'#FEF3C7'};color:${detailMapsUrl?'var(--sky)':'#92400E'};border:none;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;min-width:100px;">${detailMapsUrl?'🗺️ الدبوس':'⚠️ تحديث الموقع'}</button>
+      <button onclick="saveContactFromAppt('${aId}')" title="حفظ اسم العميل ورقمه في جهات اتصال الجوال" style="flex:1;padding:10px;background:#E0E7FF;color:#3730A3;border:none;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;min-width:100px;">👤 حفظ جهة اتصال</button>
       <button onclick="requestRecheck('${aId}')" title="فتح موعد إعادة فحص لهذا العميل" style="flex:1;padding:10px;background:#FEF3C7;color:#92400E;border:none;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;min-width:100px;">🔁 إعادة فحص</button>
       ${a.status!=='done'?`<button onclick="markDone('${aId}');document.getElementById('detailModal').classList.remove('open')" style="flex:1;padding:10px;background:#D1FAE5;color:var(--success);border:none;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;min-width:80px;">✓ إتمام</button>`:''}
       <button onclick="deleteAppt('${aId}',null);document.getElementById('detailModal').classList.remove('open')" style="flex:1;padding:10px;background:#FEE2E2;color:#EF4444;border:none;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;min-width:80px;">🗑️ حذف</button>
@@ -3903,6 +3904,49 @@ function atwadWaUrl(phone, message){
   return 'https://web.whatsapp.com/send?phone=' + p + (t ? '&text=' + t : '');
 }
 
+/* اسم نافذة موحّد لواتساب: كل ضغطة تُعيد استخدام التبويب نفسه. */
+var ATWAD_WA_TARGET = 'atwadWhatsApp';
+function openAtwadWa(phone, message){
+  return window.open(atwadWaUrl(phone, message), ATWAD_WA_TARGET);
+}
+
+/* ===== حفظ العميل في جهات اتصال الجوال (ملف vCard) ===== */
+function vcardEscape(v){
+  return String(v == null ? '' : v)
+    .replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,')
+    .replace(/\r?\n/g,'\\n');
+}
+function saveContactFromAppt(apptId){
+  var a = findAppt(apptId);
+  if(!a){ showToast('تعذر العثور على الموعد.'); return; }
+  var name  = String(a.client || '').trim() || 'عميل أطواد';
+  var phone = String(a.phone  || '').trim();
+  if(!phone){ showToast('لا يوجد رقم جوال لهذا العميل.'); return; }
+  var noteParts = [];
+  if(a.service) noteParts.push('الخدمة: ' + a.service);
+  if(a.date)    noteParts.push('آخر موعد: ' + a.date);
+  var maps = (typeof trustedLocationUrl === 'function') ? trustedLocationUrl(a) : '';
+  if(!maps && a.mapsLink) maps = a.mapsLink;
+  var lines = ['BEGIN:VCARD','VERSION:3.0','FN:' + vcardEscape(name),'N:' + vcardEscape(name) + ';;;;',
+               'TEL;TYPE=CELL:' + phone,'ORG:' + vcardEscape('عميل — مؤسسة أطواد')];
+  if(a.address) lines.push('ADR;TYPE=HOME:;;' + vcardEscape(a.address) + ';;;;');
+  if(maps)      lines.push('URL:' + maps);
+  if(noteParts.length) lines.push('NOTE:' + vcardEscape(noteParts.join(' | ')));
+  lines.push('END:VCARD');
+  try {
+    var blob = new Blob([lines.join('\r\n')], {type:'text/vcard;charset=utf-8'});
+    var url  = URL.createObjectURL(blob);
+    var link = document.createElement('a');
+    link.href = url;
+    link.download = name.replace(/[^\u0600-\u06FFa-zA-Z0-9 _-]/g,'') + '.vcf';
+    document.body.appendChild(link); link.click(); document.body.removeChild(link);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+    showToast('افتح الملف المنزَّل لإضافة العميل إلى جهات الاتصال.');
+  } catch(err) {
+    showToast('تعذّر إنشاء بطاقة الاتصال: ' + err.message);
+  }
+}
+
 function customerNoticeReference(a) {
   var ref = String((a && (a.ref || a.bookingRef || a.reference)) || '').trim();
   return ref;
@@ -3990,7 +4034,7 @@ function showCustomerNotice(kind, phone, message) {
 
 function openCustomerNoticeWhatsApp() {
   if(!_customerNoticePhone || !_customerNoticeMessage) return;
-  window.open(atwadWaUrl(_customerNoticePhone, _customerNoticeMessage), '_blank', 'noopener');
+  openAtwadWa(_customerNoticePhone, _customerNoticeMessage);
 }
 
 function closeCustomerNotice() {
@@ -4027,7 +4071,7 @@ function sendReminder(id) {
     '🛠️ الخدمة: ' + (a.service||'—') + '\n\n' +
     'يرجى التأكيد بالرد على هذه الرسالة، أو إعلامنا إذا كنتم تودّون إعادة الجدولة.\n' +
     'شكراً لثقتكم 🙏';
-  window.open(atwadWaUrl(waPhone, msg), '_blank', 'noopener');
+  openAtwadWa(waPhone, msg);
 }
 
 // ============================================================
@@ -4442,7 +4486,7 @@ document.addEventListener('DOMContentLoaded', applySharedLang);
       </div>
       <!-- الأزرار -->
       <div class="tech-modal-btns">
-        <a class="btn-wa-open" id="openWhatsappBtn" href="#" target="_blank" rel="noopener" onclick="onOpenWhatsapp()">
+        <a class="btn-wa-open" id="openWhatsappBtn" href="#" target="atwadWhatsApp" onclick="onOpenWhatsapp()">
           💬 فتح واتساب
         </a>
         <!-- زر واتساب أعمال Android — يظهر فقط على Android -->
