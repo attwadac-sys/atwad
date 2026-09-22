@@ -345,12 +345,21 @@ function toggleDayMode(){
 }
 
 /** مواعيد اليوم المحدد، مرتبة بالوقت، ولها إحداثيات */
+/** الإلغاء يُسجَّل بصيغ مختلفة حسب مصدر الموعد — نوحّدها هنا */
+function isCancelledStatus(st){
+  var v = String(st || '').trim().toLowerCase();
+  return v === 'cancelled' || v === 'canceled' || v === 'rejected' || v === 'declined' ||
+         v === 'ملغي' || v === 'ملغى' || v === 'مرفوض';
+}
+
 function dayAppointments(){
   var day = document.getElementById('dayPick').value || todayIso();
   var q = document.getElementById('q').value.trim();
   var out = [];
   allRecords.forEach(function(r){
     if(String(r.date || '') !== day) return;
+    // الملغى لا يُزار: لا يدخل المسار ولا المسافة
+    if(isCancelledStatus(r.status)) return;
     var pos = coordsOf(r);
     if(!pos) return;
     var name = String(r.client || r.name || '').trim() || 'بلا اسم';
@@ -547,7 +556,8 @@ function renderDaySide(list){
       '<div class="nm">' + (i+1) + '. ' + esc(a.name) + '</div>' +
       '<div class="meta">' + esc(a.time || '—') + ' · ' + esc(a.service) + '</div>' +
       '<div class="tags">' +
-        (a.tech ? '<span class="tag">' + esc(a.tech) + '</span>' : '') +
+        (a.tech ? '<span class="tag">' + esc(a.tech) + '</span>'
+                : '<span class="tag" style="background:#FEF3C7;color:#92400E;">بلا فني</span>') +
         '<span class="tag ' + (a.status === 'done' ? 'repeat' : '') + '">' + esc(statusLabel(a.status)) + '</span>' +
         (a.district ? '<span class="tag">' + esc(a.district) + '</span>' : '') +
       '</div></div>';
@@ -562,14 +572,16 @@ function applyFilters(){
   if(dayMode){
     var dayList = dayAppointments();
     var dayStr = document.getElementById('dayPick').value || todayIso();
-    var totalDay = 0, missing = [];
+    var totalDay = 0, cancelledDay = 0, missing = [];
     allRecords.forEach(function(r){
       if(String(r.date || '') !== dayStr) return;
+      if(isCancelledStatus(r.status)){ cancelledDay++; return; }
       totalDay++;
       if(!coordsOf(r)) missing.push(String(r.client || r.name || 'بلا اسم'));
     });
     document.getElementById('counts').innerHTML =
-      '<b>' + dayList.length + '</b> من ' + totalDay + ' موعد يوم ' + esc(dayStr) +
+      '<b>' + dayList.length + '</b> من ' + totalDay + ' موعد نشط يوم ' + esc(dayStr) +
+      (cancelledDay ? ' · ' + cancelledDay + ' ملغى (مستبعد)' : '') +
       (missing.length ? ' · بلا موقع: ' + esc(missing.join('، ')) : ' · الكل محدد');
     drawDayMarkers(dayList);
     renderDaySide(dayList);
