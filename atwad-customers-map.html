@@ -66,6 +66,22 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);disp
 .pop p{font-size:12px;color:var(--slate);margin:2px 0;}
 .pop a{display:inline-block;margin-top:7px;font-size:12px;font-weight:800;color:var(--sky);text-decoration:none;}
 
+@media print{
+  /* ورقة واحدة: الخريطة أعلى الصفحة وقائمة المواعيد تحتها */
+  body{background:#fff;}
+  .header{background:#0C3B5E !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .back, .toolbar input, .toolbar select, .toolbar .chip{display:none !important;}
+  .toolbar{border-bottom:1px solid #94A3B8;padding:6px 10px;}
+  .counts{margin:0;font-size:12px;color:#0C3B5E;}
+  .split{display:block;}
+  #map{height:11cm;width:100%;page-break-inside:avoid;}
+  .side{max-height:none;overflow:visible;border:none;}
+  .cust{page-break-inside:avoid;border-bottom:1px solid #E2E8F0;}
+  .km-box{page-break-inside:avoid;background:#fff;border:1px solid #94A3B8;}
+  .leaflet-control-zoom{display:none !important;}
+  .pin-label{box-shadow:none;border-color:#64748B;}
+}
+
 @media(max-width:820px){
   /* على الجوال: الصفحة تتمرّر طبيعياً، والخريطة بارتفاع ثابت صريح.
      الارتفاع النسبي داخل شبكة مرنة كان يُنتج خريطة بارتفاع صفر. */
@@ -105,6 +121,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);disp
   <button class="chip" id="dayChip" onclick="toggleDayMode()">مواعيد يوم</button>
   <input type="date" id="dayPick" style="display:none;font-family:'Tajawal',sans-serif;font-size:13px;padding:8px 10px;border:1.5px solid var(--line);border-radius:10px;" onchange="applyFilters()">
   <button class="chip" id="baseChip" onclick="setBase()" style="display:none;">📌 نقطة الانطلاق</button>
+  <button class="chip" id="printChip" onclick="printDay()" style="display:none;">🖨️ طباعة</button>
   <button class="chip on" id="labelChip" onclick="toggleLabels()">الأسماء ظاهرة</button>
   <button class="chip" id="repeatChip" onclick="toggleRepeat()">المتكررون فقط</button>
   <span class="counts" id="counts">جارٍ التحميل…</span>
@@ -336,6 +353,7 @@ function toggleDayMode(){
   chip.className = dayMode ? 'chip on' : 'chip';
   pick.style.display = dayMode ? 'inline-block' : 'none';
   document.getElementById('baseChip').style.display = dayMode ? 'inline-block' : 'none';
+  document.getElementById('printChip').style.display = dayMode ? 'inline-block' : 'none';
   ['districtSel','periodSel','repeatChip'].forEach(function(id){
     var el = document.getElementById(id);
     if(el){ el.disabled = dayMode; el.style.opacity = dayMode ? '.45' : '1'; }
@@ -649,6 +667,14 @@ function highlight(phone, fromList){
     m.openPopup();
   }
 }
+
+/** طباعة مسار اليوم: نثبّت أبعاد الخريطة قبل الطباعة ونعيدها بعدها */
+function printDay(){
+  if(!dayMode){ alert('الطباعة متاحة في وضع «مواعيد يوم».'); return; }
+  if(map) map.invalidateSize();
+  setTimeout(function(){ window.print(); }, 400);
+}
+window.addEventListener('afterprint', function(){ if(map) setTimeout(function(){ map.invalidateSize(); }, 200); });
 
 function toggleLabels(){
   showLabels = !showLabels;
