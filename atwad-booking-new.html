@@ -434,6 +434,18 @@ body{background:var(--bg);color:var(--ink);font-size:16px}
 .container + div p{color:var(--mist) !important;font-family:'Readex Pro',sans-serif !important}
 .container + div a{border-radius:10px !important;font-family:'Readex Pro',sans-serif !important;font-weight:500 !important;height:44px;padding:0 18px !important}
 .container + div a[href*="wa.me"]{background:var(--wa) !important}
+/* بطاقة التنظيف المدمجة — sv8/sv7 باقيتان كما هما وتستدعيان selIndoor/selOutdoor الأصليتين */
+.clean-combo{grid-column:1/-1;background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.clean-combo:has(.svc-card.sel){border-color:var(--deep);background:var(--tint)}
+.cc-name{font-size:15px;font-weight:600;color:var(--ink)}
+.cc-price{font-size:12px;color:var(--muted);margin-top:2px}
+.cc-label{font-size:13px;color:var(--muted)}
+.cc-options{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.clean-combo .svc-card{min-height:64px;padding:10px 8px;border-radius:12px;background:#fff}
+.clean-combo .svc-card .s-name{font-size:15px}
+.clean-combo .svc-card .s-price{font-size:11px}
+.clean-combo .svc-card.sel{border-width:2px !important}
+.clean-combo .svc-card.sel::after{width:22px;height:22px;line-height:22px;font-size:13px;top:6px}
 /* اختيار اليوم بالأزرار — حقل التاريخ الأصلي يبقى مخفياً ويستقبل القيمة */
 #f_date{display:none}
 .day-chips{display:flex;gap:8px;overflow-x:auto;padding:2px 0 6px;scrollbar-width:thin}
@@ -480,8 +492,15 @@ body{background:var(--bg);color:var(--ink);font-size:16px}
     <div class="service-grid">
       <div class="svc-card primary-service" id="sv1" onclick="showWashingOptions()"><div class="s-icon">💧❄️</div><div class="s-name">غسيل مكيفات</div><div class="s-price">يشمل تنظيف الوحدة الداخلية والخارجية ومجرى تصريف المياه</div><div class="s-price s-cta">اختر العدد لمعرفة السعر</div></div>
       <div class="svc-card" id="sv2" onclick="selSvc('صيانة مكيف','AC Maintenance',100,'sv2')"><div class="s-icon">🛠️</div><div class="s-name">صيانة مكيف</div><div class="s-price">تبدأ من 100 ريال</div></div>
-      <div class="svc-card" id="sv8" onclick="selIndoor()"><div class="s-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 104" class="svc-svg" role="img" aria-label="الوحدة الداخلية"><defs><linearGradient id="idTop" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0C3B5E"/><stop offset="100%" stop-color="#0EA5E9"/></linearGradient><linearGradient id="idBody" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#e8f4fd"/><stop offset="100%" stop-color="#cde8f7"/></linearGradient></defs><rect x="6" y="16" width="128" height="40" rx="9" fill="url(#idBody)" stroke="#0EA5E9" stroke-width="2.5"/><path d="M6 25a9 9 0 0 1 9-9h110a9 9 0 0 1 9 9v6H6z" fill="url(#idTop)"/><rect x="24" y="36" width="92" height="3" rx="1.5" fill="#0C3B5E" opacity="0.22"/><rect x="24" y="43" width="92" height="3" rx="1.5" fill="#0C3B5E" opacity="0.22"/><rect x="24" y="50" width="92" height="3" rx="1.5" fill="#0C3B5E" opacity="0.22"/><circle cx="15" cy="46" r="2.4" fill="#0EA5E9" opacity="0.8"/><path d="M18 58q52 14 104 0" fill="none" stroke="#0EA5E9" stroke-width="2.5" opacity="0.55"/><path d="M44 70q5 6 0 9-5-3 0-9z" fill="#0EA5E9" opacity="0.85"/><path d="M70 76q5 6 0 9-5-3 0-9z" fill="#0EA5E9" opacity="0.65"/><path d="M96 70q5 6 0 9-5-3 0-9z" fill="#0EA5E9" opacity="0.85"/><path d="M70 62q4 5 0 7.5-4-2.5 0-7.5z" fill="#0EA5E9" opacity="0.9"/></svg></div><div class="s-name">تنظيف الوحدة الداخلية</div><div class="s-price">40 ريال للوحدة — 5 وحدات فأكثر</div></div>
-      <div class="svc-card" id="sv7" onclick="selOutdoor()"><div class="s-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 104" class="svc-svg" role="img" aria-label="الوحدة الخارجية"><defs><linearGradient id="odTop" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0C3B5E"/><stop offset="100%" stop-color="#0EA5E9"/></linearGradient><linearGradient id="odBody" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#e8f4fd"/><stop offset="100%" stop-color="#cde8f7"/></linearGradient></defs><rect x="8" y="12" width="104" height="72" rx="9" fill="url(#odBody)" stroke="#0EA5E9" stroke-width="2.5"/><path d="M8 21a9 9 0 0 1 9-9h86a9 9 0 0 1 9 9v5H8z" fill="url(#odTop)"/><circle cx="60" cy="53" r="23" fill="#f4fbff" stroke="#0C3B5E" stroke-width="2" opacity="0.9"/><circle cx="60" cy="53" r="17.5" fill="none" stroke="#0C3B5E" stroke-width="1.2" opacity="0.35"/><circle cx="60" cy="53" r="11" fill="none" stroke="#0C3B5E" stroke-width="1.2" opacity="0.35"/><path d="M60 42q7 6 0 11 -7-5 0-11z" fill="#0EA5E9" opacity="0.85"/><path d="M71 53q-6 7-11 0 5-7 11 0z" fill="#0EA5E9" opacity="0.85"/><path d="M60 64q-7-6 0-11 7 5 0 11z" fill="#0EA5E9" opacity="0.85"/><path d="M49 53q6-7 11 0-5 7-11 0z" fill="#0EA5E9" opacity="0.85"/><circle cx="60" cy="53" r="3.4" fill="#0C3B5E"/><rect x="14" y="34" width="8" height="38" rx="3" fill="#0C3B5E" opacity="0.18"/><rect x="98" y="34" width="8" height="38" rx="3" fill="#0C3B5E" opacity="0.18"/><rect x="20" y="84" width="12" height="8" rx="2.5" fill="#334155"/><rect x="88" y="84" width="12" height="8" rx="2.5" fill="#334155"/><path d="M36 94q4 5 0 7.5-4-2.5 0-7.5z" fill="#0EA5E9" opacity="0.8"/><path d="M60 96q4 5 0 7.5-4-2.5 0-7.5z" fill="#0EA5E9" opacity="0.55"/><path d="M84 94q4 5 0 7.5-4-2.5 0-7.5z" fill="#0EA5E9" opacity="0.8"/></svg></div><div class="s-name">تنظيف الوحدة الخارجية</div><div class="s-price">40 ريال للوحدة — 5 وحدات فأكثر</div></div>
+      <div class="clean-combo" id="cleanCombo">
+        <div class="cc-head"><div class="cc-name">تنظيف الوحدة الداخلية أو الخارجية</div><div class="cc-price">40 ريال للوحدة — 5 وحدات فأكثر</div></div>
+        <div class="cc-label">اختر نوع الوحدة</div>
+        <div class="cc-options">
+          <div class="svc-card" id="sv8" onclick="selIndoor()"><div class="s-name">الوحدة الداخلية</div><div class="s-price">داخل الغرفة</div></div>
+          <div class="svc-card" id="sv7" onclick="selOutdoor()"><div class="s-name">الوحدة الخارجية</div><div class="s-price">خارج المبنى أو على السطح</div></div>
+        </div>
+      </div>
+      
       <div class="svc-card" id="sv6" onclick="selRecheck()"><div class="s-icon">🔁</div><div class="s-name">إعادة فحص</div><div class="s-price">لعمل سابق نفّذناه</div></div>
       <div class="svc-card is-disabled" id="sv5" aria-disabled="true" title="غير متوفر الآن"><div class="s-icon">🔧</div><div class="s-name">تركيب مكيف</div><div class="s-price s-unavailable">غير متوفر الآن</div></div>
       <div class="recheck-note" id="indoor-note" style="background:#EFF6FF;border-color:#BFDBFE;color:#1E40AF;">
