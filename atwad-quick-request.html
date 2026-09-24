@@ -31,8 +31,8 @@ h1{font:700 26px/1.4 'Noto Kufi Arabic',sans-serif}
 .req{color:var(--err)}
 .opt{font-weight:400;color:var(--soft);font-size:13px}
 input,select{width:100%;height:56px;font:400 18px 'Readex Pro',sans-serif;padding:0 14px;border:1.5px solid var(--field);border-radius:12px;color:var(--ink);background:#fff;-webkit-appearance:none;appearance:none}
-select{background-image:linear-gradient(45deg,transparent 50%,var(--soft) 50%),linear-gradient(135deg,var(--soft) 50%,transparent 50%);background-position:left 20px center,left 14px center;background-size:6px 6px;background-repeat:no-repeat}
-html[dir=ltr] select{background-position:right 14px center,right 20px center}
+select{background-image:linear-gradient(45deg,transparent 50%,var(--soft) 50%),linear-gradient(135deg,var(--soft) 50%,transparent 50%);background-position:left 14px center,left 20px center;background-size:6px 6px;background-repeat:no-repeat}
+html[dir=ltr] select{background-position:right 20px center,right 14px center}
 input:focus,select:focus{outline:none;border-color:var(--deep)}
 input.bad,select.bad{border-color:var(--err)}
 input[type=tel]{font-family:'IBM Plex Mono',monospace;direction:ltr}
@@ -419,7 +419,15 @@ function sendRequest(){
   lines.push('');
   lines.push('أرجو التواصل معي لتأكيد الموعد.');
 
-  window.open('https://wa.me/' + BUSINESS_PHONE + '?text=' + encodeURIComponent(lines.join('\n')), '_blank');
+  openWhatsApp('https://wa.me/' + BUSINESS_PHONE + '?text=' + encodeURIComponent(lines.join('\n')));
+}
+
+// الجوال: نفس الصفحة (أوثق ولا يمنعه المتصفح). الكمبيوتر: تبويب جديد منفصل تماماً عن الصفحة
+function openWhatsApp(url){
+  var mobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+  if(mobile){ window.location.href = url; return; }
+  var w = window.open(url, '_blank', 'noopener,noreferrer');
+  if(!w) window.location.href = url;
 }
 
 document.getElementById('districts').innerHTML = DISTRICTS.map(function(d){ return '<option value="' + d + '">'; }).join('');

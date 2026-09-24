@@ -90,7 +90,7 @@ h1{font:700 24px/1.4 'Noto Kufi Arabic',sans-serif}
 
     <div class="state" id="state"></div>
 
-    <a class="btn btn-wa" id="waBtn" href="#" target="_blank" rel="noopener" data-t="sendWa">إرسال الموقع عبر واتساب</a>
+    <a class="btn btn-wa" id="waBtn" href="#" target="_blank" rel="noopener noreferrer" data-t="sendWa">إرسال الموقع عبر واتساب</a>
     <button class="send-anyway" id="anywayBtn" type="button" onclick="sendAnyway()" data-t="anyway">إرسال الموقع رغم ضعف الدقة</button>
     <button class="btn btn-main" id="shareBtn" type="button" onclick="shareLocation()" data-t="locate">حدّد موقعي</button>
 
@@ -255,7 +255,7 @@ function renderWeak(r){
   document.getElementById('anywayBtn').style.display = 'block';
 }
 
-function sendAnyway(){ if(last && last.ok){ buildWa(last); window.open(document.getElementById('waBtn').href, '_blank'); } }
+function sendAnyway(){ if(last && last.ok){ buildWa(last); var u = document.getElementById('waBtn').href; if(/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)) window.location.href = u; else { var w = window.open(u, '_blank', 'noopener,noreferrer'); if(!w) window.location.href = u; } } }
 
 function renderOk(r){
   if(r.manual){ placeManual(r.lat, r.lng); return; }
