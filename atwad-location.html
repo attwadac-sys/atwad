@@ -7,6 +7,8 @@
 <title>مؤسسة أطواد — مشاركة الموقع</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@400;500;600&family=Noto+Kufi+Arabic:wght@700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 :root{
   --deep:#0C3B5E; --ink:#10202C; --muted:#56626C; --soft:#66727D; --line:#E3E6E9; --field:#D6DADF;
@@ -29,10 +31,14 @@ h1{font:700 24px/1.4 'Noto Kufi Arabic',sans-serif}
 .body{padding:22px;display:flex;flex-direction:column;gap:16px}
 .intro{color:var(--muted);line-height:1.8}
 .intro b{color:var(--deep);font-weight:600}
-.map{height:200px;border-radius:14px;background:#E3E8EC;background-image:repeating-linear-gradient(45deg,transparent 0 12px,rgba(12,59,94,.05) 12px 24px);display:grid;place-items:center;overflow:hidden}
-.map-hint{font:400 13px 'Readex Pro',sans-serif;color:var(--soft)}
-.map iframe{width:100%;height:100%;border:0;display:block}
-.map.has{background:#E3E8EC;background-image:none;display:block}
+.map-wrap{display:flex;flex-direction:column;gap:8px}
+.map{height:300px;border-radius:14px;background:#E3E8EC;overflow:hidden;position:relative;z-index:0}
+.map-hint{font-size:13px;color:var(--muted);line-height:1.7;text-align:center}
+.map-hint b{color:var(--deep);font-weight:600}
+.map-tools{display:flex;gap:8px}
+.chip{flex:1;height:40px;border-radius:10px;border:1px solid var(--field);background:#fff;color:var(--ink);font:400 13px 'Readex Pro',sans-serif;cursor:pointer}
+.chip.on{background:var(--deep);border-color:var(--deep);color:#fff}
+.leaflet-container{font-family:'Readex Pro',sans-serif}
 .btn{width:100%;height:60px;border:0;border-radius:14px;font:500 17px 'Readex Pro',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;text-decoration:none}
 .btn-main{background:var(--deep);color:#fff}
 .btn-main:hover{background:#134D78}
@@ -46,6 +52,9 @@ h1{font:700 24px/1.4 'Noto Kufi Arabic',sans-serif}
 .state.err{display:block;background:var(--err-bg);border:1px solid var(--err-bd);color:var(--err)}
 .coords{font:500 14px 'IBM Plex Mono',monospace;direction:ltr;text-align:center;background:#fff;border:1px dashed var(--ok-bd);border-radius:9px;padding:8px 10px;margin:8px 0 6px;color:var(--deep)}
 .acc{font-size:12px;text-align:center}
+.state.bad{display:block;background:var(--warn-bg);border:1px solid var(--warn-bd);color:var(--warn)}
+.state.bad ol{margin:8px 0 0;padding-inline-start:20px}
+.send-anyway{display:none;background:none;border:0;color:var(--soft);font:400 13px 'Readex Pro',sans-serif;text-decoration:underline;cursor:pointer;padding:4px;align-self:center}
 .acc.good{color:var(--ok)}.acc.mid{color:var(--muted)}.acc.bad{color:var(--warn)}
 .tips{border-top:1px solid var(--line);padding-top:16px;font-size:13px;color:var(--soft);line-height:1.9;display:flex;flex-direction:column;gap:4px}
 .tips strong{color:var(--ink);font-weight:500}
@@ -70,11 +79,19 @@ h1{font:700 24px/1.4 'Noto Kufi Arabic',sans-serif}
   <div class="body">
     <p class="intro" data-t="intro" data-html="1">اضغط الزر <b>وأنت في المنزل</b>، ثم اسمح للمتصفح بالوصول إلى الموقع. يُرسل الموقع إلينا عبر واتساب بضغطة واحدة.</p>
 
-    <div class="map" id="map"><span class="map-hint" id="mapHint" data-t="mapHint">الخريطة تظهر بعد تحديد الموقع</span></div>
+    <div class="map-wrap">
+      <div class="map" id="map" dir="ltr"></div>
+      <div class="map-tools">
+        <button class="chip on" id="satBtn" type="button" onclick="setLayer('sat')" data-t="sat">قمر صناعي</button>
+        <button class="chip" id="streetBtn" type="button" onclick="setLayer('street')" data-t="street">خريطة</button>
+      </div>
+      <p class="map-hint" id="mapHint" data-t="mapHint" data-html="1">اسحب الدبوس أو اضغط على <b>سطح منزلك</b> لتصحيح الموقع.</p>
+    </div>
 
     <div class="state" id="state"></div>
 
     <a class="btn btn-wa" id="waBtn" href="#" target="_blank" rel="noopener" data-t="sendWa">إرسال الموقع عبر واتساب</a>
+    <button class="send-anyway" id="anywayBtn" type="button" onclick="sendAnyway()" data-t="anyway">إرسال الموقع رغم ضعف الدقة</button>
     <button class="btn btn-main" id="shareBtn" type="button" onclick="shareLocation()" data-t="locate">حدّد موقعي</button>
 
     <div class="tips">
@@ -96,7 +113,7 @@ var T = {
     brand:'أطواد', tagline:'صيانة المكيفات', other:'EN', pageTitle:'مؤسسة أطواد — مشاركة الموقع',
     title:'شارك موقعك', sub:'ليصل الفني إلى بابكم مباشرة بدون اتصال.',
     intro:'اضغط الزر <b>وأنت في المنزل</b>، ثم اسمح للمتصفح بالوصول إلى الموقع. يُرسل الموقع إلينا عبر واتساب بضغطة واحدة.',
-    mapHint:'الخريطة تظهر بعد تحديد الموقع', locate:'حدّد موقعي', locating:'جارٍ تحديد الموقع…', relocate:'إعادة التحديد',
+    mapHint:'اسحب الدبوس أو اضغط على <b>سطح منزلك</b> لتصحيح الموقع.', sat:'قمر صناعي', street:'خريطة', manualOk:'تم تحديد الموقع يدوياً على الخريطة. اضغط الزر الأخضر للإرسال.', weakDrag:'<b>أو</b> صحّح الموقع بنفسك: كبّر الخريطة واضغط على سطح منزلك.', locate:'حدّد موقعي', locating:'جارٍ تحديد الموقع…', relocate:'إعادة التحديد',
     sendWa:'إرسال الموقع عبر واتساب', wait:'اسمح للمتصفح بالوصول إلى موقعك عند ظهور السؤال…',
     ok:'تم تحديد موقعك. اضغط الزر الأخضر لإرسال الموقع إلينا.', meter:'متر',
     accGood:'دقة ممتازة', accMid:'دقة مقبولة', accBad:'دقة ضعيفة — جرّب قرب النافذة أو خارج المبنى',
@@ -105,6 +122,11 @@ var T = {
     e2:'تعذّر تحديد الموقع. تأكد من تفعيل خدمة الموقع في جهازك.',
     e3:'انتهت المهلة قبل تحديد الموقع. أعد المحاولة في مكان أفضل للإشارة.',
     eX:'تعذّر تحديد الموقع: ', eUnknown:'خطأ غير معروف',
+    improving:'جارٍ تحسين الدقة… ± {m} متر',
+    weakTitle:'الموقع غير دقيق (± {m} متر)، ولن يصل الفني به.',
+    weakWhy:'غالباً الجهاز يستخدم «الموقع التقريبي» أو أنك تفتح الصفحة من كمبيوتر.',
+    weakFix:'<ol><li>افتح الرابط من <b>جوالك</b>.</li><li>آيفون: الإعدادات ← الخصوصية ← خدمات الموقع ← Safari ← فعّل <b>الموقع الدقيق</b>.</li><li>أندرويد: عند سؤال الإذن اختر <b>دقيق</b>، وفعّل GPS.</li><li>اضغط «إعادة التحديد» وأنت قرب نافذة.</li></ol>',
+    anyway:'إرسال الموقع رغم ضعف الدقة',
     tipsTitle:'إن لم يعمل الزر:', tip1:'• تأكد من تفعيل خدمة الموقع في جهازك.', tip2:'• جرّب من متصفح الجوال لا من داخل تطبيق آخر.',
     tip3:'• أو أرسل موقعك من واتساب مباشرة: مشبك الورق ← الموقع ← الموقع الحالي.',
     foot:'مؤسسة أطواد — لا نحفظ موقعك إلا لتنفيذ خدمتكم'
@@ -113,7 +135,7 @@ var T = {
     brand:'Atwad', tagline:'AC maintenance', other:'ع', pageTitle:'Atwad — Share your location',
     title:'Share your location', sub:'So the technician reaches your door without calling.',
     intro:'Tap the button <b>while you are at home</b>, then allow the browser to access your location. It is sent to us on WhatsApp in one tap.',
-    mapHint:'Map appears once location is set', locate:'Locate me', locating:'Locating…', relocate:'Locate again',
+    mapHint:'Drag the pin or tap <b>your roof</b> to correct the location.', sat:'Satellite', street:'Map', manualOk:'Location set manually on the map. Tap the green button to send.', weakDrag:'<b>Or</b> fix it yourself: zoom in and tap your roof on the map.', locate:'Locate me', locating:'Locating…', relocate:'Locate again',
     sendWa:'Send location via WhatsApp', wait:'Allow location access when your browser asks…',
     ok:'Location found. Tap the green button to send it to us.', meter:'m',
     accGood:'Excellent accuracy', accMid:'Acceptable accuracy', accBad:'Weak accuracy — try near a window or outside',
@@ -122,6 +144,11 @@ var T = {
     e2:'Could not detect your location. Make sure location services are on.',
     e3:'Timed out before finding your location. Try again somewhere with better signal.',
     eX:'Could not detect location: ', eUnknown:'Unknown error',
+    improving:'Improving accuracy… ± {m} m',
+    weakTitle:'Location is not accurate (± {m} m) — the technician cannot find you with it.',
+    weakWhy:'Your device is probably using "approximate location", or you opened the page on a computer.',
+    weakFix:'<ol><li>Open the link on your <b>phone</b>.</li><li>iPhone: Settings → Privacy → Location Services → Safari → turn on <b>Precise Location</b>.</li><li>Android: choose <b>Precise</b> when asked, and turn on GPS.</li><li>Tap "Locate again" near a window.</li></ol>',
+    anyway:'Send location anyway',
     tipsTitle:'If the button does not work:', tip1:'• Make sure location services are on.', tip2:'• Open the link in your phone browser, not inside another app.',
     tip3:'• Or share from WhatsApp directly: attach → Location → Current location.',
     foot:'Atwad — we only keep your location to serve your visit'
@@ -151,7 +178,7 @@ function applyLang(){
   var btn = document.getElementById('shareBtn');
   btn.textContent = btn.disabled ? t('locating') : (last && last.ok ? t('relocate') : t('locate'));
   if(last){ last.ok ? renderOk(last) : setState(last.cls, t(last.key) + (last.extra || '')); }
-  if(last && last.ok) buildWa(last);
+  if(last && last.ok && (last.manual || last.acc <= MAX_ACC)) buildWa(last);
 }
 
 function toggleLang(){ lang = lang === 'ar' ? 'en' : 'ar'; applyLang(); }
@@ -170,25 +197,76 @@ function buildWa(r){
   lines.push('موقع منزلي لموعد مؤسسة أطواد');
   if(name) lines.push('الاسم: ' + name);
   lines.push('الموقع: ' + mapsLink);
-  lines.push('دقة التحديد: ' + r.acc + ' متر');
+  lines.push(r.manual ? 'التحديد: يدوياً على الخريطة' : 'دقة التحديد: ' + r.acc + ' متر');
   var wa = document.getElementById('waBtn');
   wa.href = 'https://wa.me/' + BUSINESS_PHONE + '?text=' + encodeURIComponent(lines.join('\n'));
   wa.style.display = 'flex';
 }
 
+var JEDDAH_N = [21.66, 39.15], lmap = null, marker = null, circle = null, layers = {};
+function initMap(){
+  if(lmap || !window.L) return;
+  lmap = L.map('map', { zoomControl:true, attributionControl:true }).setView(JEDDAH_N, 12);
+  layers.sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom:19, attribution:'Esri' });
+  layers.street = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19, attribution:'© OpenStreetMap' });
+  layers.sat.addTo(lmap);
+  lmap.on('click', function(e){ placeManual(e.latlng.lat, e.latlng.lng); });
+}
+function setLayer(k){
+  if(!lmap) return;
+  ['sat','street'].forEach(function(x){ if(lmap.hasLayer(layers[x])) lmap.removeLayer(layers[x]); });
+  layers[k].addTo(lmap);
+  document.getElementById('satBtn').className = 'chip' + (k === 'sat' ? ' on' : '');
+  document.getElementById('streetBtn').className = 'chip' + (k === 'street' ? ' on' : '');
+}
+function showOnMap(r, zoom){
+  initMap(); if(!lmap) return;
+  var ll = [r.lat, r.lng];
+  if(!marker){
+    marker = L.marker(ll, { draggable:true }).addTo(lmap);
+    marker.on('dragend', function(){ var p = marker.getLatLng(); placeManual(p.lat, p.lng); });
+  } else marker.setLatLng(ll);
+  if(circle){ lmap.removeLayer(circle); circle = null; }
+  if(!r.manual && r.acc) circle = L.circle(ll, { radius:r.acc, color:'#0C3B5E', weight:1, fillOpacity:.08 }).addTo(lmap);
+  if(zoom) lmap.setView(ll, zoom);
+}
+function placeManual(lat, lng){
+  stopWatch();
+  var btn = document.getElementById('shareBtn');
+  btn.disabled = false; btn.className = 'btn btn-sec'; btn.textContent = t('relocate');
+  last = { ok:true, manual:true, lat:lat, lng:lng, acc:0 };
+  showOnMap(last, null);
+  buildWa(last);
+  document.getElementById('anywayBtn').style.display = 'none';
+  setState('ok', t('manualOk') + '<div class="coords">' + lat.toFixed(7) + ', ' + lng.toFixed(7) + '</div>');
+}
+
+var GOOD_ACC = 30, MAX_ACC = 300, WATCH_MS = 15000, watchId = null, watchTimer = null;
+
+function stopWatch(){
+  if(watchId !== null){ navigator.geolocation.clearWatch(watchId); watchId = null; }
+  if(watchTimer){ clearTimeout(watchTimer); watchTimer = null; }
+}
+
+function renderWeak(r){
+  setState('bad', '<b>' + t('weakTitle').replace('{m}', r.acc) + '</b><br>' + t('weakWhy') + t('weakFix') + t('weakDrag'));
+  showOnMap(r, r.acc > 5000 ? 11 : r.acc > 1000 ? 14 : 16);
+  document.getElementById('waBtn').style.display = 'none';
+  document.getElementById('anywayBtn').style.display = 'block';
+}
+
+function sendAnyway(){ if(last && last.ok){ buildWa(last); window.open(document.getElementById('waBtn').href, '_blank'); } }
+
 function renderOk(r){
+  if(r.manual){ placeManual(r.lat, r.lng); return; }
+  if(r.acc > MAX_ACC){ renderWeak(r); return; }
+  document.getElementById('anywayBtn').style.display = 'none';
+  showOnMap(r, r.acc <= 50 ? 18 : 17);
   var q = r.acc <= 50 ? ['good', t('accGood')] : (r.acc <= 200 ? ['mid', t('accMid')] : ['bad', t('accBad')]);
   setState('ok',
-    t('ok') +
+    t('ok') + '<br><span style="font-size:13px">' + t('mapHint') + '</span>' +
     '<div class="coords">' + r.lat.toFixed(7) + ', ' + r.lng.toFixed(7) + '</div>' +
     '<div class="acc ' + q[0] + '">± ' + r.acc + ' ' + t('meter') + ' · ' + q[1] + '</div>');
-  var map = document.getElementById('map');
-  var key = r.lat.toFixed(6) + ',' + r.lng.toFixed(6);
-  if(map.getAttribute('data-at') !== key){
-    map.setAttribute('data-at', key);
-    map.className = 'map has';
-    map.innerHTML = '<iframe loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://maps.google.com/maps?q=' + key + '&z=17&output=embed"></iframe>';
-  }
 }
 
 function shareLocation(){
@@ -200,29 +278,46 @@ function shareLocation(){
     return;
   }
 
+  stopWatch();
   btn.disabled = true;
   btn.textContent = t('locating');
+  document.getElementById('waBtn').style.display = 'none';
+  document.getElementById('anywayBtn').style.display = 'none';
   last = {cls:'wait', key:'wait'};
   setState('wait', t('wait'));
+  var best = null;
 
-  navigator.geolocation.getCurrentPosition(function(pos){
-    var r = { ok:true, lat:pos.coords.latitude, lng:pos.coords.longitude, acc:Math.round(pos.coords.accuracy || 0) };
-    last = r;
-    buildWa(r);
-    renderOk(r);
+  function finish(){
+    stopWatch();
     btn.disabled = false;
     btn.className = 'btn btn-sec';
     btn.textContent = t('relocate');
+    if(!best) return;
+    last = best;
+    if(best.acc <= MAX_ACC) buildWa(best);
+    renderOk(best);
+  }
+
+  // نراقب القراءات لمدة قصيرة ونحتفظ بأدقها، لأن أول قراءة غالباً تقريبية
+  watchId = navigator.geolocation.watchPosition(function(pos){
+    var r = { ok:true, lat:pos.coords.latitude, lng:pos.coords.longitude, acc:Math.round(pos.coords.accuracy || 0) };
+    if(!best || r.acc < best.acc) best = r;
+    if(best.acc <= GOOD_ACC){ finish(); return; }
+    setState('wait', t('improving').replace('{m}', best.acc));
   }, function(err){
+    if(best){ finish(); return; }
+    stopWatch();
     btn.disabled = false;
     btn.textContent = t('locate');
     var key = err.code === 1 ? 'e1' : err.code === 2 ? 'e2' : err.code === 3 ? 'e3' : 'eX';
     last = {cls:'err', key:key, extra: key === 'eX' ? (err.message || t('eUnknown')) : ''};
     setState('err', t(key) + last.extra);
   }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
+  watchTimer = setTimeout(finish, WATCH_MS);
 }
 
 applyLang();
+if(window.L) initMap(); else window.addEventListener('load', initMap);
 </script>
 </body>
 </html>
