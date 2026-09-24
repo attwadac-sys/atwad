@@ -3,155 +3,229 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0C3B5E">
 <title>مؤسسة أطواد — طلب موعد</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@400;500;600&family=Noto+Kufi+Arabic:wght@700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
 :root{
-  --deep:#0C3B5E; --steel:#1E5F8A; --sky:#0EA5E9; --ice:#E8F4FD; --frost:#F0F9FF;
-  --slate:#334155; --mist:#94A3B8; --line:#E2E8F0; --danger:#EF4444; --wa:#25D366;
+  --deep:#0C3B5E; --ink:#10202C; --muted:#56626C; --soft:#66727D; --line:#E3E6E9; --field:#D6DADF;
+  --bg:#E9ECEF; --card:#FAFAF8; --tint:#EAF1F7; --sky-2:#9DBBD1;
+  --ok:#1F7A4B; --warn:#8A4B14; --warn-bg:#FBF1E6; --warn-bd:#F0CFA8;
+  --err:#9B2C2C; --err-bg:#FBECEC; --err-bd:#F0B8B8; --wa:#1F8A55;
 }
-*{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Tajawal',sans-serif;background:linear-gradient(160deg,var(--deep),var(--steel) 45%,var(--sky));
-  color:var(--slate);min-height:100vh;padding:16px;display:flex;align-items:flex-start;justify-content:center;}
-.card{background:#fff;border-radius:20px;box-shadow:0 18px 50px rgba(5,30,55,.28);
-  width:100%;max-width:460px;overflow:hidden;margin:auto;}
-.head{background:linear-gradient(135deg,var(--deep),var(--sky));color:#fff;padding:24px 22px;text-align:center;}
-.head h1{font-size:21px;font-weight:900;}
-.head p{font-size:13.5px;opacity:.92;margin-top:6px;line-height:1.8;}
-.body{padding:20px 20px 24px;}
-
-.field{margin-bottom:16px;}
-.field label{display:block;font-size:14px;font-weight:800;color:var(--deep);margin-bottom:7px;}
-.field .req{color:var(--danger);}
-.field input, .field select{
-  width:100%;font-family:'Tajawal',sans-serif;font-size:17px;padding:14px;
-  border:2px solid var(--line);border-radius:12px;color:var(--slate);background:var(--frost);}
-.field input:focus, .field select:focus{outline:none;border-color:var(--sky);background:#fff;}
-.field .hint{font-size:12px;color:var(--mist);margin-top:5px;}
-
-.slots{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;}
-.slot{border:2px solid var(--line);border-radius:12px;padding:12px 6px;text-align:center;
-  font-size:14px;font-weight:800;color:var(--slate);background:var(--frost);cursor:pointer;line-height:1.6;}
-.slot small{display:block;font-size:10px;font-weight:700;color:var(--success);margin-top:3px;}
-.slot.on{border-color:var(--sky);background:var(--ice);color:var(--deep);}
-.slot.off{background:#F8FAFC;color:var(--mist);cursor:not-allowed;border-style:dashed;}
-.slot.off small{color:var(--danger);}
-.slots-empty{grid-column:1/-1;text-align:center;padding:22px 10px;color:var(--mist);font-size:13.5px;font-weight:700;}
-@media(max-width:380px){ .slots{grid-template-columns:repeat(2,1fr);} }
-
-.send{width:100%;background:var(--wa);color:#fff;border:none;font-family:'Tajawal',sans-serif;
-  font-weight:900;font-size:18px;padding:18px;border-radius:14px;cursor:pointer;margin-top:6px;}
-.send:hover{background:#1FB855;}
-.err{background:#FEE2E2;border:1.5px solid #FCA5A5;color:#991B1B;border-radius:12px;
-  padding:12px 14px;font-size:14px;font-weight:700;margin-bottom:14px;display:none;}
-.note{margin-top:16px;background:var(--frost);border:1.5px solid var(--ice);border-radius:12px;
-  padding:13px 15px;font-size:13px;line-height:1.9;color:var(--slate);}
-.note b{color:var(--deep);}
-.foot{text-align:center;padding:14px;font-size:12px;color:var(--mist);border-top:1px solid var(--line);}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Readex Pro',sans-serif;font-size:16px;color:var(--ink);background:var(--bg);min-height:100vh;display:flex;justify-content:center;align-items:flex-start;padding:16px}
+.card{width:100%;max-width:460px;background:var(--card);border-radius:24px;overflow:hidden;box-shadow:0 2px 12px rgba(16,32,44,.08);margin:auto}
+.head{background:var(--deep);color:#fff;padding:22px 22px 26px;display:flex;flex-direction:column;gap:12px}
+.head-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.brand{font:800 20px 'Noto Kufi Arabic',sans-serif}
+.head-right{display:flex;align-items:center;gap:10px}
+.tag{font-size:12px;color:var(--sky-2)}
+.lang{height:30px;padding:0 10px;border:1px solid rgba(255,255,255,.3);background:transparent;color:#fff;border-radius:7px;cursor:pointer;font:500 12px 'IBM Plex Mono',monospace}
+h1{font:700 26px/1.4 'Noto Kufi Arabic',sans-serif}
+.sub{font-size:15px;color:#C7D9E7;line-height:1.7}
+.body{padding:22px;display:flex;flex-direction:column;gap:20px}
+.field{display:flex;flex-direction:column;gap:8px}
+.field > label,.lbl{font-size:15px;font-weight:500;color:var(--ink)}
+.req{color:var(--err)}
+.opt{font-weight:400;color:var(--soft);font-size:13px}
+input,select{width:100%;height:56px;font:400 18px 'Readex Pro',sans-serif;padding:0 14px;border:1.5px solid var(--field);border-radius:12px;color:var(--ink);background:#fff;-webkit-appearance:none;appearance:none}
+select{background-image:linear-gradient(45deg,transparent 50%,var(--soft) 50%),linear-gradient(135deg,var(--soft) 50%,transparent 50%);background-position:left 20px center,left 14px center;background-size:6px 6px;background-repeat:no-repeat}
+html[dir=ltr] select{background-position:right 14px center,right 20px center}
+input:focus,select:focus{outline:none;border-color:var(--deep)}
+input.bad,select.bad{border-color:var(--err)}
+input[type=tel]{font-family:'IBM Plex Mono',monospace;direction:ltr}
+html[dir=rtl] input[type=tel]{text-align:right}
+.hint{font-size:13px;color:var(--soft);line-height:1.6}
+.stepper{display:flex;align-items:center;justify-content:space-between;background:#fff;border:1.5px solid var(--field);border-radius:12px;padding:6px}
+.stepper button{width:48px;height:48px;border-radius:10px;border:0;background:var(--tint);color:var(--deep);font-size:24px;cursor:pointer}
+.stepper span{font:500 20px 'IBM Plex Mono',monospace;min-width:60px;text-align:center}
+.stepper span.empty{font:400 15px 'Readex Pro',sans-serif;color:var(--soft)}
+.days{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
+.day{flex:0 0 64px;height:72px;border-radius:12px;border:1.5px solid var(--line);background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;color:var(--ink);font-family:inherit}
+.day .dw{font-size:12px;color:var(--muted)}
+.day .dn{font:500 20px 'IBM Plex Mono',monospace}
+.day.on{background:var(--deep);border-color:var(--deep);color:#fff}
+.day.on .dw{color:#C7D9E7}
+.day.off{opacity:.35;cursor:not-allowed}
+.slots{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.slot{min-height:64px;border:1.5px solid var(--line);border-radius:12px;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;font:500 15px 'Readex Pro',sans-serif;color:var(--ink);padding:6px 4px}
+.slot small{font-size:11px;font-weight:400;color:var(--ok)}
+.slot.on{border-color:var(--deep);background:var(--tint);color:var(--deep)}
+.slot.on small{color:var(--deep);font-weight:600}
+.slot.off{background:#F1F3F5;color:#9AA4AD;cursor:not-allowed;border-style:dashed}
+.slot.off small{color:var(--err)}
+.slots-empty{grid-column:1/-1;text-align:center;padding:20px 10px;color:var(--soft);font-size:14px;line-height:1.7;background:#fff;border:1.5px dashed var(--line);border-radius:12px}
+.slots-empty.warn{color:var(--warn);background:var(--warn-bg);border-color:var(--warn-bd);border-style:solid}
+.retry{margin-top:8px;height:40px;padding:0 16px;border:0;border-radius:9px;background:var(--deep);color:#fff;font:500 14px 'Readex Pro',sans-serif;cursor:pointer}
+@media(max-width:380px){.slots{grid-template-columns:repeat(2,1fr)}}
+.err{display:none;background:var(--err-bg);border:1px solid var(--err-bd);color:var(--err);border-radius:12px;padding:12px 14px;font-size:15px;line-height:1.7}
+.send{width:100%;height:62px;border:0;border-radius:14px;background:var(--wa);color:#fff;font:500 18px 'Readex Pro',sans-serif;cursor:pointer}
+.send:hover{background:#197447}
+.note{background:var(--tint);border-radius:12px;padding:14px 16px;font-size:14px;line-height:1.9;color:var(--deep)}
+.note b{font-weight:600}
+.foot{text-align:center;padding:14px;font-size:12px;color:var(--soft);border-top:1px solid #ECEEF0;background:#fff}
 </style>
 </head>
 <body>
 
 <div class="card">
   <div class="head">
-    <h1>طلب موعد</h1>
-    <p>مؤسسة أطواد لصيانة المكيفات<br>املأ البيانات ثم اضغط الزر الأخضر — ونتصل بك لتأكيد الموعد</p>
+    <div class="head-top">
+      <span class="brand" data-t="brand">أطواد</span>
+      <div class="head-right">
+        <span class="tag" data-t="tagline">صيانة المكيفات</span>
+        <button class="lang" id="langBtn" type="button" onclick="toggleLang()">EN</button>
+      </div>
+    </div>
+    <h1 data-t="title">طلب موعد</h1>
+    <p class="sub" data-t="sub">املأ البيانات ثم اضغط الزر الأخضر، ونتصل بك لتأكيد الموعد.</p>
   </div>
 
   <div class="body">
     <div class="err" id="err"></div>
 
     <div class="field">
-      <label for="f_name">الاسم <span class="req">*</span></label>
-      <input type="text" id="f_name" maxlength="60" placeholder="الاسم الكامل" autocomplete="name">
+      <label for="f_name"><span data-t="name">الاسم</span> <span class="req">*</span></label>
+      <input type="text" id="f_name" maxlength="60" autocomplete="name" data-ph="namePh" placeholder="الاسم الكامل">
     </div>
 
     <div class="field">
-      <label for="f_phone">رقم الجوال <span class="req">*</span></label>
+      <label for="f_phone"><span data-t="phone">رقم الجوال</span> <span class="req">*</span></label>
       <input type="tel" id="f_phone" maxlength="15" inputmode="numeric" placeholder="05xxxxxxxx" autocomplete="tel">
     </div>
 
     <div class="field">
-      <label for="f_service">الخدمة المطلوبة <span class="req">*</span></label>
-      <select id="f_service">
-        <option value="">-- اختر الخدمة --</option>
-        <option>غسيل مكيفات</option>
-        <option>صيانة مكيف</option>
-        <option>تنظيف الوحدة الداخلية</option>
-        <option>تنظيف الوحدة الخارجية</option>
-        <option>إعادة فحص</option>
-        <option>غير متأكد — أحتاج استشارة</option>
-      </select>
+      <label for="f_service"><span data-t="service">الخدمة المطلوبة</span> <span class="req">*</span></label>
+      <select id="f_service"></select>
     </div>
 
     <div class="field">
-      <label for="f_units">عدد المكيفات</label>
-      <input type="number" id="f_units" min="1" max="50" inputmode="numeric" placeholder="مثال: 4">
-      <div class="hint">اتركه فارغاً إن لم تكن متأكداً</div>
-    </div>
-
-    <div class="field">
-      <label for="f_district">الحي <span class="req">*</span></label>
-      <input type="text" id="f_district" maxlength="40" placeholder="مثال: أبحر الشمالية">
-    </div>
-
-    <div class="field">
-      <label for="f_day">اليوم المطلوب <span class="req">*</span></label>
-      <input type="date" id="f_day" onchange="loadSlots()">
-      <div class="hint" id="dayHint">اختر اليوم لتظهر الفترات المتاحة فعلاً</div>
-    </div>
-
-    <div class="field">
-      <label>الفترة المتاحة <span class="req">*</span></label>
-      <div class="slots" id="slots">
-        <div class="slots-empty">اختر اليوم أولاً</div>
+      <span class="lbl"><span data-t="units">عدد المكيفات</span> <span class="opt" data-t="optional">(اختياري)</span></span>
+      <div class="stepper">
+        <button type="button" onclick="stepUnits(-1)" aria-label="-">−</button>
+        <span id="unitsVal" class="empty" data-t="unsure">غير متأكد</span>
+        <button type="button" onclick="stepUnits(1)" aria-label="+">+</button>
       </div>
-      <div class="hint">يمكنك اختيار فترة واحدة أو فترتين كبديل.</div>
     </div>
 
-    <button class="send" onclick="sendRequest()">📲 إرسال الطلب عبر واتساب</button>
-
-    <div class="note">
-      <b>ما الذي يحدث بعد الإرسال؟</b><br>
-      يصلنا طلبك، ونتصل بك لتأكيد الموعد.
-      الفترات المعروضة متاحة الآن، لكن <b>الموعد لا يُحجز إلا بعد اتصالنا بك</b> —
-      ولهذا يفيدك اختيار فترة بديلة.
+    <div class="field">
+      <label for="f_district"><span data-t="district">الحي</span> <span class="req">*</span></label>
+      <input type="text" id="f_district" maxlength="40" list="districts" data-ph="districtPh" placeholder="مثال: أبحر الشمالية">
+      <datalist id="districts"></datalist>
     </div>
+
+    <div class="field">
+      <span class="lbl"><span data-t="day">اليوم المطلوب</span> <span class="req">*</span></span>
+      <div class="days" id="days"></div>
+    </div>
+
+    <div class="field">
+      <span class="lbl"><span data-t="slot">الفترة المتاحة</span> <span class="req">*</span></span>
+      <div class="slots" id="slots"></div>
+      <span class="hint" data-t="slotHint">يمكنك اختيار فترة واحدة أو فترتين: أساسية وبديلة.</span>
+    </div>
+
+    <button class="send" type="button" onclick="sendRequest()" data-t="send">إرسال الطلب عبر واتساب</button>
+
+    <div class="note" data-t="note" data-html="1"><b>ما الذي يحدث بعد الإرسال؟</b><br>يصلنا طلبك ونتصل بك لتأكيد الموعد. الفترات المعروضة متاحة الآن، لكن <b>الموعد لا يُحجز إلا بعد اتصالنا بك</b>، ولهذا يفيدك اختيار فترة بديلة.</div>
   </div>
 
-  <div class="foot">مؤسسة أطواد لصيانة المكيفات</div>
+  <div class="foot" data-t="foot">مؤسسة أطواد لصيانة المكيفات</div>
 </div>
 
 <script>
 var BUSINESS_PHONE = '966509720382';
 var DB = 'https://atwad-booking-default-rtdb.firebaseio.com';
 var SLOTS = [
-  {t:'8:00 - 10:00',  start:480,  ar:'8-10 ص',  icon:'🌅'},
-  {t:'10:00 - 12:00', start:600,  ar:'10-12 ص', icon:'☀️'},
-  {t:'12:00 - 14:00', start:720,  ar:'12-2 م',  icon:'🕛'},
-  {t:'14:00 - 16:00', start:840,  ar:'2-4 م',   icon:'🕑'},
-  {t:'16:00 - 18:00', start:960,  ar:'4-6 م',   icon:'🌤️'},
-  {t:'18:00 - 20:00', start:1080, ar:'6-8 م',   icon:'🌙'}
+  {t:'8:00 - 10:00',  start:480,  ar:'8-10 ص',  en:'8–10 AM'},
+  {t:'10:00 - 12:00', start:600,  ar:'10-12 ص', en:'10–12 PM'},
+  {t:'12:00 - 14:00', start:720,  ar:'12-2 م',  en:'12–2 PM'},
+  {t:'14:00 - 16:00', start:840,  ar:'2-4 م',   en:'2–4 PM'},
+  {t:'16:00 - 18:00', start:960,  ar:'4-6 م',   en:'4–6 PM'},
+  {t:'18:00 - 20:00', start:1080, ar:'6-8 م',   en:'6–8 PM'}
 ];
+// قيمة الخدمة (ar) هي ما يصل في رسالة واتساب
+var SERVICES = [
+  {ar:'غسيل مكيفات', en:'AC washing'},
+  {ar:'صيانة مكيف', en:'AC maintenance'},
+  {ar:'تنظيف الوحدة الداخلية', en:'Indoor unit cleaning'},
+  {ar:'تنظيف الوحدة الخارجية', en:'Outdoor unit cleaning'},
+  {ar:'إعادة فحص', en:'Re-inspection'},
+  {ar:'غير متأكد — أحتاج استشارة', en:'Not sure — I need advice'}
+];
+var DISTRICTS = ['أبحر الشمالية','أبحر الجنوبية','الشراع','الياقوت','الزمرد','اللؤلؤ','المرجان','البساتين','الشاطئ','المحمدية','النعيم','النهضة','الزهراء','السلامة','الروضة','الخالدية','البوادي','الربوة','الفيصلية','الرياض','الصفوة','الحمدانية','الصالحية'];
+var DAYS_AHEAD = 14;
 var SLOT_WINDOW = 120;      // نافذة الفترة بالدقائق
 var ADVANCE_MINUTES = 120;  // لا يُعرض موعد يبدأ خلال ساعتين
 var chosen = [];            // الفترات المختارة (واحدة أو اثنتان)
 var loadSeq = 0;
+var selDay = '';
+var units = 0;              // 0 = غير متأكد
+var slotView = {kind:'msg', key:'pickDayFirst'};
+
+var T = {
+  ar: {
+    brand:'أطواد', tagline:'صيانة المكيفات', other:'EN', pageTitle:'مؤسسة أطواد — طلب موعد',
+    title:'طلب موعد', sub:'املأ البيانات ثم اضغط الزر الأخضر، ونتصل بك لتأكيد الموعد.',
+    name:'الاسم', namePh:'الاسم الكامل', phone:'رقم الجوال', service:'الخدمة المطلوبة', pickService:'اختر الخدمة',
+    units:'عدد المكيفات', optional:'(اختياري)', unsure:'غير متأكد',
+    district:'الحي', districtPh:'مثال: أبحر الشمالية', day:'اليوم المطلوب', slot:'الفترة المتاحة',
+    slotHint:'يمكنك اختيار فترة واحدة أو فترتين: أساسية وبديلة.',
+    pickDayFirst:'اختر اليوم أولاً', loading:'جارٍ قراءة الفترات المتاحة…',
+    loadFail:'تعذّر قراءة الفترات.', retry:'إعادة المحاولة', noneLeft:'لا توجد فترات متاحة في هذا اليوم. جرّب يوماً آخر.',
+    available:'متاح', booked:'محجوز', past:'انتهى الوقت', primary:'أساسية', alt:'بديلة', today:'اليوم',
+    dow:['أحد','إثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'],
+    send:'إرسال الطلب عبر واتساب',
+    note:'<b>ما الذي يحدث بعد الإرسال؟</b><br>يصلنا طلبك ونتصل بك لتأكيد الموعد. الفترات المعروضة متاحة الآن، لكن <b>الموعد لا يُحجز إلا بعد اتصالنا بك</b>، ولهذا يفيدك اختيار فترة بديلة.',
+    foot:'مؤسسة أطواد لصيانة المكيفات',
+    eMax:'يمكنك اختيار فترتين كحد أقصى.', eDay:'اختر اليوم المطلوب.', eSlot:'اختر فترة متاحة واحدة على الأقل.',
+    eName:'اكتب الاسم من فضلك.', ePhone:'رقم الجوال غير صحيح. اكتبه بصيغة 05 متبوعة بثمانية أرقام.',
+    eService:'اختر الخدمة المطلوبة.', eDistrict:'اكتب اسم الحي من فضلك.'
+  },
+  en: {
+    brand:'Atwad', tagline:'AC maintenance', other:'ع', pageTitle:'Atwad — Request a visit',
+    title:'Request a visit', sub:'Fill in your details and tap the green button. We will call you to confirm.',
+    name:'Name', namePh:'Full name', phone:'Mobile number', service:'Service needed', pickService:'Choose a service',
+    units:'Number of AC units', optional:'(optional)', unsure:'Not sure',
+    district:'District', districtPh:'e.g. North Obhur', day:'Preferred day', slot:'Available time',
+    slotHint:'Pick one time, or two: a main one and a backup.',
+    pickDayFirst:'Pick a day first', loading:'Loading available times…',
+    loadFail:'Could not load available times.', retry:'Try again', noneLeft:'No times left on this day. Try another day.',
+    available:'Available', booked:'Booked', past:'Too late', primary:'Main', alt:'Backup', today:'Today',
+    dow:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],
+    send:'Send request via WhatsApp',
+    note:'<b>What happens next?</b><br>We receive your request and call you to confirm. The times shown are free now, but <b>the visit is only booked once we call you</b>, so a backup time helps.',
+    foot:'Atwad AC Maintenance',
+    eMax:'You can pick two times at most.', eDay:'Pick a day.', eSlot:'Pick at least one available time.',
+    eName:'Please enter your name.', ePhone:'Mobile number is not valid. Use 05 followed by eight digits.',
+    eService:'Choose a service.', eDistrict:'Please enter your district.'
+  }
+};
+
+function qs(name){
+  var m = new RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
+  return m ? decodeURIComponent(m[1].replace(/\+/g, ' ')) : '';
+}
+var lang = (qs('lang') === 'en') ? 'en' : 'ar';
+function t(k){ return T[lang][k]; }
 
 function nowSaudiMinutes(){
-  var parts = new Intl.DateTimeFormat('en-US', {
-    timeZone:'Asia/Riyadh', hour:'numeric', minute:'numeric', hour12:false
-  }).formatToParts(new Date());
-  var h = parseInt(parts.find(function(p){ return p.type==='hour'; }).value, 10);
+  var parts = new Intl.DateTimeFormat('en-US', {timeZone:'Asia/Riyadh', hour:'numeric', minute:'numeric', hour12:false}).formatToParts(new Date());
+  var h = parseInt(parts.find(function(p){ return p.type==='hour'; }).value, 10) % 24;
   var m = parseInt(parts.find(function(p){ return p.type==='minute'; }).value, 10);
   return h*60 + m;
 }
 function todaySaudiDate(){
-  var parts = new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Riyadh',year:'numeric',month:'2-digit',day:'2-digit'})
-    .formatToParts(new Date());
+  var parts = new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Riyadh',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
   var o = {};
   parts.forEach(function(p){ if(p.type!=='literal') o[p.type]=p.value; });
   return o.year+'-'+o.month+'-'+o.day;
+}
+function isoAdd(iso, n){
+  var d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0,10);
 }
 function blocksBetween(start,end){
   var out = [];
@@ -161,45 +235,80 @@ function blocksBetween(start,end){
   return out;
 }
 
-function slotsMessage(html, cls){
-  document.getElementById('slots').innerHTML =
-    '<div class="slots-empty"' + (cls ? ' style="color:' + cls + ';"' : '') + '>' + html + '</div>';
+/* ---------- اللغة ---------- */
+function applyLang(){
+  var h = document.documentElement;
+  h.lang = lang; h.dir = lang === 'ar' ? 'rtl' : 'ltr';
+  document.title = t('pageTitle');
+  document.getElementById('langBtn').textContent = t('other');
+  var els = document.querySelectorAll('[data-t]');
+  for(var i = 0; i < els.length; i++){
+    var k = els[i].getAttribute('data-t');
+    if(els[i].getAttribute('data-html')) els[i].innerHTML = t(k); else els[i].textContent = t(k);
+  }
+  var ph = document.querySelectorAll('[data-ph]');
+  for(var j = 0; j < ph.length; j++) ph[j].placeholder = t(ph[j].getAttribute('data-ph'));
+  renderServices(); renderUnits(); renderDays(); renderSlotView();
+  var err = document.getElementById('err');
+  if(err.style.display === 'block' && err.getAttribute('data-k')) err.textContent = t(err.getAttribute('data-k'));
 }
+function toggleLang(){ lang = lang === 'ar' ? 'en' : 'ar'; applyLang(); }
 
-/** يقرأ الأقفال الحقيقية من Firebase ويعرض الفترات المتاحة فقط */
-function loadSlots(){
-  var date = document.getElementById('f_day').value;
-  chosen = [];
-  if(!date){ slotsMessage('اختر اليوم أولاً'); return; }
+function renderServices(){
+  var sel = document.getElementById('f_service'), cur = sel.value;
+  sel.innerHTML = '<option value="">' + t('pickService') + '</option>' +
+    SERVICES.map(function(s){ return '<option value="' + s.ar + '"' + (s.ar === cur ? ' selected' : '') + '>' + s[lang] + '</option>'; }).join('');
+}
+function renderUnits(){
+  var el = document.getElementById('unitsVal');
+  if(units){ el.className = ''; el.textContent = lang === 'ar' ? units.toLocaleString('ar-SA') : units; }
+  else { el.className = 'empty'; el.textContent = t('unsure'); }
+}
+function stepUnits(d){ units = Math.max(0, Math.min(50, units + d)); renderUnits(); }
 
-  var d = new Date(date + 'T00:00:00');
-  if(d.getDay() === 5){
-    slotsMessage('الجمعة خارج أيام العمل — اختر يوماً آخر', '#991B1B');
+/* ---------- الأيام ---------- */
+function renderDays(){
+  var box = document.getElementById('days'), today = todaySaudiDate(), html = '';
+  for(var i = 0; i < DAYS_AHEAD; i++){
+    var iso = isoAdd(today, i), d = new Date(iso + 'T12:00:00Z'), wd = d.getUTCDay(), fri = wd === 5;
+    var num = lang === 'ar' ? d.getUTCDate().toLocaleString('ar-SA') : d.getUTCDate();
+    html += '<button type="button" class="day' + (iso === selDay ? ' on' : '') + (fri ? ' off' : '') + '"' +
+      (fri ? ' disabled' : ' onclick="pickDay(\'' + iso + '\')"') + '>' +
+      '<span class="dw">' + (i === 0 ? t('today') : t('dow')[wd]) + '</span><span class="dn">' + num + '</span></button>';
+  }
+  box.innerHTML = html;
+}
+function pickDay(iso){ selDay = iso; renderDays(); loadSlots(); }
+
+/* ---------- الفترات: يقرأ الأقفال الحقيقية من Firebase ---------- */
+function renderSlotView(){
+  var grid = document.getElementById('slots');
+  if(slotView.kind === 'msg'){
+    grid.innerHTML = '<div class="slots-empty' + (slotView.warn ? ' warn' : '') + '">' + t(slotView.key) +
+      (slotView.retry ? '<br><button type="button" class="retry" onclick="loadSlots()">' + t('retry') + '</button>' : '') + '</div>';
     return;
   }
+  renderSlots(slotView.booked, slotView.date);
+}
 
+function loadSlots(){
+  var date = selDay;
+  chosen = [];
+  if(!date){ slotView = {kind:'msg', key:'pickDayFirst'}; renderSlotView(); return; }
   var seq = ++loadSeq;
-  slotsMessage('⏳ جارٍ قراءة الفترات المتاحة…');
-
+  slotView = {kind:'msg', key:'loading'}; renderSlotView();
   fetch(DB + '/slotLocks/' + encodeURIComponent(date) + '.json', {cache:'no-store'})
-    .then(function(r){
-      if(!r.ok) throw new Error('HTTP ' + r.status);
-      return r.json();
-    })
+    .then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
     .then(function(locks){
       if(seq !== loadSeq) return;
       var booked = {};
-      Object.keys(locks || {}).forEach(function(k){
-        if(/^\d{4}$/.test(k)) booked[k] = true;
-      });
-      renderSlots(booked, date);
+      Object.keys(locks || {}).forEach(function(k){ if(/^\d{4}$/.test(k)) booked[k] = true; });
+      slotView = {kind:'grid', booked:booked, date:date}; renderSlotView();
     })
-    .catch(function(err){
+    .catch(function(){
       if(seq !== loadSeq) return;
       // فشل آمن: لا نعرض فترات قد تكون محجوزة
-      slotsMessage('تعذّر قراءة الفترات. <br><button type="button" onclick="loadSlots()" ' +
-        'style="margin-top:8px;padding:9px 16px;border:none;border-radius:9px;background:#0EA5E9;' +
-        'color:#fff;font-family:inherit;font-weight:800;cursor:pointer;">إعادة المحاولة</button>', '#92400E');
+      slotView = {kind:'msg', key:'loadFail', warn:true, retry:true}; renderSlotView();
     });
 }
 
@@ -209,62 +318,62 @@ function renderSlots(booked, date){
   var isToday = (date === todaySaudiDate());
   var nowM = isToday ? nowSaudiMinutes() : 0;
   var any = false;
-
   SLOTS.forEach(function(sl){
-    var end = sl.start + SLOT_WINDOW;
-    var conflict = blocksBetween(sl.start, end).some(function(b){ return !!booked[b]; });
+    var conflict = blocksBetween(sl.start, sl.start + SLOT_WINDOW).some(function(b){ return !!booked[b]; });
     var past = isToday && (sl.start < nowM + ADVANCE_MINUTES);
-
-    var div = document.createElement('div');
+    var b = document.createElement('button');
+    b.type = 'button';
     if(conflict || past){
-      div.className = 'slot off';
-      div.innerHTML = sl.icon + '<br>' + sl.ar + '<small>' + (conflict ? 'محجوز' : 'انتهى الوقت') + '</small>';
+      b.className = 'slot off'; b.disabled = true;
+      b.innerHTML = sl[lang] + '<small>' + (conflict ? t('booked') : t('past')) + '</small>';
     } else {
       any = true;
-      div.className = 'slot';
-      div.innerHTML = sl.icon + '<br>' + sl.ar + '<small>متاح</small>';
-      div.onclick = (function(t, el){ return function(){ toggleSlot(t, el); }; })(sl.t, div);
+      var k = chosen.indexOf(sl.t);
+      b.className = 'slot' + (k !== -1 ? ' on' : '');
+      b.innerHTML = sl[lang] + '<small>' + (k === 0 ? t('primary') : k === 1 ? t('alt') : t('available')) + '</small>';
+      b.onclick = (function(tt){ return function(){ toggleSlot(tt); }; })(sl.t);
     }
-    grid.appendChild(div);
+    grid.appendChild(b);
   });
-
   if(!any){
     var note = document.createElement('div');
-    note.className = 'slots-empty';
-    note.style.color = '#92400E';
-    note.textContent = 'لا توجد فترات متاحة في هذا اليوم — جرّب يوماً آخر';
+    note.className = 'slots-empty warn';
+    note.textContent = t('noneLeft');
     grid.appendChild(note);
   }
 }
 
-/** يسمح باختيار فترتين كحد أقصى: الأساسية وبديلة */
-function toggleSlot(t, el){
-  var i = chosen.indexOf(t);
-  if(i !== -1){
-    chosen.splice(i, 1);
-    el.className = 'slot';
-  } else {
-    if(chosen.length >= 2){
-      showErr('يمكنك اختيار فترتين كحد أقصى.');
-      return;
-    }
-    chosen.push(t);
-    el.className = 'slot on';
-    clearErr();
+/* يسمح باختيار فترتين كحد أقصى: الأساسية وبديلة */
+function toggleSlot(tt){
+  var i = chosen.indexOf(tt);
+  if(i !== -1) chosen.splice(i, 1);
+  else {
+    if(chosen.length >= 2){ showErr('eMax'); return; }
+    chosen.push(tt); clearErr();
   }
+  renderSlotView();
 }
 
-function showErr(msg){
+/* ---------- التحقق والإرسال ---------- */
+function showErr(key, fieldId){
   var el = document.getElementById('err');
-  el.textContent = msg;
+  el.setAttribute('data-k', key);
+  el.textContent = t(key);
   el.style.display = 'block';
-  el.scrollIntoView({behavior:'smooth', block:'center'});
+  var marked = document.querySelectorAll('.bad');
+  for(var i = 0; i < marked.length; i++) marked[i].classList.remove('bad');
+  if(fieldId){ var f = document.getElementById(fieldId); f.classList.add('bad'); f.focus(); }
+  window.scrollTo({top: Math.max(0, el.getBoundingClientRect().top + window.pageYOffset - 20), behavior:'smooth'});
 }
-function clearErr(){ document.getElementById('err').style.display = 'none'; }
+function clearErr(){
+  document.getElementById('err').style.display = 'none';
+  var marked = document.querySelectorAll('.bad');
+  for(var i = 0; i < marked.length; i++) marked[i].classList.remove('bad');
+}
 
-/** 05xxxxxxxx أو 5xxxxxxxx أو +9665xxxxxxxx */
+/* 05xxxxxxxx أو 5xxxxxxxx أو +9665xxxxxxxx */
 function normalizePhone(raw){
-  var p = String(raw || '').replace(/[^0-9]/g,'');
+  var p = String(raw || '').replace(/[٠-٩]/g, function(d){ return '٠١٢٣٤٥٦٧٨٩'.indexOf(d); }).replace(/[^0-9]/g,'');
   if(p.indexOf('00966') === 0) p = p.slice(5);
   else if(p.indexOf('966') === 0) p = p.slice(3);
   if(p.indexOf('0') === 0) p = p.slice(1);
@@ -273,63 +382,48 @@ function normalizePhone(raw){
 
 function formatDay(iso){
   if(!iso) return '';
-  var months = ['يناير','فبراير','مارس','أبريل','مايو','يونيو',
-                'يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  var months = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
   var days = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
-  var d = new Date(iso + 'T00:00:00');
+  var d = new Date(iso + 'T12:00:00Z');
   if(isNaN(d.getTime())) return iso;
-  return days[d.getDay()] + ' ' + d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+  return days[d.getUTCDay()] + ' ' + d.getUTCDate() + ' ' + months[d.getUTCMonth()] + ' ' + d.getUTCFullYear();
 }
 
 function sendRequest(){
   clearErr();
-
   var name     = document.getElementById('f_name').value.trim();
   var phoneRaw = document.getElementById('f_phone').value.trim();
   var service  = document.getElementById('f_service').value;
-  var units    = document.getElementById('f_units').value.trim();
   var district = document.getElementById('f_district').value.trim();
-  var day      = document.getElementById('f_day').value;
 
-  if(!day){ showErr('اختر اليوم المطلوب.'); return; }
-  if(!chosen.length){ showErr('اختر فترة متاحة واحدة على الأقل.'); return; }
-
-  if(name.length < 2){ showErr('اكتب الاسم من فضلك.'); return; }
-
+  if(name.length < 2){ showErr('eName', 'f_name'); return; }
   var phone = normalizePhone(phoneRaw);
-  if(!phone){ showErr('رقم الجوال غير صحيح. اكتبه بصيغة 05 متبوعة بثمانية أرقام.'); return; }
+  if(!phone){ showErr('ePhone', 'f_phone'); return; }
+  if(!service){ showErr('eService', 'f_service'); return; }
+  if(district.length < 2){ showErr('eDistrict', 'f_district'); return; }
+  if(!selDay){ showErr('eDay'); return; }
+  if(!chosen.length){ showErr('eSlot'); return; }
 
-  if(!service){ showErr('اختر الخدمة المطلوبة.'); return; }
-  if(district.length < 2){ showErr('اكتب اسم الحي من فضلك.'); return; }
-
-  if(units){
-    var u = Number(units);
-    if(!isFinite(u) || u < 1 || u > 50){ showErr('عدد المكيفات غير صحيح.'); return; }
-  }
-
+  // الرسالة تصل للإدارة بالعربية دائماً
   var lines = [];
   lines.push('طلب موعد جديد');
   lines.push('الاسم: ' + name);
   lines.push('الجوال: ' + phone);
   lines.push('الخدمة: ' + service);
-  if(units)  lines.push('عدد المكيفات: ' + units);
+  if(units) lines.push('عدد المكيفات: ' + units);
   lines.push('الحي: ' + district);
-  lines.push('اليوم: ' + formatDay(day));
+  lines.push('اليوم: ' + formatDay(selDay));
   lines.push('الفترة: ' + chosen[0]);
   if(chosen[1]) lines.push('بديل: ' + chosen[1]);
+  if(lang === 'en') lines.push('لغة العميل: الإنجليزية');
   lines.push('');
   lines.push('أرجو التواصل معي لتأكيد الموعد.');
 
-  var url = 'https://wa.me/' + BUSINESS_PHONE + '?text=' + encodeURIComponent(lines.join('\n'));
-  window.open(url, '_blank');
+  window.open('https://wa.me/' + BUSINESS_PHONE + '?text=' + encodeURIComponent(lines.join('\n')), '_blank');
 }
 
-// لا يقبل تاريخاً في الماضي
-(function(){
-  var d = new Date();
-  var p = function(n){ return (n<10?'0':'') + n; };
-  document.getElementById('f_day').min = d.getFullYear() + '-' + p(d.getMonth()+1) + '-' + p(d.getDate());
-})();
+document.getElementById('districts').innerHTML = DISTRICTS.map(function(d){ return '<option value="' + d + '">'; }).join('');
+applyLang();
 </script>
 </body>
 </html>
