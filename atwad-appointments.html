@@ -3141,8 +3141,11 @@ function renderLockScan(){
   });
   document.getElementById('lockRepairBody').innerHTML = h;
   document.getElementById('lockRepairFixBtn').disabled    = r.missing.length === 0;
-  document.getElementById('lockRepairOrphanBtn').disabled = true;
-  document.getElementById('lockRepairOrphanBtn').title = 'الحذف الآلي متوقف للسلامة؛ التقرير للمعاينة فقط';
+  var orphanCount = (r.orphans || []).length;
+  document.getElementById('lockRepairOrphanBtn').disabled = orphanCount === 0;
+  document.getElementById('lockRepairOrphanBtn').title = orphanCount
+    ? 'يحذف الأقفال التي لا يملكها أي موعد أو حجز قائم — بعد تأكيدك'
+    : 'لا توجد أقفال يتيمة';
 }
 
 /** ينشئ الأقفال الناقصة فقط — لا يستبدل قفلًا قائمًا مهما كان مالكه */
@@ -3184,8 +3187,59 @@ function applyLockRepair(){
  * حذف الأقفال آليًا متوقف عمدًا. الفحص يبقى للمعاينة فقط، لأن نتيجة قديمة
  * لا يجوز استخدامها للحذف بعد أن تتغير المواعيد في جلسة أخرى.
  */
+/**
+ * يحذف الأقفال اليتيمة فقط — تلك التي لا يملكها أي موعد أو حجز قائم.
+ * لا يمس قفلاً يملكه سجل موجود مهما كانت حالته.
+ */
 function applyOrphanCleanup(){
-  showToast('🔒 الحذف الآلي متوقف للسلامة. استخدم التقرير للمراجعة فقط.');
+  if(!_lockScan || !(_lockScan.orphans || []).length){ showToast('لا توجد أقفال يتيمة.'); return; }
+  if(!db){ showToast('❌ Firebase غير متاح'); return; }
+
+  var all    = _lockScan.orphans.slice();
+  var future = all.filter(function(x){ return !x.past; });
+  var past   = all.filter(function(x){ return !!x.past; });
+
+  var scope = future.length && past.length
+    ? window.confirm('تم العثور على ' + future.length + ' قفل مستقبلي و' + past.length + ' قفل قديم.\n\n' +
+                     'موافق = حذف الكل\nإلغاء = حذف المستقبلية فقط (الأهم لتحرير المواعيد)')
+    : true;
+  var target = (future.length && past.length && !scope) ? future : all;
+
+  var typed = window.prompt(
+    'سيُحذف ' + target.length + ' قفلاً يتيماً نهائياً.\n' +
+    'المواعيد والحجوزات لن تتأثر — الأقفال فقط.\n\n' +
+    'اكتب الرقم ' + target.length + ' للتأكيد:', '');
+  if(String(typed || '').trim() !== String(target.length)){ showToast('أُلغي الحذف.'); return; }
+
+  var btn = document.getElementById('lockRepairOrphanBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ جارٍ الحذف...';
+
+  // دفعات من 200 مسار حتى لا يُرفض الطلب لحجمه
+  var chunks = [], i;
+  for(i = 0; i < target.length; i += 200) chunks.push(target.slice(i, i + 200));
+
+  var done = 0;
+  var runChunk = function(idx){
+    if(idx >= chunks.length){
+      btn.textContent = '🧹 حذف الأقفال اليتيمة';
+      showToast('🧹 حُذف ' + done + ' قفلاً يتيماً — جارٍ إعادة الفحص');
+      setTimeout(runLockScan, 600);
+      return;
+    }
+    var updates = {};
+    chunks[idx].forEach(function(x){ updates['slotLocks/' + x.date + '/' + x.block] = null; });
+    db.ref().update(updates).then(function(){
+      done += chunks[idx].length;
+      btn.textContent = '⏳ ' + done + '/' + target.length;
+      runChunk(idx + 1);
+    }).catch(function(err){
+      btn.disabled = false;
+      btn.textContent = '🧹 حذف الأقفال اليتيمة';
+      showToast('❌ تعذّر الحذف: ' + err.message + ' — حُذف ' + done + ' قبل التوقف');
+    });
+  };
+  runChunk(0);
 }
 
 function showToast(msg){
