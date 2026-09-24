@@ -307,7 +307,7 @@ body{background:var(--bg);color:var(--ink);font-size:16px}
 .svc-card .s-icon .svc-svg{width:68px}
 .svc-card .s-name{font-size:15px;font-weight:600;color:var(--ink)}
 .svc-card .s-price{font-size:12px;font-weight:400;color:var(--muted)}
-.svc-card.primary-service{flex-direction:row;gap:14px;min-height:84px;justify-content:flex-start;text-align:start;padding:16px 18px}
+.svc-card.primary-service{flex-direction:row;column-gap:12px;row-gap:4px;min-height:84px;justify-content:flex-start;align-items:center;text-align:start;padding:16px 18px}
 .svc-card.primary-service .s-icon{margin:0}
 .svc-card.is-disabled,.svc-card.is-disabled:hover{background:#F1F3F5;border:1.5px dashed var(--field);opacity:1}
 .svc-card.is-disabled .s-name{color:#9AA4AD}
@@ -434,6 +434,21 @@ body{background:var(--bg);color:var(--ink);font-size:16px}
 .container + div p{color:var(--mist) !important;font-family:'Readex Pro',sans-serif !important}
 .container + div a{border-radius:10px !important;font-family:'Readex Pro',sans-serif !important;font-weight:500 !important;height:44px;padding:0 18px !important}
 .container + div a[href*="wa.me"]{background:var(--wa) !important}
+/* اختيار اليوم بالأزرار — حقل التاريخ الأصلي يبقى مخفياً ويستقبل القيمة */
+#f_date{display:none}
+.day-chips{display:flex;gap:8px;overflow-x:auto;padding:2px 0 6px;scrollbar-width:thin}
+.day-chip{flex:0 0 68px;height:76px;border-radius:12px;border:1.5px solid var(--line);background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;color:var(--ink);padding:0}
+.day-chip .dw{font-size:12px;color:var(--muted)}
+.day-chip .dn{font:500 21px 'IBM Plex Mono',monospace !important}
+.day-chip .dm{font-size:10px;color:var(--mist)}
+.day-chip.fri{background:#F1F3F5;border-style:dashed}
+.day-chip.fri .dn{color:#9AA4AD}
+.day-chip.on{background:var(--deep);border-color:var(--deep);color:#fff}
+.day-chip.on .dw,.day-chip.on .dm{color:#C7D9E7}
+.svc-card.primary-service{flex-wrap:wrap}
+.svc-card.primary-service .s-price{flex-basis:100%;margin-top:0}
+.svc-card.primary-service .s-name{flex:1}
+.svc-card .s-cta{color:var(--deep);font-weight:500}
 @media(max-width:520px){.two-col{grid-template-columns:1fr}}
 @media(max-width:420px){.slots-grid{grid-template-columns:repeat(2,1fr)}}
 </style>
@@ -463,7 +478,7 @@ body{background:var(--bg);color:var(--ink);font-size:16px}
   <div class="card-body">
     <div class="section-lbl">🛠️ الخدمات / Services</div>
     <div class="service-grid">
-      <div class="svc-card primary-service" id="sv1" onclick="showWashingOptions()"><div class="s-icon">💧❄️</div><div class="s-name">غسيل مكيفات</div><div class="s-price">متوفر الآن — اختر العدد والسعر</div></div>
+      <div class="svc-card primary-service" id="sv1" onclick="showWashingOptions()"><div class="s-icon">💧❄️</div><div class="s-name">غسيل مكيفات</div><div class="s-price">يشمل تنظيف الوحدة الداخلية والخارجية ومجرى تصريف المياه</div><div class="s-price s-cta">اختر العدد لمعرفة السعر</div></div>
       <div class="svc-card" id="sv2" onclick="selSvc('صيانة مكيف','AC Maintenance',100,'sv2')"><div class="s-icon">🛠️</div><div class="s-name">صيانة مكيف</div><div class="s-price">تبدأ من 100 ريال</div></div>
       <div class="svc-card" id="sv8" onclick="selIndoor()"><div class="s-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 104" class="svc-svg" role="img" aria-label="الوحدة الداخلية"><defs><linearGradient id="idTop" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0C3B5E"/><stop offset="100%" stop-color="#0EA5E9"/></linearGradient><linearGradient id="idBody" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#e8f4fd"/><stop offset="100%" stop-color="#cde8f7"/></linearGradient></defs><rect x="6" y="16" width="128" height="40" rx="9" fill="url(#idBody)" stroke="#0EA5E9" stroke-width="2.5"/><path d="M6 25a9 9 0 0 1 9-9h110a9 9 0 0 1 9 9v6H6z" fill="url(#idTop)"/><rect x="24" y="36" width="92" height="3" rx="1.5" fill="#0C3B5E" opacity="0.22"/><rect x="24" y="43" width="92" height="3" rx="1.5" fill="#0C3B5E" opacity="0.22"/><rect x="24" y="50" width="92" height="3" rx="1.5" fill="#0C3B5E" opacity="0.22"/><circle cx="15" cy="46" r="2.4" fill="#0EA5E9" opacity="0.8"/><path d="M18 58q52 14 104 0" fill="none" stroke="#0EA5E9" stroke-width="2.5" opacity="0.55"/><path d="M44 70q5 6 0 9-5-3 0-9z" fill="#0EA5E9" opacity="0.85"/><path d="M70 76q5 6 0 9-5-3 0-9z" fill="#0EA5E9" opacity="0.65"/><path d="M96 70q5 6 0 9-5-3 0-9z" fill="#0EA5E9" opacity="0.85"/><path d="M70 62q4 5 0 7.5-4-2.5 0-7.5z" fill="#0EA5E9" opacity="0.9"/></svg></div><div class="s-name">تنظيف الوحدة الداخلية</div><div class="s-price">40 ريال للوحدة — 5 وحدات فأكثر</div></div>
       <div class="svc-card" id="sv7" onclick="selOutdoor()"><div class="s-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 104" class="svc-svg" role="img" aria-label="الوحدة الخارجية"><defs><linearGradient id="odTop" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0C3B5E"/><stop offset="100%" stop-color="#0EA5E9"/></linearGradient><linearGradient id="odBody" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#e8f4fd"/><stop offset="100%" stop-color="#cde8f7"/></linearGradient></defs><rect x="8" y="12" width="104" height="72" rx="9" fill="url(#odBody)" stroke="#0EA5E9" stroke-width="2.5"/><path d="M8 21a9 9 0 0 1 9-9h86a9 9 0 0 1 9 9v5H8z" fill="url(#odTop)"/><circle cx="60" cy="53" r="23" fill="#f4fbff" stroke="#0C3B5E" stroke-width="2" opacity="0.9"/><circle cx="60" cy="53" r="17.5" fill="none" stroke="#0C3B5E" stroke-width="1.2" opacity="0.35"/><circle cx="60" cy="53" r="11" fill="none" stroke="#0C3B5E" stroke-width="1.2" opacity="0.35"/><path d="M60 42q7 6 0 11 -7-5 0-11z" fill="#0EA5E9" opacity="0.85"/><path d="M71 53q-6 7-11 0 5-7 11 0z" fill="#0EA5E9" opacity="0.85"/><path d="M60 64q-7-6 0-11 7 5 0 11z" fill="#0EA5E9" opacity="0.85"/><path d="M49 53q6-7 11 0-5 7-11 0z" fill="#0EA5E9" opacity="0.85"/><circle cx="60" cy="53" r="3.4" fill="#0C3B5E"/><rect x="14" y="34" width="8" height="38" rx="3" fill="#0C3B5E" opacity="0.18"/><rect x="98" y="34" width="8" height="38" rx="3" fill="#0C3B5E" opacity="0.18"/><rect x="20" y="84" width="12" height="8" rx="2.5" fill="#334155"/><rect x="88" y="84" width="12" height="8" rx="2.5" fill="#334155"/><path d="M36 94q4 5 0 7.5-4-2.5 0-7.5z" fill="#0EA5E9" opacity="0.8"/><path d="M60 96q4 5 0 7.5-4-2.5 0-7.5z" fill="#0EA5E9" opacity="0.55"/><path d="M84 94q4 5 0 7.5-4-2.5 0-7.5z" fill="#0EA5E9" opacity="0.8"/></svg></div><div class="s-name">تنظيف الوحدة الخارجية</div><div class="s-price">40 ريال للوحدة — 5 وحدات فأكثر</div></div>
@@ -748,6 +763,7 @@ body{background:var(--bg);color:var(--ink);font-size:16px}
     <div class="field">
       <label>تاريخ الزيارة <span class="req">*</span></label>
       <input type="date" id="f_date" onchange="checkDateAndSlots(this.value)">
+      <div class="day-chips" id="dayChips" aria-label="اختر اليوم"></div>
       <div class="friday-closed" id="fridayClosed">
         <div class="icon">⛔</div>
         <p>الجمعة خارج أيام العمل<br>اختر يوماً آخر، أو اطلب موافقة استثنائية</p>
@@ -2918,6 +2934,39 @@ function toggleLang(){
   LANG=LANG==='ar'?'en':'ar';
   document.querySelector('.lang-btn').textContent=LANG==='ar'?'🌐 EN':'🌐 عر';
 }
+</script>
+<script>
+/* أزرار الأيام: تضع القيمة في حقل التاريخ الأصلي وتستدعي نفس الدالة الأصلية checkDateAndSlots */
+(function(){
+  var DOW = ['أحد','إثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];
+  var MON = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  var DAYS = 21;
+  function addDays(iso, n){ var d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0,10); }
+  function render(){
+    var box = document.getElementById('dayChips'), input = document.getElementById('f_date');
+    if(!box || !input) return;
+    var start = (typeof todaySaudiDate === 'function') ? todaySaudiDate() : new Date().toISOString().slice(0,10);
+    var html = '';
+    for(var i = 0; i < DAYS; i++){
+      var iso = addDays(start, i), d = new Date(iso + 'T12:00:00Z'), wd = d.getUTCDay();
+      html += '<button type="button" class="day-chip' + (wd === 5 ? ' fri' : '') + (input.value === iso ? ' on' : '') + '" data-d="' + iso + '">' +
+        '<span class="dw">' + (i === 0 ? 'اليوم' : i === 1 ? 'غداً' : DOW[wd]) + '</span>' +
+        '<span class="dn">' + d.getUTCDate() + '</span>' +
+        '<span class="dm">' + MON[d.getUTCMonth()] + '</span></button>';
+    }
+    box.innerHTML = html;
+  }
+  document.addEventListener('click', function(e){
+    var b = e.target.closest && e.target.closest('.day-chip');
+    if(!b) return;
+    var input = document.getElementById('f_date');
+    input.value = b.getAttribute('data-d');
+    var all = document.querySelectorAll('.day-chip');
+    for(var i = 0; i < all.length; i++) all[i].classList.toggle('on', all[i] === b);
+    checkDateAndSlots(input.value);
+  });
+  render();
+})();
 </script>
 </body>
 </html>
