@@ -452,6 +452,20 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
         <div class="form-group"><label>جوال العميل <span class="req">*</span></label><input type="tel" id="f_phone" placeholder="05xxxxxxxx" inputmode="tel" autocomplete="tel" oninput="scheduleCustomerLookup(this.value)"></div>
       </div>
       <div class="form-group"><label>العنوان <span class="req">*</span></label><input type="text" id="f_address" placeholder="الحي، الشارع..."></div>
+      <div class="form-group"><label>مصدر العميل / Lead source</label>
+        <select id="f_source">
+          <option value="">-- غير محدد --</option>
+          <option value="tiktok">تيك توك / TikTok</option>
+          <option value="instagram">إنستقرام / Instagram</option>
+          <option value="snapchat">سناب شات / Snapchat</option>
+          <option value="x">منصة X</option>
+          <option value="google">قوقل / Google</option>
+          <option value="whatsapp">واتساب / WhatsApp</option>
+          <option value="referral">توصية / Referral</option>
+          <option value="returning">عميل سابق / Returning</option>
+          <option value="other">أخرى / Other</option>
+        </select>
+      </div>
       <div class="form-row">
         <div class="form-group"><label>نوع الخدمة <span class="req">*</span></label>
           <select id="f_service" onchange="onServiceOrUnitsChanged()">
@@ -808,6 +822,8 @@ let editingId = null;
 let editingFirebaseKey = null;
 let editingSource = null;
 let editingOriginalDate = ''; // التاريخ الأصلي للموعد قبل التعديل
+var LEAD_SOURCE_LABELS_AR={tiktok:'تيك توك',instagram:'إنستقرام',snapchat:'سناب شات',x:'منصة X',google:'قوقل',whatsapp:'واتساب',referral:'توصية',returning:'عميل سابق',other:'أخرى'};
+function leadSourceLabel(v){ return LEAD_SOURCE_LABELS_AR[v] || v || ''; }
 let manualAreaApproved = false;
 let manualAreaDistrict = '';
 let pendingNewApptPrefill = null;
@@ -1374,6 +1390,7 @@ function initFirebaseSync() {
           lat:             b.lat  != null ? b.lat  : (b.latitude != null ? b.latitude : ''),
           lng:             b.lng  != null ? b.lng  : (b.longitude != null ? b.longitude : ''),
           locationImage:   b.locationImage   || '',
+          leadSource:      b.leadSource      || '',
           locationVerified:b.locationVerified || false,
           locationSource:  b.locationSource  || ''
         });
@@ -1753,7 +1770,7 @@ function openNewApptForm(){
 
   editingId=null; editingFirebaseKey=null; editingSource=null;
   document.getElementById('modalTitle').textContent='➕ موعد جديد';
-  ['f_client','f_phone','f_address','f_notes'].forEach(id=>document.getElementById(id).value='');
+  ['f_client','f_phone','f_address','f_notes','f_source'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('f_service').value='';
   // أحمد هو الفني التشغيلي الوحيد لجميع المواعيد الجديدة.
   document.getElementById('f_tech').value='Abrar';
@@ -1777,6 +1794,7 @@ function openNewApptForm(){
     if(prefill.date) document.getElementById('f_date').value = prefill.date;
     if(prefill.time) document.getElementById('f_time').value = prefill.time;
     if(prefill.notes) document.getElementById('f_notes').value = prefill.notes;
+    if(prefill.leadSource) document.getElementById('f_source').value = prefill.leadSource;
     if(prefill.units) document.getElementById('f_units').value = prefill.units;
     if(prefill.service) onServiceOrUnitsChanged();
     if(prefill.mapsLink) applyPrefilledLocation(prefill.mapsLink);
@@ -1811,6 +1829,7 @@ function editAppt(id){
   document.getElementById('f_duration').value=atwadDuration(a);
   updateApptEndPreview();
   document.getElementById('f_notes').value=a.notes||'';
+  document.getElementById('f_source').value=a.leadSource||'';
   document.getElementById('areaApprovedBanner').style.display = 'none';
   loadImageInModal(a.locationImage||'');
   // استعادة حقول الموقع — resetLocFields أولاً ثم نُعيد تعبئة بيانات الموعد
@@ -2568,6 +2587,7 @@ function saveAppt(){
     units: parseInt(document.getElementById('f_units').value)||1,
     date, time: document.getElementById('f_time').value,
     notes: document.getElementById('f_notes').value.trim(),
+    leadSource: document.getElementById('f_source').value || '',
     locationImage: currentImageBase64 || '',
     duration: readManualDuration(),
     // المدة المكتوبة هنا هي المعتمدة للعرض والأقفال حتى لو كان المصدر حجزًا إلكترونيًا
@@ -3437,6 +3457,7 @@ function openDetail(id){
       <div style="background:#fff;border:1.5px solid var(--ice);border-radius:10px;padding:12px;"><div style="font-size:11px;color:var(--mist);margin-bottom:6px;">📍 موقع العميل</div><button type="button" onclick="openExactAppointmentLocation('${aId}')" style="width:100%;padding:7px;background:${detailMapsUrl?'#E0F2FE':'#FEF3C7'};color:${detailMapsUrl?'#0369A1':'#92400E'};border:0;border-radius:7px;font-family:'Tajawal',sans-serif;font-size:11px;font-weight:800;cursor:pointer;">${detailMapsUrl?'🗺️ فتح دبوس العميل':'⚠️ تحديث الموقع الدقيق'}</button>${detailCity?`<div style="font-size:11px;color:var(--mist);margin-top:6px;">العنوان: ${atwadEsc(detailCity)}</div>`:''}</div>
     </div>
     ${renderTechnicianNotificationBadge(a)?`<div style="margin-bottom:12px;">${renderTechnicianNotificationBadge(a)}</div>`:''}
+    ${a.leadSource?`<div style="display:inline-block;background:#EEF2FF;border:1.5px solid #C7D2FE;border-radius:999px;padding:4px 12px;margin-bottom:10px;font-size:12px;color:#3730A3;">📣 المصدر: ${leadSourceLabel(a.leadSource)}</div>`:''}
     ${a.notes?`<div style="background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:10px;padding:12px;margin-bottom:14px;font-size:13px;color:#92400E;">📝 ${a.notes}</div>`:''}
     ${a.locationImage?`<div style="margin-bottom:14px;"><div style="font-size:12px;color:var(--mist);margin-bottom:6px;">📸 صورة الموقع</div><img src="${a.locationImage}" style="width:100%;max-height:200px;object-fit:cover;border-radius:10px;border:1.5px solid var(--ice);" onclick="window.open('${a.locationImage}','_blank')"></div>`:''}
     <div style="display:flex;gap:8px;flex-wrap:wrap;">

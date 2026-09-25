@@ -439,6 +439,21 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
       <div class="field"><label>الجوال <span class="req">*</span></label><input type="tel" id="f_phone" placeholder="05xxxxxxxx أو +966 5x xxx xxxx" maxlength="24" inputmode="tel" autocomplete="tel" oninput="lookupCustomerByPhone(this.value)"><div class="err-msg" id="e_phone">رقم غير صحيح</div><div class="customer-lookup" id="customerLookupMsg" aria-live="polite"></div></div>
     </div>
     <div class="field">
+      <label>كيف عرفت عنا؟ <span style="color:#94A3B8;font-weight:400;">(اختياري)</span></label>
+      <select id="f_source">
+        <option value="">-- اختر --</option>
+        <option value="tiktok">تيك توك</option>
+        <option value="instagram">إنستقرام</option>
+        <option value="snapchat">سناب شات</option>
+        <option value="x">منصة X (تويتر)</option>
+        <option value="google">بحث قوقل / خرائط قوقل</option>
+        <option value="whatsapp">حالة واتساب / مجموعة</option>
+        <option value="referral">توصية من صديق أو قريب</option>
+        <option value="returning">عميل سابق</option>
+        <option value="other">أخرى</option>
+      </select>
+    </div>
+    <div class="field">
       <label>المدينة <span class="req">*</span></label>
       <select id="f_city" onchange="onCityChange()">
         <option value="">-- اختر --</option>
@@ -1898,6 +1913,33 @@ function requestAreaApproval(){
   window.open('https://wa.me/966509720382?text=' + encodeURIComponent(lines.join('\n')), '_blank');
 }
 
+// ===== مصدر العميل (تتبع المنصة التي جاء منها) =====
+// الرابط ?src=tiktok يُثبّت المصدر تلقائيًا ويُخفي السؤال عن العميل.
+var LEAD_SOURCE_LABELS={tiktok:'تيك توك',instagram:'إنستقرام',snapchat:'سناب شات',x:'منصة X',google:'قوقل',whatsapp:'واتساب',referral:'توصية',returning:'عميل سابق',other:'أخرى'};
+function readLeadSourceFromUrl(){
+  try{
+    var q=window.location.search||'';
+    var m=q.match(/[?&](?:src|utm_source|source)=([^&#]+)/i);
+    if(!m) return '';
+    var v=decodeURIComponent(m[1]).toLowerCase().trim();
+    if(v==='ig') v='instagram';
+    if(v==='snap') v='snapchat';
+    if(v==='twitter') v='x';
+    return LEAD_SOURCE_LABELS[v] ? v : '';
+  }catch(err){ console.warn('readLeadSourceFromUrl',err); return ''; }
+}
+function initLeadSource(){
+  var sel=document.getElementById('f_source');
+  if(!sel) return;
+  var v=readLeadSourceFromUrl();
+  try{
+    if(v) sessionStorage.setItem('atwad_lead_source',v);
+    else v=sessionStorage.getItem('atwad_lead_source')||'';
+  }catch(err){ console.warn('sessionStorage unavailable',err); }
+  if(v) sel.value=v;
+}
+initLeadSource();
+
 function next2(){
   var name=document.getElementById('f_name').value.trim();
   var phoneInput=document.getElementById('f_phone');
@@ -1961,6 +2003,7 @@ function next2(){
   }
   if(ok){
     S.name=name;S.phone=phone;S.city=city;S.addr=mapsLink;
+    S.source=(document.getElementById('f_source')&&document.getElementById('f_source').value)||'';
     S.district = (district === '__other_north__')
       ? document.getElementById('f_district_other').value.trim() + ' (حي خارج القائمة — يحتاج تأكيد)'
       : district;
@@ -2331,6 +2374,7 @@ function submitBooking(){
       'الحي: '+(S.district||'—'),
       'الموقع: '+S.addr
     ];
+    if(S.source && LEAD_SOURCE_LABELS[S.source]) messageLines.push('المصدر: '+LEAD_SOURCE_LABELS[S.source]);
     var msg=encodeURIComponent(messageLines.join('\n'));
     var waUrl='https://wa.me/966509720382?text='+msg;
     // لا نضع رقمًا مرجعيًا في رسالة الفشل؛ الرقم يصبح حجزًا معتمدًا فقط
@@ -2367,6 +2411,9 @@ function submitBooking(){
 
     // السعر التقديري يُحسب من الخدمة، ولا يُطلب من العميل إدخاله.
     if(S.price > 0) bookingData.servicePrice = S.price;
+
+    // مصدر العميل: يُحفظ فقط إذا اختاره العميل أو جاء عبر رابط ?src=
+    if(S.source && LEAD_SOURCE_LABELS[S.source]) bookingData.leadSource = S.source;
 
     // الموقع ليس اختياريًا: نحفظ إما رابطًا مولدًا من الإحداثيات أو رابط Google Maps أكده العميل.
     var accuracyValue = document.getElementById('f_accuracy').value.trim();
