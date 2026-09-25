@@ -857,7 +857,9 @@ function atwadDuration(a){
   if(!a) return ATWAD_DEFAULT_DURATION;
   var d=parseInt(atwadLatinDigits(a.duration),10);
   if(!isFinite(d)||d<=0) d=(a._source==='bookings')?60:ATWAD_DEFAULT_DURATION;
-  if(a._source==='bookings') d=Math.max(ATWAD_BOOKING_WINDOW_MIN,d);
+  // الحجز الإلكتروني يحجز نافذته المعروضة كاملة (ساعتان)،
+  // إلا إذا ثبّتت الإدارة مدة صريحة من نموذج التعديل (durationOverride).
+  if(a._source==='bookings' && a.durationOverride!==true) d=Math.max(ATWAD_BOOKING_WINDOW_MIN,d);
   return d;
 }
 
@@ -2568,6 +2570,8 @@ function saveAppt(){
     notes: document.getElementById('f_notes').value.trim(),
     locationImage: currentImageBase64 || '',
     duration: readManualDuration(),
+    // المدة المكتوبة هنا هي المعتمدة للعرض والأقفال حتى لو كان المصدر حجزًا إلكترونيًا
+    durationOverride: true,
     updatedAt: new Date().toISOString()
   };
 
@@ -2680,7 +2684,9 @@ function saveAppt(){
 
     // تعديل الموقع أو بيانات العميل فقط لا يحتاج معاملة أقفال الوقت؛ تمريره
     // عبر transaction كان قد يترك زر الحفظ معلقًا رغم عدم تغيير الجدول.
-    var _oldDuration = Number(_oldAppt.duration) || 60;
+    // المدة الفعلية القديمة (تحسب نافذة الحجز الإلكتروني) حتى تُحرَّر الأقفال الزائدة
+    // عندما تُثبّت الإدارة مدة أقصر لحجز إلكتروني.
+    var _oldDuration = atwadDuration(_oldAppt);
     var _scheduleChanged =
       String(_oldAppt.date || '') !== String(date || '') ||
       String(_oldAppt.time || '') !== String(data.time || '') ||
