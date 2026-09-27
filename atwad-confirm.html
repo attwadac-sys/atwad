@@ -35,6 +35,7 @@ h1{font:700 23px/1.4 'Noto Kufi Arabic',sans-serif}
 .row .v.big{font:600 16px 'Readex Pro',sans-serif;color:var(--deep)}
 .deadline{background:var(--warn-bg);border:1px solid var(--warn-bd);color:var(--warn);border-radius:12px;padding:13px 15px;font-size:13.5px;line-height:1.85}
 .deadline b{font-weight:600}
+.deadline.gentle{background:var(--tint);border-color:#C5D8E8;color:var(--deep)}
 .btn{width:100%;min-height:58px;border:0;border-radius:14px;font:500 17px 'Readex Pro',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;padding:10px 14px;line-height:1.5}
 .btn-ok{background:var(--ok);color:#fff}
 .btn-ok:hover{background:#1A6840}
@@ -124,7 +125,9 @@ var T = {
     already:'<b>سبق أن أرسلت ردك على هذا الموعد.</b><br>لا حاجة لإرساله مرة أخرى. إن أردت تغييره تواصل معنا عبر واتساب.',
     failed:'<b>تعذّر إرسال الرد.</b><br>تحقق من الاتصال وحاول مرة أخرى، أو أرسل ردك عبر واتساب بالزر بالأسفل.',
     badLink:'<b>الرابط غير مكتمل.</b><br>يرجى فتح الرابط كما وصلك في الرسالة دون تعديل، أو التواصل معنا عبر واتساب.',
-    deadline:'يرجى التأكيد <b>{dl}</b>.<br>إن لم يصلنا ردك قبل ذلك، سنعتبر الموعد ملغى ونمنح الفترة لعميل آخر في قائمة الانتظار.',
+    deadlineFirm:'يرجى التأكيد <b>{dl}</b>.<br>إن لم يصلنا ردك قبل ذلك، سنعتبر الموعد ملغى ونمنح الفترة لعميل آخر في قائمة الانتظار.',
+    deadlineSoft:'يسعدنا وصول تأكيدك <b>{dl}</b> حتى يصل الفني في وقته.<br>وإن طرأ ما يمنعك، أخبرنا بضغطة واحدة ونرتب لك موعداً آخر يناسبك.',
+    deadlineMid:'لم يصلنا ردك بعد. نرجو تأكيد الموعد <b>{dl}</b> حتى نثبّت جدول الفني ولا نؤخر عميلاً آخر.<br>ضغطة واحدة تكفي.',
     tips:'تأكيدك يوفّر على الفني انتظاراً ورحلة قد لا تلزم، ويتيح لعميل آخر الاستفادة من الفترة إن لم تكن مناسبة لك.',
     foot:'مؤسسة أطواد لصيانة المكيفات',
     waConfirm:'أؤكد موعدي', waChange:'أرجو تغيير موعدي', waRef:'رقم الطلب'
@@ -145,7 +148,9 @@ var T = {
     already:'<b>You have already replied for this appointment.</b><br>No need to send it again. To change your reply, message us on WhatsApp.',
     failed:'<b>We could not send your reply.</b><br>Check your connection and try again, or send it on WhatsApp using the button below.',
     badLink:'<b>This link is incomplete.</b><br>Please open the link exactly as you received it, or contact us on WhatsApp.',
-    deadline:'Please confirm <b>{dl}</b>.<br>Without a reply by then we will treat the appointment as cancelled and offer the window to another customer on the waiting list.',
+    deadlineFirm:'Please confirm <b>{dl}</b>.<br>Without a reply by then we will treat the appointment as cancelled and offer the window to another customer on the waiting list.',
+    deadlineSoft:'We would be glad to have your confirmation <b>{dl}</b> so the technician arrives on time.<br>If something has come up, tell us with one tap and we will arrange another time that suits you.',
+    deadlineMid:'We have not heard back yet. Please confirm <b>{dl}</b> so we can lock the technician\u2019s route and avoid delaying another customer.<br>One tap is enough.',
     tips:'Confirming saves the technician a journey that may not be needed, and frees the window for someone else if it no longer suits you.',
     foot:'Atwad AC Maintenance Est.',
     waConfirm:'I confirm my appointment', waChange:'I need to change my appointment', waRef:'Request no.'
@@ -178,7 +183,10 @@ function readParams(){
     time:     qp('t').trim(),
     service:  qp('v').trim(),
     name:     qp('n').trim(),
-    deadline: qp('dl').trim()
+    deadline: qp('dl').trim(),
+    // نبرة التنبيه: firm تحذير بالإلغاء، soft تذكير ودي، none بلا تنبيه
+    tone:     (function(){ var m = qp('m').trim().toLowerCase();
+                 return (m === 'mid' || m === 'firm' || m === 'none') ? m : 'soft'; })()
   };
 }
 
@@ -317,8 +325,17 @@ function applyLang(){
   document.getElementById('waLabel').textContent   = d.waLabel;
   document.getElementById('tips').textContent      = d.tips;
   document.getElementById('foot').textContent      = d.foot;
-  document.getElementById('deadlineBox').innerHTML =
-    d.deadline.replace('{dl}', esc(P.deadline || defaultDeadline()));
+  var dlBox = document.getElementById('deadlineBox');
+  if(P.tone === 'none'){
+    dlBox.classList.add('hide');
+  } else {
+    dlBox.classList.remove('hide');
+    dlBox.className = 'deadline' + (P.tone === 'soft' ? ' gentle' : '');
+    var body = (P.tone === 'soft') ? d.deadlineSoft
+             : (P.tone === 'mid')  ? d.deadlineMid
+             : d.deadlineFirm;
+    dlBox.innerHTML = body.replace('{dl}', esc(P.deadline || defaultDeadline()));
+  }
   renderRows();
 
   var prev = previousChoice();
