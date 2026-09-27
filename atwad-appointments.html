@@ -107,6 +107,11 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 .sp-unknown{background:#E2E8F0;color:#475569;}
 .conflict-badge{display:inline-block;margin-top:4px;padding:3px 9px;border-radius:20px;background:#FEE2E2;color:#B91C1C;font-size:10px;font-weight:800;}
 .review-badge{display:inline-block;margin-top:4px;padding:3px 9px;border-radius:20px;background:#FEF3C7;color:#92400E;font-size:10px;font-weight:800;}
+.confirm-badge{display:inline-block;margin-top:4px;margin-inline-end:4px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:800;}
+.confirm-yes{background:#D1FAE5;color:#065F46;}
+.confirm-change{background:#FFEDD5;color:#9A3412;}
+.confirm-sent{background:#E0F2FE;color:#075985;}
+
 .lockrep-row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid #EEF2F7;font-size:12px;}
 .lockrep-row:last-child{border-bottom:none;}
 .appt-actions{display:flex;gap:8px;width:100%;position:relative;align-items:stretch;border-top:1px solid #EEF2F7;padding-top:10px;}
@@ -787,6 +792,7 @@ function startSecureAppointments() {
   secureSyncStarted = true;
   loadTechnicianDirectory();
   loadWaitingList();
+  loadApptConfirmations();
   initFirebaseSync();
   loadFridaySetting();
 }
@@ -1578,6 +1584,7 @@ function renderList(){
           </div>
           ${isBooking?'<span class="source-badge source-firebase">📱 حجز إلكتروني</span>':'<span class="source-badge source-local">✏️ يدوي</span>'}
           ${renderConflictBadge(a)}
+          ${renderConfirmBadge(a)}
           ${renderTechnicianNotificationBadge(a)}
           ${String(a.status||'')==='cancelled' && a.cancelReason
             ? `<div style="font-size:11px;color:#991B1B;background:#FEE2E2;border-radius:7px;padding:3px 9px;margin-top:5px;display:inline-block;">✕ سبب الإلغاء: ${atwadEsc(a.cancelReason)}${a.cancelledAt?' · '+String(a.cancelledAt).slice(0,10):''}</div>`
@@ -1599,6 +1606,7 @@ function renderList(){
           <button class="act-btn act-more" onclick="toggleApptMenu('${aId}',event)" title="خيارات أخرى" aria-haspopup="true">⋯</button>
           <div class="act-menu" id="menu-${aId}">
             <button class="act-btn act-remind" onclick="closeApptMenus();sendReminder('${aId}')">🔔 تذكير للعميل</button>
+            <button class="act-btn act-remind" onclick="closeApptMenus();sendConfirmRequest('${aId}')">✅ ${confirmStageLabel(a)}</button>
             <button class="act-btn act-edit" onclick="closeApptMenus();editAppt('${aId}')">✏️ تعديل الموعد</button>
             ${a.tech?`<button class="act-btn act-copy-task" onclick="closeApptMenus();copyTaskMessage('${aId}')">📋 نسخ تفاصيل المهمة</button>`:''}
             <div class="act-menu-sep"></div>
@@ -3645,6 +3653,158 @@ function buildReminderMessage(a){
     lines.push('وإن أردتم التأجيل أو الإلغاء، أخبرونا مشكورين لنتيح الموعد لعميل آخر.');
   }
   return lines.join('\n');
+}
+
+/* ============================================================
+   طلب التأكيد المتدرّج — رابط بضغطة واحدة بدل المكالمة
+   ثلاث مراحل: ودية ثم متوسطة ثم حازمة. النظام يتذكر ما أُرسل
+   لكل موعد فلا تُعاد المرحلة نفسها ولا تبدأ بالحازمة.
+   ============================================================ */
+var CONFIRM_LINK_BASE = 'https://attwadac-sys.github.io/atwad/atwad-confirm.html';
+var CONFIRM_STAGES = {
+  1: {tone:'soft', label:'ودية'},
+  2: {tone:'mid',  label:'متوسطة'},
+  3: {tone:'firm', label:'حازمة'}
+};
+
+/** ردود العملاء الواردة، مفهرسة بمصدر الموعد ومفتاحه — أحدث رد يفوز */
+var apptConfirmations = {};
+function confirmIndexKey(source, key){
+  return (source === 'bookings' ? 'bookings' : 'appointments') + ':' + String(key || '');
+}
+function loadApptConfirmations(){
+  if(!db) return;
+  db.ref('apptConfirmations').on('value', function(snap){
+    var next = {};
+    snap.forEach(function(c){
+      var r = c.val() || {};
+      if(!r.apptKey) return;
+      var k = confirmIndexKey(r.source, r.apptKey);
+      var prev = next[k];
+      if(!prev || Number(r.createdAt || 0) >= Number(prev.createdAt || 0)){
+        next[k] = Object.assign({}, r, {_key: c.key});
+      }
+    });
+    apptConfirmations = next;
+    try { renderWeek(); renderList(); } catch(err){ console.error('confirm render:', err); }
+  }, function(err){
+    console.error('apptConfirmations load:', err);
+  });
+}
+function apptConfirmationOf(a){
+  if(!a || !a._fbKey) return null;
+  return apptConfirmations[confirmIndexKey(a._source, a._fbKey)] || null;
+}
+
+/** نص المهلة داخل الرابط — موعد اليوم لا تنفع معه مهلة الصباح */
+function confirmDeadlineText(a){
+  if(a && a.date === today()) return 'خلال ساعة من وصول هذه الرسالة';
+  return 'قبل الساعة ٩:٠٠ صباح يوم الموعد';
+}
+
+/** المرحلة التالية: 1 إن لم يُرسل شيء، وتتوقف عند 3 */
+function nextConfirmStage(a){
+  var sent = parseInt(a && a.confirmStage, 10);
+  if(!isFinite(sent) || sent < 1) sent = 0;
+  return Math.min(sent + 1, 3);
+}
+
+function buildConfirmLink(a, stage){
+  var st = CONFIRM_STAGES[stage] || CONFIRM_STAGES[1];
+  var q = [
+    'k=' + encodeURIComponent(a._fbKey || ''),
+    's=' + (a._source === 'bookings' ? 'b' : 'a'),
+    'm=' + st.tone,
+    'dl=' + encodeURIComponent(confirmDeadlineText(a))
+  ];
+  if(a.ref)     q.push('r=' + encodeURIComponent(a.ref));
+  if(a.date)    q.push('d=' + encodeURIComponent(a.date));
+  if(a.time)    q.push('t=' + encodeURIComponent(a.time));
+  if(a.service) q.push('v=' + encodeURIComponent(a.service));
+  if(a.client)  q.push('n=' + encodeURIComponent(a.client));
+  return CONFIRM_LINK_BASE + '?' + q.join('&');
+}
+
+function buildConfirmMessage(a, stage){
+  var lines = ['مرحباً ' + (a.client || '') + '،'];
+  if(stage === 1){
+    lines.push('نؤكد لكم موعدكم مع مؤسسة أطواد لصيانة المكيفات.');
+  } else if(stage === 2){
+    lines.push('لم يصلنا تأكيدكم بعد لموعدكم مع مؤسسة أطواد.');
+  } else {
+    lines.push('تذكير أخير بموعدكم مع مؤسسة أطواد.');
+  }
+  lines.push('');
+  lines.push('الخدمة: ' + (a.service || '—'));
+  lines.push('التاريخ: ' + formatDateShort(a.date));
+  lines.push('الوقت: ' + (a.time || '—'));
+  lines.push('');
+  lines.push('للتأكيد بضغطة واحدة:');
+  lines.push(buildConfirmLink(a, stage));
+  lines.push('');
+  if(stage === 3){
+    lines.push('إن لم يصلنا ردكم ' + confirmDeadlineText(a) + '، سنتيح الفترة لعميل آخر من قائمة الانتظار.');
+  } else {
+    lines.push('وإن لم يناسبكم الوقت، اختاروا «أرجو تغيير الموعد» من نفس الرابط.');
+  }
+  return lines.join('\n');
+}
+
+function sendConfirmRequest(id){
+  var a = findAppt(id);
+  if(!a) return;
+  if(!a._fbKey){ showToast('❌ الموعد بلا معرّف — حدّث الصفحة وأعد المحاولة.'); return; }
+
+  var stage = nextConfirmStage(a);
+  var st = CONFIRM_STAGES[stage];
+  if(parseInt(a.confirmStage, 10) >= 3){
+    if(!window.confirm('أُرسلت المراحل الثلاث لهذا العميل.\nإعادة إرسال الرسالة الحازمة؟')) return;
+  }
+
+  openAtwadWa(a.phone, buildConfirmMessage(a, stage));
+
+  if(!db) return;
+  var path = (a._source === 'bookings' ? 'bookings/' : 'appointments/') + a._fbKey;
+  db.ref(path).update({
+    confirmStage: stage,
+    confirmSentAt: new Date().toISOString()
+  }).then(function(){
+    showToast('📨 فُتحت الرسالة ' + st.label + ' (المرحلة ' + stage + ')');
+  }).catch(function(err){
+    console.error('confirmStage save:', err);
+    showToast('⚠️ فُتحت الرسالة لكن تعذّر تسجيل المرحلة: ' + (err && err.message ? err.message : err));
+  });
+}
+
+function confirmStageLabel(a){
+  var stage = parseInt(a && a.confirmStage, 10);
+  if(!isFinite(stage) || stage < 1) return 'طلب تأكيد (ودية)';
+  if(stage >= 3) return 'إعادة الحازمة';
+  var nx = CONFIRM_STAGES[stage + 1];
+  return 'طلب تأكيد (' + nx.label + ')';
+}
+
+function renderConfirmBadge(a){
+  var reply = apptConfirmationOf(a);
+  if(reply){
+    var when = '';
+    try { when = new Date(Number(reply.createdAt)).toLocaleString('ar-SA-u-ca-gregory',
+                  {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}); } catch(err){ when = ''; }
+    if(reply.choice === 'confirm'){
+      return '<span class="confirm-badge confirm-yes" title="' + atwadEsc(when) + '">✅ أكّد العميل' + (when ? ' · ' + atwadEsc(when) : '') + '</span>';
+    }
+    var note = reply.note ? ' — ' + atwadEsc(String(reply.note).slice(0,60)) : '';
+    return '<span class="confirm-badge confirm-change" title="' + atwadEsc(String(reply.note || '')) + '">🔁 طلب تغيير' + (when ? ' · ' + atwadEsc(when) : '') + note + '</span>';
+  }
+  var stage = parseInt(a && a.confirmStage, 10);
+  if(!isFinite(stage) || stage < 1) return '';
+  var sentWhen = '';
+  if(a.confirmSentAt){
+    try { sentWhen = new Date(a.confirmSentAt).toLocaleString('ar-SA-u-ca-gregory',
+                      {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}); } catch(err){ sentWhen = ''; }
+  }
+  var lbl = (CONFIRM_STAGES[stage] || {}).label || stage;
+  return '<span class="confirm-badge confirm-sent">📨 أُرسلت ' + atwadEsc(lbl) + ' · بانتظار الرد' + (sentWhen ? ' · ' + atwadEsc(sentWhen) : '') + '</span>';
 }
 
 function sendWhatsapp(id){
