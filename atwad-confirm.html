@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0C3B5E">
+<title>مؤسسة أطواد — تأكيد الموعد</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@400;500;600&family=Noto+Kufi+Arabic:wght@700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --deep:#0C3B5E; --ink:#10202C; --muted:#56626C; --soft:#66727D; --line:#E3E6E9; --field:#D6DADF;
+  --bg:#E9ECEF; --card:#FAFAF8; --tint:#EAF1F7; --sky-2:#9DBBD1;
+  --ok:#1F7A4B; --ok-bg:#EEF7F1; --ok-bd:#9FD3B5;
+  --warn:#8A4B14; --warn-bg:#FBF1E6; --warn-bd:#F0CFA8;
+  --err:#9B2C2C; --err-bg:#FBECEC; --err-bd:#F0B8B8; --wa:#1F8A55;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Readex Pro',sans-serif;font-size:15px;color:var(--ink);background:var(--bg);min-height:100vh;display:flex;justify-content:center;align-items:flex-start;padding:16px}
+.card{width:100%;max-width:460px;background:var(--card);border-radius:24px;overflow:hidden;box-shadow:0 2px 12px rgba(16,32,44,.08);margin:auto}
+.head{background:var(--deep);color:#fff;padding:22px 22px 26px;display:flex;flex-direction:column;gap:14px}
+.head-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.brand{font:800 20px 'Noto Kufi Arabic',sans-serif}
+.head-right{display:flex;align-items:center;gap:10px}
+.tag{font-size:12px;color:var(--sky-2)}
+.lang{height:30px;padding:0 10px;border:1px solid rgba(255,255,255,.3);background:transparent;color:#fff;border-radius:7px;cursor:pointer;font:500 12px 'IBM Plex Mono',monospace}
+h1{font:700 23px/1.4 'Noto Kufi Arabic',sans-serif}
+.sub{font-size:14px;color:#C7D9E7;line-height:1.7}
+.body{padding:22px;display:flex;flex-direction:column;gap:16px}
+.rows{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#fff}
+.row{display:flex;justify-content:space-between;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line);font-size:14px}
+.row:last-child{border-bottom:none}
+.row .k{color:var(--soft)}
+.row .v{color:var(--ink);font-weight:500;text-align:end}
+.row .v.big{font:600 16px 'Readex Pro',sans-serif;color:var(--deep)}
+.deadline{background:var(--warn-bg);border:1px solid var(--warn-bd);color:var(--warn);border-radius:12px;padding:13px 15px;font-size:13.5px;line-height:1.85}
+.deadline b{font-weight:600}
+.btn{width:100%;min-height:58px;border:0;border-radius:14px;font:500 17px 'Readex Pro',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;padding:10px 14px;line-height:1.5}
+.btn-ok{background:var(--ok);color:#fff}
+.btn-ok:hover{background:#1A6840}
+.btn-change{background:#fff;color:var(--ink);border:1px solid var(--field);min-height:52px;font-size:15px}
+.btn-change:hover{background:#F2F4F6}
+.btn-wa{background:var(--wa);color:#fff;display:none}
+.btn:disabled{background:#9AA4AD;color:#fff;cursor:not-allowed;border-color:#9AA4AD}
+.changeBox{display:none;flex-direction:column;gap:10px}
+.changeBox label{font-size:13.5px;color:var(--muted)}
+textarea{width:100%;min-height:92px;resize:vertical;border:1px solid var(--field);border-radius:12px;padding:12px 13px;font:400 15px 'Readex Pro',sans-serif;color:var(--ink);background:#fff}
+textarea:focus{outline:none;border-color:var(--deep)}
+.state{display:none;border-radius:12px;padding:15px 16px;font-size:14.5px;line-height:1.85}
+.state.ok{display:block;background:var(--ok-bg);border:1px solid var(--ok-bd);color:var(--ok)}
+.state.wait{display:block;background:var(--tint);border:1px solid #C5D8E8;color:var(--deep)}
+.state.err{display:block;background:var(--err-bg);border:1px solid var(--err-bd);color:var(--err)}
+.state b{font-weight:600}
+.tips{border-top:1px solid var(--line);padding-top:15px;font-size:13px;color:var(--soft);line-height:1.9}
+.foot{padding:14px 22px 20px;text-align:center;font-size:12px;color:var(--soft)}
+.hide{display:none !important}
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="head">
+    <div class="head-top">
+      <div class="head-right">
+        <span class="brand" id="brand">أطواد</span>
+        <span class="tag" id="tagline">صيانة المكيفات</span>
+      </div>
+      <button class="lang" id="langBtn" type="button" onclick="toggleLang()">EN</button>
+    </div>
+    <h1 id="title">تأكيد الموعد</h1>
+    <div class="sub" id="sub">اضغط زراً واحداً فقط، ويصلنا ردك فوراً.</div>
+  </div>
+
+  <div class="body">
+
+    <div id="badLink" class="state err hide"></div>
+
+    <div id="main">
+      <div class="rows" id="rows"></div>
+
+      <div class="deadline" id="deadlineBox" style="margin-top:16px;"></div>
+
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:16px;">
+        <button class="btn btn-ok" id="okBtn" type="button" onclick="submitChoice('confirm')"><span id="okLabel">✅ أؤكد الموعد</span></button>
+        <button class="btn btn-change" id="changeBtn" type="button" onclick="openChange()"><span id="changeLabel">🔁 أرجو تغيير الموعد</span></button>
+      </div>
+
+      <div class="changeBox" id="changeBox" style="margin-top:14px;">
+        <label id="noteLabel">اكتب الوقت الذي يناسبك (اختياري)</label>
+        <textarea id="note" maxlength="300"></textarea>
+        <button class="btn btn-ok" id="sendChangeBtn" type="button" onclick="submitChoice('change')"><span id="sendChangeLabel">إرسال طلب التغيير</span></button>
+      </div>
+
+      <div class="state" id="state" style="margin-top:16px;"></div>
+
+      <a class="btn btn-wa" id="waBtn" href="#" style="margin-top:12px;"><span id="waLabel">إرسال الرد عبر واتساب</span></a>
+
+      <div class="tips" id="tips" style="margin-top:16px;"></div>
+    </div>
+
+  </div>
+
+  <div class="foot" id="foot">مؤسسة أطواد لصيانة المكيفات</div>
+</div>
+
+<script>
+var BUSINESS_PHONE = '966509720382';
+var DB = 'https://atwad-booking-default-rtdb.firebaseio.com';
+
+var T = {
+  ar: {
+    other:'EN', dir:'rtl', htmlLang:'ar',
+    pageTitle:'مؤسسة أطواد — تأكيد الموعد',
+    brand:'أطواد', tagline:'صيانة المكيفات',
+    title:'تأكيد الموعد', sub:'اضغط زراً واحداً فقط، ويصلنا ردك فوراً.',
+    kName:'الاسم', kService:'الخدمة', kDate:'اليوم', kTime:'الفترة', kRef:'رقم الطلب',
+    okLabel:'✅ أؤكد الموعد', changeLabel:'🔁 أرجو تغيير الموعد',
+    noteLabel:'اكتب الوقت الذي يناسبك (اختياري)',
+    sendChangeLabel:'إرسال طلب التغيير',
+    waLabel:'إرسال الرد عبر واتساب',
+    sending:'جارٍ الإرسال…',
+    okDone:'<b>وصلنا تأكيدك.</b><br>الموعد مثبّت، وسيصلك الفني في الفترة المذكورة.',
+    changeDone:'<b>وصلنا طلبك.</b><br>سنتواصل معك لاختيار موعد جديد، والفترة الحالية لم تعد محجوزة لك.',
+    already:'<b>سبق أن أرسلت ردك على هذا الموعد.</b><br>لا حاجة لإرساله مرة أخرى. إن أردت تغييره تواصل معنا عبر واتساب.',
+    failed:'<b>تعذّر إرسال الرد.</b><br>تحقق من الاتصال وحاول مرة أخرى، أو أرسل ردك عبر واتساب بالزر بالأسفل.',
+    badLink:'<b>الرابط غير مكتمل.</b><br>يرجى فتح الرابط كما وصلك في الرسالة دون تعديل، أو التواصل معنا عبر واتساب.',
+    deadline:'يرجى التأكيد <b>{dl}</b>.<br>إن لم يصلنا ردك قبل ذلك، سنعتبر الموعد ملغى ونمنح الفترة لعميل آخر في قائمة الانتظار.',
+    tips:'تأكيدك يوفّر على الفني انتظاراً ورحلة قد لا تلزم، ويتيح لعميل آخر الاستفادة من الفترة إن لم تكن مناسبة لك.',
+    foot:'مؤسسة أطواد لصيانة المكيفات',
+    waConfirm:'أؤكد موعدي', waChange:'أرجو تغيير موعدي', waRef:'رقم الطلب'
+  },
+  en: {
+    other:'ع', dir:'ltr', htmlLang:'en',
+    pageTitle:'Atwad — Confirm appointment',
+    brand:'Atwad', tagline:'AC Maintenance',
+    title:'Confirm your appointment', sub:'One tap is all we need — your reply reaches us instantly.',
+    kName:'Name', kService:'Service', kDate:'Day', kTime:'Window', kRef:'Request no.',
+    okLabel:'✅ Confirm this appointment', changeLabel:'🔁 I need a different time',
+    noteLabel:'Tell us what time suits you (optional)',
+    sendChangeLabel:'Send change request',
+    waLabel:'Send reply on WhatsApp',
+    sending:'Sending…',
+    okDone:'<b>Your confirmation reached us.</b><br>The appointment is locked in and our technician will arrive within the window shown.',
+    changeDone:'<b>Your request reached us.</b><br>We will contact you to arrange a new time. The current window is no longer held for you.',
+    already:'<b>You have already replied for this appointment.</b><br>No need to send it again. To change your reply, message us on WhatsApp.',
+    failed:'<b>We could not send your reply.</b><br>Check your connection and try again, or send it on WhatsApp using the button below.',
+    badLink:'<b>This link is incomplete.</b><br>Please open the link exactly as you received it, or contact us on WhatsApp.',
+    deadline:'Please confirm <b>{dl}</b>.<br>Without a reply by then we will treat the appointment as cancelled and offer the window to another customer on the waiting list.',
+    tips:'Confirming saves the technician a journey that may not be needed, and frees the window for someone else if it no longer suits you.',
+    foot:'Atwad AC Maintenance Est.',
+    waConfirm:'I confirm my appointment', waChange:'I need to change my appointment', waRef:'Request no.'
+  }
+};
+
+var lang = 'ar';
+var P = {};
+var sent = false;
+var storeKey = '';
+
+function t(k){ return T[lang][k]; }
+function esc(v){
+  return String(v == null ? '' : v)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function qp(name){
+  var m = new RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
+  return m ? decodeURIComponent(m[1].replace(/\+/g,' ')) : '';
+}
+
+function readParams(){
+  var src = qp('s');
+  return {
+    key:      qp('k').trim(),
+    source:   (src === 'b' || src === 'bookings') ? 'bookings' : 'appointments',
+    ref:      qp('r').trim(),
+    date:     qp('d').trim(),
+    time:     qp('t').trim(),
+    service:  qp('v').trim(),
+    name:     qp('n').trim(),
+    deadline: qp('dl').trim()
+  };
+}
+
+var MONTHS_AR = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+var DAYS_AR   = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+var MONTHS_EN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+var DAYS_EN   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+function formatDay(iso){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return iso;
+  var d = new Date(iso + 'T12:00:00Z');
+  if(isNaN(d.getTime())) return iso;
+  if(lang === 'en') return DAYS_EN[d.getUTCDay()] + ' ' + d.getUTCDate() + ' ' + MONTHS_EN[d.getUTCMonth()] + ' ' + d.getUTCFullYear();
+  return DAYS_AR[d.getUTCDay()] + ' ' + d.getUTCDate() + ' ' + MONTHS_AR[d.getUTCMonth()] + ' ' + d.getUTCFullYear();
+}
+
+function defaultDeadline(){
+  return lang === 'en' ? 'by 9:00 AM on the day of the appointment' : 'قبل الساعة ٩:٠٠ صباح يوم الموعد';
+}
+
+function renderRows(){
+  var rows = [];
+  if(P.name)    rows.push(['kName', esc(P.name), false]);
+  if(P.service) rows.push(['kService', esc(P.service), false]);
+  if(P.date)    rows.push(['kDate', esc(formatDay(P.date)), true]);
+  if(P.time)    rows.push(['kTime', esc(P.time), true]);
+  if(P.ref)     rows.push(['kRef', esc(P.ref), false]);
+  document.getElementById('rows').innerHTML = rows.map(function(r){
+    return '<div class="row"><span class="k">' + t(r[0]) + '</span>' +
+           '<span class="v' + (r[2] ? ' big' : '') + '">' + r[1] + '</span></div>';
+  }).join('');
+}
+
+function setState(cls, html){
+  var el = document.getElementById('state');
+  el.className = 'state ' + cls;
+  el.innerHTML = html;
+}
+
+function buildWaLink(choice, note){
+  var lines = [];
+  lines.push(choice === 'confirm' ? t('waConfirm') : t('waChange'));
+  if(P.ref)  lines.push(t('waRef') + ': ' + P.ref);
+  if(P.date) lines.push(formatDay(P.date));
+  if(P.time) lines.push(P.time);
+  if(note)   lines.push(note);
+  return 'https://wa.me/' + BUSINESS_PHONE + '?text=' + encodeURIComponent(lines.join('\n'));
+}
+
+function showWaFallback(choice, note){
+  var wa = document.getElementById('waBtn');
+  wa.href = buildWaLink(choice, note);
+  wa.style.display = 'flex';
+}
+
+function lockButtons(disabled){
+  document.getElementById('okBtn').disabled = disabled;
+  document.getElementById('changeBtn').disabled = disabled;
+  document.getElementById('sendChangeBtn').disabled = disabled;
+}
+
+function openChange(){
+  document.getElementById('changeBox').style.display = 'flex';
+  document.getElementById('changeBtn').classList.add('hide');
+  document.getElementById('note').focus();
+}
+
+/** التخزين المحلي يمنع الإرسال المكرر، وقد يكون معطلاً في بعض المتصفحات */
+function markSent(choice){
+  try { window.localStorage.setItem(storeKey, choice); } catch(e) { /* لا شيء */ }
+}
+function previousChoice(){
+  try { return window.localStorage.getItem(storeKey) || ''; } catch(e) { return ''; }
+}
+
+function submitChoice(choice){
+  if(sent) return;
+  if(!P.key){ setState('err', t('badLink')); showWaFallback(choice, ''); return; }
+
+  var note = '';
+  if(choice === 'change'){
+    note = document.getElementById('note').value.trim();
+    if(note.length > 300) note = note.slice(0, 300);
+  }
+
+  sent = true;
+  lockButtons(true);
+  setState('wait', t('sending'));
+
+  var payload = {
+    apptKey:   P.key,
+    source:    P.source,
+    choice:    choice,
+    createdAt: Date.now()
+  };
+  if(P.ref)  payload.ref  = P.ref;
+  if(P.date) payload.date = P.date;
+  if(P.time) payload.time = P.time;
+  if(note)   payload.note = note;
+
+  fetch(DB + '/apptConfirmations.json', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(payload)
+  }).then(function(r){
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  }).then(function(){
+    markSent(choice);
+    document.getElementById('okBtn').classList.add('hide');
+    document.getElementById('changeBtn').classList.add('hide');
+    document.getElementById('changeBox').classList.add('hide');
+    setState('ok', choice === 'confirm' ? t('okDone') : t('changeDone'));
+  }).catch(function(){
+    sent = false;
+    lockButtons(false);
+    setState('err', t('failed'));
+    showWaFallback(choice, note);
+  });
+}
+
+function applyLang(){
+  var d = T[lang];
+  document.documentElement.lang = d.htmlLang;
+  document.documentElement.dir  = d.dir;
+  document.title = d.pageTitle;
+  document.getElementById('langBtn').textContent   = d.other;
+  document.getElementById('brand').textContent     = d.brand;
+  document.getElementById('tagline').textContent   = d.tagline;
+  document.getElementById('title').textContent     = d.title;
+  document.getElementById('sub').textContent       = d.sub;
+  document.getElementById('okLabel').textContent   = d.okLabel;
+  document.getElementById('changeLabel').textContent = d.changeLabel;
+  document.getElementById('noteLabel').textContent = d.noteLabel;
+  document.getElementById('sendChangeLabel').textContent = d.sendChangeLabel;
+  document.getElementById('waLabel').textContent   = d.waLabel;
+  document.getElementById('tips').textContent      = d.tips;
+  document.getElementById('foot').textContent      = d.foot;
+  document.getElementById('deadlineBox').innerHTML =
+    d.deadline.replace('{dl}', esc(P.deadline || defaultDeadline()));
+  renderRows();
+
+  var prev = previousChoice();
+  if(prev){
+    setState('ok', t('already'));
+  }
+  if(!P.key){
+    var bad = document.getElementById('badLink');
+    bad.classList.remove('hide');
+    bad.innerHTML = d.badLink;
+  }
+}
+
+function toggleLang(){
+  lang = (lang === 'ar') ? 'en' : 'ar';
+  try { window.localStorage.setItem('atwadConfirmLang', lang); } catch(e) { /* لا شيء */ }
+  applyLang();
+}
+
+P = readParams();
+storeKey = 'atwadConfirm:' + (P.key || 'none');
+try {
+  var savedLang = window.localStorage.getItem('atwadConfirmLang');
+  if(savedLang === 'en' || savedLang === 'ar') lang = savedLang;
+} catch(e) { /* لا شيء */ }
+
+if(previousChoice()){
+  document.getElementById('okBtn').classList.add('hide');
+  document.getElementById('changeBtn').classList.add('hide');
+  sent = true;
+}
+if(!P.key){
+  document.getElementById('okBtn').disabled = true;
+  document.getElementById('changeBtn').disabled = true;
+}
+applyLang();
+</script>
+</body>
+</html>
