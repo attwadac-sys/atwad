@@ -475,15 +475,22 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
         <div class="form-group"><label>نوع الخدمة <span class="req">*</span></label>
           <select id="f_service" onchange="onServiceOrUnitsChanged()">
             <option value="">-- اختر --</option>
-            <option>تنظيف مكيف</option><option>غسيل مكيفات</option>
+            <option>غسيل مكيفات</option><option>غسيل وصيانة</option>
+            <option>صيانة مكيف</option><option>تعبئة غاز</option>
+            <option>كشف تسرّب الفريون</option><option>كشف وإصلاح أعطال</option>
             <option>تنظيف الوحدة الخارجية</option><option>تنظيف الوحدة الداخلية</option>
-            <option>صيانة دورية</option><option>تعبئة غاز</option>
-            <option>كشف وإصلاح أعطال</option><option>تركيب مكيف جديد</option>
-            <option>باقة صيانة سنوية</option>
+            <option>تركيب مكيف</option>
             <option>إعادة فحص</option>
           </select>
         </div>
-        <div class="form-group"><label>عدد المكيفات</label><input type="number" id="f_units" value="1" min="1" max="30" onchange="onServiceOrUnitsChanged()"></div>
+        <div class="form-group" id="unitsGroup"><label>عدد المكيفات</label><input type="number" id="f_units" value="1" min="1" max="30" onchange="onServiceOrUnitsChanged()"></div>
+        <div class="form-group" id="splitUnitsGroup" style="display:none;">
+          <label>عدد مكيفات الغسيل / الصيانة</label>
+          <div style="display:flex;gap:8px;">
+            <input type="number" id="f_wash_units"  value="0" min="0" max="30" placeholder="غسيل"  title="عدد مكيفات الغسيل"  onchange="onServiceOrUnitsChanged()" style="flex:1;">
+            <input type="number" id="f_maint_units" value="0" min="0" max="30" placeholder="صيانة" title="عدد مكيفات الصيانة" onchange="onServiceOrUnitsChanged()" style="flex:1;">
+          </div>
+        </div>
       </div>
       <div class="form-row">
         <div class="form-group"><label>تاريخ الزيارة <span class="req">*</span></label><input type="date" id="f_date"></div>
@@ -1783,7 +1790,11 @@ function openNewApptForm(){
   // أحمد هو الفني التشغيلي الوحيد لجميع المواعيد الجديدة.
   document.getElementById('f_tech').value='Abrar';
   document.getElementById('f_status').value='pending';
+  clearLegacyServiceOptions();
   document.getElementById('f_units').value='1';
+  document.getElementById('f_wash_units').value='0';
+  document.getElementById('f_maint_units').value='0';
+  syncSplitUnitsVisibility();
   document.getElementById('f_date').value=today();
   document.getElementById('f_time').value='09:00';
   document.getElementById('f_duration').value=suggestDuration('',1);
@@ -1826,11 +1837,15 @@ function editAppt(id){
   document.getElementById('f_client').value=a.client||'';
   document.getElementById('f_phone').value=a.phone||'';
   document.getElementById('f_address').value=a.address||'';
+  ensureServiceOption(a.service);
   document.getElementById('f_service').value=a.service||'';
   // عند تعديل أي موعد يُثبّت الفني أحمد بدل أي إسناد قديم.
   document.getElementById('f_tech').value='Abrar';
   document.getElementById('f_status').value=a.status||'pending';
   document.getElementById('f_units').value=a.units||1;
+  document.getElementById('f_wash_units').value  = (a.washUnits  != null) ? a.washUnits  : 0;
+  document.getElementById('f_maint_units').value = (a.maintUnits != null) ? a.maintUnits : 0;
+  syncSplitUnitsVisibility();
   document.getElementById('f_date').value=a.date||today();
   document.getElementById('f_time').value=(atwadParseTime(a.time)!==null)
       ? atwadMinutesToBlock(atwadParseTime(a.time)).replace(/^(\d{2})(\d{2})$/,'$1:$2') : '09:00';
@@ -2292,9 +2307,44 @@ function resetLocFields() {
 function appointmentStartMinutes(time){ return atwadParseTime(time); }
 
 /** مدة مقترحة حسب الخدمة وعدد الوحدات — المسؤول يستطيع تعديلها */
-var SERVICE_UNIT_MINUTES = { 'تنظيف مكيف':30, 'غسيل مكيفات':30, 'صيانة دورية':45,
-  'تعبئة غاز':45, 'كشف وإصلاح أعطال':60, 'صيانة مكيف':60, 'تركيب مكيف جديد':90, 'تركيب مكيف':90,'إعادة فحص':30,
-  'تنظيف الوحدة الخارجية':15, 'تنظيف الوحدة الداخلية':20};
+/* المدد بالدقائق لكل وحدة. الأسماء القديمة (تنظيف مكيف، صيانة دورية، باقة صيانة
+   سنوية، تركيب مكيف جديد) حُذفت من القائمة لكنها تبقى هنا حتى تُحسب المواعيد
+   القديمة المحفوظة بها حساباً صحيحاً. */
+var SERVICE_UNIT_MINUTES = { 'غسيل مكيفات':30, 'صيانة مكيف':60, 'تعبئة غاز':45,
+  'كشف تسرّب الفريون':90, 'كشف وإصلاح أعطال':60, 'تركيب مكيف':90, 'إعادة فحص':30,
+  'تنظيف الوحدة الخارجية':15, 'تنظيف الوحدة الداخلية':20,
+  'تنظيف مكيف':30, 'صيانة دورية':45, 'باقة صيانة سنوية':45, 'تركيب مكيف جديد':90};
+
+/* خدمة الزيارة المختلطة: مكيفات تُغسل وأخرى تُصان في زيارة واحدة */
+var MIXED_SERVICE = 'غسيل وصيانة';
+
+/** شرائح سعر الغسيل — السعر للمكيف الواحد ينزل كلما زاد العدد */
+var WASH_PRICE_TIERS = {1:110, 2:90, 3:80, 4:70, 5:60};
+function washUnitPrice(units){
+  var u = parseInt(units,10);
+  if(!isFinite(u) || u < 1) return 0;
+  return WASH_PRICE_TIERS[u] || WASH_PRICE_TIERS[5];
+}
+function washTotalPrice(units){
+  var u = parseInt(units,10);
+  if(!isFinite(u) || u < 1) return 0;
+  return washUnitPrice(u) * u;
+}
+
+function readSplitUnits(){
+  var w = parseInt(document.getElementById('f_wash_units').value,10);
+  var m = parseInt(document.getElementById('f_maint_units').value,10);
+  if(!isFinite(w) || w < 0) w = 0;
+  if(!isFinite(m) || m < 0) m = 0;
+  return {wash:w, maint:m};
+}
+
+/** يُظهر حقلي الغسيل والصيانة للخدمة المختلطة فقط */
+function syncSplitUnitsVisibility(){
+  var mixed = document.getElementById('f_service').value === MIXED_SERVICE;
+  document.getElementById('splitUnitsGroup').style.display = mixed ? '' : 'none';
+  document.getElementById('unitsGroup').style.display      = mixed ? 'none' : '';
+}
 
 /** خدمات لها حد أدنى لعدد الوحدات — لا تُقبل أقل منه إلا باستثناء صريح من المؤسسة */
 var MIN_UNITS_SERVICES = { 'تنظيف الوحدة الخارجية':5, 'تنظيف الوحدة الداخلية':5 };
@@ -2338,6 +2388,42 @@ function suggestDuration(service,units){
   var total=Math.min(per*u,480);
   return Math.max(30,Math.round(total/30)*30);
 }
+
+/**
+ * يضيف اسم خدمة محفوظاً ليس في القائمة الحالية كخيار مؤقت، حتى لا تُفقد
+ * خدمة موعد قديم عند فتحه للتعديل. لا يُحفظ الخيار في أي مكان.
+ */
+function ensureServiceOption(service){
+  var name = String(service == null ? '' : service).trim();
+  if(!name) return;
+  var sel = document.getElementById('f_service');
+  if(!sel) return;
+  for(var i = 0; i < sel.options.length; i++){
+    if(sel.options[i].value === name) return;
+  }
+  var opt = document.createElement('option');
+  opt.value = name;
+  opt.textContent = name + ' (خدمة سابقة)';
+  opt.setAttribute('data-legacy','1');
+  sel.appendChild(opt);
+}
+
+/** يزيل الخيارات المؤقتة للأسماء القديمة عند تفريغ النموذج */
+function clearLegacyServiceOptions(){
+  var sel = document.getElementById('f_service');
+  if(!sel) return;
+  for(var i = sel.options.length - 1; i >= 0; i--){
+    if(sel.options[i].getAttribute('data-legacy') === '1') sel.remove(i);
+  }
+}
+
+/** مدة الزيارة المختلطة = مكيفات الغسيل × ٣٠ + مكيفات الصيانة × ٦٠ */
+function suggestMixedDuration(wash,maint){
+  var w=parseInt(wash,10);  if(!isFinite(w)||w<0) w=0;
+  var m=parseInt(maint,10); if(!isFinite(m)||m<0) m=0;
+  var total=Math.min(w*SERVICE_UNIT_MINUTES['غسيل مكيفات'] + m*SERVICE_UNIT_MINUTES['صيانة مكيف'], 480);
+  return Math.max(30,Math.round(total/30)*30);
+}
 function readManualDuration(){
   var v=parseInt(atwadLatinDigits(document.getElementById('f_duration').value),10);
   if(!isFinite(v)||v<30) v=30;
@@ -2355,9 +2441,15 @@ function updateApptEndPreview(){
            (end>=1440?'بعد منتصف الليل':atwadMinutesToBlock(end).replace(/^(\d{2})(\d{2})$/,'$1:$2'));
 }
 function onServiceOrUnitsChanged(){
+  syncSplitUnitsVisibility();
   var svc=document.getElementById('f_service').value;
-  var units=document.getElementById('f_units').value;
-  document.getElementById('f_duration').value=suggestDuration(svc,units);
+  if(svc === MIXED_SERVICE){
+    var sp=readSplitUnits();
+    document.getElementById('f_duration').value=suggestMixedDuration(sp.wash,sp.maint);
+  } else {
+    var units=document.getElementById('f_units').value;
+    document.getElementById('f_duration').value=suggestDuration(svc,units);
+  }
   updateApptEndPreview();
 }
 
@@ -2563,6 +2655,15 @@ function withSaveTimeout(promise, timeoutMs){
   });
 }
 
+/** العدد المحفوظ: مجموع الغسيل والصيانة في الزيارة المختلطة، وإلا الحقل العادي */
+function readUnitsForSave(){
+  if(document.getElementById('f_service').value === MIXED_SERVICE){
+    var sp = readSplitUnits();
+    return Math.max(1, sp.wash + sp.maint);
+  }
+  return parseInt(document.getElementById('f_units').value, 10) || 1;
+}
+
 function saveAppt(){
   if(manualSaveInProgress) return;
   const client=document.getElementById('f_client').value.trim();
@@ -2592,7 +2693,7 @@ function saveAppt(){
   const data = {
     client, phone, address, service, tech,
     status: document.getElementById('f_status').value,
-    units: parseInt(document.getElementById('f_units').value)||1,
+    units: readUnitsForSave(),
     date, time: document.getElementById('f_time').value,
     notes: document.getElementById('f_notes').value.trim(),
     leadSource: document.getElementById('f_source').value || '',
@@ -2602,6 +2703,20 @@ function saveAppt(){
     durationOverride: true,
     updatedAt: new Date().toISOString()
   };
+
+  if(data.service === MIXED_SERVICE){
+    var _split = readSplitUnits();
+    if(_split.wash < 1 || _split.maint < 1){
+      return showToast('❌ «غسيل وصيانة» تحتاج عدداً لكل من الغسيل والصيانة. إن كان أحدهما صفراً فاختاري الخدمة المفردة.');
+    }
+    data.washUnits  = _split.wash;
+    data.maintUnits = _split.maint;
+    data.washPrice  = washTotalPrice(_split.wash);
+  } else {
+    data.washUnits  = null;
+    data.maintUnits = null;
+    data.washPrice  = null;
+  }
 
   var minUnitsError = checkMinUnitsOrException(data);
   if(minUnitsError){
