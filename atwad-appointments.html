@@ -500,7 +500,11 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
             <option value="">-- اختر --</option>
             <option>غسيل مكيفات</option><option>غسيل وصيانة</option>
             <option>صيانة مكيف</option><option>تعبئة غاز</option>
-            <option>كشف تسرّب الفريون</option><option>كشف وإصلاح أعطال</option>
+            <option>الغسيل العميق</option>
+            <option>كشف تسرّب مبدئي</option>
+            <option>كشف تسرّب عميق — ضغط النيتروجين</option>
+            <option>كشف تسرّب عميق — قراءة النتيجة</option>
+            <option>كشف وإصلاح أعطال</option>
             <option>تنظيف الوحدة الخارجية</option><option>تنظيف الوحدة الداخلية</option>
             <option>تركيب مكيف</option>
             <option>إعادة فحص</option>
@@ -2409,10 +2413,21 @@ function appointmentStartMinutes(time){ return atwadParseTime(time); }
 /* المدد بالدقائق لكل وحدة. الأسماء القديمة (تنظيف مكيف، صيانة دورية، باقة صيانة
    سنوية، تركيب مكيف جديد) حُذفت من القائمة لكنها تبقى هنا حتى تُحسب المواعيد
    القديمة المحفوظة بها حساباً صحيحاً. */
-var SERVICE_UNIT_MINUTES = { 'غسيل مكيفات':30, 'صيانة مكيف':60, 'تعبئة غاز':45,
-  'كشف تسرّب الفريون':90, 'كشف وإصلاح أعطال':60, 'تركيب مكيف':90, 'إعادة فحص':30,
+var SERVICE_UNIT_MINUTES = { 'غسيل مكيفات':30, 'الغسيل العميق':90, 'صيانة مكيف':60, 'تعبئة غاز':45,
+  'كشف تسرّب مبدئي':30,
+  'كشف تسرّب عميق — ضغط النيتروجين':90, 'كشف تسرّب عميق — قراءة النتيجة':30,
+  'كشف وإصلاح أعطال':60, 'تركيب مكيف':90, 'إعادة فحص':30,
   'تنظيف الوحدة الخارجية':15, 'تنظيف الوحدة الداخلية':20,
-  'تنظيف مكيف':30, 'صيانة دورية':45, 'باقة صيانة سنوية':45, 'تركيب مكيف جديد':90};
+  'تنظيف مكيف':30, 'صيانة دورية':45, 'باقة صيانة سنوية':45, 'تركيب مكيف جديد':90,
+  'كشف تسرّب الفريون':30,
+  'كشف تسرّب الفريون — ضغط النيتروجين':90, 'كشف تسرّب الفريون — الكشف بعد ٤٨ ساعة':30};
+
+/* الكشف العميق زيارتان: ضغط النيتروجين للوحدة الداخلية والخارجية والمواسير،
+   ثم قراءة النتيجة بعد ٤٨ ساعة (٢٤ ساعة حدٌّ أدنى).
+   بعد حفظ الزيارة الأولى يعرض النظام فتح نموذج الثانية مُعبّأً. */
+var LEAK_VISIT_1 = 'كشف تسرّب عميق — ضغط النيتروجين';
+var LEAK_VISIT_2 = 'كشف تسرّب عميق — قراءة النتيجة';
+var LEAK_FOLLOWUP_DAYS = 2;
 
 /* خدمة الزيارة المختلطة: مكيفات تُغسل وأخرى تُصان في زيارة واحدة */
 var MIXED_SERVICE = 'غسيل وصيانة';
@@ -3046,6 +3061,7 @@ function saveAppt(){
         sendAdminNotification(data);
         closeModal();
         endManualSave();
+        offerLeakFollowUp(data);
       })
       .catch(function(e){
         endManualSave();
@@ -3058,6 +3074,36 @@ function saveAppt(){
         }
       });
   }
+}
+
+/**
+ * الكشف العميق زيارتان: بعد حفظ زيارة ضغط النيتروجين يُعرض فتح نموذج
+ * زيارة قراءة النتيجة بعد ٤٨ ساعة، مُعبّأً ببيانات العميل نفسه. لا يُنشأ موعد
+ * تلقائياً — تختار الإدارة الوقت وتمرّ بنفس التحققات والأقفال.
+ */
+function offerLeakFollowUp(data){
+  if(!data || String(data.service||'') !== LEAK_VISIT_1) return;
+  var followDate = shiftDay(String(data.date||today()), LEAK_FOLLOWUP_DAYS);
+  var ask = 'الكشف العميق زيارتان.\n\n' +
+            'زيارة قراءة النتيجة تكون بعد ٤٨ ساعة، أي يوم ' + formatDate(followDate) + '.\n' +
+            'أفتح نموذج الزيارة الثانية الآن ببيانات ' + (data.client || 'العميل') + '؟';
+  if(!window.confirm(ask)) return;
+
+  var note = 'قراءة النتيجة — بعد ضغط النيتروجين بتاريخ ' + String(data.date||'');
+  openNewAppt({
+    client:   data.client,
+    phone:    data.phone,
+    address:  data.address,
+    district: data.address,
+    service:  LEAK_VISIT_2,
+    date:     followDate,
+    time:     (atwadParseTime(data.time) !== null)
+                ? atwadMinutesToBlock(atwadParseTime(data.time)).replace(/^(\d{2})(\d{2})$/,'$1:$2')
+                : '09:00',
+    notes:    note,
+    mapsLink: data.mapsLink || '',
+    leadSource: data.leadSource || ''
+  });
 }
 
 // حفظ الموقع في ملف العميل
