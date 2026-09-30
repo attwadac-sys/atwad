@@ -291,18 +291,13 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
     <div class="service-grid">
       <div class="svc-card primary-service" id="sv1" onclick="showWashingOptions()"><div class="s-icon">💧❄️</div><div class="s-name">غسيل مكيفات</div><div class="s-price">متوفر الآن — اختر العدد والسعر</div></div>
       <div class="svc-card" id="sv2" onclick="selSvc('صيانة مكيف','AC Maintenance',100,'sv2')"><div class="s-icon">🛠️</div><div class="s-name">صيانة مكيف</div><div class="s-price">تبدأ من 100 ريال</div></div>
-      <div class="svc-card" id="sv8" onclick="selIndoor()"><div class="s-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 104" class="svc-svg" role="img" aria-label="الوحدة الداخلية"><defs><linearGradient id="idTop" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0C3B5E"/><stop offset="100%" stop-color="#0EA5E9"/></linearGradient><linearGradient id="idBody" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#e8f4fd"/><stop offset="100%" stop-color="#cde8f7"/></linearGradient></defs><rect x="6" y="16" width="128" height="40" rx="9" fill="url(#idBody)" stroke="#0EA5E9" stroke-width="2.5"/><path d="M6 25a9 9 0 0 1 9-9h110a9 9 0 0 1 9 9v6H6z" fill="url(#idTop)"/><rect x="24" y="36" width="92" height="3" rx="1.5" fill="#0C3B5E" opacity="0.22"/><rect x="24" y="43" width="92" height="3" rx="1.5" fill="#0C3B5E" opacity="0.22"/><rect x="24" y="50" width="92" height="3" rx="1.5" fill="#0C3B5E" opacity="0.22"/><circle cx="15" cy="46" r="2.4" fill="#0EA5E9" opacity="0.8"/><path d="M18 58q52 14 104 0" fill="none" stroke="#0EA5E9" stroke-width="2.5" opacity="0.55"/><path d="M44 70q5 6 0 9-5-3 0-9z" fill="#0EA5E9" opacity="0.85"/><path d="M70 76q5 6 0 9-5-3 0-9z" fill="#0EA5E9" opacity="0.65"/><path d="M96 70q5 6 0 9-5-3 0-9z" fill="#0EA5E9" opacity="0.85"/><path d="M70 62q4 5 0 7.5-4-2.5 0-7.5z" fill="#0EA5E9" opacity="0.9"/></svg></div><div class="s-name">تنظيف الوحدة الداخلية</div><div class="s-price">40 ريال للوحدة — 5 وحدات فأكثر</div></div>
-      <div class="svc-card" id="sv7" onclick="selOutdoor()"><div class="s-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 104" class="svc-svg" role="img" aria-label="الوحدة الخارجية"><defs><linearGradient id="odTop" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0C3B5E"/><stop offset="100%" stop-color="#0EA5E9"/></linearGradient><linearGradient id="odBody" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#e8f4fd"/><stop offset="100%" stop-color="#cde8f7"/></linearGradient></defs><rect x="8" y="12" width="104" height="72" rx="9" fill="url(#odBody)" stroke="#0EA5E9" stroke-width="2.5"/><path d="M8 21a9 9 0 0 1 9-9h86a9 9 0 0 1 9 9v5H8z" fill="url(#odTop)"/><circle cx="60" cy="53" r="23" fill="#f4fbff" stroke="#0C3B5E" stroke-width="2" opacity="0.9"/><circle cx="60" cy="53" r="17.5" fill="none" stroke="#0C3B5E" stroke-width="1.2" opacity="0.35"/><circle cx="60" cy="53" r="11" fill="none" stroke="#0C3B5E" stroke-width="1.2" opacity="0.35"/><path d="M60 42q7 6 0 11 -7-5 0-11z" fill="#0EA5E9" opacity="0.85"/><path d="M71 53q-6 7-11 0 5-7 11 0z" fill="#0EA5E9" opacity="0.85"/><path d="M60 64q-7-6 0-11 7 5 0 11z" fill="#0EA5E9" opacity="0.85"/><path d="M49 53q6-7 11 0-5 7-11 0z" fill="#0EA5E9" opacity="0.85"/><circle cx="60" cy="53" r="3.4" fill="#0C3B5E"/><rect x="14" y="34" width="8" height="38" rx="3" fill="#0C3B5E" opacity="0.18"/><rect x="98" y="34" width="8" height="38" rx="3" fill="#0C3B5E" opacity="0.18"/><rect x="20" y="84" width="12" height="8" rx="2.5" fill="#334155"/><rect x="88" y="84" width="12" height="8" rx="2.5" fill="#334155"/><path d="M36 94q4 5 0 7.5-4-2.5 0-7.5z" fill="#0EA5E9" opacity="0.8"/><path d="M60 96q4 5 0 7.5-4-2.5 0-7.5z" fill="#0EA5E9" opacity="0.55"/><path d="M84 94q4 5 0 7.5-4-2.5 0-7.5z" fill="#0EA5E9" opacity="0.8"/></svg></div><div class="s-name">تنظيف الوحدة الخارجية</div><div class="s-price">40 ريال للوحدة — 5 وحدات فأكثر</div></div>
+      <div class="svc-card" id="sv7" onclick="selUnitsClean()"><div class="s-icon" style="display:flex;align-items:center;justify-content:center;gap:8px;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 104" style="width:52px;height:auto;" role="img" aria-label="الوحدة الداخلية"><defs><linearGradient id="idTop" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0C3B5E"/><stop offset="100%" stop-color="#0EA5E9"/></linearGradient><linearGradient id="idBody" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#e8f4fd"/><stop offset="100%" stop-color="#cde8f7"/></linearGradient></defs><rect x="6" y="16" width="128" height="40" rx="9" fill="url(#idBody)" stroke="#0EA5E9" stroke-width="2.5"/><path d="M6 25a9 9 0 0 1 9-9h110a9 9 0 0 1 9 9v6H6z" fill="url(#idTop)"/><rect x="24" y="36" width="92" height="3" rx="1.5" fill="#0C3B5E" opacity="0.22"/><rect x="24" y="43" width="92" height="3" rx="1.5" fill="#0C3B5E" opacity="0.22"/><rect x="24" y="50" width="92" height="3" rx="1.5" fill="#0C3B5E" opacity="0.22"/><circle cx="15" cy="46" r="2.4" fill="#0EA5E9" opacity="0.8"/><path d="M18 58q52 14 104 0" fill="none" stroke="#0EA5E9" stroke-width="2.5" opacity="0.55"/><path d="M44 70q5 6 0 9-5-3 0-9z" fill="#0EA5E9" opacity="0.85"/><path d="M70 76q5 6 0 9-5-3 0-9z" fill="#0EA5E9" opacity="0.65"/><path d="M96 70q5 6 0 9-5-3 0-9z" fill="#0EA5E9" opacity="0.85"/><path d="M70 62q4 5 0 7.5-4-2.5 0-7.5z" fill="#0EA5E9" opacity="0.9"/></svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 104" style="width:46px;height:auto;" role="img" aria-label="الوحدة الخارجية"><defs><linearGradient id="odTop" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0C3B5E"/><stop offset="100%" stop-color="#0EA5E9"/></linearGradient><linearGradient id="odBody" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#e8f4fd"/><stop offset="100%" stop-color="#cde8f7"/></linearGradient></defs><rect x="8" y="12" width="104" height="72" rx="9" fill="url(#odBody)" stroke="#0EA5E9" stroke-width="2.5"/><path d="M8 21a9 9 0 0 1 9-9h86a9 9 0 0 1 9 9v5H8z" fill="url(#odTop)"/><circle cx="60" cy="53" r="23" fill="#f4fbff" stroke="#0C3B5E" stroke-width="2" opacity="0.9"/><circle cx="60" cy="53" r="17.5" fill="none" stroke="#0C3B5E" stroke-width="1.2" opacity="0.35"/><circle cx="60" cy="53" r="11" fill="none" stroke="#0C3B5E" stroke-width="1.2" opacity="0.35"/><path d="M60 42q7 6 0 11 -7-5 0-11z" fill="#0EA5E9" opacity="0.85"/><path d="M71 53q-6 7-11 0 5-7 11 0z" fill="#0EA5E9" opacity="0.85"/><path d="M60 64q-7-6 0-11 7 5 0 11z" fill="#0EA5E9" opacity="0.85"/><path d="M49 53q6-7 11 0-5 7-11 0z" fill="#0EA5E9" opacity="0.85"/><circle cx="60" cy="53" r="3.4" fill="#0C3B5E"/><rect x="14" y="34" width="8" height="38" rx="3" fill="#0C3B5E" opacity="0.18"/><rect x="98" y="34" width="8" height="38" rx="3" fill="#0C3B5E" opacity="0.18"/><rect x="20" y="84" width="12" height="8" rx="2.5" fill="#334155"/><rect x="88" y="84" width="12" height="8" rx="2.5" fill="#334155"/><path d="M36 94q4 5 0 7.5-4-2.5 0-7.5z" fill="#0EA5E9" opacity="0.8"/><path d="M60 96q4 5 0 7.5-4-2.5 0-7.5z" fill="#0EA5E9" opacity="0.55"/><path d="M84 94q4 5 0 7.5-4-2.5 0-7.5z" fill="#0EA5E9" opacity="0.8"/></svg></div><div class="s-name">تنظيف الوحدات الداخلية والخارجية</div><div class="s-price">40 ريال للوحدة — 5 وحدات فأكثر</div></div>
       <div class="svc-card" id="sv6" onclick="selRecheck()"><div class="s-icon">🔁</div><div class="s-name">إعادة فحص</div><div class="s-price">لعمل سابق نفّذناه</div></div>
       <div class="svc-card" id="sv9" onclick="selMixed()"><div class="s-icon">💧🛠️</div><div class="s-name">غسيل وصيانة</div><div class="s-price">مكيفات تُغسل وأخرى تُصان في زيارة واحدة</div></div>
       <div class="svc-card is-disabled" id="sv5" aria-disabled="true" title="غير متوفر الآن"><div class="s-icon">🔧</div><div class="s-name">تركيب مكيف</div><div class="s-price s-unavailable">غير متوفر الآن</div></div>
-      <div class="recheck-note" id="indoor-note" style="background:#EFF6FF;border-color:#BFDBFE;color:#1E40AF;">
-        <strong>❄️ تنظيف الوحدة الداخلية</strong><br>
-        40 ريال للوحدة — 5 وحدات فأكثر.
-      </div>
-      <div class="recheck-note" id="outdoor-note" style="background:#EFF6FF;border-color:#BFDBFE;color:#1E40AF;">
-        <strong>🌀 تنظيف الوحدة الخارجية</strong><br>
-        40 ريال للوحدة — 5 وحدات فأكثر.
+      <div class="recheck-note" id="units-note" style="background:#EFF6FF;border-color:#BFDBFE;color:#1E40AF;">
+        <strong>❄️🌀 تنظيف الوحدات الداخلية والخارجية</strong><br>
+        40 ريال للوحدة — 5 وحدات فأكثر. احسب كل وحدة تريد تنظيفها، داخلية كانت أو خارجية.
       </div>
       <div class="recheck-note" id="recheck-note">
         <strong>🔁 شروط إعادة الفحص</strong><br>
@@ -1561,27 +1556,25 @@ document.getElementById('f_date').min = todaySaudiDate();
 
 // ===== خانة العدد =====
 function changeUnits(dir){
-  var minUnits = largeCleaningSelection ? 9 : (S.serviceAr === OUTDOOR_SERVICE ? 5 : 1);
+  var minUnits = largeCleaningSelection ? 9 : (S.serviceAr === UNITS_SERVICE ? UNITS_MIN_UNITS : 1);
   var n=Math.max(minUnits,Math.min(30,S.units+dir));
   S.units=n;
   document.getElementById('units-display').textContent=n;
   if(S.isClean) S.price=n>=10?n*55:(n>=5?n*60:S.price);
-  if(S.serviceAr === OUTDOOR_SERVICE) S.price = n * OUTDOOR_UNIT_PRICE;
+  if(S.serviceAr === UNITS_SERVICE) S.price = n * UNITS_UNIT_PRICE;
   var note=document.getElementById('large-order-note');
   if(note) note.style.display=n>=10?'block':'none';
 }
 
 // ===== الخدمة =====
 function resetServiceCards(){
-  ['sv1','sv2','sv6','sv7','sv8','sv9'].forEach(function(id){
+  ['sv1','sv2','sv6','sv7','sv9'].forEach(function(id){
     var el=document.getElementById(id); if(el) el.className=id==='sv1'?'svc-card primary-service':'svc-card';
   });
   var rn=document.getElementById('recheck-note');
   if(rn) rn.className='recheck-note';
-  var on=document.getElementById('outdoor-note');
-  if(on) on.className='recheck-note';
-  var inn=document.getElementById('indoor-note');
-  if(inn) inn.className='recheck-note';
+  var un=document.getElementById('units-note');
+  if(un) un.className='recheck-note';
   var install=document.getElementById('sv5');
   if(install) install.className='svc-card is-disabled';
   var mb=document.getElementById('mixed-box');
@@ -1735,37 +1728,26 @@ function selMixed(){
   document.getElementById('e_svc').className = 'err-msg';
 }
 
+/* الداخلية والخارجية دُمجتا في خدمة واحدة: نفس السعر ونفس الحد الأدنى،
+   والعميل يعدّ الوحدات مجتمعة. غيّر السعر والحد هنا وفي نص البطاقة sv7. */
+var UNITS_SERVICE       = 'تنظيف الوحدات الداخلية والخارجية';
+var UNITS_UNIT_PRICE    = 40;
+var UNITS_MIN_UNITS     = 5;
+
+/* الاسمان القديمان يبقيان لقراءة الحجوزات المحفوظة قبل الدمج */
 var OUTDOOR_SERVICE     = 'تنظيف الوحدة الخارجية';
-var OUTDOOR_UNIT_PRICE  = 40;
-var OUTDOOR_MIN_UNITS   = 5;
-
 var INDOOR_SERVICE      = 'تنظيف الوحدة الداخلية';
-var INDOOR_UNIT_PRICE   = 40;   // غيّر السعر هنا وفي نص البطاقة sv8
-var INDOOR_MIN_UNITS    = 5;    // غيّر الحد الأدنى هنا وفي نص البطاقة sv8
 
-/** تنظيف الوحدة الخارجية: 40 ريال للوحدة، والحد الأدنى خمس وحدات */
-function selOutdoor(){
-  selSvc(OUTDOOR_SERVICE, 'Outdoor Unit Cleaning', OUTDOOR_UNIT_PRICE * OUTDOOR_MIN_UNITS, 'sv7');
-  S.units = OUTDOOR_MIN_UNITS;
-  S.price = OUTDOOR_UNIT_PRICE * OUTDOOR_MIN_UNITS;
+/** تنظيف الوحدات الداخلية والخارجية: 40 ريال للوحدة، والحد الأدنى خمس وحدات */
+function selUnitsClean(){
+  selSvc(UNITS_SERVICE, 'Unit Cleaning', UNITS_UNIT_PRICE * UNITS_MIN_UNITS, 'sv7');
+  S.units = UNITS_MIN_UNITS;
+  S.price = UNITS_UNIT_PRICE * UNITS_MIN_UNITS;
   var disp = document.getElementById('units-display');
-  if(disp) disp.textContent = String(OUTDOOR_MIN_UNITS);
+  if(disp) disp.textContent = String(UNITS_MIN_UNITS);
   var box = document.getElementById('units-box');
   if(box) box.className = 'units-box show';
-  var note = document.getElementById('outdoor-note');
-  if(note) note.className = 'recheck-note show';
-}
-
-/** تنظيف الوحدة الداخلية: 40 ريال للوحدة، والحد الأدنى خمس وحدات */
-function selIndoor(){
-  selSvc(INDOOR_SERVICE, 'Indoor Unit Cleaning', INDOOR_UNIT_PRICE * INDOOR_MIN_UNITS, 'sv8');
-  S.units = INDOOR_MIN_UNITS;
-  S.price = INDOOR_UNIT_PRICE * INDOOR_MIN_UNITS;
-  var disp = document.getElementById('units-display');
-  if(disp) disp.textContent = String(INDOOR_MIN_UNITS);
-  var box = document.getElementById('units-box');
-  if(box) box.className = 'units-box show';
-  var note = document.getElementById('indoor-note');
+  var note = document.getElementById('units-note');
   if(note) note.className = 'recheck-note show';
 }
 
@@ -1794,12 +1776,8 @@ function next1(){
       S.price = washTotalPrice(mixedUnits.wash);
     }
   }
-  if(ok && S.serviceAr === OUTDOOR_SERVICE && S.units < OUTDOOR_MIN_UNITS){
-    alert('الحد الأدنى لتنظيف الوحدات الخارجية هو ' + OUTDOOR_MIN_UNITS + ' وحدات.');
-    ok=false;
-  }
-  if(ok && S.serviceAr === INDOOR_SERVICE && S.units < INDOOR_MIN_UNITS){
-    alert('الحد الأدنى لتنظيف الوحدات الداخلية هو ' + INDOOR_MIN_UNITS + ' وحدات.');
+  if(ok && S.serviceAr === UNITS_SERVICE && S.units < UNITS_MIN_UNITS){
+    alert('الحد الأدنى لتنظيف الوحدات هو ' + UNITS_MIN_UNITS + ' وحدات، داخلية كانت أو خارجية.');
     ok=false;
   }
   if(ok) goStep(2);
@@ -2135,7 +2113,9 @@ function next2(){
 
 // ===== الموعد =====
 var FRIDAY_VAR=true;
-var DUR_MAP={'غسيل مكيفات':30,'صيانة مكيف':60,'تركيب مكيف':90,'إعادة فحص':30,'تنظيف الوحدة الخارجية':15,'تنظيف الوحدة الداخلية':20};
+var DUR_MAP={'غسيل مكيفات':30,'صيانة مكيف':60,'تركيب مكيف':90,'إعادة فحص':30,
+  'تنظيف الوحدات الداخلية والخارجية':20,
+  'تنظيف الوحدة الخارجية':15,'تنظيف الوحدة الداخلية':20};
 var SLOTS=[{t:'8:00 - 10:00',start:480,ar:'8-10 ص'},{t:'10:00 - 12:00',start:600,ar:'10-12 ص'},{t:'12:00 - 14:00',start:720,ar:'12-2 م'},{t:'14:00 - 16:00',start:840,ar:'2-4 م'},{t:'16:00 - 18:00',start:960,ar:'4-6 م'},{t:'18:00 - 20:00',start:1080,ar:'6-8 م'}];
 var SLOT_WINDOW_MINUTES=120;
 var slotCheckSeq=0;
