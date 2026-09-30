@@ -348,6 +348,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
       </div>
       <button type="button" onclick="logoutAdmin()" title="تسجيل الخروج" style="padding:7px 10px;border-radius:9px;border:1.5px solid #E2E8F0;background:#fff;color:#475569;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">خروج</button>
       <div class="view-toggle">
+        <button class="view-btn" id="vDay" onclick="switchView('day')">📅 يوم</button>
         <button class="view-btn" id="vWeek" onclick="switchView('week')">📆 أسبوع</button>
         <button class="view-btn active" id="vList" onclick="switchView('list')">📋 قائمة</button>
       </div>
@@ -388,6 +389,28 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
   <div id="weekView" style="display:none;padding:0 22px 30px;">
     <div class="week-grid" id="weekGrid"></div>
   </div>
+  <div id="dayBar" style="display:none;padding:0 22px 12px;">
+    <div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap;background:#fff;border-radius:12px;
+                padding:11px 14px;box-shadow:0 2px 8px rgba(12,59,94,.06);">
+      <button type="button" onclick="changeDay(-1)" title="اليوم السابق"
+              style="padding:9px 15px;border-radius:10px;border:1.5px solid var(--line);background:#fff;
+                     font-family:'Tajawal',sans-serif;font-size:15px;font-weight:800;color:var(--deep);cursor:pointer;">›</button>
+      <div style="flex:1;min-width:190px;text-align:center;">
+        <div id="dayLabel" style="font-size:15px;font-weight:800;color:var(--deep);">—</div>
+        <div id="daySummary" style="font-size:12px;color:var(--mist);margin-top:3px;">—</div>
+      </div>
+      <button type="button" onclick="changeDay(1)" title="اليوم التالي"
+              style="padding:9px 15px;border-radius:10px;border:1.5px solid var(--line);background:#fff;
+                     font-family:'Tajawal',sans-serif;font-size:15px;font-weight:800;color:var(--deep);cursor:pointer;">‹</button>
+      <input type="date" id="dayPicker" onchange="pickDay(this.value)"
+             style="font-family:'Tajawal',sans-serif;font-size:13px;padding:9px 10px;border:1.5px solid var(--line);
+                    border-radius:10px;background:var(--frost);color:var(--slate);cursor:pointer;">
+      <button type="button" onclick="goDayToday()"
+              style="padding:9px 14px;border-radius:10px;border:none;background:var(--deep);color:#fff;
+                     font-family:'Tajawal',sans-serif;font-size:13px;font-weight:800;cursor:pointer;">اليوم</button>
+    </div>
+  </div>
+
   <div id="searchBar" style="display:none;padding:0 22px 12px;">
     <div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap;background:#fff;border-radius:12px;
                 padding:11px 14px;box-shadow:0 2px 8px rgba(12,59,94,.06);">
@@ -830,6 +853,9 @@ if(auth) {
 let appointments = []; // كل البيانات من Firebase
 let currentWeekOffset = 0;
 let currentView = 'list';
+/* اليوم المعروض في العرض اليومي — فارغ يعني اليوم الحالي */
+var selectedDay = '';
+function currentDay(){ return selectedDay || today(); }
 let techFilter = 'all';
 let editingId = null;
 let editingFirebaseKey = null;
@@ -1514,6 +1540,12 @@ function renderList(){
   });
   if(techFilter!=='all') appts = appts.filter(a=>a.tech===techFilter);
 
+  // العرض اليومي: يوم واحد فقط، ويتجاهل مرشّح التاريخ ما عدا ذلك
+  if(currentView === 'day'){
+    var theDay = currentDay();
+    appts = appts.filter(function(a){ return String(a.date || '') === theDay; });
+  }
+
   var qEl = document.getElementById('apptSearch');
   var q = qEl ? qEl.value.trim().toLowerCase() : '';
   if(q){
@@ -1553,6 +1585,12 @@ function renderList(){
     if(cancelMode === 'cancelled' && !q){
       document.getElementById('listView').innerHTML =
         '<div style="text-align:center;padding:60px 20px;color:var(--mist);"><div style="font-size:48px;margin-bottom:12px;">✅</div><p style="font-size:15px;">لا توجد مواعيد ملغاة</p></div>';
+      return;
+    }
+    if(currentView === 'day' && !q){
+      document.getElementById('listView').innerHTML =
+        '<div style="text-align:center;padding:60px 20px;color:var(--mist);"><div style="font-size:48px;margin-bottom:12px;">☕</div><p style="font-size:15px;">لا مواعيد في ' + atwadEsc(formatDate(currentDay())) + '<br><small>استخدم السهمين للتنقل بين الأيام</small></p></div>';
+      updateDayBar([]);
       return;
     }
     document.getElementById('listView').innerHTML = q
@@ -1626,6 +1664,42 @@ function renderList(){
     html += '</div>';
   });
   document.getElementById('listView').innerHTML = html;
+  if(currentView === 'day') updateDayBar(appts);
+}
+
+/** ملخص اليوم: العدد، وقت أول موعد وآخره، ومجموع ساعات العمل */
+function updateDayBar(list){
+  var lblEl = document.getElementById('dayLabel');
+  var sumEl = document.getElementById('daySummary');
+  var pickEl = document.getElementById('dayPicker');
+  if(!lblEl || !sumEl) return;
+
+  var theDay = currentDay();
+  if(pickEl && pickEl.value !== theDay) pickEl.value = theDay;
+
+  var isToday = (theDay === today());
+  lblEl.innerHTML = atwadEsc(formatDate(theDay)) +
+    (isToday ? ' <span style="background:var(--sky);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;">اليوم</span>' : '');
+
+  var items = (list || []).filter(function(a){ return String(a.date||'') === theDay; });
+  if(!items.length){ sumEl.textContent = 'لا مواعيد'; return; }
+
+  var minutes = 0, first = null, last = null;
+  items.forEach(function(a){
+    var r = atwadRange(a);
+    if(!r) return;
+    minutes += (r.end - r.start);
+    if(first === null || r.start < first) first = r.start;
+    if(last === null || r.end > last) last = r.end;
+  });
+  function hhmm(m){ return atwadMinutesToBlock(m).replace(/^(\d{2})(\d{2})$/,'$1:$2'); }
+  var parts = [items.length + ' موعد'];
+  if(first !== null && last !== null) parts.push('من ' + hhmm(first) + ' إلى ' + hhmm(last));
+  if(minutes > 0){
+    var h = Math.floor(minutes/60), mm = minutes % 60;
+    parts.push('عمل ' + (h ? h + ' ساعة' : '') + (h && mm ? ' و' : '') + (mm ? mm + ' دقيقة' : ''));
+  }
+  sumEl.textContent = parts.join(' · ');
 }
 
 /** قائمة الخيارات الثانوية داخل بطاقة الموعد */
@@ -1669,13 +1743,38 @@ function renderTechnicianNotificationBadge(a) {
 // ===== SWITCH VIEW =====
 function switchView(v){
   currentView = v;
+  var isList = (v === 'list' || v === 'day');
+  document.getElementById('vDay').classList.toggle('active', v==='day');
   document.getElementById('vWeek').classList.toggle('active', v==='week');
   document.getElementById('vList').classList.toggle('active', v==='list');
   document.getElementById('weekView').style.display = v==='week'?'block':'none';
-  document.getElementById('listView').style.display = v==='list'?'block':'none';
+  document.getElementById('listView').style.display = isList?'block':'none';
   var sb = document.getElementById('searchBar');
-  if(sb) sb.style.display = v==='list'?'block':'none';
+  if(sb) sb.style.display = isList?'block':'none';
+  var db = document.getElementById('dayBar');
+  if(db) db.style.display = v==='day'?'block':'none';
   if(v==='week') renderWeek(); else renderList();
+}
+
+/** التنقل بين الأيام في العرض اليومي */
+function shiftDay(iso, days){
+  var d = new Date(iso + 'T12:00:00Z');
+  if(isNaN(d.getTime())) return iso;
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0,10);
+}
+function changeDay(dir){
+  selectedDay = shiftDay(currentDay(), dir);
+  renderList();
+}
+function pickDay(v){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(String(v||''))) return;
+  selectedDay = v;
+  renderList();
+}
+function goDayToday(){
+  selectedDay = '';
+  renderList();
 }
 function changeWeek(dir){ currentWeekOffset+=dir; renderWeek(); }
 function goToday(){ currentWeekOffset=0; renderWeek(); }
