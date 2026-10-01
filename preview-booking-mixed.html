@@ -81,6 +81,12 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
 .field input,.field select,.field textarea{width:100%;padding:10px 13px;border:1.5px solid #E2E8F0;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:14px;color:var(--slate);background:var(--frost);outline:none;transition:all .2s;}
 .field input:focus,.field select:focus{border-color:var(--sky);background:#fff;}
 .field input.err{border-color:var(--danger);}
+/* حقل التاريخ: المتصفح يرسم «يوم/شهر/سنة» بحروف مقلوبة داخل صفحة RTL
+   (خلل في فايرفوكس). إجباره على LTR يصحّح الرسم، والمحاذاة لليمين
+   تُبقيه منسجماً مع بقية الحقول العربية. */
+#f_date{direction:ltr;text-align:right;font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;}
+#f_date::-webkit-datetime-edit{direction:ltr;font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;}
+.date-hint{font-size:12px;color:var(--mist);margin-top:4px;line-height:1.6;}
 .err-msg{color:var(--danger);font-size:12px;margin-top:4px;display:none;}
 .err-msg.show{display:block;}
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
@@ -634,6 +640,7 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
     <div class="field">
       <label>تاريخ الزيارة <span class="req">*</span></label>
       <input type="date" id="f_date" onchange="checkDateAndSlots(this.value)">
+      <div class="date-hint">اضغط على أيقونة التقويم 📅 واختر اليوم. نعمل من السبت إلى الخميس.</div>
       <div class="friday-closed" id="fridayClosed">
         <div class="icon">⛔</div>
         <p>الجمعة خارج أيام العمل<br>اختر يوماً آخر، أو اطلب موافقة استثنائية</p>
