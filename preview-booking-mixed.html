@@ -84,9 +84,21 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
 /* حقل التاريخ: المتصفح يرسم «يوم/شهر/سنة» بحروف مقلوبة داخل صفحة RTL
    (خلل في فايرفوكس). إجباره على LTR يصحّح الرسم، والمحاذاة لليمين
    تُبقيه منسجماً مع بقية الحقول العربية. */
-#f_date{direction:ltr;text-align:right;font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;}
-#f_date::-webkit-datetime-edit{direction:ltr;font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;}
+/* حقل التاريخ الأصلي مخفي: المتصفح يرسم نصّه العربي بحروف معكوسة.
+   يبقى في الصفحة حاملاً للقيمة فقط، والعميل يختار من شرائط الأيام. */
+#f_date{display:none;}
 .date-hint{font-size:12px;color:var(--mist);margin-top:4px;line-height:1.6;}
+.day-chips{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 8px;scrollbar-width:thin;-webkit-overflow-scrolling:touch;}
+.day-chip{flex:0 0 70px;height:82px;border-radius:12px;border:1.5px solid #E2E8F0;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;color:var(--slate);padding:0;font-family:'Tajawal',sans-serif;transition:all .15s;}
+.day-chip:hover{border-color:var(--sky);}
+.day-chip .dw{font-size:12px;color:var(--mist);font-weight:600;}
+.day-chip .dn{font-size:22px;font-weight:800;color:var(--deep);}
+.day-chip .dm{font-size:10px;color:var(--mist);}
+.day-chip.fri{background:#F8FAFC;border-style:dashed;}
+.day-chip.fri .dn,.day-chip.fri .dw{color:#CBD5E1;}
+.day-chip.on{background:var(--deep);border-color:var(--deep);}
+.day-chip.on .dn{color:#fff;}
+.day-chip.on .dw,.day-chip.on .dm{color:#BAE6FD;}
 .err-msg{color:var(--danger);font-size:12px;margin-top:4px;display:none;}
 .err-msg.show{display:block;}
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
@@ -640,7 +652,8 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
     <div class="field">
       <label>تاريخ الزيارة <span class="req">*</span></label>
       <input type="date" id="f_date" onchange="checkDateAndSlots(this.value)">
-      <div class="date-hint">اضغط على أيقونة التقويم 📅 واختر اليوم. نعمل من السبت إلى الخميس.</div>
+      <div class="day-chips" id="dayChips" aria-label="اختر اليوم"></div>
+      <div class="date-hint">اسحب لرؤية أيام أكثر. الجمعة خارج أيام العمل.</div>
       <div class="friday-closed" id="fridayClosed">
         <div class="icon">⛔</div>
         <p>الجمعة خارج أيام العمل<br>اختر يوماً آخر، أو اطلب موافقة استثنائية</p>
@@ -2995,6 +3008,70 @@ function toggleLang(){
   LANG=LANG==='ar'?'en':'ar';
   document.querySelector('.lang-btn').textContent=LANG==='ar'?'🌐 EN':'🌐 عر';
 }
+
+/* ============================================================
+   شرائط الأيام — بديل حقل التاريخ الأصلي.
+   المتصفح كان يرسم «يوم/شهر/سنة» بحروف معكوسة داخل الصفحة العربية،
+   فاستُبدل العنصر بأزرار ترسمها الصفحة نفسها. تضع الزرُّ القيمةَ في
+   #f_date وتستدعي checkDateAndSlots نفسها، فلا يتغيّر أي منطق آخر.
+   ============================================================ */
+(function(){
+  var DOW  = ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+  var MON  = ['يناير','فبراير','مارس','أبريل','مايو','يونيو',
+              'يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  var DAYS = 21;
+
+  function addDays(iso, n){
+    var d = new Date(iso + 'T12:00:00Z');
+    d.setUTCDate(d.getUTCDate() + n);
+    return d.toISOString().slice(0,10);
+  }
+
+  function renderDayChips(){
+    var box = document.getElementById('dayChips');
+    var input = document.getElementById('f_date');
+    if(!box || !input) return;
+    var start = (typeof todaySaudiDate === 'function')
+                  ? todaySaudiDate() : new Date().toISOString().slice(0,10);
+    var html = '';
+    for(var i = 0; i < DAYS; i++){
+      var iso = addDays(start, i);
+      var d   = new Date(iso + 'T12:00:00Z');
+      var wd  = d.getUTCDay();
+      /* الجمعة تُسمّى باسمها دائماً، حتى لو كانت اليوم أو غداً،
+         وإلا رأى العميل «غداً» فضغطها دون أن يدري أنها مغلقة. */
+      var lbl = (wd === 5) ? 'الجمعة'
+              : (i === 0) ? 'اليوم'
+              : (i === 1) ? 'غداً' : DOW[wd];
+      html += '<button type="button" class="day-chip' +
+              (wd === 5 ? ' fri' : '') +
+              (input.value === iso ? ' on' : '') +
+              '" data-d="' + iso + '">' +
+              '<span class="dw">' + lbl + '</span>' +
+              '<span class="dn">' + d.getUTCDate() + '</span>' +
+              '<span class="dm">' + MON[d.getUTCMonth()] + '</span></button>';
+    }
+    box.innerHTML = html;
+  }
+  window.renderDayChips = renderDayChips;
+
+  document.addEventListener('click', function(e){
+    var b = e.target && e.target.closest && e.target.closest('.day-chip');
+    if(!b) return;
+    var input = document.getElementById('f_date');
+    if(!input) return;
+    input.value = b.getAttribute('data-d');
+    var all = document.querySelectorAll('.day-chip');
+    for(var i = 0; i < all.length; i++) all[i].classList.toggle('on', all[i] === b);
+    if(typeof checkDateAndSlots === 'function') checkDateAndSlots(input.value);
+  });
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', renderDayChips);
+  } else {
+    renderDayChips();
+  }
+})();
 </script>
 </body>
 </html>
