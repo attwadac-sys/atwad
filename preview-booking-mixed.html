@@ -310,10 +310,28 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
       <div class="svc-card primary-service" id="sv1" onclick="showWashingOptions()"><div class="s-icon">💧❄️</div><div class="s-name">غسيل مكيفات</div><div class="s-price">المكيف كاملاً: الوحدة الداخلية والخارجية معاً — اختر العدد والسعر</div></div>
       <div class="svc-card" id="sv2" onclick="selMaint()"><div class="s-icon">🛠️</div><div class="s-name">صيانة مكيف</div><div class="s-price">الكشف 100 ريال، و50 لكل مكيف إضافي — تُحتسب من تكلفة الإصلاح</div></div>
       <div class="svc-card" id="sv3" onclick="selGas()"><div class="s-icon">❄️🧪</div><div class="s-name">تعبئة غاز الفريون</div><div class="s-price">تبدأ من 190 ريال للمكيف — حسب الكمية المعبّأة</div></div>
+      <div class="svc-card" id="sv10" onclick="selDeepWash()"><div class="s-icon">💎❄️</div><div class="s-name">الغسيل العميق</div><div class="s-price">فكّ الوحدة الداخلية بالكامل — 250 ريال للوحدة</div></div>
+      <div class="svc-card" id="sv11" onclick="selLeak()"><div class="s-icon">🔍❄️</div><div class="s-name">كشف تسرّب الفريون</div><div class="s-price">الكشف المبدئي 100 ريال — تُحتسب إن احتاج كشفاً أعمق</div></div>
       <div class="svc-card" id="sv7" onclick="selUnitsClean()"><div class="s-icon" style="display:flex;align-items:center;justify-content:center;gap:8px;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 104" style="width:52px;height:auto;" role="img" aria-label="الوحدة الداخلية"><defs><linearGradient id="idTop" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0C3B5E"/><stop offset="100%" stop-color="#0EA5E9"/></linearGradient><linearGradient id="idBody" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#e8f4fd"/><stop offset="100%" stop-color="#cde8f7"/></linearGradient></defs><rect x="6" y="16" width="128" height="40" rx="9" fill="url(#idBody)" stroke="#0EA5E9" stroke-width="2.5"/><path d="M6 25a9 9 0 0 1 9-9h110a9 9 0 0 1 9 9v6H6z" fill="url(#idTop)"/><rect x="24" y="36" width="92" height="3" rx="1.5" fill="#0C3B5E" opacity="0.22"/><rect x="24" y="43" width="92" height="3" rx="1.5" fill="#0C3B5E" opacity="0.22"/><rect x="24" y="50" width="92" height="3" rx="1.5" fill="#0C3B5E" opacity="0.22"/><circle cx="15" cy="46" r="2.4" fill="#0EA5E9" opacity="0.8"/><path d="M18 58q52 14 104 0" fill="none" stroke="#0EA5E9" stroke-width="2.5" opacity="0.55"/><path d="M44 70q5 6 0 9-5-3 0-9z" fill="#0EA5E9" opacity="0.85"/><path d="M70 76q5 6 0 9-5-3 0-9z" fill="#0EA5E9" opacity="0.65"/><path d="M96 70q5 6 0 9-5-3 0-9z" fill="#0EA5E9" opacity="0.85"/><path d="M70 62q4 5 0 7.5-4-2.5 0-7.5z" fill="#0EA5E9" opacity="0.9"/></svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 104" style="width:46px;height:auto;" role="img" aria-label="الوحدة الخارجية"><defs><linearGradient id="odTop" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0C3B5E"/><stop offset="100%" stop-color="#0EA5E9"/></linearGradient><linearGradient id="odBody" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#e8f4fd"/><stop offset="100%" stop-color="#cde8f7"/></linearGradient></defs><rect x="8" y="12" width="104" height="72" rx="9" fill="url(#odBody)" stroke="#0EA5E9" stroke-width="2.5"/><path d="M8 21a9 9 0 0 1 9-9h86a9 9 0 0 1 9 9v5H8z" fill="url(#odTop)"/><circle cx="60" cy="53" r="23" fill="#f4fbff" stroke="#0C3B5E" stroke-width="2" opacity="0.9"/><circle cx="60" cy="53" r="17.5" fill="none" stroke="#0C3B5E" stroke-width="1.2" opacity="0.35"/><circle cx="60" cy="53" r="11" fill="none" stroke="#0C3B5E" stroke-width="1.2" opacity="0.35"/><path d="M60 42q7 6 0 11 -7-5 0-11z" fill="#0EA5E9" opacity="0.85"/><path d="M71 53q-6 7-11 0 5-7 11 0z" fill="#0EA5E9" opacity="0.85"/><path d="M60 64q-7-6 0-11 7 5 0 11z" fill="#0EA5E9" opacity="0.85"/><path d="M49 53q6-7 11 0-5 7-11 0z" fill="#0EA5E9" opacity="0.85"/><circle cx="60" cy="53" r="3.4" fill="#0C3B5E"/><rect x="14" y="34" width="8" height="38" rx="3" fill="#0C3B5E" opacity="0.18"/><rect x="98" y="34" width="8" height="38" rx="3" fill="#0C3B5E" opacity="0.18"/><rect x="20" y="84" width="12" height="8" rx="2.5" fill="#334155"/><rect x="88" y="84" width="12" height="8" rx="2.5" fill="#334155"/><path d="M36 94q4 5 0 7.5-4-2.5 0-7.5z" fill="#0EA5E9" opacity="0.8"/><path d="M60 96q4 5 0 7.5-4-2.5 0-7.5z" fill="#0EA5E9" opacity="0.55"/><path d="M84 94q4 5 0 7.5-4-2.5 0-7.5z" fill="#0EA5E9" opacity="0.8"/></svg></div><div class="s-name">تنظيف الوحدات الداخلية أو الخارجية</div><div class="s-price">40 ريال للوحدة — 5 وحدات فأكثر</div></div>
       <div class="svc-card" id="sv6" onclick="selRecheck()"><div class="s-icon">🔁</div><div class="s-name">إعادة فحص</div><div class="s-price">لعمل سابق نفّذناه</div></div>
       <div class="svc-card" id="sv9" onclick="selMixed()"><div class="s-icon">💧🛠️</div><div class="s-name">غسيل وصيانة</div><div class="s-price">مكيفات تُغسل وأخرى تُصان في زيارة واحدة</div></div>
       <div class="svc-card is-disabled" id="sv5" aria-disabled="true" title="غير متوفر الآن"><div class="s-icon">🔧</div><div class="s-name">تركيب مكيف</div><div class="s-price s-unavailable">غير متوفر الآن</div></div>
+      <div class="recheck-note" id="deep-note" style="background:#FBF4DF;border-color:#EBD48A;color:#6B5310;">
+        <strong>💎 ما هو الغسيل العميق؟</strong><br>
+        الغسيل العادي يُغسل المكيف وهو معلّق على الجدار. أمّا العميق فنُنزل الوحدة الداخلية ونفكّها بالكامل،
+        ونُخرج ملف التبريد ومروحة الدفع ونغسل كل قطعة على حدة بمادة متخصصة، ثم نعيد التركيب.<br>
+        <strong>250 ريال للوحدة، و200 للوحدة عند غسل أكثر من وحدة.</strong> الزيارة نحو ساعة ونصف للوحدة.<br>
+        متى تحتاجه: رائحة عند التشغيل، تنقيط ماء، ضعف تبريد رغم الغسيل المعتاد، أو مضى سنتان دون فكّ.
+        <div id="deep-fee-line" style="margin-top:8px;font-weight:800;"></div>
+      </div>
+      <div class="recheck-note" id="leak-note" style="background:#EFF6FF;border-color:#BFDBFE;color:#1E40AF;">
+        <strong>🔍 كيف يتم كشف التسرّب</strong><br>
+        نبدأ بـ<strong>كشف مبدئي — 100 ريال</strong>: فحص نظري لأجزاء الوحدة الداخلية والخارجية، نحو نصف ساعة.<br>
+        فإن لم يظهر موضع التسرّب، نعرض عليك <strong>الكشف العميق — 250 ريال</strong>: نفصل الوحدة الداخلية
+        والخارجية ومواسير النحاس ونضغط الأجزاء الثلاثة بغاز النيتروجين، ثم نعود بعد 48 ساعة لقراءة الضغط
+        وتحديد موضع التسرّب بالضبط — فلا يُستبدل جزء سليم.<br>
+        <strong>الـ 100 ريال تُحتسب من الـ 250</strong> إن احتجتَ الكشف العميق. ونرتّب معك زيارتيه بعد المبدئي.
+      </div>
       <div class="recheck-note" id="gas-note" style="background:#EFF6FF;border-color:#BFDBFE;color:#1E40AF;">
         <strong>❄️🧪 تعبئة غاز الفريون</strong><br>
         السعر يبدأ من <strong>190 ريالاً للمكيف</strong>، ويُحدَّد نهائياً حسب كمية الغاز التي يحتاجها المكيف،
@@ -559,7 +577,15 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
 
         <div class="recheck-note" id="districtOtherNote" style="background:#EFF6FF;border-color:#BFDBFE;color:#1E40AF;">
           <strong>ℹ️ حي خارج القائمة</strong><br>
-          سنراجع موقعك قبل تثبيت الموعد، وقد نتواصل معك إن كان خارج نطاق الخدمة.
+          نخدم الأحياء الواقعة شمال شارع الأمير محمد بن عبدالعزيز (التحلية سابقاً).
+          الحجز الإلكتروني من هذه الأحياء متاح للطلبات من <strong>5 مكيفات فأكثر</strong>،
+          ولما دونها راسلنا على واتساب ونرتّب لك.
+        </div>
+        <div class="friday-closed" id="otherNorthMinBox" style="display:none;">
+          <div class="icon">📦</div>
+          <p>حجز هذا الحي إلكترونياً يبدأ من <strong>5 مكيفات</strong><br>طلبك الحالي أقل من ذلك</p>
+          <button type="button" class="friday-wa" onclick="requestOtherNorthApproval()">📲 راسلنا لترتيب الزيارة</button>
+          <span class="friday-hint">نردّ عليك بالقبول أو نقترح موعداً يجمع طلبك مع زيارة قريبة</span>
         </div>
       </div>
 
@@ -680,6 +706,7 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
     <div class="sum-box" id="sumBox"></div>
     <div class="total-box"><span class="t-lbl">السعر التقديري</span><span class="t-price" id="totalPr">--</span></div>
     <div style="background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:10px;padding:10px 14px;font-size:12px;color:#92400E;margin-bottom:12px;">ℹ️ السعر تقديري، يُحدد النهائي بعد معاينة الفني. لا تشمل قطع الغيار.</div>
+    <div style="background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:10px;padding:10px 14px;font-size:12px;color:#1E40AF;margin-bottom:12px;line-height:1.8;">🕐 الفترة محجوزة لك بالكامل، ويصل الفني في أي وقت خلالها. مدة العمل نفسها أقصر، وهي المذكورة أعلاه.</div>
     <!-- سياسة الكشف -->
     <div class="inspection-info" id="inspection-info">
       <strong>🔍 سياسة رسوم الكشف:</strong><br>
@@ -1598,20 +1625,24 @@ document.getElementById('f_date').min = todaySaudiDate();
 // ===== خانة العدد =====
 function changeUnits(dir){
   var minUnits = largeCleaningSelection ? 9 : (S.serviceAr === UNITS_SERVICE ? UNITS_MIN_UNITS : 1);
-  var n=Math.max(minUnits,Math.min(30,S.units+dir));
+  /* الغسيل العميق ساعة ونصف للوحدة — وحدتان تملآن أطول فترة متاحة */
+  var maxUnits = (S.serviceAr === DEEP_SERVICE) ? DEEP_MAX_UNITS : 30;
+  var n=Math.max(minUnits,Math.min(maxUnits,S.units+dir));
   S.units=n;
   document.getElementById('units-display').textContent=n;
   if(S.isClean) S.price=n>=10?n*55:(n>=5?n*60:S.price);
   if(S.serviceAr === UNITS_SERVICE) S.price = n * UNITS_UNIT_PRICE;
   if(S.serviceAr === MAINT_SERVICE){ S.price = maintFee(n); showMaintFee(); }
   if(S.serviceAr === GAS_SERVICE){ S.price = GAS_MIN_PRICE * n; showGasFee(); }
+  if(S.serviceAr === DEEP_SERVICE){ S.price = deepWashPrice(n); showDeepFee(); }
+  if(S.serviceAr === LEAK_SERVICE){ S.price = LEAK_PRICE * n; }
   var note=document.getElementById('large-order-note');
   if(note) note.style.display=n>=10?'block':'none';
 }
 
 // ===== الخدمة =====
 function resetServiceCards(){
-  ['sv1','sv2','sv3','sv6','sv7','sv9'].forEach(function(id){
+  ['sv1','sv2','sv3','sv6','sv7','sv9','sv10','sv11'].forEach(function(id){
     var el=document.getElementById(id); if(el) el.className=id==='sv1'?'svc-card primary-service':'svc-card';
   });
   var rn=document.getElementById('recheck-note');
@@ -1626,6 +1657,12 @@ function resetServiceCards(){
   if(gn) gn.className='recheck-note';
   var gf=document.getElementById('gas-fee-line');
   if(gf) gf.textContent='';
+  var dn=document.getElementById('deep-note');
+  if(dn) dn.className='recheck-note';
+  var df=document.getElementById('deep-fee-line');
+  if(df) df.textContent='';
+  var ln=document.getElementById('leak-note');
+  if(ln) ln.className='recheck-note';
   var install=document.getElementById('sv5');
   if(install) install.className='svc-card is-disabled';
   var mb=document.getElementById('mixed-box');
@@ -1837,6 +1874,65 @@ function selGas(){
   var note = document.getElementById('gas-note');
   if(note) note.className = 'recheck-note show';
   showGasFee();
+}
+
+/* الغسيل العميق: 250 للوحدة الواحدة، و200 للوحدة عند أكثر من وحدة.
+   الزيارة 90 دقيقة للوحدة، وسقف الحجز الإلكتروني وحدتان (3 ساعات)؛
+   ما زاد يُرتَّب هاتفياً حتى لا يُحجز نصف يوم بفترة لا تتسع له. */
+var DEEP_SERVICE   = 'الغسيل العميق';
+var DEEP_FIRST     = 250;
+var DEEP_EXTRA     = 200;
+var DEEP_MAX_UNITS = 2;
+function deepWashPrice(units){
+  var u = parseInt(units,10);
+  if(!isFinite(u) || u < 1) u = 1;
+  return (u === 1) ? DEEP_FIRST : u * DEEP_EXTRA;
+}
+function showDeepFee(){
+  var el = document.getElementById('deep-fee-line');
+  if(!el) return;
+  if(S.serviceAr !== DEEP_SERVICE){ el.textContent = ''; return; }
+  var u = S.units || 1;
+  el.textContent = acCount(u) + ': ' + deepWashPrice(u) + ' ريال.' +
+    (u >= DEEP_MAX_UNITS ? ' لأكثر من وحدتين راسلنا على واتساب لنرتّب الزيارة.' : '');
+}
+function selDeepWash(){
+  selSvc(DEEP_SERVICE, 'Deep Cleaning', deepWashPrice(1), 'sv10');
+  var note = document.getElementById('deep-note');
+  if(note) note.className = 'recheck-note show';
+  showDeepFee();
+}
+
+/* كشف تسرّب الفريون: يحجز العميل المبدئي فقط (100 ريال، نصف ساعة).
+   الكشف العميق وزيارتاه تُرتَّب من لوحة المواعيد بعد نتيجة المبدئي. */
+var LEAK_SERVICE = 'كشف تسرّب مبدئي';
+var LEAK_PRICE   = 100;
+function selLeak(){
+  selSvc(LEAK_SERVICE, 'Leak Detection', LEAK_PRICE, 'sv11');
+  var note = document.getElementById('leak-note');
+  if(note) note.className = 'recheck-note show';
+}
+
+/* أحياء شمال جدة غير المدرجة في القائمة: الحجز الإلكتروني من 5 مكيفات فأكثر */
+var OTHER_NORTH_MIN_UNITS = 5;
+
+/** عدد المكيفات المعتمد في فحص نطاق الخدمة — يشمل الزيارة المختلطة */
+function unitsForAreaCheck(){
+  if(S.serviceAr === MIXED_SERVICE) return (mixedUnits.wash||0) + (mixedUnits.maint||0);
+  return parseInt(S.units,10) || 1;
+}
+
+/** يفتح واتساب بطلب جاهز لحي خارج القائمة بعدد أقل من الحد الأدنى */
+function requestOtherNorthApproval(){
+  var typed = (document.getElementById('f_district_other')||{}).value || '';
+  var lines = [
+    'السلام عليكم',
+    'أرغب في حجز خدمة، وحيّي خارج قائمة الأحياء في صفحة الحجز.',
+    'الحي: ' + (typed.trim() || '—'),
+    'الخدمة: ' + (S.service || '—'),
+    'عدد المكيفات: ' + unitsForAreaCheck()
+  ];
+  window.open('https://wa.me/966509720382?text=' + encodeURIComponent(lines.join('\n')), '_blank');
 }
 
 function selMaint(){
@@ -2098,6 +2194,8 @@ function onDistrictChange(){
   document.getElementById('outsideAreaBox').style.display = (v === '__outside__') ? 'block' : 'none';
   var isOther = (v === '__other_north__');
   document.getElementById('districtOtherNote').className = isOther ? 'recheck-note show' : 'recheck-note';
+  var mb = document.getElementById('otherNorthMinBox');
+  if(mb) mb.style.display = 'none';
   document.getElementById('districtOtherWrap').style.display = isOther ? 'block' : 'none';
   if(!isOther){
     document.getElementById('f_district_other').value = '';
@@ -2185,6 +2283,14 @@ function next2(){
       } else {
         document.getElementById('e_district_other').className='err-msg';
         document.getElementById('f_district_other').className='';
+        /* حي داخل شمال جدة لكنه خارج القائمة: الرحلة إليه تستحقّ من 5 مكيفات
+           فأكثر. ما دون ذلك لا يُرفض، بل يُحوّل إلى واتساب لترتيبه يدوياً. */
+        if(unitsForAreaCheck() < OTHER_NORTH_MIN_UNITS){
+          document.getElementById('otherNorthMinBox').style.display='block';
+          ok=false;
+        } else {
+          document.getElementById('otherNorthMinBox').style.display='none';
+        }
       }
     }
   }
@@ -2222,6 +2328,7 @@ function next2(){
 // ===== الموعد =====
 var FRIDAY_VAR=true;
 var DUR_MAP={'غسيل مكيفات':30,'صيانة مكيف':30,'تعبئة غاز':45,'تركيب مكيف':90,'إعادة فحص':30,
+  'الغسيل العميق':90,'كشف تسرّب مبدئي':30,
   'تنظيف الوحدات الداخلية أو الخارجية':20,
   'تنظيف الوحدة الخارجية':15,'تنظيف الوحدة الداخلية':20};
 var SLOTS=[{t:'8:00 - 10:00',start:480,ar:'8-10 ص'},{t:'10:00 - 12:00',start:600,ar:'10-12 ص'},{t:'12:00 - 14:00',start:720,ar:'12-2 م'},{t:'14:00 - 16:00',start:840,ar:'2-4 م'},{t:'16:00 - 18:00',start:960,ar:'4-6 م'},{t:'18:00 - 20:00',start:1080,ar:'6-8 م'}];
@@ -2501,8 +2608,8 @@ function buildSum(){
     ['🏘️ الحي',S.district||'—'],
     ['🗺️ رابط الموقع',S.addr.length>40?S.addr.substring(0,40)+'...':S.addr],
     ['📅 التاريخ',fmtDate(S.date)],
-    ['🕐 الوقت',S.time],
-    ['⏱️ المدة',fmtDur(calcDur())]
+    ['🕐 الفترة المحجوزة',S.time],
+    ['⏱️ مدة العمل',fmtDur(calcDur())+' تقريباً']
   ]);
   document.getElementById('sumBox').innerHTML=rows.map(function(r){return '<div class="sum-row"><span class="lbl">'+r[0]+'</span><span class="val">'+r[1]+'</span></div>';}).join('');
 
