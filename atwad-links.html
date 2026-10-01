@@ -41,7 +41,6 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);padd
 .group.g-tool    {background:#ECFDF5;border-color:#A7F3D0;}
 .group.g-ext     {background:#F8FAFC;border-color:#E2E8F0;}
 .group.g-old     {background:#FEF2F2;border-color:#FECACA;}
-.g-test    {background:#F0FDFA;border-color:#99F6E4;}
 
 h2{font-size:16px;font-weight:900;margin:0 0 12px;display:flex;align-items:center;gap:9px;flex-wrap:wrap;}
 .g-customer h2{color:#1D4ED8;}
@@ -51,14 +50,19 @@ h2{font-size:16px;font-weight:900;margin:0 0 12px;display:flex;align-items:cente
 .g-tool     h2{color:#047857;}
 .g-ext      h2{color:#475569;}
 .g-old      h2{color:#B91C1C;}
-.g-test     h2{color:#0F766E;}
 
 h2 .tag{font-size:11px;font-weight:800;padding:3px 11px;border-radius:20px;
   background:rgba(255,255,255,.85);border:1px solid rgba(0,0,0,.08);color:inherit;}
 
-.item{background:#fff;border-radius:12px;box-shadow:0 1px 5px rgba(12,59,94,.07);
-  padding:13px 15px;margin-bottom:8px;border-inline-start:5px solid var(--sky);}
-.item:last-child{margin-bottom:0;}
+/* كل رابط زرٌّ كامل يُضغط، وزر النسخ الصغير داخله لا يفتحه */
+.items{display:grid;grid-template-columns:repeat(auto-fill,minmax(152px,1fr));gap:9px;}
+.item{position:relative;display:flex;flex-direction:column;justify-content:center;gap:3px;
+  min-height:76px;padding:12px 13px;padding-inline-end:40px;
+  background:#fff;border-radius:12px;box-shadow:0 1px 5px rgba(12,59,94,.07);
+  border-inline-start:5px solid var(--sky);
+  text-decoration:none;color:inherit;cursor:pointer;transition:transform .12s,box-shadow .12s;}
+.item:hover{box-shadow:0 3px 12px rgba(12,59,94,.14);}
+.item:active{transform:scale(.975);}
 .g-customer .item{border-inline-start-color:#2563EB;}
 .g-manual   .item{border-inline-start-color:#F59E0B;}
 .g-admin    .item{border-inline-start-color:var(--deep);}
@@ -66,33 +70,28 @@ h2 .tag{font-size:11px;font-weight:800;padding:3px 11px;border-radius:20px;
 .g-tool     .item{border-inline-start-color:#10B981;}
 .g-ext      .item{border-inline-start-color:#94A3B8;}
 .g-old      .item{border-inline-start-color:#EF4444;}
-.g-test     .item{border-inline-start-color:#14B8A6;}
 
 .g-customer .item .name{color:#1D4ED8;}
 .g-manual   .item .name{color:#B45309;}
 .g-tech     .item .name{color:#6D28D9;}
 .g-tool     .item .name{color:#047857;}
 .g-old      .item .name{color:#B91C1C;}
-.g-test     .item .name{color:#0F766E;}
 
-.item .top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
-.item .name{font-size:15.5px;font-weight:900;color:var(--deep);}
-.item .desc{font-size:12.5px;color:var(--mist);margin-top:4px;line-height:1.8;}
-.item .url{font-size:12px;color:var(--steel);direction:ltr;text-align:left;margin-top:8px;
-  background:var(--frost);border:1px solid var(--ice);border-radius:8px;padding:7px 9px;
-  word-break:break-all;font-family:monospace;}
-.acts{display:flex;gap:7px;margin-top:9px;flex-wrap:wrap;}
-.acts a, .acts button{font-family:'Tajawal',sans-serif;font-size:12.5px;font-weight:800;
-  padding:8px 14px;border-radius:9px;border:1.5px solid var(--line);background:#fff;
-  color:var(--slate);cursor:pointer;text-decoration:none;}
-.acts a.open{background:var(--deep);color:#fff;border-color:var(--deep);}
-.g-customer .acts a.open{background:#2563EB;border-color:#2563EB;}
-.g-manual   .acts a.open{background:#D97706;border-color:#D97706;}
-.g-tech     .acts a.open{background:#7C3AED;border-color:#7C3AED;}
-.g-tool     .acts a.open{background:#059669;border-color:#059669;}
-.g-ext      .acts a.open{background:#64748B;border-color:#64748B;}
-.g-old      .acts a.open{background:#DC2626;border-color:#DC2626;}
-.g-test     .acts a.open{background:#0D9488;border-color:#0D9488;}
+.item .name{font-size:14.5px;font-weight:900;color:var(--deep);line-height:1.5;}
+.item .desc{font-size:11.5px;color:var(--mist);line-height:1.7;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+.item .copy{position:absolute;inset-inline-end:7px;top:7px;width:32px;height:32px;
+  display:grid;place-items:center;border:0;border-radius:9px;
+  background:var(--frost);color:var(--deep);font-size:13px;cursor:pointer;padding:0;
+  font-family:'Tajawal',sans-serif;}
+.item .copy:hover{background:var(--ice);}
+.item .copy.done{background:#DCFCE7;color:#166534;}
+.g-customer .item .copy{color:#1D4ED8;}
+.g-manual   .item .copy{color:#B45309;}
+.g-tech     .item .copy{color:#6D28D9;}
+.g-tool     .item .copy{color:#047857;}
+.g-ext      .item .copy{color:#475569;}
+.g-old      .item .copy{color:#B91C1C;}
 .acts a:hover, .acts button:hover{border-color:var(--sky);}
 
 .warn-box{background:#FEF3C7;border:1.5px solid #FCD34D;color:#92400E;border-radius:12px;
@@ -107,7 +106,7 @@ h2 .tag{font-size:11px;font-weight:800;padding:3px 11px;border-radius:20px;
 <div class="header">
   <div class="wrap" style="padding:0;">
     <h1>🔗 دليل روابط نظام أطواد</h1>
-    <p>كل صفحات النظام في مكان واحد — اضغط «فتح» أو «نسخ»</p>
+    <p>كل صفحات النظام في مكان واحد — اضغط الزر ليفتح، أو 📋 لنسخ رابطه</p>
   </div>
 </div>
 
@@ -190,13 +189,6 @@ var GROUPS = [
     ]
   },
   {
-    title: '🧪 تحت التجربة', tag: 'لا تُرسل لعميل', cls: 'g-test', warn:
-      'نسخ قيد الاختبار. جرّبيها بنفسك، فإذا سَلِمت أعيدي تسميتها إلى اسم الصفحة الأصلية وارفعيها، ثم احذفي سطرها من هنا.',
-    items: [
-      { n:'صفحة الحجز — نسخة تجريبية', d:'بطاقة «غسيل وصيانة»، وبطاقة واحدة لتنظيف الوحدات الداخلية أو الخارجية. بديلة لـ atwad-booking.html بعد نجاح التجربة', u:'preview-booking-mixed.html' }
-    ]
-  },
-  {
     title: '🗄️ نسخة تراجع', tag: 'لا تُرسل لأحد', cls: 'g-old',
     items: [
       { n:'الصفحة الرئيسية السابقة', d:'احذفها بعد أسبوع من الاستقرار', u:'index-old.html' }
@@ -217,29 +209,33 @@ function render(){
             (g.tag ? '<span class="tag">' + esc(g.tag) + '</span>' : '') +
             '</h2>';
     if(g.warn) html += '<div class="warn-box">⚠️ ' + esc(g.warn) + '</div>';
+    html += '<div class="items">';
     g.items.forEach(function(it){
       var full = it.abs ? it.u : (BASE + it.u);
-      html += '<div class="item" data-name="' + esc(it.n + ' ' + (it.d||'') + ' ' + it.u) + '">' +
-                '<div class="top"><span class="name">' + esc(it.n) + '</span></div>' +
-                (it.d ? '<div class="desc">' + esc(it.d) + '</div>' : '') +
-                '<div class="url">' + esc(full) + '</div>' +
-                '<div class="acts">' +
-                  '<a class="open" href="' + esc(full) + '" target="_blank" rel="noopener">فتح</a>' +
-                  '<button data-url="' + esc(full) + '" onclick="copyUrl(this)">نسخ الرابط</button>' +
-                '</div>' +
-              '</div>';
+      html += '<a class="item" href="' + esc(full) + '" target="_blank" rel="noopener"' +
+                ' title="' + esc(full) + '"' +
+                ' data-name="' + esc(it.n + ' ' + (it.d||'') + ' ' + it.u) + '">' +
+                '<span class="name">' + esc(it.n) + '</span>' +
+                (it.d ? '<span class="desc">' + esc(it.d) + '</span>' : '') +
+                '<button type="button" class="copy" title="نسخ الرابط"' +
+                  ' data-url="' + esc(full) + '" onclick="copyUrl(event,this)">📋</button>' +
+              '</a>';
     });
-    html += '</div>';
+    html += '</div></div>';
   });
   document.getElementById('list').innerHTML = html;
   updateCount();
 }
 
-function copyUrl(btn){
+function copyUrl(ev, btn){
+  /* الزر داخل رابط: نمنع فتحه عند نسخ العنوان */
+  if(ev){ ev.preventDefault(); ev.stopPropagation(); }
   var url = btn.getAttribute('data-url') || '';
   var done = function(){
     var old = btn.textContent;
-    btn.textContent = '✓ نُسخ';
+    btn.textContent = '✓';
+    btn.className = 'copy done';
+    setTimeout(function(){ btn.className = 'copy'; }, 1400);
     setTimeout(function(){ btn.textContent = old; }, 1400);
   };
   if(navigator.clipboard && navigator.clipboard.writeText){
