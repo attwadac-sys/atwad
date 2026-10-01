@@ -41,6 +41,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);padd
 .group.g-tool    {background:#ECFDF5;border-color:#A7F3D0;}
 .group.g-ext     {background:#F8FAFC;border-color:#E2E8F0;}
 .group.g-old     {background:#FEF2F2;border-color:#FECACA;}
+.g-test    {background:#F0FDFA;border-color:#99F6E4;}
 
 h2{font-size:16px;font-weight:900;margin:0 0 12px;display:flex;align-items:center;gap:9px;flex-wrap:wrap;}
 .g-customer h2{color:#1D4ED8;}
@@ -50,6 +51,7 @@ h2{font-size:16px;font-weight:900;margin:0 0 12px;display:flex;align-items:cente
 .g-tool     h2{color:#047857;}
 .g-ext      h2{color:#475569;}
 .g-old      h2{color:#B91C1C;}
+.g-test     h2{color:#0F766E;}
 
 h2 .tag{font-size:11px;font-weight:800;padding:3px 11px;border-radius:20px;
   background:rgba(255,255,255,.85);border:1px solid rgba(0,0,0,.08);color:inherit;}
@@ -64,12 +66,14 @@ h2 .tag{font-size:11px;font-weight:800;padding:3px 11px;border-radius:20px;
 .g-tool     .item{border-inline-start-color:#10B981;}
 .g-ext      .item{border-inline-start-color:#94A3B8;}
 .g-old      .item{border-inline-start-color:#EF4444;}
+.g-test     .item{border-inline-start-color:#14B8A6;}
 
 .g-customer .item .name{color:#1D4ED8;}
 .g-manual   .item .name{color:#B45309;}
 .g-tech     .item .name{color:#6D28D9;}
 .g-tool     .item .name{color:#047857;}
 .g-old      .item .name{color:#B91C1C;}
+.g-test     .item .name{color:#0F766E;}
 
 .item .top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
 .item .name{font-size:15.5px;font-weight:900;color:var(--deep);}
@@ -88,6 +92,7 @@ h2 .tag{font-size:11px;font-weight:800;padding:3px 11px;border-radius:20px;
 .g-tool     .acts a.open{background:#059669;border-color:#059669;}
 .g-ext      .acts a.open{background:#64748B;border-color:#64748B;}
 .g-old      .acts a.open{background:#DC2626;border-color:#DC2626;}
+.g-test     .acts a.open{background:#0D9488;border-color:#0D9488;}
 .acts a:hover, .acts button:hover{border-color:var(--sky);}
 
 .warn-box{background:#FEF3C7;border:1.5px solid #FCD34D;color:#92400E;border-radius:12px;
@@ -154,7 +159,8 @@ var GROUPS = [
       { n:'التقارير', d:'', u:'atwad-reports.html' },
       { n:'التحليلات', d:'أداء الفنيين وولاء العملاء', u:'atwad-analytics.html' },
       { n:'إدارة التقييمات', d:'', u:'atwad-reviews-admin.html' },
-      { n:'معاينة عملاء الحجز', d:'', u:'atwad-booking-customers-preview.html' }
+      { n:'معاينة عملاء الحجز', d:'', u:'atwad-booking-customers-preview.html' },
+      { n:'صفحة تأكيد الموعد', d:'يفتحها العميل من زر «أكّد العميل» في لوحة المواعيد. اللوحة تبني الرابط لكل موعد — الرابط هنا للاختبار فقط، وبدونه يظهر فارغاً', u:'atwad-confirm.html' }
     ]
   },
   {
@@ -176,11 +182,18 @@ var GROUPS = [
   {
     title: '🌐 خارج المستودع', tag: '', cls: 'g-ext',
     items: [
-      { n:'مستودع الشيفرة', d:'GitHub — خاص', u:'https://github.com/attwadac-sys/atwad', abs:true },
+      { n:'مستودع الشيفرة', d:'GitHub — عام. يجب أن يبقى عاماً وإلا توقّف الموقع عن العمل. بيانات العملاء محميّة بقواعد Firebase لا بخصوصية المستودع', u:'https://github.com/attwadac-sys/atwad', abs:true },
       { n:'رفع ملف جديد', d:'اسحب الملف ثم Commit changes', u:'https://github.com/attwadac-sys/atwad/upload/main', abs:true },
       { n:'قاعدة البيانات', d:'Firebase — البيانات والقواعد', u:'https://console.firebase.google.com/project/atwad-booking/database', abs:true },
       { n:'أمان حساب جوجل', d:'التحقق بخطوتين والرموز الاحتياطية', u:'https://myaccount.google.com/security', abs:true },
       { n:'أمان حساب GitHub', d:'ما زال يحتاج كلمة مرور وتحقق بخطوتين', u:'https://github.com/settings/security', abs:true }
+    ]
+  },
+  {
+    title: '🧪 تحت التجربة', tag: 'لا تُرسل لعميل', cls: 'g-test', warn:
+      'نسخ قيد الاختبار. جرّبيها بنفسك، فإذا سَلِمت أعيدي تسميتها إلى اسم الصفحة الأصلية وارفعيها، ثم احذفي سطرها من هنا.',
+    items: [
+      { n:'صفحة الحجز — نسخة تجريبية', d:'بطاقة «غسيل وصيانة»، وبطاقة واحدة لتنظيف الوحدات الداخلية والخارجية. بديلة لـ atwad-booking.html بعد نجاح التجربة', u:'preview-booking-mixed.html' }
     ]
   },
   {
