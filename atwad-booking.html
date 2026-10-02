@@ -2547,7 +2547,11 @@ function next3(){
 function fmtDate(d){try{return new Date(d+'T00:00:00').toLocaleDateString('ar-SA-u-ca-gregory',{weekday:'long',year:'numeric',month:'long',day:'numeric'});}catch(e){return d;}}
 
 function buildSum(){
-  if(!S.isClean) S.units=parseInt(document.getElementById('units-display').textContent)||S.units;
+  /* الزيارة المختلطة لها عدّادان، ولا تقرأ العدد من العدّاد المفرد المخفي —
+     وإلا حُفظ العدد 1 مهما اختار العميل. */
+  if(!S.isClean && S.serviceAr !== MIXED_SERVICE)
+    S.units=parseInt(document.getElementById('units-display').textContent)||S.units;
+  if(S.serviceAr === MIXED_SERVICE) S.units = (mixedUnits.wash||0) + (mixedUnits.maint||0);
   var isWashing=S.serviceAr==='غسيل مكيفات';
   var total;
   if(S.isClean){total=S.units>=10?S.units*55:(S.units>=5?S.units*60:S.price);}
