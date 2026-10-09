@@ -511,6 +511,19 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
       <div class="field"><label>الجوال <span class="req">*</span></label><input type="tel" id="f_phone" placeholder="05xxxxxxxx أو +966 5x xxx xxxx" maxlength="24" inputmode="tel" autocomplete="tel" oninput="lookupCustomerByPhone(this.value)"><div class="err-msg" id="e_phone">رقم غير صحيح</div><div class="customer-lookup" id="customerLookupMsg" aria-live="polite"></div></div>
     </div>
     <div class="field">
+      <label style="display:flex;align-items:flex-start;gap:9px;cursor:pointer;font-weight:700;">
+        <input type="checkbox" id="f_contract" onchange="onContractToggle()"
+               style="width:auto;margin:3px 0 0;flex:0 0 auto;">
+        <span>لديّ عقد صيانة سنوي مع أطواد</span>
+      </label>
+      <div id="contractNote" style="display:none;background:#ECFDF5;border:1.5px solid #6EE7B7;
+           border-radius:10px;padding:11px 13px;margin-top:9px;font-size:13px;color:#065F46;line-height:1.9;">
+        ✅ ستُخصم هذه الزيارة من رصيد عقدك ولن تُطالب بقيمتها.
+        السعر الظاهر في الصفحة للعلم فقط، وتتأكد المؤسسة من رصيدك قبل تأكيد الموعد.
+      </div>
+    </div>
+
+    <div class="field">
       <label>كيف عرفت عنا؟ <span style="color:#94A3B8;font-weight:400;">(اختياري)</span></label>
       <select id="f_source">
         <option value="">-- اختر --</option>
@@ -2694,6 +2707,10 @@ function submitBooking(){
       // لا تُحفظ داخل الحجز — تُكتب في عقدة bookingImages بالتوازي أدناه
     }
 
+    // عميل عقد سنوي: علامة فقط. الخصم من الرصيد تؤكده الإدارة في صفحة العقود.
+    var contractBox = document.getElementById('f_contract');
+    if(contractBox && contractBox.checked) bookingData.contractRequest = true;
+
     // السعر التقديري يُحسب من الخدمة، ولا يُطلب من العميل إدخاله.
     if(S.price > 0) bookingData.servicePrice = S.price;
 
@@ -2995,6 +3012,14 @@ function releaseBookingLocksRest(key,date,lockBlocks,attempt){
  * الحجوزات فتبطؤ شاشات الإدارة والفني. تُرسل بالتوازي مع الحجز، وفشلها
  * لا يُفشل الحجز إطلاقاً — الحجز هو الأهم والصورة تحسين.
  */
+/** عميل العقد لا يُطالَب بقيمة — نوضح ذلك له فور التعليم على الخانة */
+function onContractToggle(){
+  var box = document.getElementById('f_contract');
+  var note = document.getElementById('contractNote');
+  if(!box || !note) return;
+  note.style.display = box.checked ? 'block' : 'none';
+}
+
 function writeBookingImage(key,img){
   if(!key||!img) return Promise.resolve();
   return fetchWithBookingTimeout(

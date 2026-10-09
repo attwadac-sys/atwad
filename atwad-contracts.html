@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>العقود السنوية — أطواد</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --deep:#0A2540; --sky:#38BDF8; --ice:#E2E8F0; --mist:#64748B;
+  --frost:#F8FAFC; --ok:#059669; --warn:#B45309; --bad:#B91C1C;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:#F1F5F9;font-family:'Tajawal',sans-serif;color:var(--deep);
+  font-size:16px;padding:18px 16px 90px;}
+.wrap{max-width:1100px;margin:0 auto;}
+
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;
+  flex-wrap:wrap;margin-bottom:18px;}
+.top h1{font-size:23px;margin:0;}
+.top .sub{font-size:13.5px;color:var(--mist);margin-top:3px;}
+.pill{font-size:12.5px;font-weight:700;padding:5px 12px;border-radius:99px;
+  background:#E0F2FE;color:#075985;}
+
+button{font-family:'Tajawal',sans-serif;font-weight:700;border:0;border-radius:11px;cursor:pointer;}
+.btn{background:var(--sky);color:#fff;font-size:15px;padding:11px 20px;}
+.btn-ghost{background:#fff;color:var(--deep);border:1.5px solid var(--ice);font-size:13.5px;padding:8px 14px;}
+.btn-sm{font-size:12.5px;padding:7px 12px;}
+.btn-ok{background:#D1FAE5;color:#065F46;}
+.btn-pay{background:#DBEAFE;color:#1E40AF;}
+.btn-del{background:#FEE2E2;color:#991B1B;}
+button:disabled{opacity:.5;cursor:default;}
+
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:18px;}
+.tile{background:#fff;border:1.5px solid var(--ice);border-radius:14px;padding:14px 16px;}
+.tile .n{font-size:25px;font-weight:900;line-height:1.2;}
+.tile .l{font-size:12.5px;color:var(--mist);margin-top:2px;}
+
+.bar-tools{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+input[type=text],input[type=number],input[type=date],textarea,select{
+  font-family:'Tajawal',sans-serif;font-size:15px;padding:10px 13px;
+  border:1.5px solid var(--ice);border-radius:10px;background:#fff;color:var(--deep);width:100%;}
+#q{flex:1;min-width:200px;}
+
+.card{background:#fff;border:1.5px solid var(--ice);border-radius:15px;padding:16px 18px;margin-bottom:13px;}
+.card.done{opacity:.72;}
+.card-hd{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;}
+.card-hd .name{font-size:18px;font-weight:800;}
+.card-hd .ph{font-size:13px;color:var(--mist);margin-top:2px;direction:ltr;text-align:right;}
+.badge{font-size:11.5px;font-weight:800;padding:4px 11px;border-radius:99px;}
+.b-ok{background:#D1FAE5;color:#065F46;}
+.b-low{background:#FEF3C7;color:#78350F;}
+.b-out{background:#FEE2E2;color:#991B1B;}
+.b-off{background:#E2E8F0;color:#475569;}
+
+.meter{height:9px;background:#E2E8F0;border-radius:99px;overflow:hidden;margin:13px 0 7px;}
+.meter i{display:block;height:100%;background:var(--sky);}
+.meter i.low{background:#F59E0B;}
+.meter i.out{background:#EF4444;}
+
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:9px;margin:12px 0 4px;}
+.fact{background:var(--frost);border-radius:10px;padding:9px 12px;}
+.fact .k{font-size:11.5px;color:var(--mist);}
+.fact .v{font-size:15.5px;font-weight:800;margin-top:1px;}
+.v.due{color:var(--bad);}
+.v.clear{color:var(--ok);}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px;}
+.note{font-size:13px;color:var(--mist);margin-top:10px;line-height:1.8;}
+
+.sec-title{font-size:17px;font-weight:800;margin:26px 0 12px;}
+.req{background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:13px;padding:13px 16px;margin-bottom:10px;
+  display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;}
+.req .t{font-size:14.5px;font-weight:700;}
+.req .d{font-size:12.5px;color:var(--mist);margin-top:3px;}
+
+.empty{background:#fff;border:1.5px dashed var(--ice);border-radius:14px;padding:30px 20px;
+  text-align:center;color:var(--mist);font-size:14.5px;}
+
+.overlay{position:fixed;inset:0;background:rgba(10,37,64,.55);z-index:600;
+  display:none;align-items:center;justify-content:center;padding:16px;}
+.overlay.open{display:flex;}
+.sheet{background:#fff;border-radius:17px;width:100%;max-width:520px;max-height:90vh;overflow:auto;}
+.sheet-hd{display:flex;justify-content:space-between;align-items:center;
+  padding:16px 20px;border-bottom:1.5px solid var(--ice);position:sticky;top:0;background:#fff;}
+.sheet-hd h3{margin:0;font-size:17px;}
+.x{background:#F1F5F9;color:var(--mist);width:32px;height:32px;border-radius:50%;font-size:17px;line-height:1;}
+.sheet-bd{padding:18px 20px 22px;}
+.fld{margin-bottom:13px;}
+.fld label{display:block;font-size:13px;font-weight:700;margin-bottom:5px;}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+
+#toast{position:fixed;bottom:84px;right:50%;transform:translate(50%,14px);background:var(--deep);
+  color:#fff;font-size:13.5px;font-weight:700;padding:12px 19px;border-radius:12px;z-index:9999;
+  max-width:88vw;text-align:center;opacity:0;visibility:hidden;transition:.22s;line-height:1.7;}
+#toast.show{opacity:1;visibility:visible;transform:translate(50%,0);}
+
+@media(max-width:600px){
+  body{font-size:15px;}
+  .two{grid-template-columns:1fr;}
+}
+</style>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="atwad-firebase.js"></script>
+<script src="atwad-auth.js"></script>
+</head>
+<body>
+<div class="wrap" id="page">
+
+  <div class="top">
+    <div>
+      <h1>📄 العقود السنوية</h1>
+      <div class="sub">رصيد الزيارات لكل عميل، وما استُهلك منه، وما تبقّى من قيمته</div>
+    </div>
+    <div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap;">
+      <span class="pill" id="statusPill">جاري التحميل…</span>
+      <button class="btn-ghost" type="button" onclick="location.href='atwad-customers.html'">👥 العملاء</button>
+      <button class="btn" type="button" id="newBtn">+ عقد جديد</button>
+    </div>
+  </div>
+
+  <div class="tiles">
+    <div class="tile"><div class="n" id="tActive">—</div><div class="l">عقد ساري</div></div>
+    <div class="tile"><div class="n" id="tVisits">—</div><div class="l">زيارة متبقية</div></div>
+    <div class="tile"><div class="n" id="tDue">—</div><div class="l">مستحق غير محصّل</div></div>
+    <div class="tile"><div class="n" id="tReq">—</div><div class="l">طلب زيارة بانتظار الربط</div></div>
+  </div>
+
+  <div class="bar-tools">
+    <input type="text" id="q" placeholder="ابحث باسم العميل أو رقم جواله" autocomplete="off">
+    <select id="filt" style="max-width:190px;">
+      <option value="active">السارية فقط</option>
+      <option value="all">الكل</option>
+      <option value="ended">المنتهية</option>
+    </select>
+  </div>
+
+  <div id="list"></div>
+
+  <div class="sec-title">🔔 طلبات زيارة من عملاء العقود</div>
+  <div id="reqs"></div>
+</div>
+
+<!-- نافذة العقد -->
+<div class="overlay" id="sheet">
+  <div class="sheet">
+    <div class="sheet-hd">
+      <h3 id="sheetTitle">عقد جديد</h3>
+      <button class="x" type="button" id="closeSheet">×</button>
+    </div>
+    <div class="sheet-bd">
+      <div class="fld"><label>اسم العميل *</label><input type="text" id="f_client"></div>
+      <div class="fld"><label>رقم الجوال *</label><input type="text" id="f_phone" inputmode="numeric" placeholder="05xxxxxxxx"></div>
+      <div class="two">
+        <div class="fld"><label>تاريخ البداية</label><input type="date" id="f_start"></div>
+        <div class="fld"><label>تاريخ النهاية</label><input type="date" id="f_end"></div>
+      </div>
+      <div class="two">
+        <div class="fld"><label>عدد الزيارات *</label><input type="number" id="f_total" min="1" step="1"></div>
+        <div class="fld"><label>المستهلك</label><input type="number" id="f_used" min="0" step="1" value="0"></div>
+      </div>
+      <div class="two">
+        <div class="fld"><label>قيمة العقد (ريال)</label><input type="number" id="f_value" min="0" step="1"></div>
+        <div class="fld"><label>المدفوع (ريال)</label><input type="number" id="f_paid" min="0" step="1" value="0"></div>
+      </div>
+      <div class="fld"><label>ملاحظات</label><textarea id="f_notes" rows="2"></textarea></div>
+      <div class="fld">
+        <label><input type="checkbox" id="f_active" checked style="width:auto;margin-left:7px;"> العقد ساري</label>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:6px;">
+        <button class="btn" type="button" id="saveBtn" style="flex:1;">حفظ</button>
+        <button class="btn-ghost" type="button" id="cancelBtn">إلغاء</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+'use strict';
+
+var ADMIN_UID = 'NU8g25megKefUOBQGvfkVtBOw802';
+var db = window.db;
+var contracts = [];     // [{_key, ...}]
+var requests  = [];     // حجوزات عليها علامة عقد ولم تُربط بعد
+var editingKey = null;
+
+/* ===== أدوات ===== */
+function el(id){ return document.getElementById(id); }
+
+function toast(msg){
+  var t = el('toast');
+  t.textContent = msg;
+  t.className = 'show';
+  setTimeout(function(){ t.className = ''; }, 3200);
+}
+
+function esc(s){
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function num(v){
+  var n = parseFloat(v);
+  return isFinite(n) ? n : 0;
+}
+
+function money(v){
+  return num(v).toLocaleString('en-US') + ' ﷼';
+}
+
+function today(){
+  var d = new Date();
+  return d.getFullYear() + '-' +
+         String(d.getMonth() + 1).padStart(2, '0') + '-' +
+         String(d.getDate()).padStart(2, '0');
+}
+
+function normPhone(v){
+  var p = String(v == null ? '' : v).replace(/[^\d]/g, '');
+  if(p.indexOf('966') === 0) p = '0' + p.slice(3);
+  if(p.length === 9 && p.charAt(0) === '5') p = '0' + p;
+  return p;
+}
+
+function remaining(c){
+  return Math.max(0, num(c.totalVisits) - num(c.usedVisits));
+}
+
+function outstanding(c){
+  return Math.max(0, num(c.value) - num(c.paid));
+}
+
+function isEnded(c){
+  if(c.active === false) return true;
+  if(remaining(c) <= 0) return true;
+  if(c.endDate && String(c.endDate) < today()) return true;
+  return false;
+}
+
+/* ===== التحميل ===== */
+function listen(){
+  db.ref('contracts').on('value', function(snap){
+    contracts = [];
+    snap.forEach(function(ch){
+      var v = ch.val() || {};
+      var row = {};
+      Object.keys(v).forEach(function(k){ row[k] = v[k]; });
+      row._key = ch.key;
+      contracts.push(row);
+    });
+    contracts.sort(function(a, b){
+      return String(b.startDate || '').localeCompare(String(a.startDate || ''));
+    });
+    render();
+  }, function(err){
+    console.error('contracts:', err);
+    el('statusPill').textContent = 'تعذر التحميل';
+    el('list').innerHTML = '<div class="empty">تعذّر تحميل العقود: ' + esc(err.message || '') + '</div>';
+  });
+
+  // الحجوزات المعلّمة كعقد — الجدول صار خفيفاً بعد إخراج الصور منه
+  db.ref('bookings').limitToLast(400).on('value', function(snap){
+    requests = [];
+    snap.forEach(function(ch){
+      var b = ch.val() || {};
+      if(b.contractRequest !== true) return;
+      if(b.contractKey) return;                 // رُبط بعقد سابقاً
+      var st = String(b.status || '').trim();
+      if(st === 'cancelled' || st === 'ملغي') return;
+      requests.push({
+        _key: ch.key,
+        client: b.client || b.name || '—',
+        phone: normPhone(b.phone),
+        date: b.date || '',
+        time: b.time || '',
+        service: b.service || ''
+      });
+    });
+    requests.sort(function(a, b){ return String(a.date).localeCompare(String(b.date)); });
+    renderRequests();
+    el('tReq').textContent = requests.length;
+  }, function(err){
+    console.error('bookings:', err);
+    el('reqs').innerHTML = '<div class="empty">تعذّر تحميل الطلبات</div>';
+  });
+}
+
+/* ===== العرض ===== */
+function visible(){
+  var q = el('q').value.trim().toLowerCase();
+  var f = el('filt').value;
+  return contracts.filter(function(c){
+    if(f === 'active' && isEnded(c)) return false;
+    if(f === 'ended'  && !isEnded(c)) return false;
+    if(!q) return true;
+    var hay = (String(c.client || '') + ' ' + String(c.phone || '')).toLowerCase();
+    return hay.indexOf(q) !== -1;
+  });
+}
+
+function render(){
+  var rows = visible();
+  var live = contracts.filter(function(c){ return !isEnded(c); });
+  var visitsLeft = live.reduce(function(s, c){ return s + remaining(c); }, 0);
+  var due = contracts.reduce(function(s, c){ return s + outstanding(c); }, 0);
+
+  el('tActive').textContent = live.length;
+  el('tVisits').textContent = visitsLeft;
+  el('tDue').textContent = money(due);
+  el('statusPill').textContent = 'متصل • ' + contracts.length + ' عقد';
+
+  if(!rows.length){
+    el('list').innerHTML = '<div class="empty">لا توجد عقود مطابقة. اضغط «عقد جديد» لإضافة أول عقد.</div>';
+    return;
+  }
+
+  var html = '';
+  for(var i = 0; i < rows.length; i++){
+    var c = rows[i];
+    var left = remaining(c);
+    var tot  = Math.max(1, num(c.totalVisits));
+    var pctUsed = Math.min(100, Math.round(num(c.usedVisits) / tot * 100));
+    var owe = outstanding(c);
+    var ended = isEnded(c);
+
+    var badge, meterCls;
+    if(c.active === false){ badge = '<span class="badge b-off">موقوف</span>'; meterCls = 'out'; }
+    else if(left <= 0)    { badge = '<span class="badge b-out">استُهلك بالكامل</span>'; meterCls = 'out'; }
+    else if(left <= 2)    { badge = '<span class="badge b-low">تبقّى ' + left + '</span>'; meterCls = 'low'; }
+    else                  { badge = '<span class="badge b-ok">ساري</span>'; meterCls = ''; }
+
+    html +=
+      '<div class="card' + (ended ? ' done' : '') + '">' +
+        '<div class="card-hd">' +
+          '<div><div class="name">' + esc(c.client) + '</div>' +
+          '<div class="ph">' + esc(c.phone) + '</div></div>' + badge +
+        '</div>' +
+        '<div class="meter"><i class="' + meterCls + '" style="width:' + pctUsed + '%"></i></div>' +
+        '<div style="font-size:12.5px;color:var(--mist);">استُهلك ' +
+          num(c.usedVisits) + ' من ' + num(c.totalVisits) + ' زيارة</div>' +
+        '<div class="facts">' +
+          '<div class="fact"><div class="k">المتبقي</div><div class="v">' + left + ' زيارة</div></div>' +
+          '<div class="fact"><div class="k">قيمة العقد</div><div class="v">' + money(c.value) + '</div></div>' +
+          '<div class="fact"><div class="k">المحصّل</div><div class="v clear">' + money(c.paid) + '</div></div>' +
+          '<div class="fact"><div class="k">المتبقي عليه</div><div class="v ' + (owe > 0 ? 'due' : 'clear') + '">' +
+            money(owe) + '</div></div>' +
+          '<div class="fact"><div class="k">من</div><div class="v" style="font-size:13.5px;">' +
+            esc(c.startDate || '—') + '</div></div>' +
+          '<div class="fact"><div class="k">إلى</div><div class="v" style="font-size:13.5px;">' +
+            esc(c.endDate || '—') + '</div></div>' +
+        '</div>' +
+        (c.notes ? '<div class="note">📝 ' + esc(c.notes) + '</div>' : '') +
+        '<div class="acts">' +
+          '<button class="btn-ok btn-sm" type="button" onclick="useVisit(\'' + c._key + '\')"' +
+            (left <= 0 ? ' disabled' : '') + '>✔ خصم زيارة</button>' +
+          '<button class="btn-pay btn-sm" type="button" onclick="addPayment(\'' + c._key + '\')">💰 تسجيل دفعة</button>' +
+          '<button class="btn-ghost btn-sm" type="button" onclick="editContract(\'' + c._key + '\')">✎ تعديل</button>' +
+          '<button class="btn-del btn-sm" type="button" onclick="removeContract(\'' + c._key + '\')">حذف</button>' +
+        '</div>' +
+      '</div>';
+  }
+  el('list').innerHTML = html;
+}
+
+function renderRequests(){
+  if(!requests.length){
+    el('reqs').innerHTML = '<div class="empty">لا توجد طلبات بانتظار الربط.</div>';
+    return;
+  }
+  var html = '';
+  for(var i = 0; i < requests.length; i++){
+    var r = requests[i];
+    var match = findContractByPhone(r.phone);
+    html +=
+      '<div class="req">' +
+        '<div><div class="t">' + esc(r.client) + ' — ' + esc(r.phone) + '</div>' +
+        '<div class="d">' + esc(r.date) + ' ' + esc(r.time) + ' • ' + esc(r.service) +
+        (match ? ' • عقد مطابق: متبقٍ ' + remaining(match) + ' زيارة'
+               : ' • <span style="color:var(--bad);font-weight:700;">لا يوجد عقد بهذا الرقم</span>') +
+        '</div></div>' +
+        (match
+          ? '<button class="btn-ok btn-sm" type="button" onclick="linkRequest(\'' + r._key + '\',\'' + match._key + '\')">ربط وخصم زيارة</button>'
+          : '<button class="btn-ghost btn-sm" type="button" onclick="newFromRequest(\'' + r._key + '\')">إنشاء عقد له</button>') +
+      '</div>';
+  }
+  el('reqs').innerHTML = html;
+}
+
+function findContractByPhone(phone){
+  var p = normPhone(phone);
+  if(!p) return null;
+  for(var i = 0; i < contracts.length; i++){
+    if(normPhone(contracts[i].phone) === p && !isEnded(contracts[i])) return contracts[i];
+  }
+  return null;
+}
+
+function byKey(key){
+  for(var i = 0; i < contracts.length; i++){
+    if(contracts[i]._key === key) return contracts[i];
+  }
+  return null;
+}
+
+/* ===== العمليات ===== */
+function useVisit(key){
+  var c = byKey(key);
+  if(!c) return;
+  if(remaining(c) <= 0) return toast('⚠️ لا يوجد رصيد زيارات في هذا العقد');
+  if(!confirm('خصم زيارة واحدة من عقد ' + c.client + '؟ المتبقي سيصبح ' + (remaining(c) - 1) + '.')) return;
+
+  var updates = {};
+  updates['contracts/' + key + '/usedVisits'] = num(c.usedVisits) + 1;
+  updates['contracts/' + key + '/updatedAt']  = new Date().toISOString();
+  var logKey = db.ref('contracts/' + key + '/log').push().key;
+  updates['contracts/' + key + '/log/' + logKey] = {
+    type: 'visit', date: today(), at: new Date().toISOString()
+  };
+
+  db.ref().update(updates).then(function(){
+    toast('✅ خُصمت زيارة — المتبقي ' + (remaining(c) - 1));
+  }).catch(function(err){
+    toast('❌ تعذّر الخصم: ' + (err.message || ''));
+  });
+}
+
+function addPayment(key){
+  var c = byKey(key);
+  if(!c) return;
+  var owe = outstanding(c);
+  var raw = prompt('مبلغ الدفعة بالريال' + (owe > 0 ? ' (المتبقي عليه ' + owe + ')' : '') + ':', owe > 0 ? String(owe) : '');
+  if(raw === null) return;
+  var amt = num(raw);
+  if(amt <= 0) return toast('⚠️ أدخل مبلغاً صحيحاً');
+
+  var updates = {};
+  updates['contracts/' + key + '/paid']      = num(c.paid) + amt;
+  updates['contracts/' + key + '/updatedAt'] = new Date().toISOString();
+  var logKey = db.ref('contracts/' + key + '/log').push().key;
+  updates['contracts/' + key + '/log/' + logKey] = {
+    type: 'payment', amount: amt, date: today(), at: new Date().toISOString()
+  };
+
+  db.ref().update(updates).then(function(){
+    toast('✅ سُجّلت دفعة ' + money(amt));
+  }).catch(function(err){
+    toast('❌ تعذّر التسجيل: ' + (err.message || ''));
+  });
+}
+
+function linkRequest(bookingKey, contractKey){
+  var c = byKey(contractKey);
+  if(!c) return;
+  if(remaining(c) <= 0) return toast('⚠️ لا يوجد رصيد زيارات في هذا العقد');
+  if(!confirm('ربط هذا الطلب بعقد ' + c.client + ' وخصم زيارة؟')) return;
+
+  var updates = {};
+  updates['bookings/' + bookingKey + '/contractKey'] = contractKey;
+  updates['contracts/' + contractKey + '/usedVisits'] = num(c.usedVisits) + 1;
+  updates['contracts/' + contractKey + '/updatedAt']  = new Date().toISOString();
+  var logKey = db.ref('contracts/' + contractKey + '/log').push().key;
+  updates['contracts/' + contractKey + '/log/' + logKey] = {
+    type: 'visit', date: today(), at: new Date().toISOString(), bookingKey: bookingKey
+  };
+
+  db.ref().update(updates).then(function(){
+    toast('✅ رُبط الطلب وخُصمت زيارة');
+  }).catch(function(err){
+    toast('❌ تعذّر الربط: ' + (err.message || ''));
+  });
+}
+
+function newFromRequest(bookingKey){
+  var r = null;
+  for(var i = 0; i < requests.length; i++){
+    if(requests[i]._key === bookingKey) r = requests[i];
+  }
+  if(!r) return;
+  openSheet(null);
+  el('f_client').value = r.client === '—' ? '' : r.client;
+  el('f_phone').value  = r.phone;
+  el('f_start').value  = today();
+}
+
+function removeContract(key){
+  var c = byKey(key);
+  if(!c) return;
+  if(!confirm('حذف عقد ' + c.client + ' نهائياً؟ لا يمكن التراجع.')) return;
+  db.ref('contracts/' + key).remove().then(function(){
+    toast('تم الحذف');
+  }).catch(function(err){
+    toast('❌ تعذّر الحذف: ' + (err.message || ''));
+  });
+}
+
+/* ===== النافذة ===== */
+function openSheet(key){
+  editingKey = key;
+  el('sheetTitle').textContent = key ? 'تعديل العقد' : 'عقد جديد';
+  var c = key ? byKey(key) : null;
+
+  el('f_client').value = c ? (c.client || '') : '';
+  el('f_phone').value  = c ? (c.phone || '')  : '';
+  el('f_start').value  = c ? (c.startDate || '') : today();
+  el('f_end').value    = c ? (c.endDate || '')   : '';
+  el('f_total').value  = c ? num(c.totalVisits) : '';
+  el('f_used').value   = c ? num(c.usedVisits)  : 0;
+  el('f_value').value  = c ? num(c.value) : '';
+  el('f_paid').value   = c ? num(c.paid)  : 0;
+  el('f_notes').value  = c ? (c.notes || '') : '';
+  el('f_active').checked = c ? (c.active !== false) : true;
+
+  el('sheet').className = 'overlay open';
+}
+
+function closeSheet(){
+  el('sheet').className = 'overlay';
+  editingKey = null;
+}
+
+function editContract(key){ openSheet(key); }
+
+function saveContract(){
+  var client = el('f_client').value.trim();
+  var phone  = normPhone(el('f_phone').value);
+  var total  = num(el('f_total').value);
+  var used   = num(el('f_used').value);
+
+  if(!client) return toast('⚠️ اكتب اسم العميل');
+  if(!/^05\d{8}$/.test(phone)) return toast('⚠️ رقم الجوال يجب أن يبدأ بـ 05 ويتكون من 10 أرقام');
+  if(total < 1) return toast('⚠️ عدد الزيارات يجب أن يكون 1 فأكثر');
+  if(used > total) return toast('⚠️ المستهلك أكبر من عدد الزيارات');
+
+  var data = {
+    client: client,
+    phone: phone,
+    startDate: el('f_start').value || '',
+    endDate: el('f_end').value || '',
+    totalVisits: total,
+    usedVisits: used,
+    value: num(el('f_value').value),
+    paid: num(el('f_paid').value),
+    notes: el('f_notes').value.trim(),
+    active: el('f_active').checked,
+    updatedAt: new Date().toISOString()
+  };
+
+  var btn = el('saveBtn');
+  btn.disabled = true;
+  btn.textContent = 'جاري الحفظ…';
+
+  var op;
+  if(editingKey){
+    op = db.ref('contracts/' + editingKey).update(data);
+  } else {
+    data.createdAt = new Date().toISOString();
+    op = db.ref('contracts').push().set(data);
+  }
+
+  op.then(function(){
+    toast(editingKey ? '✅ حُدّث العقد' : '✅ أُضيف العقد');
+    closeSheet();
+  }).catch(function(err){
+    toast('❌ تعذّر الحفظ: ' + (err.message || ''));
+  }).then(function(){
+    btn.disabled = false;
+    btn.textContent = 'حفظ';
+  });
+}
+
+/* ===== التشغيل بعد التحقق ===== */
+window.__atwadInitPage = function(user){
+  if(!user || user.uid !== ADMIN_UID){
+    document.body.innerHTML =
+      '<div style="padding:40px;text-align:center;font-family:Tajawal,sans-serif;">' +
+      'هذا الحساب غير مصرّح له بعرض العقود.</div>';
+    return;
+  }
+  db = window.db;
+  if(!db){
+    el('statusPill').textContent = 'غير متصل';
+    return;
+  }
+
+  el('newBtn').addEventListener('click', function(){ openSheet(null); });
+  el('closeSheet').addEventListener('click', closeSheet);
+  el('cancelBtn').addEventListener('click', closeSheet);
+  el('saveBtn').addEventListener('click', saveContract);
+  el('q').addEventListener('input', render);
+  el('filt').addEventListener('change', render);
+  el('sheet').addEventListener('click', function(e){
+    if(e.target === el('sheet')) closeSheet();
+  });
+
+  listen();
+};
+
+window.__atwadCleanup = function(){
+  if(!db) return;
+  db.ref('contracts').off();
+  db.ref('bookings').off();
+};
+</script>
+<script src="atwad-nav.js"></script>
+</body>
+</html>
