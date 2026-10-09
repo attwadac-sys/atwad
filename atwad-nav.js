@@ -11,6 +11,9 @@
  *     التبويبات على الجوال.
  *  ٣) زر الرجوع أو إغلاق التبويب وفيه بيانات غير محفوظة يطلب تأكيداً.
  *
+ * الشريط السفلي يختفي تلقائياً ما دامت نافذة منبثقة مفتوحة، وطبقته أدنى
+ * من طبقات نوافذ النظام، حتى لا يحجب أزرارها أبداً.
+ *
  * لا يلمس هذا الملف بيانات Firebase ولا أي منطق قائم؛ يعمل على طبقة
  * التنقل فقط. لاستثناء حقل من حساب «البيانات غير المحفوظة» أضف إليه
  * الخاصية data-nosave.
@@ -207,7 +210,7 @@
       '#atwadMobileNav{display:none;}' +
 
       '@media(max-width:900px){' +
-        '#atwadMobileNav{display:flex;position:fixed;bottom:0;right:0;left:0;z-index:900;' +
+        '#atwadMobileNav{display:flex;position:fixed;bottom:0;right:0;left:0;z-index:90;' +
           'background:#0A2540;border-top:1px solid rgba(255,255,255,.1);' +
           'padding:6px 2px calc(6px + env(safe-area-inset-bottom,0px));' +
           'box-shadow:0 -4px 20px rgba(10,37,64,.22);}' +
@@ -219,6 +222,7 @@
         '#atwadMobileNav .amn-ic{font-size:19px;line-height:1;}' +
         '#atwadMobileNav .amn-tx{font-size:10.5px;font-weight:700;white-space:nowrap;}' +
         '#atwadMobileNav .amn-item:focus-visible{outline:2px solid #38BDF8;outline-offset:-2px;}' +
+        'body.atwad-nav-off #atwadMobileNav{display:none !important;}' +
         'body{padding-bottom:70px !important;}' +
         '#atwadNavNotice{bottom:96px;}' +
       '}' +
@@ -226,6 +230,69 @@
         '#atwadNavNotice{transition:none;}' +
       '}';
     document.head.appendChild(css);
+  }
+
+  /* ===== إخفاء الشريط عند فتح نافذة ===== */
+  /*
+   * نوافذ النظام كلها أبناء مباشرون للـ body وتغطي الشاشة. إن بقي الشريط
+   * ظاهراً فوقها حجب أزرارها السفلية — وهذا ما منع «متابعة إلى الحجز».
+   * نُخفيه ما دامت نافذة مفتوحة، ونُعيده عند إغلاقها.
+   */
+  var SKIP_IDS = { atwadMobileNav:1, atwadNavNotice:1, atwadNavStyles:1 };
+
+  function overlayOpen(){
+    var kids = document.body.children;
+    for(var i = 0; i < kids.length; i++){
+      var el = kids[i];
+      if(el.id && SKIP_IDS[el.id]) continue;
+      var tag = el.tagName;
+      if(tag === 'SCRIPT' || tag === 'STYLE' || tag === 'LINK' || tag === 'NOSCRIPT') continue;
+
+      var cs = window.getComputedStyle(el);
+      if(cs.display === 'none' || cs.visibility === 'hidden' || cs.opacity === '0') continue;
+      if(cs.position !== 'fixed' && cs.position !== 'absolute') continue;
+
+      var z = parseInt(cs.zIndex, 10);
+      if(isNaN(z) || z < 100) continue;
+
+      var r = el.getBoundingClientRect();
+      if(r.height >= window.innerHeight * 0.5 && r.width >= window.innerWidth * 0.6) return true;
+    }
+    return false;
+  }
+
+  var barHidden = false;
+  function syncBar(){
+    var hide = overlayOpen();
+    if(hide === barHidden) return;
+    barHidden = hide;
+    if(hide){
+      document.body.classList.add('atwad-nav-off');
+    } else {
+      document.body.classList.remove('atwad-nav-off');
+    }
+  }
+
+  function watchOverlays(){
+    var pending = false;
+    function schedule(){
+      if(pending) return;
+      pending = true;
+      window.requestAnimationFrame(function(){
+        pending = false;
+        syncBar();
+      });
+    }
+    if(window.MutationObserver){
+      new MutationObserver(schedule).observe(document.body, {
+        subtree: true, childList: true,
+        attributes: true, attributeFilter: ['style', 'class']
+      });
+    }
+    window.addEventListener('click', schedule, true);
+    window.addEventListener('transitionend', schedule, true);
+    window.addEventListener('resize', schedule);
+    syncBar();
   }
 
   /* ===== حماية زر الرجوع وإغلاق التبويب ===== */
@@ -245,6 +312,7 @@
       buildMobileBar();
       rebindSidebar();
       rebindLinks();
+      watchOverlays();
       guardUnload();
     } catch(err){
       console.error('[atwad-nav] تعذّر تهيئة التنقل:', err);
