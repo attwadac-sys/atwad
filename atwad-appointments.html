@@ -825,6 +825,7 @@ function logoutAdmin() {
 function startSecureAppointments() {
   if(secureSyncStarted) return;
   secureSyncStarted = true;
+  showApptCache();
   loadTechnicianDirectory();
   loadWaitingList();
   loadApptConfirmations();
@@ -1282,7 +1283,110 @@ var appointmentsErrorHandler = null;
 var firebaseSyncAttempt = 0;
 var firebaseInitialLoadTimer = null;
 
+// ===== نسخة محلية تُعرض فوراً =====
+// سبب التعليق المتكرر: الصفحة كانت تنتظر تنزيل جدول appointments كاملاً ثم
+// جدول bookings كاملاً، وكل سجل قد يحمل صورة موقع بصيغة base64. على بيانات
+// الجوال يستغرق ذلك عشرات الثواني فتبقى الشاشة محجوبة. الحل هنا: نعرض آخر
+// نسخة ناجحة من المتصفح فوراً (بدون الصور) ثم نُحدّثها من السحابة في الخلفية.
+var APPT_CACHE_KEY = 'atwadApptCache_v2';
+var apptCacheMode  = false;
+
+function apptCacheStrip(list) {
+  var out = [];
+  for(var i = 0; i < list.length; i++) {
+    var a = list[i] || {};
+    var row = {};
+    var keys = Object.keys(a);
+    for(var k = 0; k < keys.length; k++) {
+      // الصور لا تُخزَّن محلياً — حصة التخزين في المتصفح محدودة
+      if(keys[k] === 'locationImage') continue;
+      row[keys[k]] = a[keys[k]];
+    }
+    row._hadImage = a.locationImage ? true : false;
+    out.push(row);
+  }
+  return out;
+}
+
+function saveApptCache(list) {
+  try {
+    localStorage.setItem(APPT_CACHE_KEY, JSON.stringify({
+      at: Date.now(),
+      rows: apptCacheStrip(list)
+    }));
+  } catch(err) {
+    console.warn('تعذّر حفظ النسخة المحلية للمواعيد:', err);
+  }
+}
+
+function apptCacheAgeText(at) {
+  var mins = Math.round((Date.now() - at) / 60000);
+  if(mins < 1)  return 'قبل لحظات';
+  if(mins < 60) return 'قبل ' + mins + ' دقيقة';
+  var hrs = Math.round(mins / 60);
+  if(hrs < 24)  return 'قبل ' + hrs + ' ساعة';
+  return 'قبل ' + Math.round(hrs / 24) + ' يوم';
+}
+
+function showApptCache() {
+  var raw = null;
+  try {
+    raw = localStorage.getItem(APPT_CACHE_KEY);
+  } catch(err) {
+    console.warn('تعذّر قراءة النسخة المحلية للمواعيد:', err);
+    return false;
+  }
+  if(!raw) return false;
+
+  var data = null;
+  try {
+    data = JSON.parse(raw);
+  } catch(err) {
+    console.warn('النسخة المحلية للمواعيد غير صالحة:', err);
+    return false;
+  }
+  if(!data || !data.rows || !data.rows.length) return false;
+
+  apptCacheMode = true;
+  appointments  = data.rows;
+  updateStats();
+  renderWeek();
+  renderList();
+  finishAppointmentsLoading();
+
+  var dot = document.getElementById('fbDot');
+  var st  = document.getElementById('fbStatusText');
+  if(dot) dot.className = 'fb-dot loading';
+  if(st)  st.textContent = 'نسخة محفوظة ' + apptCacheAgeText(data.at) + ' • جاري التحديث';
+
+  var pill = document.getElementById('fbStatus');
+  if(pill && !pill.getAttribute('data-resync')) {
+    pill.setAttribute('data-resync', '1');
+    pill.style.cursor = 'pointer';
+    pill.title = 'اضغط لإعادة التحديث من السحابة';
+    pill.addEventListener('click', function() { initFirebaseSync(); });
+  }
+  return true;
+}
+
+/** التعديل ممنوع أثناء عرض النسخة المحفوظة — الصور غير محمَّلة والحفظ يمسحها */
+function apptCacheBlocks() {
+  if(!apptCacheMode) return false;
+  showToast('⏳ البيانات المعروضة نسخة محفوظة — انتظر اكتمال التحديث قبل التعديل');
+  return true;
+}
+
 function setAppointmentsLoadingState(message, allowRetry) {
+  if(apptCacheMode) {
+    // النسخة المحفوظة معروضة والعمل مستمر — لا نُعيد حجب الشاشة
+    if(allowRetry) {
+      var cdot = document.getElementById('fbDot');
+      var cst  = document.getElementById('fbStatusText');
+      if(cdot) cdot.className = 'fb-dot';
+      if(cst)  cst.textContent = 'نسخة محفوظة • تعذّر التحديث — اضغط للمحاولة';
+    }
+    return;
+  }
   var overlay = document.getElementById('loadingOverlay');
   var spinner = document.getElementById('loadingSpinner');
   var messageEl = document.getElementById('loadingMessage');
@@ -1303,7 +1407,9 @@ function finishAppointmentsLoading() {
 }
 
 function applyLoadedAppointments(fbAppts, bookingWarning) {
-  appointments = fbAppts;
+  appointments  = fbAppts;
+  apptCacheMode = false;
+  saveApptCache(fbAppts);
   updateStats();
   renderWeek();
   renderList();
@@ -1344,7 +1450,10 @@ function initFirebaseSync() {
   if(firebaseInitialLoadTimer) clearTimeout(firebaseInitialLoadTimer);
   setAppointmentsLoadingState('جاري تحميل المواعيد...', false);
   document.getElementById('fbDot').className = 'fb-dot loading';
-  document.getElementById('fbStatusText').textContent = 'جاري الاتصال...';
+  if(!apptCacheMode) {
+    // أثناء عرض النسخة المحفوظة نترك الشريط يوضّح ذلك بدل «جاري الاتصال»
+    document.getElementById('fbStatusText').textContent = 'جاري الاتصال...';
+  }
 
   // لا تبقى الصفحة محجوبة إلى ما لا نهاية عند انقطاع الشبكة.
   firebaseInitialLoadTimer = setTimeout(function() {
@@ -1352,7 +1461,7 @@ function initFirebaseSync() {
     document.getElementById('fbDot').className = 'fb-dot';
     document.getElementById('fbStatusText').textContent = 'تعذر الاتصال';
     setAppointmentsLoadingState('تعذر تحميل المواعيد. تحقق من الإنترنت ثم أعد المحاولة.', true);
-  }, 15000);
+  }, 25000);
 
   // مزامنة مواعيد النظام الداخلي
   appointmentsValueHandler = function(snap) {
@@ -1384,9 +1493,9 @@ function initFirebaseSync() {
       // عند وصول bookings لاحقاً سيُعاد الدمج والعرض تلقائياً.
       partialAppointmentsShown = true;
       applyLoadedAppointments(atwadDedupeForDisplay(fbAppts), true);
-    }, 8000);
+    }, 2500);
 
-    db.ref('bookings').once('value').then(function(bookSnap) {
+    db.ref('bookings').limitToLast(600).once('value').then(function(bookSnap) {
       if(bookingsFinished || thisAttempt !== firebaseSyncAttempt) return;
       bookingsFinished = true;
       clearTimeout(bookingsTimer);
@@ -1929,6 +2038,7 @@ function openNewApptForm(){
 }
 
 function editAppt(id){
+  if(apptCacheBlocks()) return;
   const a = findAppt(id);
   if(!a) return;
   editingId = id;
@@ -2785,6 +2895,7 @@ function readUnitsForSave(){
 }
 
 function saveAppt(){
+  if(apptCacheBlocks()) return;
   if(manualSaveInProgress) return;
   const client=document.getElementById('f_client').value.trim();
   const phone=document.getElementById('f_phone').value.trim();
@@ -3842,6 +3953,7 @@ function createMissingWO(apptId) {
 
 function deleteAppt(id, e){
   if(e) e.stopPropagation();
+  if(apptCacheBlocks()) return;
   if(!confirm('⚠️ هل تريدين حذف هذا الموعد نهائياً؟')) return;
   const a = findAppt(id);
   if(!a || !db) return;
