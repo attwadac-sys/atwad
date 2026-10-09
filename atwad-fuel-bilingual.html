@@ -99,7 +99,16 @@ tr:last-child td{border-bottom:none;}
   .total-card .delta{margin-inline-start:0;}
 }
 @media print{ body{background:#fff;} .month-bar,.card.entry,.del,.ghost,.lang{display:none;} }
+  .connpill{font-size:12px;font-weight:700;padding:5px 12px;border-radius:99px;
+    background:rgba(255,255,255,.18);color:#fff;white-space:nowrap;}
+  .connpill.bad{background:#FEE2E2;color:#991B1B;}
+  .connpill.warn{background:#FEF3C7;color:#78350F;}
 </style>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="atwad-firebase.js"></script>
+<script src="atwad-auth.js"></script>
 </head>
 <body>
 
@@ -108,7 +117,10 @@ tr:last-child td{border-bottom:none;}
     <h1 data-i18n="title">مصروف البنزين</h1>
     <p data-i18n="subtitle">مؤسسة أطواد — تسجيل يومي وحساب شهري</p>
   </div>
-  <button class="lang" id="langBtn" onclick="toggleLang()">English</button>
+  <div style="display:flex;gap:9px;align-items:center;">
+    <span class="connpill" id="connPill">…</span>
+    <button class="lang" id="langBtn" onclick="toggleLang()">English</button>
+  </div>
 </div>
 
 <div class="wrap">
@@ -137,6 +149,9 @@ tr:last-child td{border-bottom:none;}
     <div class="stat"><b id="sKm">0</b><span data-i18n="kmMonth">كيلومترات الشهر</span></div>
     <div class="stat"><b id="sCostKm">—</b><span data-i18n="costKm">تكلفة الكيلومتر</span></div>
     <div class="stat"><b id="sKmFill">—</b><span data-i18n="kmPerFill">كم لكل تعبئة</span></div>
+    <div class="stat"><b id="sVisits">—</b><span data-i18n="visits">زيارات الشهر</span></div>
+    <div class="stat"><b id="sKmVisit">—</b><span data-i18n="kmPerVisit">كم لكل زيارة</span></div>
+    <div class="stat"><b id="sCostVisit">—</b><span data-i18n="costPerVisit">وقود الزيارة</span></div>
   </div>
 
   <div class="card entry">
@@ -217,6 +232,10 @@ var TXT = {
     askOdo:'العداد {a} أقل من آخر قراءة ({b}). هل تريد الحفظ رغم ذلك؟',
     askDel:'حذف تعبئة {a} ريال بتاريخ {b}؟',
     noExport:'لا توجد بيانات للتصدير.',
+    visits:'زيارات الشهر', kmPerVisit:'كم لكل زيارة', costPerVisit:'وقود الزيارة',
+    connOn:'متصل', connOff:'غير متصل — حفظ محلي', connErr:'خطأ اتصال', connWait:'جاري الاتصال…',
+    movedUp:'رُفعت {a} تعبئة من هذا الجهاز إلى السحابة.',
+    offlineSave:'لا يوجد اتصال — حُفظت محلياً فقط ولن تظهر عند الإدارة حتى تعود الشبكة.',
     noStore:'المتصفح يمنع الحفظ على هذا الجهاز. البيانات ستبقى حتى إغلاق الصفحة فقط — نزّل ملف إكسل قبل الإغلاق.',
     saveFail:'تعذر الحفظ: ',
     months:['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'],
@@ -246,6 +265,10 @@ var TXT = {
     askOdo:'Odometer {a} is lower than the last reading ({b}). Save anyway?',
     askDel:'Delete the {a} SAR fill-up dated {b}?',
     noExport:'Nothing to export yet.',
+    visits:'Visits this month', kmPerVisit:'Km per visit', costPerVisit:'Fuel per visit',
+    connOn:'Online', connOff:'Offline — saved on device', connErr:'Connection error', connWait:'Connecting…',
+    movedUp:'{a} fill-ups from this device were uploaded to the cloud.',
+    offlineSave:'No connection — saved on this device only. The office will not see it until you are back online.',
     noStore:'This browser blocks saving on this device. Data lasts until you close the page — download the Excel file first.',
     saveFail:'Could not save: ',
     months:['January','February','March','April','May','June','July','August','September','October','November','December'],
@@ -276,29 +299,154 @@ function toggleLang(){
 }
 
 /* ============ التخزين ============ */
-function loadEntries(){
+/*
+ * كانت الصفحة تحفظ في ذاكرة المتصفح وحدها، فكانت تسجيلات الفني تبقى في
+ * جواله ولا تصل إلى الإدارة، وتضيع بتغيير الجهاز أو مسح البيانات.
+ * الآن المرجع هو قاعدة البيانات، والذاكرة المحلية نسخة احتياطية تعمل
+ * عند انقطاع الشبكة وتُرفع تلقائياً عند عودتها.
+ */
+var FUEL_NODE    = 'fuelLogs';
+var fuelDb           = null;
+var cloudReady   = false;
+var localPending = [];   // ما كان محفوظاً على الجهاز قبل الاتصال
+
+function warnBox(msg){
+  document.getElementById('storageWarn').innerHTML =
+    '<div class="warnbox">' + escapeHtml(msg) + '</div>';
+}
+
+function setConn(state, extra){
+  var pill = document.getElementById('connPill');
+  if(!pill) return;
+  if(state === 'on'){
+    pill.className = 'connpill';
+    pill.textContent = t('connOn') + ' • ' + (extra || 0);
+  } else if(state === 'off'){
+    pill.className = 'connpill warn';
+    pill.textContent = t('connOff');
+  } else if(state === 'err'){
+    pill.className = 'connpill bad';
+    pill.textContent = t('connErr');
+  } else {
+    pill.className = 'connpill';
+    pill.textContent = t('connWait');
+  }
+}
+
+function loadLocal(){
   try {
     var raw = window.localStorage.getItem(STORE_KEY);
-    entries = raw ? JSON.parse(raw) : [];
-    if(!Array.isArray(entries)) entries = [];
+    var rows = raw ? JSON.parse(raw) : [];
+    if(!Array.isArray(rows)) rows = [];
+    entries = rows;
+    localPending = rows.slice();
     var savedLang = window.localStorage.getItem(LANG_KEY);
     if(savedLang === 'en' || savedLang === 'ar') lang = savedLang;
   } catch(err) {
     storageOk = false;
     entries = [];
-    document.getElementById('storageWarn').innerHTML = '<div class="warnbox">' + escapeHtml(t('noStore')) + '</div>';
+    localPending = [];
+    console.warn('تعذّر قراءة النسخة المحلية:', err);
+    warnBox(t('noStore'));
   }
 }
-function saveEntries(){
+
+function saveLocal(){
   if(!storageOk) return;
   try {
     window.localStorage.setItem(STORE_KEY, JSON.stringify(entries));
   } catch(err) {
     storageOk = false;
-    document.getElementById('storageWarn').innerHTML =
-      '<div class="warnbox">' + escapeHtml(t('saveFail') + err.message) + '</div>';
+    warnBox(t('saveFail') + err.message);
   }
 }
+
+/** يحوّل سجل القاعدة إلى شكل الصفحة */
+function rowFrom(key, v){
+  var o = v || {};
+  return {
+    id: key,
+    date: String(o.date || ''),
+    amount: Number(o.amount) || 0,
+    odo: (o.odo === null || o.odo === undefined || o.odo === '') ? null : Number(o.odo),
+    note: String(o.note || '')
+  };
+}
+
+function startCloud(){
+  fuelDb = window.db || null;
+  if(!fuelDb){
+    setConn('off');
+    warnBox(t('offlineSave'));
+    return;
+  }
+  setConn('wait');
+  fuelDb.ref(FUEL_NODE).on('value', function(snap){
+    var rows = [];
+    snap.forEach(function(ch){ rows.push(rowFrom(ch.key, ch.val())); });
+    entries = rows;
+    cloudReady = true;
+    saveLocal();
+    setConn('on', rows.length);
+    uploadLeftovers();
+    render();
+  }, function(err){
+    console.error('fuelLogs:', err);
+    cloudReady = false;
+    setConn('err');
+    warnBox(t('connErr') + ': ' + (err.message || ''));
+  });
+}
+
+/** يرفع ما كان محفوظاً على هذا الجهاز ولم يصل إلى السحابة — مرة واحدة لكل سجل */
+function uploadLeftovers(){
+  if(!cloudReady || !localPending.length) return;
+  var have = {};
+  entries.forEach(function(e){ have[e.id] = true; });
+
+  var missing = localPending.filter(function(e){
+    return e && e.id && !have[e.id] && e.date;
+  });
+  localPending = [];
+  if(!missing.length) return;
+
+  var updates = {};
+  missing.forEach(function(e){
+    updates[FUEL_NODE + '/' + e.id] = {
+      date: e.date,
+      amount: Number(e.amount) || 0,
+      odo: (e.odo == null ? null : Number(e.odo)),
+      note: String(e.note || '')
+    };
+  });
+
+  fuelDb.ref().update(updates).then(function(){
+    warnBox(fill(t('movedUp'), missing.length));
+  }).catch(function(err){
+    console.error('رفع التسجيلات المحلية:', err);
+    warnBox(t('saveFail') + (err.message || ''));
+  });
+}
+
+/** يكتب سجلاً واحداً: السحابة إن أمكن، وإلا الجهاز وحده */
+function persistEntry(row){
+  saveLocal();
+  if(!cloudReady || !fuelDb){
+    warnBox(t('offlineSave'));
+    return;
+  }
+  fuelDb.ref(FUEL_NODE + '/' + row.id).set({
+    date: row.date,
+    amount: Number(row.amount) || 0,
+    odo: (row.odo == null ? null : Number(row.odo)),
+    note: String(row.note || '')
+  }).catch(function(err){
+    console.error('حفظ التعبئة:', err);
+    warnBox(t('saveFail') + (err.message || ''));
+  });
+}
+
+function saveEntries(){ saveLocal(); }
 
 /* ============ أدوات ============ */
 function escapeHtml(v){
@@ -376,8 +524,9 @@ function addEntry(){
     if(last !== null && odo < last && !confirm(fill(t('askOdo'), money(odo), money(last)))) return;
   }
 
-  entries.push({ id: String(Date.now()), date: date, amount: amount, odo: odo, note: note });
-  saveEntries();
+  var row = { id: String(Date.now()), date: date, amount: amount, odo: odo, note: note };
+  entries.push(row);
+  persistEntry(row);
 
   document.getElementById('fAmount').value = DEFAULT_FILL;
   document.getElementById('fOdo').value = '';
@@ -397,7 +546,13 @@ function removeEntry(id){
   if(!row) return;
   if(!confirm(fill(t('askDel'), money(row.amount), row.date))) return;
   entries = entries.filter(function(e){ return e.id !== id; });
-  saveEntries();
+  saveLocal();
+  if(cloudReady && fuelDb){
+    fuelDb.ref(FUEL_NODE + '/' + id).remove().catch(function(err){
+      console.error('حذف التعبئة:', err);
+      warnBox(t('saveFail') + (err.message || ''));
+    });
+  }
   render();
 }
 
@@ -447,6 +602,68 @@ function render(){
 
   renderStrip(ym, list, nDays);
   renderTable(list);
+  updateVisitStats(ym, km, total);
+}
+
+/* ===== ربط المسافة بعدد زيارات الشهر ===== */
+/*
+ * الزيارة الواحدة = موعد إداري، أو حجز إلكتروني لم يُحوَّل إلى موعد.
+ * نستبعد الملغى، ونعتمد فهرس التاريخ الموجود في القاعدة فلا نقرأ الجدول كاملاً.
+ */
+var visitCache = {};
+
+function isCancelled(status){
+  var v = String(status == null ? '' : status).toLowerCase();
+  return v.indexOf('cancel') !== -1 || v.indexOf('ملغ') !== -1;
+}
+
+function paintVisits(ym, n, km, total){
+  // المستخدم قد يكون غيّر الشهر أثناء القراءة
+  if((document.getElementById('monthPick').value || '') !== ym) return;
+  document.getElementById('sVisits').textContent = n;
+  document.getElementById('sKmVisit').textContent = (n > 0 && km > 0) ? money(km / n) : '—';
+  document.getElementById('sCostVisit').textContent =
+    (n > 0 && total > 0) ? (total / n).toFixed(1) + ' ' + t('sar') : '—';
+}
+
+function updateVisitStats(ym, km, total){
+  if(!fuelDb || !cloudReady){
+    document.getElementById('sVisits').textContent = '—';
+    document.getElementById('sKmVisit').textContent = '—';
+    document.getElementById('sCostVisit').textContent = '—';
+    return;
+  }
+  if(visitCache[ym] !== undefined){
+    paintVisits(ym, visitCache[ym], km, total);
+    return;
+  }
+  document.getElementById('sVisits').textContent = '…';
+
+  var from = ym + '-01';
+  var to   = ym + '-31';
+  Promise.all([
+    fuelDb.ref('appointments').orderByChild('date').startAt(from).endAt(to).once('value'),
+    fuelDb.ref('bookings').orderByChild('date').startAt(from).endAt(to).once('value')
+  ]).then(function(res){
+    var linked = {};
+    var n = 0;
+    res[0].forEach(function(ch){
+      var a = ch.val() || {};
+      if(a.sourceBookingKey) linked[a.sourceBookingKey] = true;
+      if(!isCancelled(a.status)) n += 1;
+    });
+    res[1].forEach(function(ch){
+      var b = ch.val() || {};
+      if(linked[ch.key]) return;
+      if(isCancelled(b.status)) return;
+      n += 1;
+    });
+    visitCache[ym] = n;
+    paintVisits(ym, n, km, total);
+  }).catch(function(err){
+    console.warn('تعذّر حساب الزيارات:', err);
+    document.getElementById('sVisits').textContent = '—';
+  });
 }
 
 function renderStrip(ym, list, nDays){
@@ -554,13 +771,26 @@ function exportCsv(){
 }
 
 /* ============ البدء ============ */
-loadEntries();
+loadLocal();
 document.getElementById('fDate').value = todayIso();
 document.getElementById('monthPick').value = monthOf(todayIso());
 document.getElementById('fAmount').addEventListener('keydown', function(ev){
   if(ev.key === 'Enter') addEntry();
 });
 applyLang();
+setConn('wait');
+
+// atwad-auth.js يستدعيها بعد نجاح تسجيل الدخول
+window.__atwadInitPage = function(){ startCloud(); };
+
+// وإن كان التحقق قد اكتمل قبل تعريف الدالة أعلاه
+if(window.__atwadPageInitialized && window.auth && window.auth.currentUser){
+  startCloud();
+}
+
+window.__atwadCleanup = function(){
+  if(fuelDb) fuelDb.ref(FUEL_NODE).off();
+};
 </script>
 </body>
 </html>
