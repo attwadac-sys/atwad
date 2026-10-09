@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>نقل صور المواقع — أطواد</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--deep:#0A2540;--sky:#38BDF8;--ice:#E2E8F0;--mist:#64748B;--ok:#059669;--warn:#B45309;--bad:#B91C1C;}
+*{box-sizing:border-box;}
+body{margin:0;background:#F1F5F9;font-family:'Tajawal',sans-serif;color:var(--deep);padding:18px;}
+.wrap{max-width:820px;margin:0 auto;}
+h1{font-size:21px;margin:0 0 6px;}
+.sub{font-size:14px;color:var(--mist);margin-bottom:18px;line-height:1.8;}
+.card{background:#fff;border:1.5px solid var(--ice);border-radius:14px;padding:18px;margin-bottom:14px;}
+.card h2{font-size:16.5px;margin:0 0 6px;}
+.card p{font-size:13.5px;color:var(--mist);line-height:1.9;margin:0 0 14px;}
+.phase{border-right:5px solid var(--ice);}
+.phase.active{border-right-color:var(--sky);}
+.phase.done{border-right-color:var(--ok);}
+button{font-family:'Tajawal',sans-serif;font-size:15px;font-weight:700;border:0;border-radius:11px;
+  background:var(--sky);color:#fff;padding:11px 20px;cursor:pointer;}
+button.danger{background:var(--bad);}
+button:disabled{background:#CBD5E1;cursor:default;}
+.bar{height:9px;background:#E2E8F0;border-radius:99px;overflow:hidden;margin:14px 0 8px;}
+.bar i{display:block;height:100%;width:0;background:var(--sky);transition:width .25s;}
+.log{font-size:13px;color:var(--mist);line-height:1.9;margin-top:8px;min-height:22px;}
+.log b{color:var(--deep);}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-top:12px;}
+.stat{background:#F8FAFC;border:1px solid var(--ice);border-radius:10px;padding:10px 12px;}
+.stat .n{font-size:21px;font-weight:800;}
+.stat .l{font-size:12px;color:var(--mist);}
+.warn{background:#FEF3C7;border:1.5px solid #FCD34D;color:#78350F;border-radius:11px;
+  padding:13px 15px;font-size:13.5px;line-height:1.9;margin-bottom:12px;}
+.errs{background:#FEF2F2;border:1px solid #FECACA;border-radius:10px;padding:10px 12px;
+  font-size:12.5px;color:#7F1D1D;max-height:160px;overflow:auto;margin-top:10px;line-height:1.8;}
+label.chk{display:flex;gap:9px;align-items:flex-start;font-size:13.5px;line-height:1.7;
+  margin-bottom:12px;cursor:pointer;}
+.hide{display:none;}
+</style>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <h1>🚚 نقل صور المواقع خارج السجلات</h1>
+  <p class="sub">
+    ثلاث مراحل منفصلة، وبينها تُحدَّث الصفحات. لا تُحذف صورة واحدة قبل التأكد من
+    وصول نسخة منها سليمة إلى مكانها الجديد.
+  </p>
+
+  <div id="gate" class="card">جاري التحقق من تسجيل الدخول…</div>
+
+  <!-- ١ -->
+  <div class="card phase" id="p1">
+    <h2>المرحلة ١ — فحص فقط</h2>
+    <p>تقرأ ولا تكتب شيئاً. تخبرك كم صورة موجودة وكم ميجابايت ستتحرر.</p>
+    <button id="b1" type="button" disabled>ابدأ الفحص</button>
+    <div class="bar"><i id="bar1"></i></div>
+    <div class="log" id="log1">لم يبدأ</div>
+    <div class="stats hide" id="st1"></div>
+  </div>
+
+  <!-- ٢ -->
+  <div class="card phase" id="p2">
+    <h2>المرحلة ٢ — نسخ الصور إلى مكانها الجديد</h2>
+    <p>
+      تنسخ كل صورة إلى العقدة الجديدة وتتحقق من مطابقة الطول، <b>دون أن تمسّ
+      الأصل</b>. لو توقفت في منتصفها أو أعدت تشغيلها فلا ضرر — تتخطّى ما نُسخ
+      سابقاً. لن يتغيّر شيء في النظام بعد هذه المرحلة.
+    </p>
+    <button id="b2" type="button" disabled>ابدأ النسخ</button>
+    <div class="bar"><i id="bar2"></i></div>
+    <div class="log" id="log2">لم يبدأ</div>
+    <div class="errs hide" id="err2"></div>
+  </div>
+
+  <!-- ٣ -->
+  <div class="card phase" id="p3">
+    <h2>المرحلة ٣ — حذف النسخ القديمة من داخل السجلات</h2>
+    <div class="warn">
+      ⚠️ لا تُشغّل هذه المرحلة إلا بعد رفع الصفحات المحدَّثة التي تقرأ الصور من
+      مكانها الجديد. قبل ذلك ستختفي الصور من الشاشة مؤقتاً.
+    </div>
+    <p>هنا فقط يتحقق التوفير: ينكمش حجم القراءة فتعود الصفحة سريعة.</p>
+    <label class="chk">
+      <input type="checkbox" id="ok3">
+      <span>رفعتُ الصفحات المحدَّثة وتحققتُ من ظهور الصور فيها</span>
+    </label>
+    <button id="b3" type="button" class="danger" disabled>ابدأ الحذف</button>
+    <div class="bar"><i id="bar3"></i></div>
+    <div class="log" id="log3">لم يبدأ</div>
+    <div class="errs hide" id="err3"></div>
+  </div>
+</div>
+
+<script>
+var ADMIN_UID = 'NU8g25megKefUOBQGvfkVtBOw802';
+var db = null;
+
+// الجدول الأصلي  ->  العقدة الجديدة للصور
+var MAP = [
+  { table:'appointments', images:'apptImages'    },
+  { table:'bookings',     images:'bookingImages' }
+];
+
+firebase.initializeApp({
+  apiKey: "AIzaSyAjq2PVCkAVYwqpIpKIGx01LkbCB3TmW6w",
+  authDomain: "atwad-booking.firebaseapp.com",
+  databaseURL: "https://atwad-booking-default-rtdb.firebaseio.com",
+  projectId: "atwad-booking",
+  storageBucket: "atwad-booking.firebasestorage.app",
+  messagingSenderId: "110922546416",
+  appId: "1:110922546416:web:d8cd48aa90f2d6ce9cd635"
+});
+
+function el(id){ return document.getElementById(id); }
+function log(n, html){ el('log' + n).innerHTML = html; }
+function bar(n, done, total){ el('bar' + n).style.width = (total ? (done / total * 100) : 0) + '%'; }
+function phase(n, cls){ el('p' + n).className = 'card phase ' + cls; }
+
+function fmtBytes(b){
+  if(b < 1024) return b + ' بايت';
+  if(b < 1048576) return (b / 1024).toFixed(1) + ' كيلوبايت';
+  return (b / 1048576).toFixed(2) + ' ميجابايت';
+}
+function byteLen(str){
+  if(window.TextEncoder) return new TextEncoder().encode(str).length;
+  return unescape(encodeURIComponent(str)).length;
+}
+function showErrs(n, list){
+  if(!list.length) return;
+  var box = el('err' + n);
+  box.className = 'errs';
+  box.innerHTML = '<b>' + list.length + ' سجل لم يكتمل:</b><br>' + list.slice(0, 25).join('<br>');
+}
+
+/** يجمع كل السجلات التي تحمل صورة داخلها */
+function collect() {
+  var found = [];
+  var jobs = [];
+  for(var i = 0; i < MAP.length; i++){
+    jobs.push((function(m){
+      return db.ref(m.table).once('value').then(function(snap){
+        snap.forEach(function(child){
+          var rec = child.val();
+          if(!rec || !rec.locationImage) return;
+          var img = String(rec.locationImage);
+          found.push({
+            table: m.table,
+            images: m.images,
+            key: child.key,
+            len: img.length,
+            bytes: byteLen(img),
+            img: img
+          });
+        });
+      });
+    })(MAP[i]));
+  }
+  return Promise.all(jobs).then(function(){ return found; });
+}
+
+/* ===== المرحلة ١ ===== */
+function runScan(){
+  el('b1').disabled = true;
+  phase(1, 'active');
+  log(1, 'جاري قراءة الجدولين… قد تستغرق دقيقة.');
+
+  collect().then(function(found){
+    var bytes = 0, byTable = {};
+    for(var i = 0; i < found.length; i++){
+      bytes += found[i].bytes;
+      byTable[found[i].table] = (byTable[found[i].table] || 0) + 1;
+    }
+    bar(1, 1, 1);
+    phase(1, 'done');
+    log(1, '✅ اكتمل الفحص.');
+    el('st1').className = 'stats';
+    el('st1').innerHTML =
+      '<div class="stat"><div class="n">' + found.length + '</div><div class="l">صورة داخل السجلات</div></div>' +
+      '<div class="stat"><div class="n">' + (byTable.appointments || 0) + '</div><div class="l">في المواعيد</div></div>' +
+      '<div class="stat"><div class="n">' + (byTable.bookings || 0) + '</div><div class="l">في الحجوزات</div></div>' +
+      '<div class="stat"><div class="n">' + fmtBytes(bytes) + '</div><div class="l">ستتحرر من كل قراءة</div></div>';
+    el('b1').disabled = false;
+    el('b2').disabled = found.length === 0;
+  }).catch(function(err){
+    log(1, '❌ تعذّر الفحص: ' + (err.message || 'خطأ'));
+    el('b1').disabled = false;
+  });
+}
+
+/* ===== المرحلة ٢ — نسخ مع تحقق ===== */
+function copyOne(item){
+  var target = db.ref(item.images + '/' + item.key);
+  return target.once('value').then(function(snap){
+    var existing = snap.val();
+    // نُسخت سابقاً بنفس الطول — نتخطّاها
+    if(typeof existing === 'string' && existing.length === item.len) return 'skip';
+    return target.set(item.img).then(function(){
+      return target.once('value');
+    }).then(function(check){
+      var v = check.val();
+      if(typeof v !== 'string' || v.length !== item.len){
+        throw new Error('الطول بعد النسخ لا يطابق الأصل');
+      }
+      return 'copied';
+    });
+  });
+}
+
+function runCopy(){
+  el('b2').disabled = true;
+  el('b1').disabled = true;
+  phase(2, 'active');
+  log(2, 'جاري قراءة السجلات…');
+
+  collect().then(function(found){
+    var done = 0, copied = 0, skipped = 0;
+    var errors = [];
+
+    function step(i){
+      if(i >= found.length){
+        bar(2, 1, 1);
+        phase(2, errors.length ? 'active' : 'done');
+        log(2, '✅ انتهى النسخ — <b>' + copied + '</b> صورة منسوخة، <b>' +
+               skipped + '</b> كانت منسوخة سابقاً' +
+               (errors.length ? '، <b>' + errors.length + '</b> فشلت.' : '.') +
+               (errors.length ? '' : '<br>لم يتغيّر شيء في النظام بعد. الخطوة التالية: رفع الصفحات المحدَّثة.'));
+        showErrs(2, errors);
+        el('b1').disabled = false;
+        el('b2').disabled = false;
+        return;
+      }
+      var it = found[i];
+      copyOne(it).then(function(r){
+        if(r === 'copied') copied += 1; else skipped += 1;
+      }).catch(function(err){
+        errors.push(it.table + '/' + it.key + ' — ' + (err.message || 'خطأ'));
+      }).then(function(){
+        done += 1;
+        bar(2, done, found.length);
+        log(2, 'جاري النسخ… <b>' + done + '</b> من <b>' + found.length + '</b>');
+        // مهلة قصيرة بين الكتابات حتى لا نُغرق الاتصال بصور كبيرة
+        setTimeout(function(){ step(i + 1); }, 60);
+      });
+    }
+
+    if(!found.length){
+      log(2, 'لا توجد صور داخل السجلات — لا شيء لنسخه.');
+      el('b1').disabled = false;
+      return;
+    }
+    log(2, 'عدد الصور: <b>' + found.length + '</b>. بدء النسخ…');
+    step(0);
+  }).catch(function(err){
+    log(2, '❌ تعذّر النسخ: ' + (err.message || 'خطأ'));
+    el('b1').disabled = false;
+    el('b2').disabled = false;
+  });
+}
+
+/* ===== المرحلة ٣ — حذف الأصل بعد التأكد ===== */
+function runClear(){
+  el('b3').disabled = true;
+  phase(3, 'active');
+  log(3, 'جاري التحقق من النسخ قبل أي حذف…');
+
+  collect().then(function(found){
+    if(!found.length){
+      phase(3, 'done');
+      log(3, '✅ لا توجد صور داخل السجلات — الحذف تم سابقاً.');
+      return;
+    }
+
+    var safe = [];
+    var errors = [];
+    var checked = 0;
+
+    function verify(i){
+      if(i >= found.length){
+        if(!safe.length){
+          log(3, '❌ لم يتم التحقق من أي صورة. شغّل المرحلة ٢ أولاً.');
+          showErrs(3, errors);
+          el('b3').disabled = false;
+          return;
+        }
+        erase();
+        return;
+      }
+      var it = found[i];
+      db.ref(it.images + '/' + it.key).once('value').then(function(snap){
+        var v = snap.val();
+        if(typeof v === 'string' && v.length === it.len){
+          safe.push(it);
+        } else {
+          errors.push(it.table + '/' + it.key + ' — لا توجد نسخة مطابقة، لن تُحذف');
+        }
+      }).catch(function(err){
+        errors.push(it.table + '/' + it.key + ' — ' + (err.message || 'خطأ تحقق'));
+      }).then(function(){
+        checked += 1;
+        bar(3, checked, found.length * 2);
+        log(3, 'تحقق… <b>' + checked + '</b> من <b>' + found.length + '</b>');
+        verify(i + 1);
+      });
+    }
+
+    function erase(){
+      log(3, 'تم التحقق من <b>' + safe.length + '</b> صورة. جاري حذف النسخ الداخلية…');
+      var updates = {};
+      for(var i = 0; i < safe.length; i++){
+        updates[safe[i].table + '/' + safe[i].key + '/locationImage'] = null;
+      }
+      db.ref().update(updates).then(function(){
+        bar(3, 1, 1);
+        phase(3, 'done');
+        var freed = 0;
+        for(var j = 0; j < safe.length; j++) freed += safe[j].bytes;
+        log(3, '✅ تم حذف <b>' + safe.length + '</b> نسخة داخلية، وتحرر <b>' +
+               fmtBytes(freed) + '</b> من كل قراءة.' +
+               (errors.length ? '<br>⚠️ <b>' + errors.length + '</b> صورة بقيت كما هي لعدم اكتمال نسختها.' : ''));
+        showErrs(3, errors);
+      }).catch(function(err){
+        log(3, '❌ تعذّر الحذف: ' + (err.message || 'خطأ') + ' — لم يُحذف شيء.');
+        el('b3').disabled = false;
+      });
+    }
+
+    verify(0);
+  }).catch(function(err){
+    log(3, '❌ تعذّر التحقق: ' + (err.message || 'خطأ'));
+    el('b3').disabled = false;
+  });
+}
+
+el('ok3').addEventListener('change', function(){
+  el('b3').disabled = !this.checked;
+});
+
+firebase.auth().onAuthStateChanged(function(user){
+  if(!user){
+    location.replace('atwad-login.html?return=preview-image-move.html&reason=login-required');
+    return;
+  }
+  if(user.uid !== ADMIN_UID){
+    el('gate').textContent = '❌ هذا الحساب غير مصرّح له.';
+    return;
+  }
+  db = firebase.database();
+  el('gate').innerHTML = '✅ تم التحقق — ابدأ بالمرحلة ١.';
+  el('b1').disabled = false;
+  el('b1').addEventListener('click', runScan);
+  el('b2').addEventListener('click', runCopy);
+  el('b3').addEventListener('click', runClear);
+}, function(err){
+  el('gate').textContent = '❌ تعذّر التحقق: ' + (err.message || 'خطأ');
+});
+</script>
+</body>
+</html>
