@@ -2691,7 +2691,7 @@ function submitBooking(){
       if(bookImageBase64.length>BOOKING_IMAGE_MAX_CHARS){
         throw new Error('صورة الموقع أكبر من الحد المسموح. احذفها أو اختر صورة أخرى.');
       }
-      bookingData.locationImage=bookImageBase64;
+      // لا تُحفظ داخل الحجز — تُكتب في عقدة bookingImages بالتوازي أدناه
     }
 
     // السعر التقديري يُحسب من الخدمة، ولا يُطلب من العميل إدخاله.
@@ -2715,6 +2715,9 @@ function submitBooking(){
     if(Number.isFinite(parsedAccuracy) && parsedAccuracy > 0) {
       bookingData.accuracy = parsedAccuracy;
     }
+
+    // تبدأ مع الحجز لا بعده، حتى لا يقطعها الانتقال إلى واتساب
+    writeBookingImage(pendingBookingKey,bookImageBase64);
 
     writePublicBooking(pendingBookingKey,bookingData,30000).then(function(){
       document.getElementById('refNum').textContent=ref;
@@ -2987,6 +2990,32 @@ function releaseBookingLocksRest(key,date,lockBlocks,attempt){
  * 2) يكتب سجل bookings عبر HTTPS.
  * 3) يقرأ السجل مرة أخرى للتأكد قبل إظهار النجاح للعميل.
  */
+/**
+ * صورة الموقع تُكتب في عقدة مستقلة لا داخل الحجز، حتى لا ينتفخ جدول
+ * الحجوزات فتبطؤ شاشات الإدارة والفني. تُرسل بالتوازي مع الحجز، وفشلها
+ * لا يُفشل الحجز إطلاقاً — الحجز هو الأهم والصورة تحسين.
+ */
+function writeBookingImage(key,img){
+  if(!key||!img) return Promise.resolve();
+  return fetchWithBookingTimeout(
+    'https://atwad-booking-default-rtdb.firebaseio.com/bookingImages/'+encodeURIComponent(key)+'.json',
+    {
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(img),
+      cache:'no-store'
+    },
+    20000
+  ).then(function(response){
+    if(response.ok) return;
+    return response.text().catch(function(){return '';}).then(function(t){
+      console.warn('[booking] تعذّر حفظ صورة الموقع:',response.status,String(t).slice(0,200));
+    });
+  }).catch(function(err){
+    console.warn('[booking] تعذّر حفظ صورة الموقع:',err&&(err.code||err.message));
+  });
+}
+
 function writePublicBooking(key,bookingData,timeoutMs){
   var lockBlocks=bookingLockBlocks(bookingData.time,bookingData.duration);
   if(!bookingData.date||lockBlocks.length===0){

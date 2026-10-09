@@ -1239,6 +1239,26 @@ function imageNodeFor(a) {
   return (a && a._source === 'bookings') ? 'bookingImages' : 'apptImages';
 }
 
+/**
+ * يكتب صورة الموقع في عقدتها المنفصلة بدل داخل السجل، فلا يعود حجم
+ * الجدول ينتفخ. الصورة الفارغة تعني حذف الصورة المحفوظة.
+ * فشل كتابة الصورة لا يُفقد الموعد — الموعد محفوظ قبلها.
+ */
+function saveLocationImage(source, key, img) {
+  if(!db || !key) return Promise.resolve();
+  var node = (source === 'bookings') ? 'bookingImages' : 'apptImages';
+  var path = node + '/' + key;
+  var ref  = db.ref(path);
+  var op   = img ? ref.set(img) : ref.remove();
+
+  return op.then(function() {
+    apptImageCache[path] = img || '';
+  }).catch(function(err) {
+    console.error('تعذّر حفظ صورة الموقع:', err);
+    showToast('⚠️ حُفظ الموعد، لكن تعذّر حفظ صورة الموقع');
+  });
+}
+
 function fetchLocationImage(a) {
   if(!a) return Promise.resolve('');
   if(a.locationImage) return Promise.resolve(a.locationImage);
@@ -2972,7 +2992,8 @@ function saveAppt(){
     date, time: document.getElementById('f_time').value,
     notes: document.getElementById('f_notes').value.trim(),
     leadSource: document.getElementById('f_source').value || '',
-    locationImage: currentImageBase64 || '',
+    // الصورة تُكتب في عقدتها بعد نجاح الحفظ؛ و null تمسح أي بقية قديمة
+    locationImage: null,
     duration: readManualDuration(),
     // المدة المكتوبة هنا هي المعتمدة للعرض والأقفال حتى لو كان المصدر حجزًا إلكترونيًا
     durationOverride: true,
@@ -3130,6 +3151,7 @@ function saveAppt(){
     }
 
     withSaveTimeout(_savePromise, 20000).then(function() {
+        saveLocationImage(_editSource || 'appointments', editingFirebaseKey, currentImageBase64 || '');
         // حفظ موقع العميل — داخل try/catch حتى لا يمنع إغلاق النافذة
         if(_saveToCustomer && _custKey && _mapsLink) {
           try {
@@ -3208,6 +3230,7 @@ function saveAppt(){
         });
       });
     withSaveTimeout(_newSavePromise, 20000).then(function() {
+        saveLocationImage('appointments', _newKey, currentImageBase64 || '');
         if(_saveToCustomerNew && _custKeyNew && _mapsLinkNew) {
           try {
             saveLocationToCustomer(_custKeyNew, {
@@ -3377,6 +3400,7 @@ function rescheduleChoice(choice) {
       return true;
     });
   withSaveTimeout(_reschedulePromise, 20000).then(function() {
+      saveLocationImage('appointments', newKey, currentImageBase64 || '');
       // حفظ الموقع إن طُلب — خطأه لا يوقف العملية
       if(_saveToCustomer && _custKey && _mapsLink) {
         try {
