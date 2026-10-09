@@ -130,8 +130,13 @@ function byteLen(str){
   return unescape(encodeURIComponent(str)).length;
 }
 function showErrs(n, list){
-  if(!list.length) return;
   var box = el('err' + n);
+  // التشغيل الناجح يُفرغ أخطاء التشغيل السابق حتى لا تُقرأ على أنها جديدة
+  if(!list.length){
+    box.className = 'errs hide';
+    box.innerHTML = '';
+    return;
+  }
   box.className = 'errs';
   box.innerHTML = '<b>' + list.length + ' سجل لم يكتمل:</b><br>' + list.slice(0, 25).join('<br>');
 }
@@ -213,6 +218,7 @@ function copyOne(item){
 function runCopy(){
   el('b2').disabled = true;
   el('b1').disabled = true;
+  showErrs(2, []);
   phase(2, 'active');
   log(2, 'جاري قراءة السجلات…');
 
@@ -264,6 +270,7 @@ function runCopy(){
 /* ===== المرحلة ٣ — حذف الأصل بعد التأكد ===== */
 function runClear(){
   el('b3').disabled = true;
+  showErrs(3, []);
   phase(3, 'active');
   log(3, 'جاري التحقق من النسخ قبل أي حذف…');
 

@@ -564,10 +564,7 @@ function renderAppts() {
             <span class="time-badge">⏰ ${a.time||'--:--'}</span>
             <span style="font-size:12px;color:var(--mist);">${a.duration||60} ${t('minutes')}</span>
           </div>
-          ${a.locationImage
-            ? `<img class="location-img" src="${a.locationImage}" alt="${t('imgAlt')}" onclick="window.open('${a.locationImage}','_blank')">`
-            : `<div class="no-img">${t('noImg')}</div>`
-          }
+          <div class="loc-slot" data-key="${a._fbKey||''}" data-src="${a._source||'appointments'}"><div class="no-img">${t('noImg')}</div></div>
           <div class="info-row"><span class="icon">📍</span><span>${a.address||'—'}</span></div>
           ${a.phone ? `<div class="info-row"><span class="icon">📱</span><span>${a.phone}</span></div>` : ''}
           ${a.notes ? `<div class="info-row"><span class="icon">📝</span><span style="font-size:12px;color:var(--mist);">${a.notes}</span></div>` : ''}
@@ -586,6 +583,63 @@ function renderAppts() {
   });
 
   list.innerHTML = html;
+  hydrateLocationImages();
+}
+
+/* ===== صور المواقع تُجلب لبطاقات اليوم فقط ===== */
+/*
+ * كانت الصور مخزَّنة داخل كل سجل، فكان الفني ينزّل صور كل المواعيد
+ * والحجوزات عند كل فتح. الآن تُجلب صورة كل بطاقة معروضة وحدها، ومع
+ * الإبقاء على القراءة من داخل السجل حتى يكتمل نقل الصور القديمة.
+ */
+var techImageCache = {};
+
+function fillLocSlot(slot, img) {
+  if(!img) return;
+  slot.innerHTML = '<img class="location-img" alt="' + t('imgAlt') + '">';
+  var im = slot.querySelector('img');
+  im.src = img;
+  im.addEventListener('click', function() {
+    var w = window.open('', '_blank');
+    if(!w) return;
+    w.document.write('<img src="' + img + '" style="max-width:100%">');
+    w.document.close();
+  });
+}
+
+/** الصور التي لم تُنقل بعد لا تزال داخل السجل نفسه */
+function inlineImageFor(key) {
+  for(var i = 0; i < allAppts.length; i++) {
+    if(allAppts[i] && allAppts[i]._fbKey === key) return allAppts[i].locationImage || '';
+  }
+  return '';
+}
+
+function hydrateLocationImages() {
+  if(!db) return;
+  var slots = document.querySelectorAll('.loc-slot');
+  for(var i = 0; i < slots.length; i++) {
+    (function(slot) {
+      var key = slot.getAttribute('data-key');
+      if(!key) return;
+      var node = slot.getAttribute('data-src') === 'bookings' ? 'bookingImages' : 'apptImages';
+      var path = node + '/' + key;
+
+      if(Object.prototype.hasOwnProperty.call(techImageCache, path)) {
+        fillLocSlot(slot, techImageCache[path]);
+        return;
+      }
+      db.ref(path).once('value').then(function(snap) {
+        var v = snap.val();
+        var img = (typeof v === 'string' && v) ? v : inlineImageFor(key);
+        techImageCache[path] = img;
+        fillLocSlot(slot, img);
+      }).catch(function(err) {
+        console.warn('تعذّر تحميل صورة الموقع:', err);
+        fillLocSlot(slot, inlineImageFor(key));
+      });
+    })(slots[i]);
+  }
 }
 
 

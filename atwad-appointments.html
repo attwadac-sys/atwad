@@ -1226,6 +1226,41 @@ function resetImageField() {
   document.getElementById('imgUploadArea').style.borderColor = '#E2E8F0';
 }
 
+/* ===== صورة الموقع تُقرأ عند فتح الموعد فقط ===== */
+/*
+ * الصور كانت مخزَّنة داخل السجل نفسه، فكان كل فتح للصفحة ينزّلها كلها.
+ * الآن تُقرأ صورة الموعد وحدها عند فتحه. ونُبقي القراءة من داخل السجل
+ * كخيار احتياطي حتى تكتمل عملية النقل، فتعمل الصفحة مع الحالتين.
+ */
+var apptImageCache = {};
+var apptImagePending = false;
+
+function imageNodeFor(a) {
+  return (a && a._source === 'bookings') ? 'bookingImages' : 'apptImages';
+}
+
+function fetchLocationImage(a) {
+  if(!a) return Promise.resolve('');
+  if(a.locationImage) return Promise.resolve(a.locationImage);
+
+  var key = a._fbKey;
+  if(!key || !db) return Promise.resolve('');
+
+  var path = imageNodeFor(a) + '/' + key;
+  if(Object.prototype.hasOwnProperty.call(apptImageCache, path)) {
+    return Promise.resolve(apptImageCache[path]);
+  }
+  return db.ref(path).once('value').then(function(snap) {
+    var v = snap.val();
+    var img = (typeof v === 'string') ? v : '';
+    apptImageCache[path] = img;
+    return img;
+  }).catch(function(err) {
+    console.warn('تعذّر تحميل صورة الموقع:', err);
+    return '';
+  });
+}
+
 function loadImageInModal(imageBase64) {
   if(imageBase64) {
     currentImageBase64 = imageBase64;
@@ -2068,7 +2103,15 @@ function editAppt(id){
   document.getElementById('f_notes').value=a.notes||'';
   document.getElementById('f_source').value=a.leadSource||'';
   document.getElementById('areaApprovedBanner').style.display = 'none';
-  loadImageInModal(a.locationImage||'');
+  // الصورة تصل بعد لحظة؛ الحفظ ممنوع قبل وصولها حتى لا تُمسح بالخطأ
+  loadImageInModal('');
+  apptImagePending = true;
+  (function(target){
+    fetchLocationImage(target).then(function(img){
+      apptImagePending = false;
+      if(editingFirebaseKey === target._fbKey) loadImageInModal(img);
+    });
+  })(a);
   // استعادة حقول الموقع — resetLocFields أولاً ثم نُعيد تعبئة بيانات الموعد
   resetLocFields();
   // لا نضع في الحقل إلا دبوسًا يمكن إثبات إحداثياته.
@@ -2896,6 +2939,7 @@ function readUnitsForSave(){
 
 function saveAppt(){
   if(apptCacheBlocks()) return;
+  if(apptImagePending) return showToast('⏳ جارٍ تحميل صورة الموقع — انتظر لحظة قبل الحفظ');
   if(manualSaveInProgress) return;
   const client=document.getElementById('f_client').value.trim();
   const phone=document.getElementById('f_phone').value.trim();
@@ -3844,7 +3888,7 @@ function openDetail(id){
     ${renderTechnicianNotificationBadge(a)?`<div style="margin-bottom:12px;">${renderTechnicianNotificationBadge(a)}</div>`:''}
     ${a.leadSource?`<div style="display:inline-block;background:#EEF2FF;border:1.5px solid #C7D2FE;border-radius:999px;padding:4px 12px;margin-bottom:10px;font-size:12px;color:#3730A3;">📣 المصدر: ${leadSourceLabel(a.leadSource)}</div>`:''}
     ${a.notes?`<div style="background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:10px;padding:12px;margin-bottom:14px;font-size:13px;color:#92400E;">📝 ${a.notes}</div>`:''}
-    ${a.locationImage?`<div style="margin-bottom:14px;"><div style="font-size:12px;color:var(--mist);margin-bottom:6px;">📸 صورة الموقع</div><img src="${a.locationImage}" style="width:100%;max-height:200px;object-fit:cover;border-radius:10px;border:1.5px solid var(--ice);" onclick="window.open('${a.locationImage}','_blank')"></div>`:''}
+    <div id="detailLocImgBox" style="margin-bottom:0;"></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
       <a href="${atwadWaUrl(a.phone, buildReminderMessage(a))}" target="atwadWhatsApp" style="flex:1;text-align:center;padding:10px;background:#25D366;color:#fff;border-radius:9px;font-weight:700;text-decoration:none;font-size:13px;min-width:100px;">📲 تذكير</a>
       <button onclick="sendWhatsAppConfirmation(findAppt('${aId}'))" style="flex:1;padding:10px;background:#DBEAFE;color:#1E40AF;border:none;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;min-width:100px;">✅ تأكيد للعميل</button>
@@ -3859,6 +3903,31 @@ function openDetail(id){
       <button onclick="deleteAppt('${aId}',null);document.getElementById('detailModal').classList.remove('open')" style="flex:1;padding:10px;background:#FEE2E2;color:#EF4444;border:none;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;min-width:80px;">🗑️ حذف</button>
     </div>`;
   document.getElementById('detailModal').classList.add('open');
+  renderDetailLocationImage(a);
+}
+
+/** يملأ صورة الموقع في بطاقة التفاصيل بعد فتحها، إن وُجدت صورة */
+function renderDetailLocationImage(a) {
+  var box = document.getElementById('detailLocImgBox');
+  if(!box) return;
+  box.innerHTML = '';
+  fetchLocationImage(a).then(function(img) {
+    var cur = document.getElementById('detailLocImgBox');
+    if(!cur || !img) return;
+    cur.style.marginBottom = '14px';
+    cur.innerHTML =
+      '<div style="font-size:12px;color:var(--mist);margin-bottom:6px;">📸 صورة الموقع</div>' +
+      '<img style="width:100%;max-height:200px;object-fit:cover;border-radius:10px;' +
+      'border:1.5px solid var(--ice);cursor:zoom-in;">';
+    var im = cur.querySelector('img');
+    im.src = img;
+    im.addEventListener('click', function() {
+      var w = window.open('', '_blank');
+      if(!w) return;
+      w.document.write('<img src="' + img + '" style="max-width:100%">');
+      w.document.close();
+    });
+  });
 }
 
 /**
