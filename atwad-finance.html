@@ -725,8 +725,10 @@ function filterByPeriod(arr){
 // ===== KPIs =====
 function calcKPIs(){
   var filtered = filterByPeriod(entries);
-  var income  = filtered.filter(function(e){ return e.type==='income'; });
-  var expense = filtered.filter(function(e){ return e.type==='expense'; });
+  // القيد الملغى أو المسوّى خرج من الحساب — لا يدخل المبيعات ولا المصاريف
+  var live    = filtered.filter(function(e){ return e.status !== 'ملغي' && e.status !== 'مسوى'; });
+  var income  = live.filter(function(e){ return e.type==='income'; });
+  var expense = live.filter(function(e){ return e.type==='expense'; });
 
   // الدخل المحصل فعلياً فقط
   var revenue    = income.reduce(function(s,e){ return s + getCollectedAmount(e); }, 0);
