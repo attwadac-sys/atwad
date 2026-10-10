@@ -97,7 +97,8 @@ td.num{direction:ltr;text-align:left;font-variant-numeric:tabular-nums;white-spa
     <div class="bar">
       <button class="ok" id="payBtn" disabled>✅ علّم المحدّد مدفوعاً</button>
       <button class="amber" id="dueBtn" disabled>📌 اجعله ذمة متابَعة</button>
-      <button class="g" id="twinBtn" style="background:#7C3AED;">👯 حدّد كل ما له توأم مدفوع</button>
+      <button class="g" id="twinExact" style="background:#7C3AED;">👯 حدّد التطابق التام فقط</button>
+      <button class="g" id="twinNear" style="background:#A78BFA;">👯 + الفارق ≤ ٢٠٪</button>
       <button class="g" id="cancelBtn" disabled style="background:#B91C1C;">🗑 ألغِ المحدّد</button>
       <span class="small" id="selInfo"></span>
     </div>
@@ -480,18 +481,32 @@ function markPaid(){
   }, 'عُلّمت مدفوعة');
 }
 
-function selectTwins(){
+/* الفارق الكبير قد يعني زيارتين حقيقيتين في اليوم نفسه، لا تكراراً —
+   فيُستثنى من التحديد الجماعي ويُترك لعين صاحب العمل. */
+function twinGap(r){
+  if(!r || !r.twin) return null;
+  var t = parseFloat(r.twin.v.amount) || 0;
+  var base = Math.max(t, r.amount);
+  if(base <= 0) return null;
+  return Math.abs(t - r.amount) / base;
+}
+
+function selectTwins(maxGap){
   var list = document.querySelectorAll('.rc');
-  var n = 0;
+  var n = 0, sum = 0, skipped = 0;
   for(var i = 0; i < list.length; i++){
     var r = ROWS[parseInt(list[i].getAttribute('data-i'), 10)];
-    var on = !!(r && r.twin);
+    var g = twinGap(r);
+    var on = (g !== null) && (g <= maxGap);
     list[i].checked = on;
-    if(on) n += 1;
+    if(on){ n += 1; sum += r.remaining; }
+    else if(g !== null){ skipped += 1; }
   }
   syncSel();
-  el('msg').textContent = n ? ('حُدّد ' + n + ' قيداً له توأم مدفوع. راجعها ثم ألغِها.')
-                            : 'لا يوجد قيد له توأم مدفوع.';
+  el('msg').textContent = n
+    ? ('حُدّد ' + n + ' قيداً بإجمالي ' + fmtNum(sum) + ' ﷼.' +
+       (skipped ? ' وتُرك ' + skipped + ' صفاً فارقه أكبر — راجعها صفاً صفاً.' : ''))
+    : 'لا يوجد قيد ضمن هذا الحدّ.';
 }
 
 function cancelSelected(){
@@ -525,7 +540,8 @@ window.__atwadInitPage = function(user){
   el('runBtn').addEventListener('click', run);
   el('payBtn').addEventListener('click', markPaid);
   el('dueBtn').addEventListener('click', markDue);
-  el('twinBtn').addEventListener('click', selectTwins);
+  el('twinExact').addEventListener('click', function(){ selectTwins(0); });
+  el('twinNear').addEventListener('click', function(){ selectTwins(0.20); });
   el('cancelBtn').addEventListener('click', cancelSelected);
   el('allChk').addEventListener('change', function(){
     var on = el('allChk').checked;
