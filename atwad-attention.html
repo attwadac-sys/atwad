@@ -114,9 +114,15 @@ function skeleton(s){
   var t = String(s || '').toLowerCase();
   t = t.replace(/[ـً-ْ.,_\-()0-9]/g, ' ');
   t = t.replace(/\b(mr|mrs|ms|miss|dr|eng|al|el)\b/g, ' ');
+  // «al» الملتصقة: Alqarni ← al+qarni، بشرط ٣ أحرف بعدها فلا تمسّ Ali أو Alaa
+  t = t.replace(/\bal(?=[a-z]{3,})/g, ' ');
   t = t.replace(/^(الاستاذ|الأستاذ|الاستاذة|الدكتور|السيد|السيدة)\s+/, '');
+  // «ال» التعريف في أول الكلمة تُحذف كما تُحذف al في الإنجليزية،
+  // وتبقى داخل الكلمة (عبدالرحمن) لأن نظيرها الإنجليزي يبقى أيضاً
+  t = t.replace(/(^|\s)ال/g, '$1');
   t = t.replace(/kh/g, 'k').replace(/gh/g, 'g').replace(/sh/g, 's')
-       .replace(/th/g, 't').replace(/ph/g, 'f').replace(/ch/g, 's');
+       .replace(/th/g, 't').replace(/ph/g, 'f').replace(/ch/g, 's')
+       .replace(/q/g, 'k');   // ق تُكتب q أو k
   var out = '';
   for(var i = 0; i < t.length; i++){
     var c = t.charAt(i);
@@ -131,7 +137,8 @@ function skeleton(s){
 
 function sameParty(a, b){
   var x = skeleton(a), y = skeleton(b);
-  if(!x || !y) return false;
+  // هيكل من حرف واحد لا يميّز أحداً (علي / Alaa كلاهما «l»)
+  if(x.length < 2 || y.length < 2) return false;
   if(x === y) return true;
   // اسم مختصر داخل اسم كامل — بشرط طول كافٍ يمنع المصادفة
   if(x.length >= 4 && y.indexOf(x) >= 0) return true;
@@ -201,6 +208,8 @@ function load(){
     res[0].forEach(function(c){
       var e = c.val() || {};
       if(e.type !== 'income') return;
+      // الملغى والمسوّى خرجا من الحساب — لا يُعرضان ولا يعودان بعد التحديث
+      if(e.status === 'ملغي' || e.status === 'مسوى') return;
       var amt = parseFloat(e.amount) || 0;
       var rem = amt - collected(e);
       if(rem <= 0) return;

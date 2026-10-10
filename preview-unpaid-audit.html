@@ -229,7 +229,7 @@ function run(){
     var allIncome = [];
     res[0].forEach(function(c){
       var v = c.val() || {};
-      if(v.type === 'income'){
+      if(v.type === 'income' && v.status !== 'ملغي' && v.status !== 'مسوى'){
         allIncome.push({ key: c.key, v: v, norm: normName(v.party || v.client || '') });
       }
     });
