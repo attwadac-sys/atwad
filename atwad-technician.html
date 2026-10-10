@@ -94,6 +94,27 @@ body{font-family:'Cairo',sans-serif;background:#F1F5F9;color:var(--slate);min-he
 .empty .icon{font-size:52px;margin-bottom:12px;}
 
 /* TOAST */
+/* ===== ورقة تسجيل القبض عند إتمام الزيارة ===== */
+.pay-ov{position:fixed;inset:0;background:rgba(12,59,94,.55);display:none;z-index:1200;
+  align-items:flex-end;justify-content:center;font-family:'Cairo',sans-serif;}
+.pay-ov.show{display:flex;}
+.pay-sheet{background:#fff;width:100%;max-width:460px;border-radius:20px 20px 0 0;padding:20px 18px 26px;
+  box-shadow:0 -10px 40px rgba(0,0,0,.25);}
+.pay-sheet h3{margin:0 0 3px;font-size:18px;color:var(--deep);}
+.pay-who{font-size:13.5px;color:var(--mist);margin-bottom:14px;line-height:1.7;}
+.pay-amt{width:100%;font-size:30px;font-weight:800;text-align:center;color:var(--deep);
+  border:2px solid var(--ice);border-radius:14px;padding:12px;font-family:'Cairo',sans-serif;
+  direction:ltr;background:var(--frost);}
+.pay-amt:focus{outline:none;border-color:var(--sky);}
+.pay-lbl{font-size:12.5px;color:var(--mist);text-align:center;margin:9px 0 13px;}
+.pay-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.pay-btn{font-family:'Cairo',sans-serif;font-size:15.5px;font-weight:700;border:0;border-radius:14px;
+  padding:15px 10px;cursor:pointer;color:#fff;}
+.pay-cash{background:var(--success);}
+.pay-tr{background:var(--sky);}
+.pay-no{background:var(--warning);grid-column:1 / -1;}
+.pay-x{background:#fff;color:var(--mist);border:1.5px solid var(--ice);grid-column:1 / -1;font-size:14px;padding:12px;}
+.pay-btn:disabled{opacity:.5;}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--deep);color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.2);transition:transform .3s;z-index:999;font-family:'Cairo',sans-serif;}
 .toast.show{transform:translateX(-50%) translateY(0);}
 
@@ -173,17 +194,11 @@ body{font-family:'Cairo',sans-serif;background:#F1F5F9;color:var(--slate);min-he
   </div>
 </div>
 
-<!-- FILTER TABS -->
-<div class="odo-card" id="odoCard">
-  <div class="odo-title" data-i18n="odoTitle">🚗 قراءة العداد نهاية اليوم</div>
-  <div class="odo-sub" id="odoLast" data-i18n="odoHint">سجّل قراءة عداد السيارة بعد آخر موعد</div>
-  <div class="odo-row">
-    <input type="number" id="odoInput" inputmode="numeric" min="0" placeholder="مثال: 370980">
-    <button onclick="saveOdometer()" id="odoBtn" data-i18n="save">حفظ</button>
-  </div>
-  <div class="odo-msg" id="odoMsg"></div>
-</div>
+<!-- بطاقة العداد أُزيلت: القراءة تُسجَّل في صفحة الوقود عند كل تعبئة،
+     فلا يُطلب من الفني إدخالها مرتين. الدوال أدناه تُركت فلا ضرر منها
+     لأنها لا تجد عناصرها في الصفحة. -->
 
+<!-- FILTER TABS -->
 <div class="tabs">
   <button class="tab active" onclick="filterAppts('today',this)" data-i18n="tabToday">اليوم</button>
   <button class="tab" onclick="filterAppts('week',this)" data-i18n="tabWeek">الأسبوع</button>
@@ -195,6 +210,22 @@ body{font-family:'Cairo',sans-serif;background:#F1F5F9;color:var(--slate);min-he
   <div class="loading">
     <div class="spinner"></div>
     <div data-i18n="pickFirst">اختر الفني لعرض مواعيده...</div>
+  </div>
+</div>
+
+<!-- ورقة تسجيل القبض — تظهر عند الضغط على «إتمام» -->
+<div class="pay-ov" id="payOv">
+  <div class="pay-sheet">
+    <h3 id="payTitle">المبلغ المستلم</h3>
+    <div class="pay-who" id="payWho"></div>
+    <input type="number" inputmode="decimal" min="0" step="1" class="pay-amt" id="payAmt" placeholder="0">
+    <div class="pay-lbl" id="payLbl">ريال</div>
+    <div class="pay-btns">
+      <button class="pay-btn pay-cash" id="payCash">💵 نقداً</button>
+      <button class="pay-btn pay-tr"   id="payTrans">🏦 تحويل</button>
+      <button class="pay-btn pay-no"   id="payNone">⏳ لم يُدفع — دَيْن</button>
+      <button class="pay-btn pay-x"    id="payCancel">إلغاء</button>
+    </div>
   </div>
 </div>
 
