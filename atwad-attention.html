@@ -115,9 +115,14 @@ function collected(e){
 var DONE_ST = {done:1, invoiced:1, completed:1, 'مكتمل':1, 'منجز':1, 'تم':1, 'مفوتر':1};
 var SKIP_ST = {cancelled:1, canceled:1, failed:1, 'ملغي':1, 'ملغى':1};
 
+/* كلمة test وحدها، لا داخل كلمة أخرى — فـ"freon leak testing" عمل حقيقي لا تجربة.
+   والعربية تُطابَق كنصّ لأن \b لا تعمل بعد الحروف العربية. */
+var TEST_EN = /(^|[^a-z])(test|demo|dummy|sample)([^a-z]|$)/;
+
 function isTestRow(e){
   var s = (String(e.party || '') + ' ' + String(e.desc || '')).toLowerCase();
-  return s.indexOf('اختبار') >= 0 || s.indexOf('إختبار') >= 0 || s.indexOf('test') >= 0;
+  if(s.indexOf('اختبار') >= 0 || s.indexOf('إختبار') >= 0 || s.indexOf('تجربة') >= 0) return true;
+  return TEST_EN.test(s);
 }
 
 function load(){
@@ -149,17 +154,40 @@ function load(){
     scanJobs(res[2]);
 
     var tday = todayStr();
-    var buckets = { unpaid:[], debt:[], future:[], test:[] };
+    var buckets = { dup:[], unpaid:[], debt:[], future:[], test:[] };
     var oldCount = 0, oldSum = 0;
 
+    // كل القيود غير المحصّلة أولاً، ثم نكتشف التكرار قبل التوزيع
+    var all = [];
     res[0].forEach(function(c){
       var e = c.val() || {};
       if(e.type !== 'income') return;
       var amt = parseFloat(e.amount) || 0;
       var rem = amt - collected(e);
       if(rem <= 0) return;
+      all.push({ key: c.key, e: e, amount: amt, remaining: rem, age: daysAgo(e.date) });
+    });
 
-      var row = { key: c.key, e: e, amount: amt, remaining: rem, age: daysAgo(e.date) };
+    /* تكرار شبه مؤكّد: نفس المبلغ ونفس اليوم بالضبط.
+       صارم عمداً — عميلان مختلفان بنفس المبلغ في نفس اليوم نادر،
+       أمّا «نفس المبلغ خلال أسبوعين» فيُشعل كل شيء لأن الأسعار موحّدة. */
+    var byDayAmt = {};
+    for(var q = 0; q < all.length; q++){
+      var sig = (all[q].e.date || '') + '|' + all[q].amount;
+      if(!byDayAmt[sig]) byDayAmt[sig] = [];
+      byDayAmt[sig].push(all[q]);
+    }
+    var dupKeys = {};
+    for(var sg in byDayAmt){
+      if(Object.prototype.hasOwnProperty.call(byDayAmt, sg) && byDayAmt[sg].length > 1){
+        for(var z = 0; z < byDayAmt[sg].length; z++){ dupKeys[byDayAmt[sg][z].key] = true; }
+      }
+    }
+
+    all.forEach(function(row){
+      var e = row.e;
+
+      if(dupKeys[row.key]){ buckets.dup.push(row); return; }
 
       if(isTestRow(e)){ buckets.test.push(row); return; }
 
@@ -169,7 +197,7 @@ function load(){
 
       if(row.age > STALE_DAYS){
         if(isDebt){ buckets.debt.push(row); }
-        else { oldCount += 1; oldSum += rem; }
+        else { oldCount += 1; oldSum += row.remaining; }
         return;
       }
 
@@ -178,6 +206,11 @@ function load(){
     });
 
     function byAge(a, b){ return b.age - a.age; }
+    // المكرّرات متجاورة: نفس اليوم ونفس المبلغ معاً
+    buckets.dup.sort(function(a, b){
+      var d = String(a.e.date || '').localeCompare(String(b.e.date || ''));
+      return d !== 0 ? d : (a.amount - b.amount);
+    });
     buckets.unpaid.sort(byAge);
     buckets.debt.sort(byAge);
     buckets.future.sort(function(a,b){ return String(a.e.date).localeCompare(String(b.e.date)); });
@@ -218,12 +251,25 @@ function rowHtml(r, acts){
 
 function render(b, oldCount, oldSum){
   var html = '';
-  var total = b.unpaid.length + b.debt.length + b.future.length + b.test.length;
+  var total = b.dup.length + b.unpaid.length + b.debt.length + b.future.length + b.test.length;
 
   if(total === 0){
     html = '<div class="clear"><div class="big">✅</div>' +
       '<div class="t">لا شيء يحتاج قرارك</div>' +
       '<div class="s">كل زيارة مكتملة سُجّل قبضها، ولا دَيْن تجاوز ' + STALE_DAYS + ' يوماً.</div></div>';
+  }
+
+  if(b.dup.length){
+    html += '<div class="grp violet"><h2>👯 دَيْن مسجّل مرّتين — راجعه أولاً ' +
+      '<span class="cnt">' + b.dup.length + '</span></h2>' +
+      '<div class="why">قيدان بنفس المبلغ وفي نفس اليوم. الغالب أنهما دَيْن واحد كُتب باسمين ' +
+      '(«سوزي» و«Ms.suzi» مثلاً)، فيُحتسب عليك مرّتين. أبقِ واحداً وألغِ الآخر. ' +
+      'وإن كانا عميلين مختلفين فعلاً، اتركهما.</div>';
+    for(var d = 0; d < b.dup.length; d++){
+      html += rowHtml(b.dup[d],
+        '<button class="mini g" onclick="act(\'' + esc(b.dup[d].key) + '\',\'cancel\')">ألغِ هذا</button>');
+    }
+    html += '</div>';
   }
 
   if(b.unpaid.length){
