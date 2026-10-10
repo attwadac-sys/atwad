@@ -282,15 +282,10 @@ function run(){
       if(normStatus2(v.status) === 'مدفوع'){ paidRows.push({ key: c.key, v: v }); }
     });
 
-    // توأم مدفوع: نفس العميل ونفس اليوم، أحدهما محصّل والآخر لا
-    function paidTwin(party, date){
-      if(!date) return null;
-      for(var t = 0; t < paidRows.length; t++){
-        if(paidRows[t].v.date !== date) continue;
-        if(sameParty(paidRows[t].v.party || paidRows[t].v.client || '', party)) return paidRows[t];
-      }
-      return null;
-    }
+    /* توأم مدفوع: نفس اليوم + تطابق تام لهيكل الاسم (لا احتواء —
+       «عبدالله» محتواة في «Abdullah Nasser» وهما عميلان مختلفان).
+       وكل قيد مدفوع يُقترن بقيد واحد فقط، فلا يُدَّعى مرّتين. */
+    function twinSkeleton(x){ return skeleton(x); }
 
     var dupSet = {};
     var seen = {};
@@ -319,8 +314,7 @@ function run(){
 
       ROWS.push({
         key: it.key, e: e, amount: amt, remaining: remaining,
-        job: job, cls: cls, dup: dup,
-        twin: paidTwin(e.party || e.client || '', e.date || '')
+        job: job, cls: cls, dup: dup, twin: null
       });
     }
 
@@ -333,6 +327,28 @@ function run(){
         ROWS[x].dup = true;
         ROWS[y].dup = true;
       }
+    }
+
+    /* إقران شامل: كل الأزواج المرشّحة تُرتَّب بفارق المبلغ تصاعدياً
+       ثم تُسنَد بالترتيب، فيأخذ كل قيد مدفوع أقرب قيد غير مدفوع إليه. */
+    var cand = [];
+    for(var a1 = 0; a1 < ROWS.length; a1++){
+      var skU = twinSkeleton(ROWS[a1].e.party || ROWS[a1].e.client || '');
+      if(skU.length < 2) continue;
+      for(var b1 = 0; b1 < paidRows.length; b1++){
+        if(paidRows[b1].v.date !== (ROWS[a1].e.date || '')) continue;
+        if(twinSkeleton(paidRows[b1].v.party || paidRows[b1].v.client || '') !== skU) continue;
+        cand.push({ u: a1, p: b1,
+          d: Math.abs((parseFloat(paidRows[b1].v.amount) || 0) - ROWS[a1].amount) });
+      }
+    }
+    cand.sort(function(x, y){ return x.d - y.d; });
+    var usedP = {}, usedU = {};
+    for(var c1 = 0; c1 < cand.length; c1++){
+      if(usedP[cand[c1].p] || usedU[cand[c1].u]) continue;
+      usedP[cand[c1].p] = true;
+      usedU[cand[c1].u] = true;
+      ROWS[cand[c1].u].twin = paidRows[cand[c1].p];
     }
 
     ROWS.sort(function(a, b){ return String(b.e.date || '').localeCompare(String(a.e.date || '')); });
@@ -369,8 +385,12 @@ function paint(){
         esc(r.job.date) + (r.job.service ? ' · ' + esc(r.job.service) : '') + '</div>'
       : '<span class="small">لا يوجد</span>';
     if(r.twin){
+      var tAmt = parseFloat(r.twin.v.amount) || 0;
+      var diff = tAmt - r.amount;
+      var diffTxt = (diff === 0) ? ' <b>(نفس المبلغ)</b>'
+        : ' <b style="color:#B45309;">(فارق ' + fmtNum(Math.abs(diff)) + ')</b>';
       jobTxt += '<div class="small" style="color:#5B21B6;margin-top:4px;">👯 مدفوع: ' +
-        fmtNum(parseFloat(r.twin.v.amount) || 0) + ' ﷼ — ' + esc(r.twin.v.desc || '') + '</div>';
+        fmtNum(tAmt) + ' ﷼' + diffTxt + ' — ' + esc(r.twin.v.desc || '') + '</div>';
     }
 
     html += '<tr>' +
