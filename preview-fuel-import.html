@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>استيراد الوقود من واتساب — أطواد</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--deep:#0A2540;--sky:#38BDF8;--ice:#E2E8F0;--mist:#64748B;--frost:#F8FAFC;
+  --ok:#059669;--warn:#B45309;--bad:#B91C1C;}
+*{box-sizing:border-box;}
+body{margin:0;background:#F1F5F9;font-family:'Tajawal',sans-serif;color:var(--deep);padding:18px 16px 60px;}
+.wrap{max-width:900px;margin:0 auto;}
+h1{font-size:22px;margin:0 0 5px;}
+.sub{font-size:14px;color:var(--mist);line-height:1.9;margin-bottom:18px;}
+.card{background:#fff;border:1.5px solid var(--ice);border-radius:14px;padding:18px;margin-bottom:14px;}
+.card h2{font-size:16.5px;margin:0 0 10px;}
+textarea{width:100%;min-height:220px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;
+  border:1.5px solid var(--ice);border-radius:11px;padding:12px;line-height:1.8;direction:ltr;text-align:left;}
+button{font-family:'Tajawal',sans-serif;font-size:15px;font-weight:700;border:0;border-radius:11px;
+  background:var(--sky);color:#fff;padding:11px 22px;cursor:pointer;}
+button.ok{background:var(--ok);}
+button:disabled{background:#CBD5E1;cursor:default;}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:11px;margin:14px 0;}
+.tile{background:var(--frost);border:1px solid var(--ice);border-radius:11px;padding:11px 13px;}
+.tile .n{font-size:22px;font-weight:800;}
+.tile .l{font-size:12px;color:var(--mist);}
+table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:10px;}
+th,td{text-align:right;padding:8px 7px;border-bottom:1px solid var(--ice);}
+th{color:var(--mist);font-weight:700;}
+.tag{font-size:11.5px;font-weight:800;padding:3px 10px;border-radius:99px;}
+.t-new{background:#D1FAE5;color:#065F46;}
+.t-have{background:#E2E8F0;color:#475569;}
+.t-dup{background:#FEF3C7;color:#78350F;}
+.msg{font-size:14px;line-height:1.9;margin-top:12px;}
+.warn{background:#FEF3C7;border:1.5px solid #FCD34D;color:#78350F;border-radius:11px;
+  padding:12px 14px;font-size:13.5px;line-height:1.9;}
+.pill{font-size:12px;font-weight:700;padding:5px 12px;border-radius:99px;background:#E0F2FE;color:#075985;}
+.hide{display:none;}
+</style>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="atwad-firebase.js"></script>
+<script src="atwad-auth.js"></script>
+</head>
+<body>
+<div class="wrap">
+
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+    <div>
+      <h1>⛽ استيراد الوقود من سجل واتساب</h1>
+      <div class="sub">
+        الصق رسائل الفني كما هي. تُقرأ أسطر الوقود وحدها، ويُتجاهل كل ما عداها —
+        الغداء والعشاء والعملاء والتحويلات لا تُستورد.
+      </div>
+    </div>
+    <span class="pill" id="pill">…</span>
+  </div>
+
+  <div class="card">
+    <h2>١ — الصق النص</h2>
+    <textarea id="src" placeholder="Date 8/10/2026&#10;Mr.hasan shaheen =100 t&#10;Petrol mitsubisi = 100&#10;Lunch = 30&#10;&#10;Date 6/10/2026&#10;Petrol mitsubisi = 100"></textarea>
+    <div style="margin-top:12px;"><button type="button" id="scanBtn" disabled>تحليل النص</button></div>
+  </div>
+
+  <div class="card hide" id="resCard">
+    <h2>٢ — المراجعة قبل الاستيراد</h2>
+    <div class="tiles" id="tiles"></div>
+    <div class="warn">
+      هذه التسجيلات بلا قراءة عداد، فلا تُحسب لها مسافة ولا تكلفة كيلومتر —
+      تدخل في إجمالي المصروف فقط. وهذا طبيعي، فسجل واتساب لا يحوي قراءة العداد.
+    </div>
+    <div style="max-height:340px;overflow:auto;"><table id="tbl"></table></div>
+    <div style="margin-top:14px;">
+      <button type="button" class="ok" id="impBtn">استيراد الجديد فقط</button>
+    </div>
+    <div class="msg" id="msg"></div>
+  </div>
+
+</div>
+
+<script>
+'use strict';
+
+var ADMIN_UID = 'NU8g25megKefUOBQGvfkVtBOw802';
+var fuelDb = null;
+var existingDates = {};   // التواريخ الموجودة فعلاً في النظام
+var parsed = [];
+
+function el(id){ return document.getElementById(id); }
+
+function esc(v){
+  return String(v == null ? '' : v)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function pad2(n){ return (n < 10 ? '0' : '') + n; }
+
+/**
+ * يقرأ النص سطراً سطراً: سطر التاريخ يضبط اليوم الجاري،
+ * وأي سطر وقود بعده يُنسب إليه.
+ */
+/*
+ * ملف تصدير واتساب يسبق كل سطر بطابع مثل:
+ *   [8/10/2026, 9:12 PM] أحمد:
+ * أو 8/10/2026, 9:12 م - أحمد:
+ * نزيله أولاً حتى تُقرأ أسطر «Date» و«Petrol» كما هي.
+ */
+function stripWa(line){
+  var s1 = String(line == null ? '' : line);
+  // يزيل علامات الاتجاه التي يضعها واتساب أحياناً
+  s1 = s1.replace(/[\u200e\u200f\u202a-\u202e]/g, '');
+  var re = /^\s*\[?\s*\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{2,4}\s*[,،]?\s*\d{1,2}:\d{2}(?::\d{2})?\s*(?:[AaPp]\.?[Mm]\.?|ص|م)?\s*\]?\s*(?:[-–—]\s*)?/;
+  var m = s1.match(re);
+  if(!m) return s1;
+  var rest = s1.slice(m[0].length);
+  // اسم المرسل ثم نقطتان
+  var n = rest.match(/^\s*[^:\n]{1,40}:\s*/);
+  return n ? rest.slice(n[0].length) : rest;
+}
+
+function parseText(text){
+  var lines = String(text || '').split(/\r?\n/).map(stripWa);
+  var cur = '';
+  var out = [];
+
+  var reDate = /^\s*(?:date|التاريخ)\s*[:\-]?\s*(\d{1,2})\s*[\/\-\.]\s*(\d{1,2})\s*[\/\-\.]\s*(\d{4})/i;
+  var reIso  = /^\s*(?:date|التاريخ)\s*[:\-]?\s*(\d{4})-(\d{2})-(\d{2})/i;
+  // حد الكلمة \b لا يعمل بعد حرف عربي، فنفصل الحالتين
+  var reFuel = /^\s*(?:(?:petrol|petrl|patrol|fuel|gas)\b|بنزين|وقود|بترول)[^=]*=\s*([0-9]+(?:[.,][0-9]+)?)/i;
+
+  for(var i = 0; i < lines.length; i++){
+    var line = lines[i];
+
+    var mIso = line.match(reIso);
+    if(mIso){ cur = mIso[1] + '-' + mIso[2] + '-' + mIso[3]; continue; }
+
+    var mD = line.match(reDate);
+    if(mD){
+      // الصيغة يوم/شهر/سنة كما يكتبها الفني
+      cur = mD[3] + '-' + pad2(Number(mD[2])) + '-' + pad2(Number(mD[1]));
+      continue;
+    }
+
+    var mF = line.match(reFuel);
+    if(mF && cur){
+      var amt = parseFloat(String(mF[1]).replace(',', '.'));
+      if(isFinite(amt) && amt > 0){
+        out.push({ date: cur, amount: amt, raw: line.trim().slice(0, 110) });
+      }
+    }
+  }
+  return out;
+}
+
+function classify(rows){
+  var seen = {};
+  return rows.map(function(r){
+    var state;
+    if(seen[r.date]) state = 'dup';
+    else if(existingDates[r.date]) state = 'have';
+    else state = 'new';
+    seen[r.date] = true;
+    return { date:r.date, amount:r.amount, raw:r.raw, state:state };
+  });
+}
+
+function scan(){
+  parsed = classify(parseText(el('src').value));
+  el('resCard').className = 'card';
+
+  var nNew = parsed.filter(function(r){ return r.state === 'new'; });
+  var nHave = parsed.filter(function(r){ return r.state === 'have'; }).length;
+  var nDup = parsed.filter(function(r){ return r.state === 'dup'; }).length;
+  var sum = nNew.reduce(function(s, r){ return s + r.amount; }, 0);
+
+  el('tiles').innerHTML =
+    '<div class="tile"><div class="n">' + parsed.length + '</div><div class="l">سطر وقود في النص</div></div>' +
+    '<div class="tile"><div class="n" style="color:var(--ok);">' + nNew.length + '</div><div class="l">جديد سيُستورد</div></div>' +
+    '<div class="tile"><div class="n">' + nHave + '</div><div class="l">موجود في النظام</div></div>' +
+    '<div class="tile"><div class="n">' + nDup + '</div><div class="l">مكرر داخل النص</div></div>' +
+    '<div class="tile"><div class="n">' + Math.round(sum) + ' ﷼</div><div class="l">قيمة الجديد</div></div>';
+
+  var html = '<thead><tr><th>التاريخ</th><th>المبلغ</th><th>الحالة</th><th>السطر الأصلي</th></tr></thead><tbody>';
+  if(!parsed.length){
+    html += '<tr><td colspan="4" style="color:var(--mist);padding:18px 7px;">' +
+            'لم أجد سطر وقود واحداً. تأكد أن النص يحتوي أسطراً مثل «Date 8/10/2026» و«Petrol mitsubisi = 100».' +
+            '</td></tr>';
+  }
+  parsed.sort(function(a, b){ return a.date < b.date ? -1 : 1; });
+  parsed.forEach(function(r){
+    var tag = r.state === 'new'  ? '<span class="tag t-new">جديد</span>'
+            : r.state === 'have' ? '<span class="tag t-have">موجود</span>'
+            :                      '<span class="tag t-dup">مكرر</span>';
+    html += '<tr><td>' + esc(r.date) + '</td><td>' + Math.round(r.amount) + ' ﷼</td><td>' + tag +
+            '</td><td style="color:var(--mist);font-size:12.5px;">' + esc(r.raw) + '</td></tr>';
+  });
+  el('tbl').innerHTML = html + '</tbody>';
+
+  el('impBtn').disabled = nNew.length === 0;
+  el('msg').textContent = '';
+}
+
+function importNew(){
+  var rows = parsed.filter(function(r){ return r.state === 'new'; });
+  if(!rows.length) return;
+  if(!fuelDb) return;
+  if(!confirm('استيراد ' + rows.length + ' تسجيل وقود إلى النظام؟')) return;
+
+  el('impBtn').disabled = true;
+  el('msg').textContent = 'جاري الاستيراد…';
+
+  var updates = {};
+  rows.forEach(function(r){
+    // مفتاح مبني على التاريخ: إعادة الاستيراد لا تُنشئ نسخة ثانية
+    updates['fuelLogs/wa_' + r.date] = {
+      date: r.date,
+      amount: Number(r.amount),
+      note: 'من سجل واتساب'
+    };
+  });
+
+  fuelDb.ref().update(updates).then(function(){
+    rows.forEach(function(r){ existingDates[r.date] = true; });
+    scan();   // يُعيد الترقيم ويمسح الرسائل، فنكتب النتيجة بعده
+    el('msg').innerHTML = '✅ تم استيراد <b>' + rows.length + '</b> تسجيل. افتح صفحة مصروف البنزين لتراها.';
+  }).catch(function(err){
+    el('msg').textContent = '❌ تعذّر الاستيراد: ' + (err.message || '');
+    el('impBtn').disabled = false;
+  });
+}
+
+window.__atwadInitPage = function(user){
+  if(!user || user.uid !== ADMIN_UID){
+    document.body.innerHTML = '<div style="padding:40px;text-align:center;font-family:Tajawal,sans-serif;">' +
+      'هذا الحساب غير مصرّح له.</div>';
+    return;
+  }
+  fuelDb = window.db || null;
+  if(!fuelDb){ el('pill').textContent = 'غير متصل'; return; }
+
+  fuelDb.ref('fuelLogs').once('value').then(function(snap){
+    existingDates = {};
+    var n = 0;
+    snap.forEach(function(ch){
+      var v = ch.val() || {};
+      if(v.date){ existingDates[String(v.date)] = true; n += 1; }
+    });
+    el('pill').textContent = 'متصل • ' + n + ' تسجيل حالي';
+    el('scanBtn').disabled = false;
+  }).catch(function(err){
+    el('pill').textContent = 'تعذّر القراءة';
+    el('msg').textContent = String(err.message || err);
+  });
+
+  el('scanBtn').addEventListener('click', scan);
+  el('impBtn').addEventListener('click', importNew);
+};
+</script>
+</body>
+</html>
