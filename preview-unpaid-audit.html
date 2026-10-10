@@ -72,6 +72,9 @@ td.num{direction:ltr;text-align:left;font-variant-numeric:tabular-nums;white-spa
       <div class="tile"><div class="n" id="k_due">—</div><div class="l">🔴 عمل مكتمل<br>ذمة حقيقية</div></div>
       <div class="tile"><div class="n" id="k_none">—</div><div class="l">⚪ بلا موعد مطابق<br>مراجعة يدوية</div></div>
       <div class="tile"><div class="n" id="k_dup">—</div><div class="l">🟣 تكرار محتمل<br>نفس الاسم والمبلغ</div></div>
+      <div class="tile" style="border-color:#C4B5FD;background:#F5F3FF;">
+        <div class="n" id="k_twin">—</div>
+        <div class="l">👯 له توأم <b>مدفوع</b><br>نفس العميل ونفس اليوم</div></div>
     </div>
   </div>
 
@@ -94,6 +97,8 @@ td.num{direction:ltr;text-align:left;font-variant-numeric:tabular-nums;white-spa
     <div class="bar">
       <button class="ok" id="payBtn" disabled>✅ علّم المحدّد مدفوعاً</button>
       <button class="amber" id="dueBtn" disabled>📌 اجعله ذمة متابَعة</button>
+      <button class="g" id="twinBtn" style="background:#7C3AED;">👯 حدّد كل ما له توأم مدفوع</button>
+      <button class="g" id="cancelBtn" disabled style="background:#B91C1C;">🗑 ألغِ المحدّد</button>
       <span class="small" id="selInfo"></span>
     </div>
     <div class="msg" id="msg"></div>
@@ -130,6 +135,47 @@ function normName(s){
   t = t.replace(/[أإآ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه');
   return t.replace(/\s+/g, ' ').trim();
 }
+
+
+/* ===== مطابقة الأسماء عبر الأبجديتين (هيكل الحروف الساكنة) ===== */
+var AR2LAT = {
+  'ب':'b','ت':'t','ث':'t','ج':'j','ح':'h','خ':'k','د':'d','ذ':'z','ر':'r','ز':'z',
+  'س':'s','ش':'s','ص':'s','ض':'d','ط':'t','ظ':'z','ع':'','غ':'g','ف':'f','ق':'k',
+  'ك':'k','ل':'l','م':'m','ن':'n','ه':'h','ة':'','و':'','ي':'','ى':'','ا':'',
+  'أ':'','إ':'','آ':'','ء':'','ؤ':'','ئ':''
+};
+
+function skeleton(s){
+  var t = String(s || '').toLowerCase();
+  t = t.replace(/[\u0640\u064B-\u0652.,_\-()0-9]/g, ' ');
+  t = t.replace(/\b(mr|mrs|ms|miss|dr|eng|al|el)\b/g, ' ');
+  t = t.replace(/^(الاستاذ|الأستاذ|الاستاذة|الدكتور|السيد|السيدة)\s+/, '');
+  t = t.replace(/(^|\s)ال/g, '$1');
+  t = t.replace(/\bal(?=[a-z]{3,})/g, ' ');
+  t = t.replace(/kh/g, 'k').replace(/gh/g, 'g').replace(/sh/g, 's')
+       .replace(/th/g, 't').replace(/ph/g, 'f').replace(/ch/g, 's').replace(/q/g, 'k');
+  var out = '';
+  for(var i = 0; i < t.length; i++){
+    var c = t.charAt(i);
+    if(Object.prototype.hasOwnProperty.call(AR2LAT, c)){ out += AR2LAT[c]; continue; }
+    if(c >= 'a' && c <= 'z'){
+      if('aeiouwy'.indexOf(c) >= 0) continue;
+      out += c;
+    }
+  }
+  return out.replace(/(.)\1+/g, '$1');
+}
+
+function sameParty(a, b){
+  var x = skeleton(a), y = skeleton(b);
+  if(x.length < 2 || y.length < 2) return false;
+  if(x === y) return true;
+  if(x.length >= 4 && y.indexOf(x) >= 0) return true;
+  if(y.length >= 4 && x.indexOf(y) >= 0) return true;
+  return false;
+}
+
+function normStatus2(s){ return (s === 'معلق') ? 'غير مدفوع' : (s || 'مدفوع'); }
 
 function normStatus(s){ return (s === 'معلق') ? 'غير مدفوع' : (s || 'مدفوع'); }
 
@@ -227,12 +273,24 @@ function run(){
 
     // كل قيود الدخل — للكشف عن التكرار
     var allIncome = [];
+    var paidRows  = [];   // المدفوعة، للبحث عن توأم لكل قيد غير محصّل
     res[0].forEach(function(c){
       var v = c.val() || {};
-      if(v.type === 'income' && v.status !== 'ملغي' && v.status !== 'مسوى'){
-        allIncome.push({ key: c.key, v: v, norm: normName(v.party || v.client || '') });
-      }
+      if(v.type !== 'income') return;
+      if(v.status === 'ملغي' || v.status === 'مسوى') return;
+      allIncome.push({ key: c.key, v: v, norm: normName(v.party || v.client || '') });
+      if(normStatus2(v.status) === 'مدفوع'){ paidRows.push({ key: c.key, v: v }); }
     });
+
+    // توأم مدفوع: نفس العميل ونفس اليوم، أحدهما محصّل والآخر لا
+    function paidTwin(party, date){
+      if(!date) return null;
+      for(var t = 0; t < paidRows.length; t++){
+        if(paidRows[t].v.date !== date) continue;
+        if(sameParty(paidRows[t].v.party || paidRows[t].v.client || '', party)) return paidRows[t];
+      }
+      return null;
+    }
 
     var dupSet = {};
     var seen = {};
@@ -261,7 +319,8 @@ function run(){
 
       ROWS.push({
         key: it.key, e: e, amount: amt, remaining: remaining,
-        job: job, cls: cls, dup: dup
+        job: job, cls: cls, dup: dup,
+        twin: paidTwin(e.party || e.client || '', e.date || '')
       });
     }
 
@@ -288,8 +347,8 @@ function run(){
 }
 
 function paint(){
-  var sums = { open:0, due:0, none:0, dup:0 };
-  var cnts = { open:0, due:0, none:0, dup:0 };
+  var sums = { open:0, due:0, none:0, dup:0, twin:0 };
+  var cnts = { open:0, due:0, none:0, dup:0, twin:0 };
   var html = '';
 
   for(var i = 0; i < ROWS.length; i++){
@@ -297,16 +356,22 @@ function paint(){
     sums[r.cls] += r.remaining;
     cnts[r.cls] += 1;
     if(r.dup){ sums.dup += r.remaining; cnts.dup += 1; }
+    if(r.twin){ sums.twin += r.remaining; cnts.twin += 1; }
 
     var tag = r.cls === 'open' ? '<span class="tag t-open">🟡 عمل جارٍ</span>'
             : r.cls === 'due'  ? '<span class="tag t-due">🔴 ذمة حقيقية</span>'
                                : '<span class="tag t-none">⚪ بلا مطابقة</span>';
     if(r.dup) tag += ' <span class="tag t-dup">🟣 تكرار؟</span>';
+    if(r.twin) tag += ' <span class="tag" style="background:#EDE9FE;color:#5B21B6;">👯 توأم مدفوع</span>';
 
     var jobTxt = r.job
       ? esc(r.job.src) + ' — ' + esc(r.job.status) + '<div class="small">' +
         esc(r.job.date) + (r.job.service ? ' · ' + esc(r.job.service) : '') + '</div>'
       : '<span class="small">لا يوجد</span>';
+    if(r.twin){
+      jobTxt += '<div class="small" style="color:#5B21B6;margin-top:4px;">👯 مدفوع: ' +
+        fmtNum(parseFloat(r.twin.v.amount) || 0) + ' ﷼ — ' + esc(r.twin.v.desc || '') + '</div>';
+    }
 
     html += '<tr>' +
       '<td><input type="checkbox" class="rc" data-i="' + i + '"></td>' +
@@ -325,6 +390,7 @@ function paint(){
   el('k_due').textContent  = fmtNum(sums.due)  + ' (' + cnts.due  + ')';
   el('k_none').textContent = fmtNum(sums.none) + ' (' + cnts.none + ')';
   el('k_dup').textContent  = fmtNum(sums.dup)  + ' (' + cnts.dup  + ')';
+  el('k_twin').textContent = fmtNum(sums.twin) + ' (' + cnts.twin + ')';
   el('resCard').classList.remove('hide');
   bindChecks();
   syncSel();
@@ -353,6 +419,7 @@ function syncSel(){
   el('selInfo').textContent = s.length ? ('محدّد: ' + s.length + ' بإجمالي ' + fmtNum(sum) + ' ﷼') : '';
   el('payBtn').disabled = s.length === 0;
   el('dueBtn').disabled = s.length === 0;
+  el('cancelBtn').disabled = s.length === 0;
 }
 
 function applyUpdates(makePatch, label){
@@ -360,6 +427,7 @@ function applyUpdates(makePatch, label){
   if(!s.length || !auDb) return;
   el('payBtn').disabled = true;
   el('dueBtn').disabled = true;
+  el('cancelBtn').disabled = true;
   el('msg').textContent = 'جاري الحفظ…';
 
   var updates = {};
@@ -381,6 +449,7 @@ function applyUpdates(makePatch, label){
   }).catch(function(err){
     el('payBtn').disabled = false;
     el('dueBtn').disabled = false;
+    el('cancelBtn').disabled = false;
     el('msg').textContent = '❌ تعذّر الحفظ: ' + (err.message || err);
   });
 }
@@ -389,6 +458,26 @@ function markPaid(){
   applyUpdates(function(r){
     return { status: 'مدفوع', paidAmount: r.amount };
   }, 'عُلّمت مدفوعة');
+}
+
+function selectTwins(){
+  var list = document.querySelectorAll('.rc');
+  var n = 0;
+  for(var i = 0; i < list.length; i++){
+    var r = ROWS[parseInt(list[i].getAttribute('data-i'), 10)];
+    var on = !!(r && r.twin);
+    list[i].checked = on;
+    if(on) n += 1;
+  }
+  syncSel();
+  el('msg').textContent = n ? ('حُدّد ' + n + ' قيداً له توأم مدفوع. راجعها ثم ألغِها.')
+                            : 'لا يوجد قيد له توأم مدفوع.';
+}
+
+function cancelSelected(){
+  applyUpdates(function(){
+    return { status: 'ملغي', paymentNote: 'أُلغي — توأم مكرّر لقيد مدفوع لنفس العميل في نفس اليوم' };
+  }, 'أُلغيت');
 }
 
 function markDue(){
@@ -416,6 +505,8 @@ window.__atwadInitPage = function(user){
   el('runBtn').addEventListener('click', run);
   el('payBtn').addEventListener('click', markPaid);
   el('dueBtn').addEventListener('click', markDue);
+  el('twinBtn').addEventListener('click', selectTwins);
+  el('cancelBtn').addEventListener('click', cancelSelected);
   el('allChk').addEventListener('change', function(){
     var on = el('allChk').checked;
     var list = document.querySelectorAll('.rc');
