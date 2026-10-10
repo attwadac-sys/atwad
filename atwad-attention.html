@@ -100,6 +100,45 @@ function normName(s){
 
 function normStatus(s){ return (s === 'معلق') ? 'غير مدفوع' : (s || 'مدفوع'); }
 
+/* ===== مطابقة الأسماء عبر الأبجديتين =====
+   يُختزل الاسم إلى حروفه الساكنة، فـ«سوزي» و«Ms.suzi» يعطيان sz،
+   و«عبدالرحمن العماري» و«Mr.abdulrahman al amari» يعطيان bdlrhmnlmr. */
+var AR2LAT = {
+  'ب':'b','ت':'t','ث':'t','ج':'j','ح':'h','خ':'k','د':'d','ذ':'z','ر':'r','ز':'z',
+  'س':'s','ش':'s','ص':'s','ض':'d','ط':'t','ظ':'z','ع':'','غ':'g','ف':'f','ق':'k',
+  'ك':'k','ل':'l','م':'m','ن':'n','ه':'h','ة':'','و':'','ي':'','ى':'','ا':'',
+  'أ':'','إ':'','آ':'','ء':'','ؤ':'','ئ':''
+};
+
+function skeleton(s){
+  var t = String(s || '').toLowerCase();
+  t = t.replace(/[ـً-ْ.,_\-()0-9]/g, ' ');
+  t = t.replace(/\b(mr|mrs|ms|miss|dr|eng|al|el)\b/g, ' ');
+  t = t.replace(/^(الاستاذ|الأستاذ|الاستاذة|الدكتور|السيد|السيدة)\s+/, '');
+  t = t.replace(/kh/g, 'k').replace(/gh/g, 'g').replace(/sh/g, 's')
+       .replace(/th/g, 't').replace(/ph/g, 'f').replace(/ch/g, 's');
+  var out = '';
+  for(var i = 0; i < t.length; i++){
+    var c = t.charAt(i);
+    if(Object.prototype.hasOwnProperty.call(AR2LAT, c)){ out += AR2LAT[c]; continue; }
+    if(c >= 'a' && c <= 'z'){
+      if('aeiouwy'.indexOf(c) >= 0) continue;   // حروف العلّة تسقط
+      out += c;
+    }
+  }
+  return out.replace(/(.)\1+/g, '$1');          // دمج التكرار: ll → l
+}
+
+function sameParty(a, b){
+  var x = skeleton(a), y = skeleton(b);
+  if(!x || !y) return false;
+  if(x === y) return true;
+  // اسم مختصر داخل اسم كامل — بشرط طول كافٍ يمنع المصادفة
+  if(x.length >= 4 && y.indexOf(x) >= 0) return true;
+  if(y.length >= 4 && x.indexOf(y) >= 0) return true;
+  return false;
+}
+
 function collected(e){
   var s = normStatus(e.status);
   if(s === 'مدفوع') return parseFloat(e.amount) || 0;
@@ -168,9 +207,10 @@ function load(){
       all.push({ key: c.key, e: e, amount: amt, remaining: rem, age: daysAgo(e.date) });
     });
 
-    /* تكرار شبه مؤكّد: نفس المبلغ ونفس اليوم بالضبط.
-       صارم عمداً — عميلان مختلفان بنفس المبلغ في نفس اليوم نادر،
-       أمّا «نفس المبلغ خلال أسبوعين» فيُشعل كل شيء لأن الأسعار موحّدة. */
+    /* تكرار: نفس اليوم + نفس المبلغ + **نفس الاسم**.
+       التاريخ والمبلغ وحدهما لا يكفيان لأن الأسعار موحّدة (١٠٠، ١١٠، ١٨٠)
+       فيتصادف عميلان مختلفان في اليوم نفسه. والاسم يُقارَن بهيكله الساكن
+       ليتطابق «سوزي» مع «Ms.suzi» رغم اختلاف الأبجدية. */
     var byDayAmt = {};
     for(var q = 0; q < all.length; q++){
       var sig = (all[q].e.date || '') + '|' + all[q].amount;
@@ -179,8 +219,16 @@ function load(){
     }
     var dupKeys = {};
     for(var sg in byDayAmt){
-      if(Object.prototype.hasOwnProperty.call(byDayAmt, sg) && byDayAmt[sg].length > 1){
-        for(var z = 0; z < byDayAmt[sg].length; z++){ dupKeys[byDayAmt[sg][z].key] = true; }
+      if(!Object.prototype.hasOwnProperty.call(byDayAmt, sg)) continue;
+      var grp = byDayAmt[sg];
+      if(grp.length < 2) continue;
+      for(var z = 0; z < grp.length; z++){
+        for(var z2 = z + 1; z2 < grp.length; z2++){
+          if(sameParty(grp[z].e.party, grp[z2].e.party)){
+            dupKeys[grp[z].key] = true;
+            dupKeys[grp[z2].key] = true;
+          }
+        }
       }
     }
 
