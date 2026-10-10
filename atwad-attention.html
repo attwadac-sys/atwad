@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ما يحتاج قرارك — أطواد</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--deep:#0A2540;--sky:#38BDF8;--ice:#E2E8F0;--mist:#64748B;--frost:#F8FAFC;
+  --ok:#059669;--warn:#D97706;--bad:#B91C1C;--violet:#7C3AED;}
+*{box-sizing:border-box;}
+body{margin:0;background:#F1F5F9;font-family:'Tajawal',sans-serif;color:var(--deep);padding:18px 16px 70px;}
+.wrap{max-width:760px;margin:0 auto;}
+.head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px;}
+h1{font-size:23px;margin:0;}
+.sub{font-size:13.5px;color:var(--mist);line-height:1.85;margin-bottom:18px;}
+.pill{font-size:12px;font-weight:700;padding:5px 12px;border-radius:99px;background:#E0F2FE;color:#075985;}
+.clear{background:#fff;border:1.5px solid #A7F3D0;border-radius:16px;padding:40px 20px;text-align:center;}
+.clear .big{font-size:46px;line-height:1;}
+.clear .t{font-size:19px;font-weight:800;color:var(--ok);margin-top:12px;}
+.clear .s{font-size:14px;color:var(--mist);margin-top:7px;line-height:1.8;}
+.grp{background:#fff;border:1.5px solid var(--ice);border-radius:16px;padding:16px 16px 6px;margin-bottom:13px;}
+.grp.red{border-color:#FECACA;} .grp.amber{border-color:#FDE68A;} .grp.violet{border-color:#DDD6FE;}
+.grp h2{font-size:16px;margin:0 0 2px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.grp .why{font-size:12.5px;color:var(--mist);line-height:1.8;margin-bottom:11px;}
+.cnt{font-size:12px;font-weight:800;padding:2px 10px;border-radius:99px;background:var(--frost);color:var(--mist);}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px;
+  padding:11px 0;border-top:1px solid var(--ice);flex-wrap:wrap;}
+.row .who{font-size:14.5px;font-weight:700;}
+.row .meta{font-size:12px;color:var(--mist);line-height:1.7;}
+.row .amt{font-size:16px;font-weight:800;direction:ltr;font-variant-numeric:tabular-nums;}
+.acts{display:flex;gap:7px;flex-wrap:wrap;}
+.mini{font-family:'Tajawal',sans-serif;font-size:12.5px;font-weight:700;border:0;border-radius:9px;
+  padding:7px 13px;cursor:pointer;color:#fff;background:var(--ok);}
+.mini.g{background:#fff;color:var(--mist);border:1.5px solid var(--ice);}
+.mini:disabled{opacity:.5;cursor:default;}
+.old{background:#fff;border:1.5px dashed var(--ice);border-radius:16px;padding:15px 16px;
+  font-size:13.5px;color:var(--mist);line-height:1.9;}
+.old a{color:#0369A1;font-weight:700;}
+.msg{font-size:14px;line-height:1.9;margin:14px 0 0;}
+.bar{margin-top:16px;}
+button.big{font-family:'Tajawal',sans-serif;font-size:15px;font-weight:700;border:0;border-radius:11px;
+  background:var(--sky);color:#fff;padding:11px 22px;cursor:pointer;}
+button.big:disabled{background:#CBD5E1;cursor:default;}
+.hide{display:none;}
+</style>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="atwad-firebase.js"></script>
+<script src="atwad-auth.js"></script>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="head">
+    <h1>🎯 ما يحتاج قرارك</h1>
+    <span class="pill" id="pill">…</span>
+  </div>
+  <div class="sub">
+    لا تعرض هذه الصفحة حساباتك — تعرض ما لا يستطيع النظام حسمه وحده.
+    في اليوم السليم تكون فارغة، وفراغها هو الخبر الجيّد.
+  </div>
+
+  <div id="out"></div>
+  <div class="msg" id="msg"></div>
+  <div class="bar"><button class="big" id="refBtn" disabled>🔄 تحديث</button></div>
+
+</div>
+
+<script>
+var ADMIN_UID = 'NU8g25megKefUOBQGvfkVtBOw802';
+var atDb = null;
+var STALE_DAYS = 14;   // ما تجاوز أسبوعين يخرج من «الجاري» ويصير متراكماً
+
+function el(id){ return document.getElementById(id); }
+
+function esc(s){
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function fmtNum(n){ return Number(n || 0).toLocaleString('en-US'); }
+function todayStr(){ return new Date().toISOString().split('T')[0]; }
+
+function daysAgo(d){
+  if(!d) return 0;
+  var t = new Date(d + 'T00:00:00').getTime();
+  if(isNaN(t)) return 0;
+  return Math.floor((Date.now() - t) / 86400000);
+}
+
+function normName(s){
+  var x = String(s || '').toLowerCase();
+  x = x.replace(/[ـ.,_\-]/g, ' ').replace(/\b(mr|mrs|ms|miss|dr|eng)\b/g, ' ');
+  x = x.replace(/[أإآ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه');
+  return x.replace(/\s+/g, ' ').trim();
+}
+
+function normStatus(s){ return (s === 'معلق') ? 'غير مدفوع' : (s || 'مدفوع'); }
+
+function collected(e){
+  var s = normStatus(e.status);
+  if(s === 'مدفوع') return parseFloat(e.amount) || 0;
+  if(s === 'مدفوع جزئياً'){
+    if(Array.isArray(e.payments) && e.payments.length){
+      return e.payments.reduce(function(a,p){ return a + (parseFloat(p.amount) || 0); }, 0);
+    }
+    return parseFloat(e.paidAmount) || 0;
+  }
+  return 0;
+}
+
+var DONE_ST = {done:1, invoiced:1, completed:1, 'مكتمل':1, 'منجز':1, 'تم':1, 'مفوتر':1};
+var SKIP_ST = {cancelled:1, canceled:1, failed:1, 'ملغي':1, 'ملغى':1};
+
+function isTestRow(e){
+  var s = (String(e.party || '') + ' ' + String(e.desc || '')).toLowerCase();
+  return s.indexOf('اختبار') >= 0 || s.indexOf('إختبار') >= 0 || s.indexOf('test') >= 0;
+}
+
+function load(){
+  if(!atDb) return;
+  el('refBtn').disabled = true;
+  el('msg').textContent = 'جاري الفحص…';
+
+  Promise.all([
+    atDb.ref('transactions').once('value'),
+    atDb.ref('appointments').once('value'),
+    atDb.ref('bookings').once('value')
+  ]).then(function(res){
+
+    // فهرس الأعمال المكتملة: اسم+تاريخ
+    var doneJobs = {};
+    function scanJobs(snap){
+      snap.forEach(function(c){
+        var v = c.val() || {};
+        var nm = v.client || v.customerName || v.name || '';
+        if(!nm) return;
+        var raw = String(v.status || '').trim();
+        if(SKIP_ST[raw.toLowerCase()] || SKIP_ST[raw]) return;
+        if(DONE_ST[raw.toLowerCase()] || DONE_ST[raw]){
+          doneJobs[normName(nm) + '|' + (v.date || '')] = true;
+        }
+      });
+    }
+    scanJobs(res[1]);
+    scanJobs(res[2]);
+
+    var tday = todayStr();
+    var buckets = { unpaid:[], debt:[], future:[], test:[] };
+    var oldCount = 0, oldSum = 0;
+
+    res[0].forEach(function(c){
+      var e = c.val() || {};
+      if(e.type !== 'income') return;
+      var amt = parseFloat(e.amount) || 0;
+      var rem = amt - collected(e);
+      if(rem <= 0) return;
+
+      var row = { key: c.key, e: e, amount: amt, remaining: rem, age: daysAgo(e.date) };
+
+      if(isTestRow(e)){ buckets.test.push(row); return; }
+
+      if(e.date && e.date > tday){ buckets.future.push(row); return; }
+
+      var isDebt = !!(e.dueType || e.dueDate || e.paymentNote);
+
+      if(row.age > STALE_DAYS){
+        if(isDebt){ buckets.debt.push(row); }
+        else { oldCount += 1; oldSum += rem; }
+        return;
+      }
+
+      if(isDebt){ buckets.debt.push(row); return; }
+      if(doneJobs[normName(e.party || '') + '|' + (e.date || '')]){ buckets.unpaid.push(row); }
+    });
+
+    function byAge(a, b){ return b.age - a.age; }
+    buckets.unpaid.sort(byAge);
+    buckets.debt.sort(byAge);
+    buckets.future.sort(function(a,b){ return String(a.e.date).localeCompare(String(b.e.date)); });
+
+    render(buckets, oldCount, oldSum);
+    el('refBtn').disabled = false;
+    el('msg').textContent = '';
+  }).catch(function(err){
+    el('refBtn').disabled = false;
+    el('msg').textContent = '❌ تعذّرت القراءة: ' + (err.message || err);
+  });
+}
+
+// صياغة عربية سليمة للعدد: يوم / يومان / ٣-١٠ أيام / ١١+ يوماً
+function dayWord(n){
+  if(n === 1) return 'يوم';
+  if(n === 2) return 'يومين';
+  if(n >= 3 && n <= 10) return n + ' أيام';
+  return n + ' يوماً';
+}
+
+function ageWord(age){
+  if(age === 0) return 'اليوم';
+  if(age > 0)  return 'منذ ' + dayWord(age);
+  return 'بعد ' + dayWord(-age);
+}
+
+function rowHtml(r, acts){
+  var ageTxt = ageWord(r.age);
+  return '<div class="row" id="r-' + esc(r.key) + '">' +
+    '<div><div class="who">' + esc(r.e.party || '—') + '</div>' +
+    '<div class="meta">' + esc(r.e.date || '—') + ' · ' + ageTxt +
+      (r.e.desc ? ' · ' + esc(r.e.desc) : '') + '</div></div>' +
+    '<div style="display:flex;align-items:center;gap:12px;">' +
+    '<div class="amt">' + fmtNum(r.remaining) + ' ﷼</div>' +
+    '<div class="acts">' + acts + '</div></div></div>';
+}
+
+function render(b, oldCount, oldSum){
+  var html = '';
+  var total = b.unpaid.length + b.debt.length + b.future.length + b.test.length;
+
+  if(total === 0){
+    html = '<div class="clear"><div class="big">✅</div>' +
+      '<div class="t">لا شيء يحتاج قرارك</div>' +
+      '<div class="s">كل زيارة مكتملة سُجّل قبضها، ولا دَيْن تجاوز ' + STALE_DAYS + ' يوماً.</div></div>';
+  }
+
+  if(b.unpaid.length){
+    html += '<div class="grp red"><h2>🔴 زيارة اكتملت ولم يُسجَّل قبضها ' +
+      '<span class="cnt">' + b.unpaid.length + '</span></h2>' +
+      '<div class="why">الفني أنهى العمل، والمبلغ لم يُعلَّم مقبوضاً ولم يُسجَّل كدَيْن. ' +
+      'إمّا قُبض فعلّمه، وإمّا لم يُقبض فاجعله دَيناً يُتابَع.</div>';
+    for(var i = 0; i < b.unpaid.length; i++){
+      html += rowHtml(b.unpaid[i],
+        '<button class="mini" onclick="act(\'' + esc(b.unpaid[i].key) + '\',\'paid\')">قُبض</button>' +
+        '<button class="mini g" onclick="act(\'' + esc(b.unpaid[i].key) + '\',\'debt\')">دَيْن</button>');
+    }
+    html += '</div>';
+  }
+
+  if(b.debt.length){
+    html += '<div class="grp amber"><h2>🟠 دَيْن يحتاج مطالبة ' +
+      '<span class="cnt">' + b.debt.length + '</span></h2>' +
+      '<div class="why">مسجّل كدَيْن ومضى عليه وقت. اتّصل بالعميل، وإن سدّد فعلّمه مقبوضاً.</div>';
+    for(var j = 0; j < b.debt.length; j++){
+      html += rowHtml(b.debt[j],
+        '<button class="mini" onclick="act(\'' + esc(b.debt[j].key) + '\',\'paid\')">سدّد</button>');
+    }
+    html += '</div>';
+  }
+
+  if(b.future.length){
+    html += '<div class="grp violet"><h2>🟣 إيراد بتاريخ لم يأتِ بعد ' +
+      '<span class="cnt">' + b.future.length + '</span></h2>' +
+      '<div class="why">زيارة مستقبلية محسوبة ضمن المبيعات، فتُظهر إيراداً لم يتحقّق. ' +
+      'اتركها حتى موعدها — هذا تنبيه لا خطأ.</div>';
+    for(var k = 0; k < b.future.length; k++){
+      html += rowHtml(b.future[k], '');
+    }
+    html += '</div>';
+  }
+
+  if(b.test.length){
+    html += '<div class="grp"><h2>⚪ بيانات اختبار في الحسابات ' +
+      '<span class="cnt">' + b.test.length + '</span></h2>' +
+      '<div class="why">قيود تحمل كلمة «اختبار» أو «test» وتُحسب ضمن أرقامك. ' +
+      'ألغِها لتخرج من الحساب — لا تُحذف، تُعلَّم «ملغي».</div>';
+    for(var m = 0; m < b.test.length; m++){
+      html += rowHtml(b.test[m],
+        '<button class="mini g" onclick="act(\'' + esc(b.test[m].key) + '\',\'cancel\')">إلغاء القيد</button>');
+    }
+    html += '</div>';
+  }
+
+  if(oldCount){
+    html += '<div class="old">📦 متراكم أقدم من ' + STALE_DAYS + ' يوماً: <b>' + oldCount +
+      '</b> قيداً بإجمالي <b>' + fmtNum(oldSum) + ' ﷼</b> — خارج هذه اللوحة عمداً حتى لا تُغرقها. ' +
+      'نظّفه مرة واحدة من <a href="preview-unpaid-audit.html">أداة مراجعة غير المدفوع</a>، ' +
+      'وبعدها لن يتكوّن تراكم جديد.</div>';
+  }
+
+  el('out').innerHTML = html;
+}
+
+function act(key, what){
+  if(!atDb) return;
+  var patch;
+  if(what === 'paid'){
+    patch = { status: 'مدفوع' };
+  } else if(what === 'debt'){
+    patch = { status: 'مؤجل', dueType: 'open', paidAmount: 0,
+              paymentNote: 'لم يُقبض — أُدرج للمتابعة من لوحة القرارات' };
+  } else {
+    patch = { status: 'ملغي' };
+  }
+
+  var row = el('r-' + key);
+  if(row){
+    var bs = row.querySelectorAll('button');
+    for(var i = 0; i < bs.length; i++){ bs[i].disabled = true; }
+  }
+
+  atDb.ref('transactions/' + key).once('value').then(function(snap){
+    var v = snap.val() || {};
+    if(what === 'paid'){ patch.paidAmount = parseFloat(v.amount) || 0; }
+    return atDb.ref('transactions/' + key).update(patch);
+  }).then(function(){
+    if(row) row.style.display = 'none';
+    el('msg').textContent = '✅ تمّ. اضغط «تحديث» لإعادة الفحص.';
+  }).catch(function(err){
+    if(row){
+      var bs2 = row.querySelectorAll('button');
+      for(var j = 0; j < bs2.length; j++){ bs2[j].disabled = false; }
+    }
+    el('msg').textContent = '❌ تعذّر الحفظ: ' + (err.message || err);
+  });
+}
+
+window.__atwadInitPage = function(user){
+  if(!user || user.uid !== ADMIN_UID){
+    document.body.innerHTML = '<div style="padding:40px;text-align:center;font-family:Tajawal,sans-serif;">' +
+      'هذا الحساب غير مصرّح له.</div>';
+    return;
+  }
+  atDb = window.db || null;
+  if(!atDb){ el('pill').textContent = 'غير متصل'; return; }
+  el('pill').textContent = 'متصل';
+  el('refBtn').disabled = false;
+  el('refBtn').addEventListener('click', load);
+  load();
+};
+</script>
+</body>
+</html>
