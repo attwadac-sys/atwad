@@ -846,7 +846,172 @@ function openMap(address) {
   }
 }
 
+/* ============================================================
+   تسجيل القبض لحظة إتمام الزيارة
+   السبب: المال يستلمه الفني، فيُسجَّل حيث يُستلم لا بعد أيام.
+   الافتراضي «نقداً» لأنه الواقع الغالب، و«لم يُدفع» استثناء مقصود.
+   ============================================================ */
+var _payCtx = null;          // {id, source, fbKey, appt}
+var _txCache = null;         // قيود الدخل المقروءة مرة واحدة لكل جلسة
+
+function payText(ar, en){ return (typeof LANG !== 'undefined' && LANG === 'en') ? en : ar; }
+
+function payNorm(s){
+  var x = String(s || '').toLowerCase();
+  x = x.replace(/[ـ.,_\-]/g, ' ').replace(/\b(mr|mrs|ms|miss|dr|eng)\b/g, ' ');
+  x = x.replace(/[أإآ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه');
+  return x.replace(/\s+/g, ' ').trim();
+}
+
+// البحث عن قيد دخل غير محصّل لنفس العميل ونفس التاريخ، لتحديثه بدل إنشاء قيد ثانٍ
+function findOpenTx(client, date){
+  if(!_txCache) return null;
+  var nm = payNorm(client);
+  for(var i = 0; i < _txCache.length; i++){
+    var r = _txCache[i];
+    if(r.v.type !== 'income') continue;
+    var st = r.v.status || '';
+    if(st === 'مدفوع' || st === 'ملغي' || st === 'مسوى') continue;
+    if(r.v.date !== date) continue;
+    if(payNorm(r.v.party || r.v.client || '') !== nm) continue;
+    return r;
+  }
+  return null;
+}
+
+function loadTxCache(){
+  if(_txCache || !db) return Promise.resolve();
+  return db.ref('transactions').limitToLast(400).once('value').then(function(snap){
+    _txCache = [];
+    snap.forEach(function(c){ _txCache.push({ key: c.key, v: c.val() || {} }); });
+  }).catch(function(err){
+    console.warn('تعذّرت قراءة القيود المالية:', err);
+    _txCache = [];
+  });
+}
+
+function openPaySheet(id, source, fbKey){
+  var a = allAppts.find(function(x){
+    return x.id === id || x._fbKey === id || ('B_' + x._fbKey) === id;
+  });
+  _payCtx = { id: id, source: source, fbKey: fbKey, appt: a || null };
+
+  var client = (a && a.client) || '—';
+  var svc    = (a && a.service) || '';
+  document.getElementById('payTitle').textContent =
+    payText('المبلغ المستلم', 'Amount received');
+  document.getElementById('payWho').textContent =
+    client + (svc ? ' · ' + svc : '');
+  document.getElementById('payLbl').textContent = payText('ريال', 'SAR');
+  document.getElementById('payCash').textContent  = payText('💵 نقداً', '💵 Cash');
+  document.getElementById('payTrans').textContent = payText('🏦 تحويل', '🏦 Transfer');
+  document.getElementById('payNone').textContent  = payText('⏳ لم يُدفع — دَيْن', '⏳ Not paid — debt');
+  document.getElementById('payCancel').textContent = payText('إلغاء', 'Cancel');
+
+  var amtEl = document.getElementById('payAmt');
+  amtEl.value = '';
+  document.getElementById('payOv').classList.add('show');
+
+  loadTxCache().then(function(){
+    var hit = findOpenTx(client, (a && a.date) || '');
+    if(hit && !amtEl.value){ amtEl.value = parseFloat(hit.v.amount) || ''; }
+    amtEl.focus();
+  });
+}
+
+function closePaySheet(){
+  document.getElementById('payOv').classList.remove('show');
+  _payCtx = null;
+}
+
+function submitPay(method){
+  if(!_payCtx) return;
+  if(!db) { showToast(t('tNoFb')); closePaySheet(); return; }
+
+  var amt = parseFloat(document.getElementById('payAmt').value);
+  if(!(amt > 0)){
+    showToast(payText('⚠️ اكتب المبلغ أولاً', '⚠️ Enter the amount first'));
+    document.getElementById('payAmt').focus();
+    return;
+  }
+
+  var ctx = _payCtx;
+  var a = ctx.appt || {};
+  var client = a.client || '—';
+  var date = a.date || new Date().toISOString().split('T')[0];
+  var paid = (method !== 'none');
+
+  var tx = {
+    type: 'income',
+    amount: amt,
+    date: date,
+    party: client,
+    desc: (a.service || 'زيارة صيانة') + ' - ' + client,
+    category: 'خدمة',
+    method: (method === 'transfer') ? 'تحويل' : 'كاش',
+    status: paid ? 'مدفوع' : 'مؤجل',
+    paidAmount: paid ? amt : 0,
+    payments: [],
+    source: 'technician',
+    createdBy: (a.tech === 'Abrar' || a.tech === 'أبرار') ? 'أحمد' : (a.tech || 'أحمد'),
+    createdAt: new Date().toISOString()
+  };
+  if(!paid){
+    tx.dueType = 'open';
+    tx.paymentNote = 'لم يُدفع عند إتمام الزيارة — سجّله الفني';
+  }
+
+  var hit = findOpenTx(client, date);
+  var txPath = hit ? ('transactions/' + hit.key) : ('transactions/' + db.ref('transactions').push().key);
+  if(!hit){ tx.id = 'F' + Date.now().toString().slice(-7); }
+
+  var apptPath = (ctx.source === 'bookings' ? 'bookings/' : 'appointments/') + ctx.fbKey;
+
+  var updates = {};
+  updates[apptPath + '/status'] = 'done';
+  for(var k in tx){
+    if(Object.prototype.hasOwnProperty.call(tx, k)){ updates[txPath + '/' + k] = tx[k]; }
+  }
+
+  var btns = document.querySelectorAll('.pay-btn');
+  for(var i = 0; i < btns.length; i++){ btns[i].disabled = true; }
+
+  db.ref().update(updates).then(function(){
+    if(hit){ hit.v.status = tx.status; hit.v.paidAmount = tx.paidAmount; }
+    else if(_txCache){ _txCache.push({ key: txPath.split('/')[1], v: tx }); }
+    for(var j = 0; j < btns.length; j++){ btns[j].disabled = false; }
+    closePaySheet();
+    finishDoneUI(ctx.id);
+    showToast(paid
+      ? payText('✅ تمّ — سُجّل ' + amt + ' ريال', '✅ Done — ' + amt + ' SAR recorded')
+      : payText('📌 سُجّل كدَيْن على ' + client, '📌 Recorded as debt for ' + client));
+  }).catch(function(e){
+    for(var j2 = 0; j2 < btns.length; j2++){ btns[j2].disabled = false; }
+    showToast(t('tErr') + e.message);
+  });
+}
+
+function finishDoneUI(id){
+  const card = document.getElementById('card-' + id);
+  if(card) {
+    card.className = 'appt-card done';
+    const badge = card.querySelector('.status-badge');
+    if(badge) { badge.className='status-badge badge-done'; badge.textContent=statusLabel('done'); }
+    const doneBtn = card.querySelector('.btn-done');
+    if(doneBtn) { doneBtn.disabled=true; doneBtn.textContent=t('completed'); }
+  }
+  const a = allAppts.find(x => (x.id===id || x._fbKey===id || ('B_'+x._fbKey)===id));
+  if(a) a.status = 'done';
+  updateStats();
+}
+
 function markDone(id, source, fbKey) {
+  if(!db) { showToast(t('tNoFb')); return; }
+  openPaySheet(id, source, fbKey);
+}
+
+// المسار القديم — يُبقى للرجوع إليه إن لزم (لا يُستدعى الآن)
+function markDoneNoPayment(id, source, fbKey) {
   if(!db) { showToast(t('tNoFb')); return; }
   if(!confirm(t('confirmDone'))) return;
 
@@ -877,6 +1042,15 @@ function showToast(msg) {
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 3000);
 }
+
+// ربط أزرار ورقة القبض
+document.getElementById('payCash').addEventListener('click', function(){ submitPay('cash'); });
+document.getElementById('payTrans').addEventListener('click', function(){ submitPay('transfer'); });
+document.getElementById('payNone').addEventListener('click', function(){ submitPay('none'); });
+document.getElementById('payCancel').addEventListener('click', closePaySheet);
+document.getElementById('payOv').addEventListener('click', function(ev){
+  if(ev.target === this) closePaySheet();
+});
 
 // تهيئة
 updateDate();
