@@ -380,8 +380,8 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
       </div>
       <button onclick="openLockRepair()" title="فحص أقفال المواعيد وإصلاح الناقص منها" style="padding:7px 12px;border-radius:10px;border:1.5px solid #BFDBFE;background:#EFF6FF;color:#1E40AF;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">&#128274; فحص الأقفال والتداخلات</button>
       <button class="btn-primary" onclick="openNewAppt()" style="padding:8px 14px;font-size:12px;">＋ موعد</button>
-      <button onclick="openWaitingList(null)" style="padding:7px 12px;background:#FEF9C3;color:#92400E;border:1.5px solid #FDE68A;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;">
-        &#128196; <span id="waitingBadge" style="background:#EF4444;color:#fff;border-radius:50%;width:16px;height:16px;display:none;align-items:center;justify-content:center;font-size:9px;font-weight:700;margin-right:2px;"></span>
+      <button onclick="openWaitingList(null)" title="العملاء المنتظرون لموعد شاغر" style="padding:7px 12px;background:#FEF9C3;color:#92400E;border:1.5px solid #FDE68A;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;">
+        &#128196; قائمة الانتظار <span id="waitingBadge" style="background:#EF4444;color:#fff;border-radius:50%;min-width:18px;height:18px;display:none;align-items:center;justify-content:center;font-size:10px;font-weight:800;padding:0 4px;"></span>
       </button>
     </div>
   </div>
@@ -782,7 +782,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;position:sticky;top:0;background:#fff;padding-bottom:10px;border-bottom:1px solid var(--ice);">
       <h3 style="margin:0;font-size:15px;">&#128196; قائمة الانتظار</h3>
       <div style="display:flex;gap:8px;align-items:center;">
-        <span id="waitingBadge" style="background:#EF4444;color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;"></span>
+        <span id="waitingBadgeModal" style="background:#EF4444;color:#fff;border-radius:50%;min-width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;padding:0 5px;"></span>
         <button onclick="openAddWaitingModal()" style="padding:6px 12px;background:var(--sky);color:#fff;border:none;border-radius:8px;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">➕ إضافة</button>
         <button onclick="document.getElementById('waitingListModal').classList.remove('open')" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--mist);">×</button>
       </div>
@@ -5067,9 +5067,15 @@ function loadWaitingList() {
     snap.forEach(function(c) {
       waitingList.push(Object.assign({}, c.val(), {_key: c.key}));
     });
-    // تحديث عداد قائمة الانتظار
+    // تحديث عدّاد قائمة الانتظار — الشارة كانت مخفية دائماً فلا يراها أحد
+    var n = waitingList.length;
     var badge = document.getElementById('waitingBadge');
-    if(badge) badge.textContent = waitingList.length || '';
+    if(badge){
+      badge.textContent = n ? String(n) : '';
+      badge.style.display = n ? 'flex' : 'none';
+    }
+    var badge2 = document.getElementById('waitingBadgeModal');
+    if(badge2) badge2.textContent = n ? String(n) : '0';
   });
 }
 
@@ -5295,7 +5301,12 @@ function showFreeSlot(cancelledAppt) {
   }).sort(function(a,b){ return b._score - a._score; });
 
   if(scored.length) {
-    showToast('🔍 يوجد ' + scored.length + ' عميل في قائمة الانتظار — سنعرضهم بعد إشعار العميل');
+    // التنبيه يذكر الأوْلى بالاسم، فالقرار يُتّخذ من الرسالة نفسها
+    var top = scored[0];
+    showToast('📢 تحرّر ' + formatDateShort(cancelledAppt.date) +
+      (cancelledAppt.time ? ' ' + cancelledAppt.time : '') +
+      ' — الأوْلى: ' + (top.name || '—') +
+      (scored.length > 1 ? ' ومعه ' + (scored.length - 1) + ' آخرون' : ''));
     setTimeout(function(){
       var notice = document.getElementById('customerNoticeModal');
       if(notice && notice.classList.contains('open')) {

@@ -146,6 +146,8 @@
     "appointmentWaitlist": {
       ".read": "auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802'",
       ".write": "auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802'"
+,
+      ".indexOn": ["booked"]
     },
     "workOrders": {
       ".read": "auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802'",
