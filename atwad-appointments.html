@@ -307,6 +307,27 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 .btn-use-old{background:#FEF3C7;color:#92400E;}
 .btn-use-new{background:#DBEAFE;color:#1E40AF;}
 .btn-save-new{background:#D1FAE5;color:#065F46;}
+/* ===== ورقة تسجيل القبض عند إتمام الزيارة — نفس ورقة صفحة الفني ===== */
+.pay-ov{position:fixed;inset:0;background:rgba(12,59,94,.55);display:none;z-index:4000;
+  align-items:center;justify-content:center;font-family:'Tajawal',sans-serif;padding:16px;}
+.pay-ov.show{display:flex;}
+.pay-sheet{background:#fff;width:100%;max-width:420px;border-radius:20px;padding:22px 20px 24px;
+  box-shadow:0 20px 60px rgba(0,0,0,.3);}
+.pay-sheet h3{margin:0 0 3px;font-size:18px;color:var(--deep);}
+.pay-who{font-size:13.5px;color:var(--mist);margin-bottom:15px;line-height:1.7;}
+.pay-amt{width:100%;font-size:30px;font-weight:800;text-align:center;color:var(--deep);
+  border:2px solid var(--ice);border-radius:14px;padding:12px;font-family:'Tajawal',sans-serif;
+  direction:ltr;background:var(--frost);}
+.pay-amt:focus{outline:none;border-color:var(--sky);}
+.pay-lbl{font-size:12.5px;color:var(--mist);text-align:center;margin:9px 0 14px;}
+.pay-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.pay-btn{font-family:'Tajawal',sans-serif;font-size:15.5px;font-weight:700;border:0;border-radius:14px;
+  padding:15px 10px;cursor:pointer;color:#fff;}
+.pay-cash{background:var(--success);}
+.pay-tr{background:var(--sky);}
+.pay-no{background:var(--warning);grid-column:1 / -1;}
+.pay-x{background:#fff;color:var(--mist);border:1.5px solid var(--ice);grid-column:1 / -1;font-size:14px;padding:12px;}
+.pay-btn:disabled{opacity:.5;}
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
@@ -630,6 +651,22 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
     <div class="modal-footer">
       <button class="btn-cancel" onclick="document.getElementById('detailModal').classList.remove('open')">إغلاق</button>
       <button class="btn-save" id="detailEditBtn">✏️ تعديل</button>
+    </div>
+  </div>
+</div>
+
+<!-- ورقة تسجيل القبض — تظهر عند «✓ إتمام» -->
+<div class="pay-ov" id="payOv">
+  <div class="pay-sheet">
+    <h3>المبلغ المستلم</h3>
+    <div class="pay-who" id="payWho"></div>
+    <input type="number" inputmode="decimal" min="0" step="1" class="pay-amt" id="payAmt" placeholder="0">
+    <div class="pay-lbl">ريال</div>
+    <div class="pay-btns">
+      <button class="pay-btn pay-cash" id="payCash">💵 نقداً</button>
+      <button class="pay-btn pay-tr"   id="payTrans">🏦 تحويل</button>
+      <button class="pay-btn pay-no"   id="payNone">⏳ لم يُدفع — دَيْن</button>
+      <button class="pay-btn pay-x"    id="payCancel">إلغاء</button>
     </div>
   </div>
 </div>
@@ -3987,18 +4024,145 @@ function requestRecheck(id){
   showToast('🔁 راجع التاريخ والوقت ثم احفظ');
 }
 
+/* ============================================================
+   تسجيل القبض لحظة إتمام الزيارة — نفس آلية صفحة الفني.
+   الهدف ألّا يُغلق موعد من أي باب دون أن يُعرف مصير مبلغه.
+   ============================================================ */
+var _payCtx = null;
+var _txCache = null;
+
+function payNorm(s){
+  var x = String(s || '').toLowerCase();
+  x = x.replace(/[ـ.,_\-]/g, ' ').replace(/\b(mr|mrs|ms|miss|dr|eng)\b/g, ' ');
+  x = x.replace(/[أإآ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه');
+  return x.replace(/\s+/g, ' ').trim();
+}
+
+// قيد دخل غير محصّل لنفس العميل ونفس التاريخ — يُحدَّث بدل إنشاء قيد ثانٍ
+function findOpenTx(client, date){
+  if(!_txCache) return null;
+  var nm = payNorm(client);
+  for(var i = 0; i < _txCache.length; i++){
+    var r = _txCache[i];
+    if(r.v.type !== 'income') continue;
+    var st = r.v.status || '';
+    if(st === 'مدفوع' || st === 'ملغي' || st === 'مسوى') continue;
+    if(r.v.date !== date) continue;
+    if(payNorm(r.v.party || r.v.client || '') !== nm) continue;
+    return r;
+  }
+  return null;
+}
+
+function loadTxCache(){
+  if(_txCache || !db) return Promise.resolve();
+  return db.ref('transactions').limitToLast(400).once('value').then(function(snap){
+    _txCache = [];
+    snap.forEach(function(c){ _txCache.push({ key: c.key, v: c.val() || {} }); });
+  }).catch(function(err){
+    console.warn('تعذّرت قراءة القيود المالية:', err);
+    _txCache = [];
+  });
+}
+
 function markDone(id){
   const a = findAppt(id);
   if(!a || !db) return;
-  const ref = a._source==='bookings' ? 'bookings/'+a._fbKey : 'appointments/'+a._fbKey;
-  db.ref(ref).update({status:'done'})
+  _payCtx = { id: id, appt: a };
+
+  document.getElementById('payWho').textContent =
+    (a.client || '—') + (a.service ? ' · ' + a.service : '');
+  var amtEl = document.getElementById('payAmt');
+  amtEl.value = '';
+  document.getElementById('payOv').classList.add('show');
+
+  loadTxCache().then(function(){
+    var hit = findOpenTx(a.client || '', a.date || '');
+    if(hit && !amtEl.value){ amtEl.value = parseFloat(hit.v.amount) || ''; }
+    amtEl.focus();
+  });
+}
+
+function closePaySheet(){
+  document.getElementById('payOv').classList.remove('show');
+  _payCtx = null;
+}
+
+function submitPay(method){
+  if(!_payCtx || !db) return;
+
+  var amt = parseFloat(document.getElementById('payAmt').value);
+  if(!(amt > 0)){
+    showToast('⚠️ اكتب المبلغ أولاً');
+    document.getElementById('payAmt').focus();
+    return;
+  }
+
+  var ctx = _payCtx;
+  var a = ctx.appt;
+  var client = a.client || '—';
+  var date = a.date || new Date().toISOString().split('T')[0];
+  var paid = (method !== 'none');
+
+  var tx = {
+    type: 'income',
+    amount: amt,
+    date: date,
+    party: client,
+    desc: (a.service || 'زيارة صيانة') + ' - ' + client,
+    category: 'خدمة',
+    method: (method === 'transfer') ? 'تحويل' : 'كاش',
+    status: paid ? 'مدفوع' : 'مؤجل',
+    paidAmount: paid ? amt : 0,
+    payments: [],
+    createdAt: new Date().toISOString()
+  };
+  if(!paid){
+    tx.dueType = 'open';
+    tx.paymentNote = 'لم يُدفع عند إتمام الزيارة';
+  }
+
+  var hit = findOpenTx(client, date);
+  var txKey = hit ? hit.key : db.ref('transactions').push().key;
+  if(!hit){ tx.id = 'F' + Date.now().toString().slice(-7); }
+
+  var apptPath = (a._source === 'bookings' ? 'bookings/' : 'appointments/') + a._fbKey;
+
+  var updates = {};
+  updates[apptPath + '/status'] = 'done';
+  for(var k in tx){
+    if(Object.prototype.hasOwnProperty.call(tx, k)){ updates['transactions/' + txKey + '/' + k] = tx[k]; }
+  }
+
+  var btns = document.querySelectorAll('.pay-btn');
+  for(var i = 0; i < btns.length; i++){ btns[i].disabled = true; }
+
+  db.ref().update(updates)
     .then(function(){
+      if(hit){ hit.v.status = tx.status; hit.v.paidAmount = tx.paidAmount; }
+      else if(_txCache){ _txCache.push({ key: txKey, v: tx }); }
       // الموعد المكتمل لا يحجز وقتًا بعد الآن — تُحرر أقفاله هو فقط
       return releaseSlotLocksForAppt(a);
     })
-    .then(() => showToast('🎉 تم إتمام الموعد'))
-    .catch(e => showToast('❌ خطأ: ' + e.message));
+    .then(function(){
+      for(var j = 0; j < btns.length; j++){ btns[j].disabled = false; }
+      closePaySheet();
+      showToast(paid ? ('✅ تم الإتمام — سُجّل ' + amt + ' ريال')
+                     : ('📌 تم الإتمام — دَيْن على ' + client));
+    })
+    .catch(function(e){
+      for(var j2 = 0; j2 < btns.length; j2++){ btns[j2].disabled = false; }
+      showToast('❌ خطأ: ' + e.message);
+    });
 }
+
+document.getElementById('payCash').addEventListener('click', function(){ submitPay('cash'); });
+document.getElementById('payTrans').addEventListener('click', function(){ submitPay('transfer'); });
+document.getElementById('payNone').addEventListener('click', function(){ submitPay('none'); });
+document.getElementById('payCancel').addEventListener('click', closePaySheet);
+document.getElementById('payOv').addEventListener('click', function(ev){
+  if(ev.target === this) closePaySheet();
+});
 
 // ============================================================
 // إنشاء أمر عمل لموعد مكتمل لا يوجد له أمر عمل
