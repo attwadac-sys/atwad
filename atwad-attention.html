@@ -28,6 +28,7 @@ h1{font-size:23px;margin:0;}
   padding:11px 0;border-top:1px solid var(--ice);flex-wrap:wrap;}
 .row .who{font-size:14.5px;font-weight:700;}
 .row .meta{font-size:12px;color:var(--mist);line-height:1.7;}
+.row .twinline{color:#c4b5fd;}
 .row .amt{font-size:16px;font-weight:800;direction:ltr;font-variant-numeric:tabular-nums;}
 .acts{display:flex;gap:7px;flex-wrap:wrap;}
 .mini{font-family:'Tajawal',sans-serif;font-size:12.5px;font-weight:700;border:0;border-radius:9px;
@@ -205,11 +206,13 @@ function load(){
     scanJobs(res[2]);
 
     var tday = todayStr();
-    var buckets = { dup:[], unpaid:[], debt:[], future:[], test:[] };
+    var buckets = { twin:[], dup:[], unpaid:[], debt:[], future:[], test:[] };
     var oldCount = 0, oldSum = 0;
 
-    // كل القيود غير المحصّلة أولاً، ثم نكتشف التكرار قبل التوزيع
-    var all = [];
+    // كل القيود غير المحصّلة أولاً، ثم نكتشف التكرار قبل التوزيع.
+    // والمحصّل لا يُعرض لكنه يُحتفظ به: بدونه يستحيل كشف القيد
+    // الوهمي الذي له توأم مقبوض — وهذا أكثر أنواع التكرار ضرراً.
+    var all = [], paidRows = [];
     res[0].forEach(function(c){
       var e = c.val() || {};
       if(e.type !== 'income') return;
@@ -217,9 +220,35 @@ function load(){
       if(e.status === 'ملغي' || e.status === 'مسوى') return;
       var amt = parseFloat(e.amount) || 0;
       var rem = amt - collected(e);
-      if(rem <= 0) return;
+      if(rem <= 0){
+        if(amt > 0) paidRows.push({ key: c.key, e: e, amount: amt });
+        return;
+      }
       all.push({ key: c.key, e: e, amount: amt, remaining: rem, age: daysAgo(e.date) });
     });
+
+    /* التوأم المحصّل: نفس اليوم ونفس هيكل الاسم تماماً.
+       لا نقبل احتواء اسم في اسم هنا («عبدالله» داخل «Abdullah Nasser»)
+       لأن الإلغاء لا يُستدرك. والإقران عامٌّ بالأقرب مبلغاً أولاً،
+       فلا يُطالِب قيدٌ محصّلٌ واحدٌ بأكثر من قيد غير مدفوع. */
+    var cand = [];
+    for(var a1 = 0; a1 < all.length; a1++){
+      var skU = skeleton(all[a1].e.party || all[a1].e.client || '');
+      if(skU.length < 2) continue;
+      for(var b1 = 0; b1 < paidRows.length; b1++){
+        if((paidRows[b1].e.date || '') !== (all[a1].e.date || '')) continue;
+        if(skeleton(paidRows[b1].e.party || paidRows[b1].e.client || '') !== skU) continue;
+        cand.push({ u: a1, p: b1, d: Math.abs(paidRows[b1].amount - all[a1].amount) });
+      }
+    }
+    cand.sort(function(x, y){ return x.d - y.d; });
+    var usedP = {}, usedU = {};
+    for(var c1 = 0; c1 < cand.length; c1++){
+      if(usedP[cand[c1].p] || usedU[cand[c1].u]) continue;
+      usedP[cand[c1].p] = true; usedU[cand[c1].u] = true;
+      all[cand[c1].u].twin = paidRows[cand[c1].p];
+      all[cand[c1].u].gap  = cand[c1].d;
+    }
 
     /* تكرار: نفس اليوم + نفس المبلغ + **نفس الاسم**.
        التاريخ والمبلغ وحدهما لا يكفيان لأن الأسعار موحّدة (١٠٠، ١١٠، ١٨٠)
@@ -249,6 +278,9 @@ function load(){
     all.forEach(function(row){
       var e = row.e;
 
+      // التوأم المحصّل دليلٌ أقوى من كل ما بعده: يُعرض أولاً ولا يُعفيه قِدَمه
+      if(row.twin){ buckets.twin.push(row); return; }
+
       if(dupKeys[row.key]){ buckets.dup.push(row); return; }
 
       if(isTestRow(e)){ buckets.test.push(row); return; }
@@ -268,6 +300,11 @@ function load(){
     });
 
     function byAge(a, b){ return b.age - a.age; }
+    // الأقرب مبلغاً أولاً: الفارق صفر يقين، والفارق الكبير يحتاج ذاكرتك
+    buckets.twin.sort(function(a, b){
+      var g = (a.gap || 0) - (b.gap || 0);
+      return g !== 0 ? g : String(a.e.date || '').localeCompare(String(b.e.date || ''));
+    });
     // المكرّرات متجاورة: نفس اليوم ونفس المبلغ معاً
     buckets.dup.sort(function(a, b){
       var d = String(a.e.date || '').localeCompare(String(b.e.date || ''));
@@ -300,12 +337,13 @@ function ageWord(age){
   return 'بعد ' + dayWord(-age);
 }
 
-function rowHtml(r, acts){
+function rowHtml(r, acts, extra){
   var ageTxt = ageWord(r.age);
   return '<div class="row" id="r-' + esc(r.key) + '">' +
     '<div><div class="who">' + esc(r.e.party || '—') + '</div>' +
     '<div class="meta">' + esc(r.e.date || '—') + ' · ' + ageTxt +
-      (r.e.desc ? ' · ' + esc(r.e.desc) : '') + '</div></div>' +
+      (r.e.desc ? ' · ' + esc(r.e.desc) : '') + '</div>' +
+    (extra ? '<div class="meta twinline">' + extra + '</div>' : '') + '</div>' +
     '<div style="display:flex;align-items:center;gap:12px;">' +
     '<div class="amt">' + fmtNum(r.remaining) + ' ﷼</div>' +
     '<div class="acts">' + acts + '</div></div></div>';
@@ -313,12 +351,35 @@ function rowHtml(r, acts){
 
 function render(b, oldCount, oldSum){
   var html = '';
-  var total = b.dup.length + b.unpaid.length + b.debt.length + b.future.length + b.test.length;
+  var total = b.twin.length + b.dup.length + b.unpaid.length +
+              b.debt.length + b.future.length + b.test.length;
 
   if(total === 0){
     html = '<div class="clear"><div class="big">✅</div>' +
       '<div class="t">لا شيء يحتاج قرارك</div>' +
       '<div class="s">كل زيارة مكتملة سُجّل قبضها، ولا دَيْن تجاوز ' + STALE_DAYS + ' يوماً.</div></div>';
+  }
+
+  if(b.twin.length){
+    var tSum = 0;
+    for(var w = 0; w < b.twin.length; w++){ tSum += b.twin[w].remaining; }
+    html += '<div class="grp violet"><h2>♊ قيد وهمي — الزيارة محصّلة أصلاً ' +
+      '<span class="cnt">' + b.twin.length + '</span></h2>' +
+      '<div class="why">لكل قيد هنا توأمٌ <b>مقبوض</b> لنفس العميل في نفس اليوم — ' +
+      'أي أن الزيارة الواحدة دُخلت مرّتين: مرّة بسعرها المقدَّر وقت الحجز، ' +
+      'ومرّة بالمبلغ الذي قبضه الفني. غير المدفوع منهما وهمٌ يرفع ذممك بلا سند. ' +
+      'يُشار بجانب كل قيد إلى المبلغ المقبوض وفارقه. ' +
+      'الفارق صفراً يقينٌ فألغِه، والفارق الكبير قد يكون زيارتين فعلاً في يوم واحد — ' +
+      'فإن تذكّرت زيارتين اتركه. مجموع الوهم هنا: <b>' + fmtNum(tSum) + ' ﷼</b>.</div>';
+    for(var tw = 0; tw < b.twin.length; tw++){
+      var r = b.twin[tw];
+      var note = '↔ مقبوض: <b>' + fmtNum(r.twin.amount) + ' ﷼</b> · الفارق ' +
+                 (r.gap === 0 ? '<b>صفر — تطابق تام</b>' : fmtNum(r.gap) + ' ﷼');
+      html += rowHtml(r,
+        '<button class="mini g" onclick="act(\'' + esc(r.key) + '\',\'cancel\')">ألغِ الوهمي</button>',
+        note);
+    }
+    html += '</div>';
   }
 
   if(b.dup.length){
@@ -400,7 +461,9 @@ function act(key, what){
     patch = { status: 'مؤجل', dueType: 'open', paidAmount: 0,
               paymentNote: 'لم يُقبض — أُدرج للمتابعة من لوحة القرارات' };
   } else {
-    patch = { status: 'ملغي' };
+    // سبب الإلغاء يُحفظ: مراجعةٌ لاحقة بعد شهر لن تعرف لماذا أُلغي القيد
+    patch = { status: 'ملغي',
+              paymentNote: 'أُلغي من لوحة القرارات — ' + todayStr() };
   }
 
   var row = el('r-' + key);
