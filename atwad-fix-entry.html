@@ -48,6 +48,12 @@ button.big:disabled{opacity:.45;cursor:default;}
 </style>
 </head>
 <body>
+<!-- Firebase SDK أولاً: atwad-firebase.js يستدعي firebase.initializeApp
+     فلا بد أن تُحمَّل هذه الثلاثة قبله، وإلا بقي window.auth فارغاً
+     فيُظهر atwad-auth.js «تعذر تهيئة نظام تسجيل الدخول». -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 <script src="atwad-firebase.js"></script>
 <script src="atwad-auth.js"></script>
 
@@ -75,7 +81,7 @@ button.big:disabled{opacity:.45;cursor:default;}
 
   <div id="out"></div>
 
-  <div class="ver">إصدار الصفحة: <b>v1 · 2026-10-11 23:00</b></div>
+  <div class="ver">إصدار الصفحة: <b>v2 · 2026-10-11 23:12</b></div>
   <div class="bar">
     <button class="big" id="backBtn" onclick="location.href='atwad-attention.html'">🎯 ما يحتاج قرارك</button>
     <button class="big" id="homeBtn" onclick="location.href='atwad-finance.html'">💰 الإدارة المالية</button>
