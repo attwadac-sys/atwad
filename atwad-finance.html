@@ -1009,6 +1009,37 @@ function calcPrice(svc, units) {
   return ((p||100)) * units;
 }
 
+/* ===== تطبيع الأسماء — الهيكل الصوتي =====
+   يوحّد الاسم العربي واللاتيني في بصمة واحدة («ياسر» = «Yasser» = «Yaser»)
+   حتى لا يتولّد قيدٌ ثانٍ للزيارة نفسها باختلاف هجاء الاسم. */
+var AR2LAT_FIN = {
+  'ب':'b','ت':'t','ث':'t','ج':'j','ح':'h','خ':'k','د':'d','ذ':'z','ر':'r','ز':'z',
+  'س':'s','ش':'s','ص':'s','ض':'d','ط':'t','ظ':'z','ع':'','غ':'g','ف':'f','ق':'k',
+  'ك':'k','ل':'l','م':'m','ن':'n','ه':'h','ة':'','و':'','ي':'','ى':'','ا':'',
+  'أ':'','إ':'','آ':'','ء':'','ؤ':'','ئ':''
+};
+
+function finSkeleton(s){
+  var t = String(s || '').toLowerCase();
+  t = t.replace(/[ـً-ْ.,_\-()0-9]/g, ' ');
+  t = t.replace(/\b(mr|mrs|ms|miss|dr|eng|al|el)\b/g, ' ');
+  t = t.replace(/^(الاستاذ|الأستاذ|الاستاذة|الدكتور|السيد|السيدة)\s+/, '');
+  t = t.replace(/(^|\s)ال/g, '$1');
+  t = t.replace(/\bal(?=[a-z]{3,})/g, ' ');
+  t = t.replace(/kh/g, 'k').replace(/gh/g, 'g').replace(/sh/g, 's')
+       .replace(/th/g, 't').replace(/ph/g, 'f').replace(/ch/g, 's').replace(/q/g, 'k');
+  var out = '';
+  for(var i = 0; i < t.length; i++){
+    var c = t.charAt(i);
+    if(Object.prototype.hasOwnProperty.call(AR2LAT_FIN, c)){ out += AR2LAT_FIN[c]; continue; }
+    if(c >= 'a' && c <= 'z'){
+      if('aeiouwy'.indexOf(c) >= 0) continue;
+      out += c;
+    }
+  }
+  return out.replace(/(.)\1+/g, '$1');
+}
+
 function importFinanceFromFirebase() {
   if(!db){ showToast('⚠️ Firebase غير متاح'); return; }
   var btn = document.getElementById('importFinBtn');
@@ -1016,10 +1047,24 @@ function importFinanceFromFirebase() {
   db.ref('bookings').once('value', function(snap) {
     var added=0, skip=0;
     var existRefs = new Set(entries.map(function(e){ return e.firebaseRef||''; }));
+
+    /* الحارس الثاني: زيارةٌ أُغلقت بورقة الدفع قبل إضافة علامة الحجز
+       لا تحمل firebaseRef، فنمنع تكرارها بمطابقة الاسم واليوم. */
+    var existDayName = {};
+    entries.forEach(function(e){
+      if(e.type !== 'income') return;
+      if(e.status === 'ملغي' || e.status === 'مسوى') return;
+      var sk = finSkeleton(e.party || e.client || '');
+      if(sk.length < 2 || !e.date) return;
+      existDayName[e.date + '|' + sk] = true;
+    });
+
     snap.forEach(function(child) {
       var b = child.val(); var key = child.key;
       if(existRefs.has(key)){ skip++; return; }
       if(!b.date) return;
+      var bSk = finSkeleton(b.client || b.name || '');
+      if(bSk.length >= 2 && existDayName[b.date + '|' + bSk]){ skip++; return; }
       var amount = b.servicePrice || calcPrice(b.service||'تنظيف مكيف', b.units||1);
       entries.unshift({
         id:'F'+Date.now()+Math.random().toString(36).slice(2,5),
@@ -1032,7 +1077,9 @@ function importFinanceFromFirebase() {
         payments:[], paidAmount:0,
         createdAt:b.createdAt||new Date().toISOString()
       });
-      existRefs.add(key); added++;
+      existRefs.add(key);
+      if(bSk.length >= 2){ existDayName[b.date + '|' + bSk] = true; }
+      added++;
     });
     saveData(); renderAll();
     btn.textContent='📥 استيراد إيرادات الحجوزات'; btn.disabled=false;

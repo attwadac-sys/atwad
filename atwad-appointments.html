@@ -4039,8 +4039,19 @@ function payNorm(s){
 }
 
 // قيد دخل غير محصّل لنفس العميل ونفس التاريخ — يُحدَّث بدل إنشاء قيد ثانٍ
-function findOpenTx(client, date){
+function findOpenTx(client, date, bookingKey){
   if(!_txCache) return null;
+  // أولاً: القيد المرتبط بالحجز نفسه — مطابقة قاطعة لا تحتمل الخطأ
+  if(bookingKey){
+    for(var k = 0; k < _txCache.length; k++){
+      var b = _txCache[k];
+      if(b.v.type !== 'income') continue;
+      var bs = b.v.status || '';
+      if(bs === 'ملغي' || bs === 'مسوى') continue;
+      if(b.v.firebaseRef === bookingKey) return b;
+    }
+  }
+  // ثانياً: نفس العميل ونفس اليوم وغير محصّل
   var nm = payNorm(client);
   for(var i = 0; i < _txCache.length; i++){
     var r = _txCache[i];
@@ -4077,7 +4088,8 @@ function markDone(id){
   document.getElementById('payOv').classList.add('show');
 
   loadTxCache().then(function(){
-    var hit = findOpenTx(a.client || '', a.date || '');
+    var hit = findOpenTx(a.client || '', a.date || '',
+      (a._source === 'bookings') ? a._fbKey : '');
     if(hit && !amtEl.value){ amtEl.value = parseFloat(hit.v.amount) || ''; }
     amtEl.focus();
   });
@@ -4122,7 +4134,11 @@ function submitPay(method){
     tx.paymentNote = 'لم يُدفع عند إتمام الزيارة';
   }
 
-  var hit = findOpenTx(client, date);
+  // علامة الحجز تمنع زرّ «استيراد إيرادات الحجوزات» من إنشاء قيد ثانٍ لاحقاً
+  var bookingKey = (a._source === 'bookings') ? a._fbKey : '';
+  if(bookingKey) tx.firebaseRef = bookingKey;
+
+  var hit = findOpenTx(client, date, bookingKey);
   var txKey = hit ? hit.key : db.ref('transactions').push().key;
   if(!hit){ tx.id = 'F' + Date.now().toString().slice(-7); }
 
