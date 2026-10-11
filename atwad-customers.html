@@ -2597,8 +2597,8 @@ if(db) {
 var LANG = localStorage.getItem('atwad_lang') || 'ar';
 
 var NAV_TEXT = {
-  ar: {clients:'العملاء', appts:'المواعيد', wo:'أوامر العمل', finance:'الإدارة المالية', reports:'التقارير', settings:'الإعدادات', brand:'أطواد', brandSub:'لصيانة المكيفات'},
-  en: {clients:'Clients', appts:'Appointments', wo:'Work Orders', finance:'Finance', reports:'Reports', settings:'Settings', brand:'Atwad', brandSub:'AC Maintenance'}
+  ar: {clients:'العملاء', appts:'المواعيد', wo:'أوامر العمل', finance:'الإدارة المالية', reports:'التقارير', attention:'ما يحتاج قرارك', settings:'الإعدادات', brand:'أطواد', brandSub:'لصيانة المكيفات'},
+  en: {clients:'Clients', appts:'Appointments', wo:'Work Orders', finance:'Finance', reports:'Reports', attention:'Needs Your Call', settings:'Settings', brand:'Atwad', brandSub:'AC Maintenance'}
 };
 
 function applySharedLang() {
@@ -2616,12 +2616,21 @@ function applySharedLang() {
   setTxt('nav-wo', t.wo);
   setTxt('nav-finance', t.finance);
   setTxt('nav-reports', t.reports);
+  setTxt('nav-attention', t.attention);
   setTxt('nav-settings', t.settings);
   // page specific
   if(typeof applyPageLang === 'function') applyPageLang(l);
 }
 
-function setTxt(id, txt) { var el=document.getElementById(id); if(el) el.textContent=txt; }
+/* setTxt تُبدّل النص وتُبقي الأيقونة */
+function setTxt(id, txt) {
+  var el = document.getElementById(id); if(!el) return;
+  var ic = el.querySelector('.nav-icon');
+  if(!ic){ el.textContent = txt; return; }
+  while(el.firstChild) el.removeChild(el.firstChild);
+  el.appendChild(ic);
+  el.appendChild(document.createTextNode(' ' + txt));
+}
 function setHTML(id, txt) { var el=document.getElementById(id); if(el) el.innerHTML=txt; }
 function setPlh(id, txt) { var el=document.getElementById(id); if(el) el.placeholder=txt; }
 
