@@ -41,7 +41,8 @@ h1{font-size:23px;margin:0;}
   font-size:13.5px;color:var(--mist);line-height:1.9;}
 .old a{color:#0369A1;font-weight:700;}
 .msg{font-size:14px;line-height:1.9;margin:14px 0 0;}
-.bar{margin-top:16px;display:flex;flex-wrap:wrap;gap:10px;}
+.ver{margin-top:18px;font-size:11px;color:var(--mist);opacity:.65;}
+.bar{margin-top:10px;display:flex;flex-wrap:wrap;gap:10px;}
 #backBtn,#homeBtn{background:rgba(255,255,255,.10);}
 button.big{font-family:'Tajawal',sans-serif;font-size:15px;font-weight:700;border:0;border-radius:11px;
   background:var(--sky);color:#fff;padding:11px 22px;cursor:pointer;}
@@ -68,6 +69,10 @@ button.big:disabled{background:#CBD5E1;cursor:default;}
 
   <div id="out"></div>
   <div class="msg" id="msg"></div>
+  <!-- بصمة الإصدار: تُقارَن بما يُطلب رفعه فيُعرف أن المتصفح
+       لم يعطِ نسخةً محفوظة. تُغيَّر مع كل تعديل على هذه الصفحة. -->
+  <div class="ver">إصدار اللوحة: <b id="verTag">v5 · 2026-10-11 22:33</b></div>
+
   <div class="bar">
     <button class="big" id="refBtn" disabled>🔄 تحديث</button>
     <button class="big" id="backBtn" onclick="location.href='atwad-finance.html'">💰 الإدارة المالية</button>
@@ -204,16 +209,18 @@ function load(){
         if(SKIP_ST[raw.toLowerCase()] || SKIP_ST[raw]) return;
         if(DONE_ST[raw.toLowerCase()] || DONE_ST[raw]){
           doneJobs[normName(nm) + '|' + (v.date || '')] = true;
-          /* فهرس الزيارات يُبنى بالهيكل الساكن لا بالاسم المطبّع:
-             normName لا يعبر الأبجديتين، فـ«Saad Alqarni» لا يلقى
-             موعده المسجّل «سعد القرني» فيُقال «لا موعد» وهو خطأ. */
-          var sk = skeleton(nm);
-          var k2 = (sk.length >= 2 ? 's:' + sk : 'n:' + normName(nm)) + '|' + (v.date || '');
-          if(!doneSigs[k2]) doneSigs[k2] = {};
-          // الزيارة نفسها قد تكون في appointments و bookings معاً،
-          // فنميّزها بوقتها وخدمتها لا بمفتاحها حتى لا تُعدّ مرّتين
-          doneSigs[k2][String(v.time || '') + '·' + String(v.service || '')] = true;
         }
+        /* فهرس الزيارات يَعُدّ كل موعد غير ملغى، مكتملاً كان أو لا:
+           السؤال هنا «كم زيارة حُجزت ذلك اليوم؟» لا «هل أُغلق الموعد؟».
+           وموعدٌ لم يُعلَّم مكتملاً وقد حُصّل ثمنه هو زيارةٌ حقيقية.
+           والمفتاح بالهيكل الساكن لا بـ normName، فذاك لا يعبر
+           الأبجديتين فـ«Saad Alqarni» لا يلقى موعد «سعد القرني». */
+        var sk = skeleton(nm);
+        var k2 = (sk.length >= 2 ? 's:' + sk : 'n:' + normName(nm)) + '|' + (v.date || '');
+        if(!doneSigs[k2]) doneSigs[k2] = {};
+        // الزيارة نفسها قد تكون في appointments و bookings معاً،
+        // فنميّزها بوقتها وخدمتها لا بمفتاحها حتى لا تُعدّ مرّتين
+        doneSigs[k2][String(v.time || '') + '·' + String(v.service || '')] = true;
       });
     }
     scanJobs(res[1]);
@@ -362,11 +369,11 @@ function dayWord(n){
   return n + ' يوماً';
 }
 
-// صياغة سليمة مع الصفة: موعدان مكتملان / ٣ مواعيد مكتملة / ١١ موعداً مكتملاً
+// صياغة سليمة مع الصفة: زيارتان مسجّلتان / ٣ زيارات مسجّلة / ١١ زيارةً مسجّلة
 function visitWord(n){
-  if(n === 2) return 'موعدان مكتملان';
-  if(n >= 3 && n <= 10) return n + ' مواعيد مكتملة';
-  return n + ' موعداً مكتملاً';
+  if(n === 2) return 'زيارتان مسجّلتان';
+  if(n >= 3 && n <= 10) return n + ' زيارات مسجّلة';
+  return n + ' زيارةً مسجّلة';
 }
 
 function ageWord(age){
@@ -411,21 +418,21 @@ function render(b, oldCount, oldSum){
       '<div class="why">لكل قيد هنا توأمٌ <b>مقبوض</b> لنفس العميل في نفس اليوم: ' +
       'الزيارة دُخلت مرّتين — مرّة بسعرها المقدَّر وقت الحجز، ومرّة بما قبضه الفني فعلاً. ' +
       'لا تحكم بفرق المبلغ، فالفرق طبيعي (خصم، أو وحدة إضافية، أو قطعة غيار). ' +
-      '<b>احكم بعدد المواعيد المكتملة</b> المذكور بجانب كل قيد:<br>' +
-      '· <b>موعد واحد</b> — زيارةٌ واحدة بقيدين، فأحدهما وهمٌ قطعاً. ألغِه.<br>' +
-      '· <b>موعدان أو أكثر</b> — زرتَه مرّتين ذلك اليوم فعلاً، والقيدان صحيحان. اتركه.<br>' +
-      '· <b>لا موعد</b> — قيدٌ أُدخل يدوياً (من ذمم الواتساب مثلاً) وقد حُصّل بعدها ' +
+      '<b>احكم بعدد الزيارات المسجّلة</b> المذكور بجانب كل قيد:<br>' +
+      '· <b>زيارة واحدة</b> — زيارةٌ واحدة بقيدين، فأحدهما وهمٌ قطعاً. ألغِه.<br>' +
+      '· <b>زيارتان أو أكثر</b> — زرتَه مرّتين ذلك اليوم فعلاً، والقيدان صحيحان. اتركه.<br>' +
+      '· <b>لا زيارة</b> — قيدٌ أُدخل يدوياً (من ذمم الواتساب مثلاً) وقد حُصّل بعدها ' +
       'ولم تُصحّح الملاحظة. راجعه ثم ألغِه.<br>' +
       'المجموع هنا <b>' + fmtNum(tSum) + ' ﷼</b>، منها <b>' + fmtNum(sOne) +
-      ' ﷼</b> في ' + nOne + ' قيداً بموعد واحد — وهذه قرارٌ مؤكّد لا يحتاج ذاكرتك.' +
+      ' ﷼</b> في ' + nOne + ' قيداً بزيارة واحدة — وهذه قرارٌ مؤكّد لا يحتاج ذاكرتك.' +
       (nMany ? ' و' + nMany + ' منها بزيارتين فأكثر — راجعها ولا تتعجّل.' : '') +
-      (nNone ? ' و' + nNone + ' بلا موعد مسجّل.' : '') +
+      (nNone ? ' و' + nNone + ' بلا زيارة مسجّلة.' : '') +
       '</div>';
     for(var tw = 0; tw < b.twin.length; tw++){
       var r = b.twin[tw];
       var vtxt;
-      if(r.vis === 1)      vtxt = '<b class="sure">📋 موعد واحد مكتمل — وهمٌ قطعاً</b>';
-      else if(!r.vis)      vtxt = '<b class="warn">📋 لا موعد مسجّل — راجعه</b>';
+      if(r.vis === 1)      vtxt = '<b class="sure">📋 زيارة واحدة مسجّلة ذلك اليوم — وهمٌ قطعاً</b>';
+      else if(!r.vis)      vtxt = '<b class="warn">📋 لا زيارة مسجّلة — راجعه</b>';
       else                 vtxt = '<b class="warn">📋 ' + visitWord(r.vis) +
                                   ' — قد تكون زيارات فعلية</b>';
       var note = '↔ مقبوض: <b>' + fmtNum(r.twin.amount) + ' ﷼</b> · الفارق ' +
