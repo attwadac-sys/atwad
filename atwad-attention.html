@@ -38,7 +38,8 @@ h1{font-size:23px;margin:0;}
   font-size:13.5px;color:var(--mist);line-height:1.9;}
 .old a{color:#0369A1;font-weight:700;}
 .msg{font-size:14px;line-height:1.9;margin:14px 0 0;}
-.bar{margin-top:16px;}
+.bar{margin-top:16px;display:flex;flex-wrap:wrap;gap:10px;}
+#backBtn,#homeBtn{background:rgba(255,255,255,.10);}
 button.big{font-family:'Tajawal',sans-serif;font-size:15px;font-weight:700;border:0;border-radius:11px;
   background:var(--sky);color:#fff;padding:11px 22px;cursor:pointer;}
 button.big:disabled{background:#CBD5E1;cursor:default;}
@@ -64,7 +65,11 @@ button.big:disabled{background:#CBD5E1;cursor:default;}
 
   <div id="out"></div>
   <div class="msg" id="msg"></div>
-  <div class="bar"><button class="big" id="refBtn" disabled>🔄 تحديث</button></div>
+  <div class="bar">
+    <button class="big" id="refBtn" disabled>🔄 تحديث</button>
+    <button class="big" id="backBtn" onclick="location.href='atwad-finance.html'">💰 الإدارة المالية</button>
+    <button class="big" id="homeBtn" onclick="location.href='atwad-customers.html'">🏠 الرئيسية</button>
+  </div>
 
 </div>
 
