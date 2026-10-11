@@ -882,13 +882,22 @@ function syncCreditToFinance(w){
       category: 'خدمة',
       method: 'كاش',
       party: w.client || '',
-      status: 'مؤجل',
+      // لا نُرجع قيداً محصّلاً إلى «مؤجل» عند تعديل أمر العمل بعد التحصيل
+      status: (existing && (existing.status === 'مدفوع' || existing.status === 'مسوى'))
+                ? existing.status : 'مؤجل',
       dueType: w.dueDate ? 'specific' : 'open',
       payments: existing && existing.payments ? existing.payments : [],
       paidAmount: existing && existing.paidAmount ? existing.paidAmount : 0,
       woId: w.id,
       createdAt: existing && existing.createdAt ? existing.createdAt : new Date().toISOString()
     };
+
+    /* علامة الحجز: تمنع «استيراد إيرادات الحجوزات» من توليد قيد ثانٍ
+       للزيارة نفسها، وتجعل ورقة الدفع تُحدّث هذه الذمّة في مكانها
+       بدل إنشاء قيد مستقل عند التحصيل. */
+    if(w.sourceApptSrc === 'bookings' && w.sourceApptKey){
+      entry.firebaseRef = w.sourceApptKey;
+    }
     if(w.dueDate) entry.dueDate = w.dueDate;
     if(w.dueNote) entry.paymentNote = w.dueNote;
 
