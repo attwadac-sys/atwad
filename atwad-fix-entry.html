@@ -81,7 +81,7 @@ button.big:disabled{opacity:.45;cursor:default;}
 
   <div id="out"></div>
 
-  <div class="ver">إصدار الصفحة: <b>v2 · 2026-10-11 23:12</b></div>
+  <div class="ver">إصدار الصفحة: <b>v3 · 2026-10-11 23:24</b></div>
   <div class="bar">
     <button class="big" id="backBtn" onclick="location.href='atwad-attention.html'">🎯 ما يحتاج قرارك</button>
     <button class="big" id="homeBtn" onclick="location.href='atwad-finance.html'">💰 الإدارة المالية</button>
@@ -138,6 +138,36 @@ function skeleton(s){
   return out.replace(/(.)\1+/g, '$1');
 }
 
+/* مطابقة على مستوى الكلمة لا على مستوى النصّ كلّه.
+   الاحتواء النصّي كان يُلقي بالغرباء في القائمة: هيكل «سعد القرني»
+   هو sdkrn، وهيكل «Ms.rania» هو rn، وهو محتوًى فيه — فتظهر رانية
+   في نتائج سعد. وصفٌّ غريب أمامه زرُّ «ملغي» فخٌّ لا تساهل فيه.
+   القاعدة الآن: كل كلمة كتبتَها يجب أن تلقى كلمةً في الاسم. */
+function nameWords(s){
+  var raw = String(s || '').split(/[\s،,._\-()]+/);
+  var out = [];
+  for(var i = 0; i < raw.length; i++){
+    var sk = skeleton(raw[i]);
+    if(sk.length >= 2) out.push(sk);
+  }
+  return out;
+}
+
+function nameHit(qWords, rowName){
+  var rw = nameWords(rowName);
+  if(!rw.length) return false;
+  for(var i = 0; i < qWords.length; i++){
+    var hit = false;
+    for(var j = 0; j < rw.length; j++){
+      // تطابق تام، أو بداية الكلمة لمن يكتب «قرن» ويريد «القرني»
+      if(rw[j] === qWords[i] ||
+         (qWords[i].length >= 3 && rw[j].indexOf(qWords[i]) === 0)){ hit = true; break; }
+    }
+    if(!hit) return false;
+  }
+  return true;
+}
+
 function stClass(s){
   if(s === 'مدفوع') return 'paid';
   if(s === 'ملغي' || s === 'مسوى') return 'void';
@@ -149,8 +179,8 @@ function search(){
   if(!fxDb) return;
   var qRaw = el('q').value.trim();
   if(!qRaw){ el('msg').textContent = '⚠️ اكتب اسماً أولاً.'; return; }
-  var qSk = skeleton(qRaw);
-  if(qSk.length < 2){
+  var qWords = nameWords(qRaw);
+  if(!qWords.length){
     el('msg').textContent = '⚠️ الاسم قصير جداً على التمييز — أضف حرفاً أو حرفين.';
     return;
   }
@@ -164,10 +194,7 @@ function search(){
     snap.forEach(function(c){
       var v = c.val() || {};
       if(v.type !== 'income') return;
-      var sk = skeleton(v.party || v.client || '');
-      // المطابقة بالاحتواء هنا مقصودة: البحث لا يُغيّر شيئاً بنفسه،
-      // والقرار بيد من يقرأ الصفوف — فالسخاء في العرض أنفع من التضييق
-      if(sk.indexOf(qSk) < 0 && qSk.indexOf(sk) < 0) return;
+      if(!nameHit(qWords, v.party || v.client || '')) return;
       ROWS.push({ key: c.key, v: v });
     });
 
