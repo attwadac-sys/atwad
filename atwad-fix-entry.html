@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>تصحيح قيد — أطواد</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--deep:#0A2540;--sky:#38BDF8;--ice:#E2E8F0;--mist:#64748B;--frost:#F8FAFC;
+  --ok:#059669;--warn:#D97706;--bad:#B91C1C;--violet:#7C3AED;}
+*{box-sizing:border-box;}
+body{margin:0;background:#F1F5F9;font-family:'Tajawal',sans-serif;color:var(--deep);padding:18px 16px 70px;}
+.wrap{max-width:760px;margin:0 auto;}
+.head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px;}
+h1{font-size:23px;margin:0;}
+.sub{font-size:13.5px;color:var(--mist);line-height:1.85;margin-bottom:18px;}
+.pill{font-size:12px;font-weight:700;padding:5px 12px;border-radius:99px;background:#E0F2FE;color:#075985;}
+.card{background:#fff;border:1.5px solid var(--ice);border-radius:16px;padding:16px;margin-bottom:13px;}
+.srch{display:flex;gap:9px;flex-wrap:wrap;}
+input[type=text]{font-family:'Tajawal',sans-serif;font-size:15px;padding:11px 13px;border:1.5px solid var(--ice);
+  border-radius:11px;flex:1 1 200px;min-width:0;color:var(--deep);}
+input[type=text]:focus{outline:0;border-color:var(--sky);}
+button.big{font-family:'Tajawal',sans-serif;font-size:15px;font-weight:700;border:0;border-radius:11px;
+  background:var(--sky);color:#fff;padding:11px 22px;cursor:pointer;}
+button.big:disabled{opacity:.45;cursor:default;}
+.hint{font-size:12px;color:var(--mist);line-height:1.8;margin-top:10px;}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px;
+  padding:12px 0;border-top:1px solid var(--ice);flex-wrap:wrap;}
+.row:first-child{border-top:0;}
+.row .who{font-size:14.5px;font-weight:700;}
+.row .meta{font-size:12px;color:var(--mist);line-height:1.7;}
+.amt{font-size:15px;font-weight:800;white-space:nowrap;}
+.st{font-size:11.5px;font-weight:800;padding:3px 10px;border-radius:99px;white-space:nowrap;}
+.st.paid{background:#D1FAE5;color:#065F46;} .st.due{background:#FEF3C7;color:#92400E;}
+.st.none{background:#FEE2E2;color:#991B1B;} .st.void{background:#E2E8F0;color:#475569;}
+.acts{display:flex;gap:7px;flex-wrap:wrap;}
+.mini{font-family:'Tajawal',sans-serif;font-size:12.5px;font-weight:700;border:0;border-radius:9px;
+  padding:7px 13px;cursor:pointer;background:var(--frost);color:var(--deep);border:1px solid var(--ice);}
+.mini:disabled{opacity:.4;cursor:default;}
+.mini.p{background:#D1FAE5;color:#065F46;border-color:#A7F3D0;}
+.mini.d{background:#FEF3C7;color:#92400E;border-color:#FDE68A;}
+.mini.v{background:#FEE2E2;color:#991B1B;border-color:#FECACA;}
+.msg{font-size:13px;font-weight:700;margin-top:12px;min-height:20px;line-height:1.8;}
+.empty{font-size:13.5px;color:var(--mist);padding:16px 0;line-height:1.8;}
+.ver{margin-top:18px;font-size:11px;color:var(--mist);opacity:.65;}
+.bar{margin-top:10px;display:flex;flex-wrap:wrap;gap:10px;}
+#backBtn,#homeBtn{background:rgba(10,37,64,.07);color:var(--deep);}
+</style>
+</head>
+<body>
+<script src="atwad-firebase.js"></script>
+<script src="atwad-auth.js"></script>
+
+<div class="wrap">
+  <div class="head">
+    <h1>🩹 تصحيح قيد</h1>
+    <span class="pill" id="pill">جارٍ الاتصال…</span>
+  </div>
+  <div class="sub">
+    ضغطةٌ خاطئة تحدث. اكتب اسم العميل، واختر القيد، وأعِده إلى حالته الصحيحة.
+    لا تُحذف قيود هنا ولا تُنشأ — تُغيَّر الحالة فقط، ويُحفظ أثر كل تغيير في القيد نفسه.
+  </div>
+
+  <div class="card">
+    <div class="srch">
+      <input type="text" id="q" placeholder="اسم العميل — عربي أو لاتيني (سعد القرني / Saad Alqarni)">
+      <button class="big" id="goBtn" disabled>🔍 ابحث</button>
+    </div>
+    <div class="hint">
+      البحث بهيكل الاسم الساكن، فـ«سعد القرني» يلقى «Saad Alqarni» و«Mr.saad al qarni».
+      واكتب جزءاً من الاسم إن لم تتذكّره كاملاً.
+    </div>
+    <div class="msg" id="msg"></div>
+  </div>
+
+  <div id="out"></div>
+
+  <div class="ver">إصدار الصفحة: <b>v1 · 2026-10-11 23:00</b></div>
+  <div class="bar">
+    <button class="big" id="backBtn" onclick="location.href='atwad-attention.html'">🎯 ما يحتاج قرارك</button>
+    <button class="big" id="homeBtn" onclick="location.href='atwad-finance.html'">💰 الإدارة المالية</button>
+  </div>
+</div>
+
+<script>
+var ADMIN_UID = 'NU8g25megKefUOBQGvfkVtBOw802';
+var fxDb = null;
+var ROWS = [];
+
+function el(id){ return document.getElementById(id); }
+function esc(s){
+  return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function fmtNum(n){
+  var v = Math.round((parseFloat(n) || 0) * 100) / 100;
+  return v.toLocaleString('en-US', { maximumFractionDigits: 2 });
+}
+function todayStr(){
+  var d = new Date(), m = d.getMonth() + 1, y = d.getDate();
+  return d.getFullYear() + '-' + (m < 10 ? '0' : '') + m + '-' + (y < 10 ? '0' : '') + y;
+}
+
+/* ===== مطابقة الأسماء عبر الأبجديتين =====
+   الاسم يُختزل إلى حروفه الساكنة، فـ«سعد القرني» و«Saad Alqarni»
+   يعطيان sdkrn، فيُلقى القيد أيّاً كانت أبجدية كاتبه. */
+var AR2LAT = {
+  'ب':'b','ت':'t','ث':'t','ج':'j','ح':'h','خ':'k','د':'d','ذ':'z','ر':'r','ز':'z',
+  'س':'s','ش':'s','ص':'s','ض':'d','ط':'t','ظ':'z','ع':'','غ':'g','ف':'f','ق':'k',
+  'ك':'k','ل':'l','م':'m','ن':'n','ه':'h','ة':'','و':'','ي':'','ى':'','ا':'',
+  'أ':'','إ':'','آ':'','ء':'','ؤ':'','ئ':''
+};
+
+function skeleton(s){
+  var t = String(s || '').toLowerCase();
+  t = t.replace(/[ـً-ْ.,_\-()0-9]/g, ' ');
+  t = t.replace(/\b(mr|mrs|ms|miss|dr|eng|al|el)\b/g, ' ');
+  t = t.replace(/^(الاستاذ|الأستاذ|الاستاذة|الدكتور|السيد|السيدة)\s+/, '');
+  t = t.replace(/(^|\s)ال/g, '$1');
+  t = t.replace(/\bal(?=[a-z]{3,})/g, ' ');
+  t = t.replace(/kh/g, 'k').replace(/gh/g, 'g').replace(/sh/g, 's')
+       .replace(/th/g, 't').replace(/ph/g, 'f').replace(/ch/g, 's').replace(/q/g, 'k');
+  var out = '';
+  for(var i = 0; i < t.length; i++){
+    var c = t.charAt(i);
+    if(Object.prototype.hasOwnProperty.call(AR2LAT, c)){ out += AR2LAT[c]; continue; }
+    if(c >= 'a' && c <= 'z'){
+      if('aeiouwy'.indexOf(c) >= 0) continue;
+      out += c;
+    }
+  }
+  return out.replace(/(.)\1+/g, '$1');
+}
+
+function stClass(s){
+  if(s === 'مدفوع') return 'paid';
+  if(s === 'ملغي' || s === 'مسوى') return 'void';
+  if(s === 'غير مدفوع' || s === 'معلق') return 'none';
+  return 'due';
+}
+
+function search(){
+  if(!fxDb) return;
+  var qRaw = el('q').value.trim();
+  if(!qRaw){ el('msg').textContent = '⚠️ اكتب اسماً أولاً.'; return; }
+  var qSk = skeleton(qRaw);
+  if(qSk.length < 2){
+    el('msg').textContent = '⚠️ الاسم قصير جداً على التمييز — أضف حرفاً أو حرفين.';
+    return;
+  }
+
+  el('goBtn').disabled = true;
+  el('msg').textContent = '⏳ جارٍ البحث في القيود…';
+  el('out').innerHTML = '';
+
+  fxDb.ref('transactions').once('value').then(function(snap){
+    ROWS = [];
+    snap.forEach(function(c){
+      var v = c.val() || {};
+      if(v.type !== 'income') return;
+      var sk = skeleton(v.party || v.client || '');
+      // المطابقة بالاحتواء هنا مقصودة: البحث لا يُغيّر شيئاً بنفسه،
+      // والقرار بيد من يقرأ الصفوف — فالسخاء في العرض أنفع من التضييق
+      if(sk.indexOf(qSk) < 0 && qSk.indexOf(sk) < 0) return;
+      ROWS.push({ key: c.key, v: v });
+    });
+
+    ROWS.sort(function(a, b){
+      return String(b.v.date || '').localeCompare(String(a.v.date || ''));
+    });
+
+    render();
+    el('goBtn').disabled = false;
+    el('msg').textContent = ROWS.length
+      ? ('وُجد ' + ROWS.length + ' قيداً.')
+      : '';
+  }).catch(function(err){
+    el('goBtn').disabled = false;
+    el('msg').textContent = '❌ تعذّرت القراءة: ' + (err.message || err);
+  });
+}
+
+function render(){
+  if(!ROWS.length){
+    el('out').innerHTML = '<div class="card"><div class="empty">' +
+      'لا قيد بهذا الاسم. جرّب جزءاً منه، أو تحقّق من هجائه في الإدارة المالية.' +
+      '</div></div>';
+    return;
+  }
+
+  var html = '<div class="card">';
+  for(var i = 0; i < ROWS.length; i++){
+    var r = ROWS[i], v = r.v;
+    var st = v.status || 'مدفوع';
+    var paid = parseFloat(v.paidAmount) || 0;
+    var amt  = parseFloat(v.amount) || 0;
+
+    html += '<div class="row" id="r-' + esc(r.key) + '">' +
+      '<div><div class="who">' + esc(v.party || v.client || '—') + '</div>' +
+      '<div class="meta">' + esc(v.date || '—') +
+        (v.desc ? ' · ' + esc(v.desc) : '') +
+        (paid > 0 && paid < amt ? ' · حُصّل منه ' + fmtNum(paid) + ' ﷼' : '') +
+        (v.paymentNote ? '<br>📝 ' + esc(v.paymentNote) : '') +
+      '</div></div>' +
+      '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">' +
+      '<span class="st ' + stClass(st) + '">' + esc(st) + '</span>' +
+      '<span class="amt">' + fmtNum(amt) + ' ﷼</span>' +
+      '<div class="acts">' +
+        '<button class="mini p" onclick="setSt(\'' + esc(r.key) + '\',\'paid\')">مدفوع</button>' +
+        '<button class="mini d" onclick="setSt(\'' + esc(r.key) + '\',\'due\')">دَيْن</button>' +
+        '<button class="mini v" onclick="setSt(\'' + esc(r.key) + '\',\'void\')">ملغي</button>' +
+      '</div></div></div>';
+  }
+  html += '</div>';
+  el('out').innerHTML = html;
+}
+
+function setSt(key, what){
+  if(!fxDb) return;
+
+  var row = el('r-' + key);
+  var btns = row ? row.querySelectorAll('button') : [];
+  for(var i = 0; i < btns.length; i++){ btns[i].disabled = true; }
+
+  fxDb.ref('transactions/' + key).once('value').then(function(snap){
+    var v = snap.val() || {};
+    var amt = parseFloat(v.amount) || 0;
+    var patch;
+
+    if(what === 'paid'){
+      patch = { status: 'مدفوع', paidAmount: amt,
+                paymentNote: 'صُحّح إلى مدفوع — ' + todayStr() };
+    } else if(what === 'due'){
+      /* الرجوع إلى دَيْن يُصفّر المحصّل ويُبقي الذمّة مفتوحة.
+         لو كان هناك تحصيل جزئي حقيقي فمكانه «payments» لا هذا الزرّ. */
+      patch = { status: 'مؤجل', paidAmount: 0, dueType: 'open',
+                paymentNote: 'أُعيد إلى دَيْن — ' + todayStr() };
+    } else {
+      patch = { status: 'ملغي',
+                paymentNote: 'أُلغي من صفحة التصحيح — ' + todayStr() };
+    }
+
+    return fxDb.ref('transactions/' + key).update(patch).then(function(){
+      // الصفّ يُحدَّث محلياً فيُرى الأثر فوراً بلا إعادة بحث
+      for(var j = 0; j < ROWS.length; j++){
+        if(ROWS[j].key === key){
+          ROWS[j].v.status      = patch.status;
+          ROWS[j].v.paidAmount  = patch.paidAmount != null ? patch.paidAmount : ROWS[j].v.paidAmount;
+          ROWS[j].v.paymentNote = patch.paymentNote;
+          if(patch.dueType) ROWS[j].v.dueType = patch.dueType;
+        }
+      }
+      render();
+      el('msg').textContent = '✅ تمّ التصحيح. الحالة الجديدة ظاهرة في الصفّ.';
+    });
+  }).catch(function(err){
+    for(var k = 0; k < btns.length; k++){ btns[k].disabled = false; }
+    el('msg').textContent = '❌ تعذّر الحفظ: ' + (err.message || err);
+  });
+}
+
+el('q').addEventListener('keydown', function(e){
+  if(e.key === 'Enter'){ search(); }
+});
+
+window.__atwadInitPage = function(user){
+  if(!user || user.uid !== ADMIN_UID){
+    document.body.innerHTML = '<div style="padding:40px;text-align:center;font-family:Tajawal,sans-serif;">' +
+      'هذا الحساب غير مصرّح له.</div>';
+    return;
+  }
+  fxDb = window.db || null;
+  if(!fxDb){ el('pill').textContent = 'غير متصل'; return; }
+  el('pill').textContent = 'متصل';
+  el('goBtn').disabled = false;
+  el('goBtn').addEventListener('click', search);
+  el('q').focus();
+};
+</script>
+</body>
+</html>
