@@ -40,6 +40,11 @@ button.big:disabled{opacity:.45;cursor:default;}
 .mini.p{background:#D1FAE5;color:#065F46;border-color:#A7F3D0;}
 .mini.d{background:#FEF3C7;color:#92400E;border-color:#FDE68A;}
 .mini.v{background:#FEE2E2;color:#991B1B;border-color:#FECACA;}
+.amtfix{display:flex;align-items:center;gap:7px;flex-wrap:wrap;width:100%;
+  font-size:12px;color:var(--mist);padding-top:9px;}
+.amtfix input{font-family:'Tajawal',sans-serif;font-size:14px;font-weight:700;width:104px;
+  padding:7px 10px;border:1.5px solid var(--ice);border-radius:9px;color:var(--deep);direction:ltr;text-align:center;}
+.amtfix input:focus{outline:0;border-color:var(--sky);}
 .msg{font-size:13px;font-weight:700;margin-top:12px;min-height:20px;line-height:1.8;}
 .empty{font-size:13.5px;color:var(--mist);padding:16px 0;line-height:1.8;}
 .ver{margin-top:18px;font-size:11px;color:var(--mist);opacity:.65;}
@@ -168,6 +173,9 @@ function nameHit(qWords, rowName){
   return true;
 }
 
+// «معلق» تعني غير مدفوع في بيانات قديمة، و«مدفوع» هي حالة الفراغ الافتراضية
+function normSt(s){ return (s === 'معلق') ? 'غير مدفوع' : (s || 'مدفوع'); }
+
 function stClass(s){
   if(s === 'مدفوع') return 'paid';
   if(s === 'ملغي' || s === 'مسوى') return 'void';
@@ -242,10 +250,61 @@ function render(){
         '<button class="mini p" onclick="setSt(\'' + esc(r.key) + '\',\'paid\')">مدفوع</button>' +
         '<button class="mini d" onclick="setSt(\'' + esc(r.key) + '\',\'due\')">دَيْن</button>' +
         '<button class="mini v" onclick="setSt(\'' + esc(r.key) + '\',\'void\')">ملغي</button>' +
-      '</div></div></div>';
+      '</div></div>' +
+      // تعديل المبلغ: سعرٌ أُدخل خطأً يبقى خطأً مهما صحّحنا الحالة
+      '<div class="amtfix">' +
+        '<span>المبلغ الصحيح:</span>' +
+        '<input type="number" step="0.01" min="0" id="a-' + esc(r.key) + '" value="' + amt + '">' +
+        '<span>﷼</span>' +
+        '<button class="mini" onclick="setAmt(\'' + esc(r.key) + '\')">احفظ المبلغ</button>' +
+      '</div></div>';
   }
   html += '</div>';
   el('out').innerHTML = html;
+}
+
+function setAmt(key){
+  if(!fxDb) return;
+  var inp = el('a-' + key);
+  if(!inp) return;
+  var neu = parseFloat(inp.value);
+  if(!(neu > 0)){ el('msg').textContent = '⚠️ أدخل مبلغاً أكبر من صفر.'; return; }
+
+  var row = el('r-' + key);
+  var btns = row ? row.querySelectorAll('button') : [];
+  for(var i = 0; i < btns.length; i++){ btns[i].disabled = true; }
+
+  fxDb.ref('transactions/' + key).once('value').then(function(snap){
+    var v = snap.val() || {};
+    var old = parseFloat(v.amount) || 0;
+    if(Math.abs(old - neu) < 0.005){
+      for(var z = 0; z < btns.length; z++){ btns[z].disabled = false; }
+      el('msg').textContent = 'ℹ️ المبلغ كما هو — لا تغيير.';
+      return null;
+    }
+
+    var patch = { amount: neu,
+                  paymentNote: 'المبلغ عُدّل من ' + fmtNum(old) + ' إلى ' +
+                               fmtNum(neu) + ' ﷼ — ' + todayStr() };
+    /* القيد المحصّل كاملاً: المحصّل يتبع المبلغ، وإلا بقي فرقٌ وهمي.
+       والمحصّل جزئياً يُترك كما هو — دفعاته الفعلية ليست من شأن هذا الزرّ. */
+    if(normSt(v.status) === 'مدفوع'){ patch.paidAmount = neu; }
+
+    return fxDb.ref('transactions/' + key).update(patch).then(function(){
+      for(var j = 0; j < ROWS.length; j++){
+        if(ROWS[j].key === key){
+          ROWS[j].v.amount      = neu;
+          ROWS[j].v.paymentNote = patch.paymentNote;
+          if(patch.paidAmount != null){ ROWS[j].v.paidAmount = patch.paidAmount; }
+        }
+      }
+      render();
+      el('msg').textContent = '✅ المبلغ صار ' + fmtNum(neu) + ' ﷼.';
+    });
+  }).catch(function(err){
+    for(var k = 0; k < btns.length; k++){ btns[k].disabled = false; }
+    el('msg').textContent = '❌ تعذّر الحفظ: ' + (err.message || err);
+  });
 }
 
 function setSt(key, what){
