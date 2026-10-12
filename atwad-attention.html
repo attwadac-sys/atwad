@@ -71,7 +71,7 @@ button.big:disabled{background:#CBD5E1;cursor:default;}
   <div class="msg" id="msg"></div>
   <!-- بصمة الإصدار: تُقارَن بما يُطلب رفعه فيُعرف أن المتصفح
        لم يعطِ نسخةً محفوظة. تُغيَّر مع كل تعديل على هذه الصفحة. -->
-  <div class="ver">إصدار اللوحة: <b id="verTag">v6 · 2026-10-11 23:05</b></div>
+  <div class="ver">إصدار اللوحة: <b id="verTag">v7 · 2026-10-12 09:15</b></div>
 
   <div class="bar">
     <button class="big" id="refBtn" disabled>🔄 تحديث</button>
@@ -227,11 +227,11 @@ function load(){
     scanJobs(res[1]);
     scanJobs(res[2]);
 
-    function visitCount(party, date){
-      var sk = skeleton(party || '');
-      var k = (sk.length >= 2 ? 's:' + sk : 'n:' + normName(party || '')) + '|' + (date || '');
-      var s = doneSigs[k];
-      return s ? Object.keys(s).length : 0;
+    // عدد الزيارات لكل مفتاح، جاهزاً للاستخدام مرّتين: في الحدّ وفي العرض
+    var visitsByKey = {};
+    for(var vk in doneSigs){
+      if(!Object.prototype.hasOwnProperty.call(doneSigs, vk)) continue;
+      visitsByKey[vk] = Object.keys(doneSigs[vk]).length;
     }
 
     var tday = todayStr();
@@ -260,6 +260,32 @@ function load(){
        لا نقبل احتواء اسم في اسم هنا («عبدالله» داخل «Abdullah Nasser»)
        لأن الإلغاء لا يُستدرك. والإقران عامٌّ بالأقرب مبلغاً أولاً،
        فلا يُطالِب قيدٌ محصّلٌ واحدٌ بأكثر من قيد غير مدفوع. */
+    /* الزائد لا الزوج: ثلاثة قيود لزيارتين فيها قيدٌ زائد واحد، لا ثلاثة.
+       بدون هذا الحدّ كان إلغاء قيدٍ يُحرّر توأمه المقبوض فيلتقط
+       أقرب قيدٍ آخر، فتظهر توأمةٌ جديدة بعد كل إلغاء إلى ما لا نهاية. */
+    function grpKey(party, date){
+      var sk = skeleton(party || '');
+      return (sk.length >= 2 ? 's:' + sk : 'n:' + normName(party || '')) + '|' + (date || '');
+    }
+
+    var txCount = {};
+    function bump(party, date){
+      var k = grpKey(party, date);
+      txCount[k] = (txCount[k] || 0) + 1;
+    }
+    for(var t1 = 0; t1 < all.length; t1++){ bump(all[t1].e.party, all[t1].e.date); }
+    for(var t2 = 0; t2 < paidRows.length; t2++){ bump(paidRows[t2].e.party, paidRows[t2].e.date); }
+
+    // المسموح بتوأمته في كل مجموعة = القيود الحيّة ناقص الزيارات المسجّلة
+    var allow = {};
+    for(var gk in txCount){
+      if(!Object.prototype.hasOwnProperty.call(txCount, gk)) continue;
+      var parts = gk.split('|');
+      var vz = visitsByKey[gk] || 0;
+      // لا زيارة مسجّلة: لا نعرف العدد الصحيح، فنسمح بواحد ونُحذّر في الصفّ
+      allow[gk] = vz > 0 ? Math.max(0, txCount[gk] - vz) : 1;
+    }
+
     var cand = [];
     for(var a1 = 0; a1 < all.length; a1++){
       var skU = skeleton(all[a1].e.party || all[a1].e.client || '');
@@ -274,10 +300,15 @@ function load(){
     var usedP = {}, usedU = {};
     for(var c1 = 0; c1 < cand.length; c1++){
       if(usedP[cand[c1].p] || usedU[cand[c1].u]) continue;
+      var row = all[cand[c1].u];
+      var gk2 = grpKey(row.e.party, row.e.date);
+      if(!allow[gk2]) continue;          // استُنفد الزائد في هذه المجموعة
+      allow[gk2] -= 1;
       usedP[cand[c1].p] = true; usedU[cand[c1].u] = true;
-      all[cand[c1].u].twin = paidRows[cand[c1].p];
-      all[cand[c1].u].gap  = cand[c1].d;
-      all[cand[c1].u].vis  = visitCount(all[cand[c1].u].e.party, all[cand[c1].u].e.date);
+      row.twin = paidRows[cand[c1].p];
+      row.gap  = cand[c1].d;
+      row.vis  = visitsByKey[gk2] || 0;
+      row.txn  = txCount[gk2] || 0;
     }
 
     /* تكرار: نفس اليوم + نفس المبلغ + **نفس الاسم**.
@@ -333,11 +364,8 @@ function load(){
     /* الترتيب بقوّة الدليل لا بفرق المبلغ:
        زيارةٌ واحدة مسجّلة أولاً (قرارٌ مؤكّد)، ثم ما لا موعد له،
        ثم زيارتان أو أكثر (قرارٌ يحتاج ذاكرتك). */
-    function twinRank(r){
-      if(r.vis === 1) return 0;
-      if(!r.vis)      return 1;
-      return 2;
-    }
+    // المحسوب أولاً، ثم ما لا تُعرَف زياراته
+    function twinRank(r){ return r.vis > 0 ? 0 : 1; }
     buckets.twin.sort(function(a, b){
       var k = twinRank(a) - twinRank(b);
       if(k !== 0) return k;
@@ -368,6 +396,20 @@ function dayWord(n){
   if(n === 2) return 'يومين';
   if(n >= 3 && n <= 10) return n + ' أيام';
   return n + ' يوماً';
+}
+
+function txWord(n){
+  if(n === 2) return 'قيدان';
+  if(n >= 3 && n <= 10) return n + ' قيود';
+  return n + ' قيداً';
+}
+
+function extraWord(n){
+  if(n <= 0) return 'لا زائد';
+  if(n === 1) return 'قيدٌ زائد واحد';
+  if(n === 2) return 'قيدان زائدان';
+  if(n <= 10) return n + ' قيود زائدة';
+  return n + ' قيداً زائداً';
 }
 
 // صياغة سليمة مع الصفة: زيارتان مسجّلتان / ٣ زيارات مسجّلة / ١١ زيارةً مسجّلة
@@ -407,35 +449,41 @@ function render(b, oldCount, oldSum){
   }
 
   if(b.twin.length){
-    var tSum = 0, nOne = 0, nMany = 0, nNone = 0, sOne = 0;
+    var tSum = 0, nSure = 0, nNone = 0, sSure = 0;
     for(var w = 0; w < b.twin.length; w++){
       tSum += b.twin[w].remaining;
-      if(b.twin[w].vis === 1){ nOne++; sOne += b.twin[w].remaining; }
-      else if(!b.twin[w].vis){ nNone++; }
-      else { nMany++; }
+      if(b.twin[w].vis > 0){ nSure++; sSure += b.twin[w].remaining; }
+      else { nNone++; }
     }
-    html += '<div class="grp violet"><h2>♊ قيد وهمي — الزيارة محصّلة أصلاً ' +
+    html += '<div class="grp violet"><h2>♊ قيد زائد — القيود أكثر من الزيارات ' +
       '<span class="cnt">' + b.twin.length + '</span></h2>' +
-      '<div class="why">لكل قيد هنا توأمٌ <b>مقبوض</b> لنفس العميل في نفس اليوم: ' +
-      'الزيارة دُخلت مرّتين — مرّة بسعرها المقدَّر وقت الحجز، ومرّة بما قبضه الفني فعلاً. ' +
-      'لا تحكم بفرق المبلغ، فالفرق طبيعي (خصم، أو وحدة إضافية، أو قطعة غيار). ' +
-      '<b>احكم بعدد الزيارات المسجّلة</b> المذكور بجانب كل قيد:<br>' +
-      '· <b>زيارة واحدة</b> — زيارةٌ واحدة بقيدين، فأحدهما وهمٌ قطعاً. ألغِه.<br>' +
-      '· <b>زيارتان أو أكثر</b> — زرتَه مرّتين ذلك اليوم فعلاً، والقيدان صحيحان. اتركه.<br>' +
-      '· <b>لا زيارة</b> — قيدٌ أُدخل يدوياً (من ذمم الواتساب مثلاً) وقد حُصّل بعدها ' +
-      'ولم تُصحّح الملاحظة. راجعه ثم ألغِه.<br>' +
-      'المجموع هنا <b>' + fmtNum(tSum) + ' ﷼</b>، منها <b>' + fmtNum(sOne) +
-      ' ﷼</b> في ' + nOne + ' قيداً بزيارة واحدة — وهذه قرارٌ مؤكّد لا يحتاج ذاكرتك.' +
-      (nMany ? ' و' + nMany + ' منها بزيارتين فأكثر — راجعها ولا تتعجّل.' : '') +
-      (nNone ? ' و' + nNone + ' بلا زيارة مسجّلة.' : '') +
+      '<div class="why">القاعدة هنا حسابية لا تخميناً: تُعَدّ قيود العميل في ذلك اليوم، ' +
+      'وتُعَدّ زياراته المسجّلة، والفارق بينهما هو الزائد. ' +
+      'ثلاثة قيود لزيارتين فيها <b>قيدٌ زائد واحد</b> لا ثلاثة — فلا يُعرض إلا الزائد. ' +
+      'ولا تحكم بفرق المبلغ: الفرق بين المقدَّر والمقبوض طبيعي ' +
+      '(خصم، أو وحدة إضافية، أو قطعة غيار).<br>' +
+      '· قيدٌ يقول <b>«قيدٌ زائد»</b> — ألغِه، الحساب لا يحتاج ذاكرتك.<br>' +
+      '· قيدٌ يقول <b>«لا زيارة مسجّلة»</b> — لا يُعرَف عدد زياراته، ' +
+      'وغالباً أُدخل يدوياً (ذمم الواتساب) وقد حُصّل بعدها ولم تُصحّح ملاحظته. راجعه أولاً.<br>' +
+      'المجموع <b>' + fmtNum(tSum) + ' ﷼</b>' +
+      (nSure ? '، منها <b>' + fmtNum(sSure) + ' ﷼</b> في ' + txWord(nSure) +
+               ' زائدة بالحساب — قرارٌ مؤكّد.' : '.') +
+      (nNone ? ' و' + txWord(nNone) + ' بلا زيارة مسجّلة — راجعها ولا تتعجّل.' : '') +
       '</div>';
     for(var tw = 0; tw < b.twin.length; tw++){
       var r = b.twin[tw];
       var vtxt;
-      if(r.vis === 1)      vtxt = '<b class="sure">📋 زيارة واحدة مسجّلة ذلك اليوم — وهمٌ قطعاً</b>';
-      else if(!r.vis)      vtxt = '<b class="warn">📋 لا زيارة مسجّلة — راجعه</b>';
-      else                 vtxt = '<b class="warn">📋 ' + visitWord(r.vis) +
-                                  ' — قد تكون زيارات فعلية</b>';
+      if(!r.vis){
+        vtxt = '<b class="warn">📋 لا زيارة مسجّلة — راجعه</b>';
+      } else if(r.vis === 1){
+        vtxt = '<b class="sure">📋 زيارة واحدة مسجّلة و' + txWord(r.txn) +
+               ' — وهمٌ قطعاً</b>';
+      } else {
+        // الزائد محسوب: القيود ناقص الزيارات، فلا يُطلب منك التذكّر بل القراءة
+        // «·» بدل «مقابل» تجنّباً لجرّ المعدود: «مقابل زيارتان» خطأ نحوي
+        vtxt = '<b class="sure">📋 ' + txWord(r.txn) + ' · ' + visitWord(r.vis) +
+               ' — ' + extraWord((r.txn || 0) - r.vis) + '</b>';
+      }
       var note = '↔ مقبوض: <b>' + fmtNum(r.twin.amount) + ' ﷼</b> · الفارق ' +
                  (r.gap === 0 ? '<b>صفر</b>' : fmtNum(r.gap) + ' ﷼') + ' · ' + vtxt;
       html += rowHtml(r,
