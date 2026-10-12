@@ -327,6 +327,20 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 .pay-tr{background:var(--sky);}
 .pay-no{background:var(--warning);grid-column:1 / -1;}
 .pay-wr{background:#0B2545;grid-column:1 / -1;}
+.wr-field{margin-bottom:12px;}
+.wr-field label{display:block;font-size:12px;font-weight:700;color:var(--slate);margin-bottom:5px;}
+.wr-field select,.wr-field textarea{width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid #E2E8F0;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;color:var(--slate);background:#fff;}
+.wr-field textarea{min-height:70px;resize:vertical;}
+.ts-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+.ts-chip{padding:6px 14px;border-radius:20px;border:1.5px solid #E2E8F0;background:#fff;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:600;color:var(--mist);cursor:pointer;}
+.ts-chip.active{border-color:var(--sky);color:var(--sky);background:var(--ice);}
+.ts-table{width:100%;border-collapse:collapse;font-size:12px;}
+.ts-table th{background:var(--frost);color:var(--slate);font-weight:700;padding:8px 6px;text-align:right;border-bottom:1.5px solid #E2E8F0;}
+.ts-table td{padding:8px 6px;border-bottom:1px solid #F1F5F9;color:var(--slate);}
+.ts-rate-bad{color:#B91C1C;font-weight:800;}
+.ts-rate-ok{color:#047857;font-weight:800;}
+.ts-case{background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:10px 12px;margin-bottom:8px;font-size:12px;line-height:1.7;}
+.ts-sub{font-size:11px;color:var(--mist);margin:14px 0 6px;font-weight:700;}
 .pay-x{background:#fff;color:var(--mist);border:1.5px solid var(--ice);grid-column:1 / -1;font-size:14px;padding:12px;}
 .pay-btn:disabled{opacity:.5;}
 </style>
@@ -382,6 +396,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
         <span id="notifBadge" style="display:none;position:absolute;top:-6px;right:-6px;background:#EF4444;color:#fff;border-radius:50%;width:16px;height:16px;font-size:9px;font-weight:700;align-items:center;justify-content:center;font-family:'Tajawal',sans-serif;">0</span>
       </div>
       <button onclick="openLockRepair()" title="فحص أقفال المواعيد وإصلاح الناقص منها" style="padding:7px 12px;border-radius:10px;border:1.5px solid #BFDBFE;background:#EFF6FF;color:#1E40AF;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">&#128274; فحص الأقفال والتداخلات</button>
+      <button onclick="openTechStats()" title="إحصائيات أداء الفنيين وحالات إعادة العمل" style="padding:7px 12px;border-radius:10px;border:1.5px solid #DDD6FE;background:#F5F3FF;color:#5B21B6;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">&#128202; أداء الفنيين</button>
       <button class="btn-primary" onclick="openNewAppt()" style="padding:8px 14px;font-size:12px;">＋ موعد</button>
       <button onclick="openWaitingList(null)" title="العملاء المنتظرون لموعد شاغر" style="padding:7px 12px;background:#FEF9C3;color:#92400E;border:1.5px solid #FDE68A;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;">
         &#128196; قائمة الانتظار <span id="waitingBadge" style="background:#EF4444;color:#fff;border-radius:50%;min-width:18px;height:18px;display:none;align-items:center;justify-content:center;font-size:10px;font-weight:800;padding:0 4px;"></span>
@@ -675,6 +690,61 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
   </div>
 </div>
 
+<!-- نافذة توثيق الضمان — تظهر عند «ضمان — إعادة عمل» -->
+<div class="modal-overlay" id="warrantyModal">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-hdr">
+      <h3>🛡️ توثيق إعادة العمل تحت الضمان</h3>
+      <button class="modal-close" onclick="closeWarrantyModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="warrantyWho" style="font-size:12px;color:var(--mist);margin-bottom:12px;"></div>
+      <div class="wr-field">
+        <label for="wrPrev">الزيارة السابقة التي سبّبت المشكلة</label>
+        <select id="wrPrev"></select>
+      </div>
+      <div class="wr-field">
+        <label for="wrTech">الفني المسؤول</label>
+        <select id="wrTech"></select>
+      </div>
+      <div class="wr-field">
+        <label for="wrFault">نوع الخلل</label>
+        <select id="wrFault"></select>
+      </div>
+      <div class="wr-field">
+        <label for="wrNote">ملاحظة (اختياري)</label>
+        <textarea id="wrNote" placeholder="ما الذي وُجد وما الذي أُصلح؟"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeWarrantyModal()">إلغاء</button>
+      <button class="btn-save" id="wrConfirmBtn" onclick="confirmWarranty()">🛡️ إتمام تحت الضمان</button>
+    </div>
+  </div>
+</div>
+
+<!-- نافذة أداء الفنيين -->
+<div class="modal-overlay" id="techStatsModal">
+  <div class="modal" style="max-width:640px;">
+    <div class="modal-hdr">
+      <h3>📊 أداء الفنيين</h3>
+      <button class="modal-close" onclick="closeTechStats()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="ts-filters" id="tsFilters">
+        <button class="ts-chip active" data-days="30" onclick="setTechStatsRange(30,this)">آخر 30 يوم</button>
+        <button class="ts-chip" data-days="90" onclick="setTechStatsRange(90,this)">آخر 90 يوم</button>
+        <button class="ts-chip" data-days="365" onclick="setTechStatsRange(365,this)">سنة</button>
+        <button class="ts-chip" data-days="0" onclick="setTechStatsRange(0,this)">الكل</button>
+      </div>
+      <div id="techStatsBody"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeTechStats()">إغلاق</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <!-- إشعار العميل عبر واتساب بعد تغيير/إلغاء الموعد -->
@@ -916,6 +986,20 @@ let pendingNewApptPrefill = null;
 let pendingNewApptApprovedCallback = null;
 
 const TECHS = { Abrar:'أحمد', 'أبرار':'أحمد', 'Abrar':'أحمد', Shoib:'شعيب', Suhail:'سهيل' };
+// مفاتيح الفنيين الفعلية (بدون الأسماء المستعارة) — تُستخدم في قوائم الاختيار والإحصائيات
+const TECH_KEYS = ['Abrar','Shoib','Suhail'];
+// أنواع الخلل في حالات إعادة العمل تحت الضمان
+const WARRANTY_FAULTS = {
+  water_leak:'تقطير ماء من المكيف',
+  weak_cooling:'ضعف تبريد',
+  noise:'صوت أو اهتزاز',
+  freon_leak:'تسرب فريون',
+  poor_cleaning:'تنظيف غير كافٍ',
+  install_error:'خطأ في الفك أو التركيب',
+  drain_block:'انسداد مجرى التصريف',
+  other:'أخرى'
+};
+function techDisplayName(k){ return TECHS[k] || k || '—'; }
 const STATUS_LABELS = { confirmed:'مؤكد', pending:'في الانتظار', done:'مكتمل', cancelled:'ملغي' };
 const STATUS_ICONS = { confirmed:'✅', pending:'⏳', done:'🎉', cancelled:'❌' };
 const STATUS_PILL_CLASS = { confirmed:'sp-confirmed', pending:'sp-pending', done:'sp-done', cancelled:'sp-cancelled' };
@@ -4104,13 +4188,14 @@ function closePaySheet(){
   _payCtx = null;
 }
 
-function submitPay(method){
+function submitPay(method, warranty){
   if(!_payCtx || !db) return;
 
   var isWarranty = (method === 'warranty');
   var amt = parseFloat(document.getElementById('payAmt').value);
   if(isWarranty){
     amt = 0;
+    if(!warranty){ openWarrantyModal(); return; }
   } else if(!(amt > 0)){
     showToast('⚠️ اكتب المبلغ أولاً — أو اختر «ضمان — إعادة عمل» إن كانت الزيارة مجانية');
     document.getElementById('payAmt').focus();
@@ -4119,13 +4204,10 @@ function submitPay(method){
 
   var warrantyNote = '';
   if(isWarranty){
-    warrantyNote = window.prompt('سبب إعادة العمل (الزيارة السابقة، الفني، نوع الخلل):', '');
-    if(warrantyNote === null) return;
-    warrantyNote = String(warrantyNote).trim();
-    if(!warrantyNote){
-      showToast('⚠️ اكتب سبب الضمان حتى يُوثَّق');
-      return;
-    }
+    warrantyNote = 'الفني: ' + techDisplayName(warranty.tech) +
+      ' · الخلل: ' + (WARRANTY_FAULTS[warranty.fault] || warranty.fault) +
+      (warranty.prevDate ? ' · الزيارة السابقة: ' + warranty.prevDate : '') +
+      (warranty.note ? ' · ' + warranty.note : '');
   }
 
   var ctx = _payCtx;
@@ -4172,8 +4254,18 @@ function submitPay(method){
   updates[apptPath + '/status'] = 'done';
   if(isWarranty){
     updates[apptPath + '/warrantyRework'] = true;
-    updates[apptPath + '/warrantyNote'] = warrantyNote;
+    updates[apptPath + '/warrantyTech'] = warranty.tech || '';
+    updates[apptPath + '/warrantyFault'] = warranty.fault || 'other';
+    updates[apptPath + '/warrantyPrevKey'] = warranty.prevKey || '';
+    updates[apptPath + '/warrantyPrevDate'] = warranty.prevDate || '';
+    updates[apptPath + '/warrantyNote'] = warranty.note || '';
     updates[apptPath + '/warrantyAt'] = new Date().toISOString();
+    // علامة على الزيارة الأصلية أيضاً حتى تظهر في سجلها أنها سبّبت إعادة عمل
+    if(warranty.prevPath){
+      updates[warranty.prevPath + '/causedRework'] = true;
+      updates[warranty.prevPath + '/causedReworkFault'] = warranty.fault || 'other';
+      updates[warranty.prevPath + '/causedReworkAt'] = new Date().toISOString();
+    }
   }
   for(var k in tx){
     if(Object.prototype.hasOwnProperty.call(tx, k)){ updates['transactions/' + txKey + '/' + k] = tx[k]; }
@@ -4191,6 +4283,11 @@ function submitPay(method){
     })
     .then(function(){
       for(var j = 0; j < btns.length; j++){ btns[j].disabled = false; }
+      if(isWarranty){
+        a.warrantyRework = true; a.warrantyTech = warranty.tech || ''; a.warrantyFault = warranty.fault || 'other';
+        a.warrantyPrevKey = warranty.prevKey || ''; a.warrantyPrevDate = warranty.prevDate || '';
+        closeWarrantyModal();
+      }
       closePaySheet();
       showToast(isWarranty ? ('🛡️ تم الإتمام تحت الضمان — بدون مبلغ على ' + client)
                 : paid ? ('✅ تم الإتمام — سُجّل ' + amt + ' ريال')
@@ -4206,6 +4303,198 @@ document.getElementById('payCash').addEventListener('click', function(){ submitP
 document.getElementById('payTrans').addEventListener('click', function(){ submitPay('transfer'); });
 document.getElementById('payNone').addEventListener('click', function(){ submitPay('none'); });
 document.getElementById('payWarranty').addEventListener('click', function(){ submitPay('warranty'); });
+
+// ============================================================
+// نافذة توثيق الضمان — الزيارة السابقة، الفني المسؤول، نوع الخلل
+// ============================================================
+function _wrEsc(v){ return String(v === undefined || v === null ? '' : v).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+
+function _wrPrevVisitsFor(a){
+  var phone = atwadNormalizePhone(a.phone || '');
+  var name = String(a.client || '').trim();
+  var out = [];
+  for(var i = 0; i < appointments.length; i++){
+    var x = appointments[i];
+    if(!x || x._fbKey === a._fbKey) continue;
+    if(x.status !== 'done') continue;
+    var samePhone = phone && atwadNormalizePhone(x.phone || '') === phone;
+    var sameName = name && String(x.client || '').trim() === name;
+    if(!samePhone && !sameName) continue;
+    if(a.date && x.date && x.date > a.date) continue;
+    out.push(x);
+  }
+  out.sort(function(p, q){ return String(q.date || '').localeCompare(String(p.date || '')); });
+  return out;
+}
+
+function openWarrantyModal(){
+  if(!_payCtx) return;
+  var a = _payCtx.appt;
+  document.getElementById('warrantyWho').textContent = (a.client || '—') + (a.service ? ' · ' + a.service : '') + (a.date ? ' · ' + a.date : '');
+
+  var prevSel = document.getElementById('wrPrev');
+  var prev = _wrPrevVisitsFor(a);
+  var html = '<option value="">— غير محددة / غير مسجلة في النظام —</option>';
+  for(var i = 0; i < prev.length; i++){
+    var x = prev[i];
+    html += '<option value="' + _wrEsc(x._source + '|' + x._fbKey) + '" data-tech="' + _wrEsc(x.tech || '') + '" data-date="' + _wrEsc(x.date || '') + '">' +
+      _wrEsc((x.date || '') + ' · ' + (x.service || '') + ' · 👷 ' + techDisplayName(x.tech)) + '</option>';
+  }
+  prevSel.innerHTML = html;
+
+  var techSel = document.getElementById('wrTech');
+  var th = '<option value="">— اختر الفني —</option>';
+  for(var t = 0; t < TECH_KEYS.length; t++){
+    th += '<option value="' + TECH_KEYS[t] + '">' + _wrEsc(techDisplayName(TECH_KEYS[t])) + '</option>';
+  }
+  th += '<option value="team">الفريق كاملاً (غير محدد)</option>';
+  techSel.innerHTML = th;
+
+  var faultSel = document.getElementById('wrFault');
+  var fh = '';
+  for(var k in WARRANTY_FAULTS){
+    if(Object.prototype.hasOwnProperty.call(WARRANTY_FAULTS, k)){
+      fh += '<option value="' + k + '">' + _wrEsc(WARRANTY_FAULTS[k]) + '</option>';
+    }
+  }
+  faultSel.innerHTML = fh;
+  document.getElementById('wrNote').value = '';
+
+  // اختيار الزيارة السابقة يملأ الفني تلقائياً (ويمكن تغييره)
+  prevSel.onchange = function(){
+    var opt = prevSel.options[prevSel.selectedIndex];
+    var tk = opt ? (opt.getAttribute('data-tech') || '') : '';
+    if(tk && TECH_KEYS.indexOf(tk) >= 0) techSel.value = tk;
+  };
+  if(prev.length){ prevSel.selectedIndex = 1; prevSel.onchange(); }
+
+  document.getElementById('warrantyModal').classList.add('open');
+}
+
+function closeWarrantyModal(){
+  document.getElementById('warrantyModal').classList.remove('open');
+}
+
+function confirmWarranty(){
+  var techSel = document.getElementById('wrTech');
+  var prevSel = document.getElementById('wrPrev');
+  var tech = techSel.value;
+  if(!tech){ showToast('⚠️ حدّد الفني المسؤول'); techSel.focus(); return; }
+  var opt = prevSel.options[prevSel.selectedIndex];
+  var prevVal = prevSel.value || '';
+  var prevPath = '';
+  var prevKey = '';
+  if(prevVal){
+    var parts = prevVal.split('|');
+    prevKey = parts[1] || '';
+    prevPath = (parts[0] === 'bookings' ? 'bookings/' : 'appointments/') + prevKey;
+  }
+  var data = {
+    tech: tech,
+    fault: document.getElementById('wrFault').value || 'other',
+    prevKey: prevKey,
+    prevPath: prevPath,
+    prevDate: opt ? (opt.getAttribute('data-date') || '') : '',
+    note: String(document.getElementById('wrNote').value || '').trim()
+  };
+  submitPay('warranty', data);
+}
+
+// ============================================================
+// أداء الفنيين — زيارات مكتملة مقابل حالات إعادة عمل منسوبة إليهم
+// ============================================================
+var _techStatsDays = 30;
+
+function setTechStatsRange(days, el){
+  _techStatsDays = days;
+  var chips = document.querySelectorAll('#tsFilters .ts-chip');
+  for(var i = 0; i < chips.length; i++){ chips[i].classList.remove('active'); }
+  if(el) el.classList.add('active');
+  renderTechStats();
+}
+
+function openTechStats(){
+  document.getElementById('techStatsModal').classList.add('open');
+  renderTechStats();
+}
+function closeTechStats(){ document.getElementById('techStatsModal').classList.remove('open'); }
+
+function renderTechStats(){
+  var body = document.getElementById('techStatsBody');
+  var since = '';
+  if(_techStatsDays > 0){
+    var d = new Date(); d.setDate(d.getDate() - _techStatsDays);
+    since = d.toISOString().split('T')[0];
+  }
+  var stats = {};
+  for(var t = 0; t < TECH_KEYS.length; t++){ stats[TECH_KEYS[t]] = { done: 0, rework: 0, faults: {} }; }
+  stats.team = { done: 0, rework: 0, faults: {} };
+  var cases = [];
+  var faultTotals = {};
+
+  for(var i = 0; i < appointments.length; i++){
+    var a = appointments[i];
+    if(!a || a.status !== 'done') continue;
+    if(since && a.date && a.date < since) continue;
+    var tk = a.tech || 'Abrar';
+    if(!stats[tk]) stats[tk] = { done: 0, rework: 0, faults: {} };
+    // زيارات الضمان نفسها لا تُحسب إنجازاً للفني
+    if(!a.warrantyRework) stats[tk].done += 1;
+    if(a.warrantyRework){
+      var who = a.warrantyTech || 'team';
+      if(!stats[who]) stats[who] = { done: 0, rework: 0, faults: {} };
+      var f = a.warrantyFault || 'other';
+      stats[who].rework += 1;
+      stats[who].faults[f] = (stats[who].faults[f] || 0) + 1;
+      faultTotals[f] = (faultTotals[f] || 0) + 1;
+      cases.push(a);
+    }
+  }
+
+  var html = '<table class="ts-table"><thead><tr><th>الفني</th><th>زيارات مكتملة</th><th>إعادة عمل</th><th>النسبة</th><th>أكثر خلل</th></tr></thead><tbody>';
+  var keys = TECH_KEYS.slice();
+  for(var sk in stats){ if(Object.prototype.hasOwnProperty.call(stats, sk) && keys.indexOf(sk) < 0 && sk !== 'team') keys.push(sk); }
+  keys.push('team');
+  for(var k = 0; k < keys.length; k++){
+    var key = keys[k];
+    var st = stats[key];
+    if(!st) continue;
+    if(key === 'team' && !st.rework) continue;
+    var rate = st.done ? Math.round(st.rework / st.done * 1000) / 10 : 0;
+    var topF = '', topN = 0;
+    for(var ff in st.faults){ if(Object.prototype.hasOwnProperty.call(st.faults, ff) && st.faults[ff] > topN){ topN = st.faults[ff]; topF = ff; } }
+    var rateCls = rate >= 10 ? 'ts-rate-bad' : 'ts-rate-ok';
+    var label = key === 'team' ? 'الفريق (غير محدد)' : techDisplayName(key);
+    html += '<tr><td><strong>' + _wrEsc(label) + '</strong></td><td>' + st.done + '</td><td>' + st.rework + '</td>' +
+      '<td class="' + rateCls + '">' + (key === 'team' ? '—' : rate + '%') + '</td>' +
+      '<td>' + (topF ? _wrEsc(WARRANTY_FAULTS[topF] || topF) + ' (' + topN + ')' : '—') + '</td></tr>';
+  }
+  html += '</tbody></table>';
+
+  if(cases.length){
+    html += '<div class="ts-sub">توزيع أنواع الخلل</div><div style="display:flex;flex-wrap:wrap;gap:6px;">';
+    for(var ft in faultTotals){
+      if(Object.prototype.hasOwnProperty.call(faultTotals, ft)){
+        html += '<span class="tech-pill">' + _wrEsc(WARRANTY_FAULTS[ft] || ft) + ' · ' + faultTotals[ft] + '</span>';
+      }
+    }
+    html += '</div>';
+    cases.sort(function(p, q){ return String(q.date || '').localeCompare(String(p.date || '')); });
+    html += '<div class="ts-sub">حالات إعادة العمل (' + cases.length + ')</div>';
+    for(var c = 0; c < cases.length; c++){
+      var ca = cases[c];
+      html += '<div class="ts-case"><strong>' + _wrEsc(ca.client || '—') + '</strong> · ' + _wrEsc(ca.date || '') +
+        '<br>👷 ' + _wrEsc(ca.warrantyTech === 'team' ? 'الفريق' : techDisplayName(ca.warrantyTech)) +
+        ' · ⚠️ ' + _wrEsc(WARRANTY_FAULTS[ca.warrantyFault] || ca.warrantyFault || 'أخرى') +
+        (ca.warrantyPrevDate ? ' · الزيارة الأصلية: ' + _wrEsc(ca.warrantyPrevDate) : '') +
+        (ca.warrantyNote ? '<br><span style="color:var(--mist)">' + _wrEsc(ca.warrantyNote) + '</span>' : '') + '</div>';
+    }
+  } else {
+    html += '<div style="padding:14px;color:#64748B;font-size:12px;">لا توجد حالات إعادة عمل موثقة في هذه الفترة. تُسجَّل الحالات من زر «🛡️ ضمان — إعادة عمل» عند إتمام الموعد.</div>';
+  }
+  html += '<div style="margin-top:12px;font-size:11px;color:var(--mist);line-height:1.7;">النسبة = حالات إعادة العمل المنسوبة للفني ÷ زياراته المكتملة في الفترة نفسها. زيارات الضمان لا تُحسب ضمن إنجاز الفني.</div>';
+  body.innerHTML = html;
+}
 document.getElementById('payCancel').addEventListener('click', closePaySheet);
 document.getElementById('payOv').addEventListener('click', function(ev){
   if(ev.target === this) closePaySheet();
