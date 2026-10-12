@@ -43,6 +43,7 @@ h1{font-size:23px;margin:0;}
 .mini.p{background:#D1FAE5;color:#065F46;border-color:#A7F3D0;}
 .mini.d{background:#FEF3C7;color:#92400E;border-color:#FDE68A;}
 .mini.g{background:#EDE9FE;color:#5B21B6;border-color:#DDD6FE;}
+.mini.v{background:#FEE2E2;color:#991B1B;border-color:#FECACA;}
 .mini.big2{font-size:13px;padding:9px 16px;}
 button.big{font-family:'Tajawal',sans-serif;font-size:15px;font-weight:700;border:0;border-radius:11px;
   background:var(--sky);color:#fff;padding:11px 22px;cursor:pointer;}
@@ -144,6 +145,16 @@ function moLabel(k){
 }
 
 function normStatus(s){ return (s === 'معلق') ? 'غير مدفوع' : (s || 'مدفوع'); }
+
+/* كلمة test وحدها، لا داخل كلمة أخرى — فـ"freon leak testing" عمل حقيقي لا تجربة.
+   والعربية تُطابَق كنصّ لأن \b لا تعمل بعد الحروف العربية.
+   هذا وسمٌ للنظر لا حكمٌ: القرار بزرّ تضغطه أنت. */
+var TEST_EN = /(^|[^a-z])(test|demo|dummy|sample)([^a-z]|$)/;
+function looksTest(e){
+  var s = (String(e.party || '') + ' ' + String(e.desc || '')).toLowerCase();
+  if(s.indexOf('اختبار') >= 0 || s.indexOf('إختبار') >= 0 || s.indexOf('تجربة') >= 0) return true;
+  return TEST_EN.test(s);
+}
 
 function collected(e){
   var s = normStatus(e.status);
@@ -290,12 +301,15 @@ function render(){
       html += '<div class="row" id="r-' + esc(x.key) + '">' +
         '<div><div class="who">' + esc(x.e.party || x.e.client || '—') + '</div>' +
         '<div class="meta">' + esc(x.e.date || '—') + ' · منذ ' + dayWord(x.age) +
-          (x.e.desc ? ' · ' + esc(x.e.desc) : '') + '</div></div>' +
+          (x.e.desc ? ' · ' + esc(x.e.desc) : '') +
+          (looksTest(x.e) ? '<br><b class="tst">🧪 يبدو قيداً تجريبياً — تحقّق</b>' : '') +
+        '</div></div>' +
         '<div style="display:flex;align-items:center;gap:11px;flex-wrap:wrap;">' +
         '<span class="amt">' + fmtNum(x.remaining) + ' ﷼</span>' +
         '<div class="acts">' +
           '<button class="mini p" onclick="one(\'' + esc(x.key) + '\',\'paid\')">قُبض</button>' +
           '<button class="mini d" onclick="one(\'' + esc(x.key) + '\',\'debt\')">دَيْن قائم</button>' +
+          '<button class="mini v" onclick="one(\'' + esc(x.key) + '\',\'void\')">🧪 تجريبي</button>' +
         '</div></div></div>';
     }
     html += '</div></div>';
@@ -315,6 +329,12 @@ function patchFor(what){
   if(what === 'debt'){
     return { status: 'مؤجل', dueType: 'open', paidAmount: 0,
              paymentNote: 'دَيْن قائم — أُدرج للمطالبة من لوحة المتراكم ' + todayStr() };
+  }
+  if(what === 'void'){
+    /* «ملغي» لا حذف: الحذف يمحو القيد بلا رجعة ويترك فراغاً
+       لا يُعرف بعد شهر ما كان فيه. والملغى يخرج من كل الأرقام ويبقى أثره. */
+    return { status: 'ملغي', paidAmount: 0,
+             paymentNote: 'قيد تجريبي — أُلغي من لوحة المتراكم ' + todayStr() };
   }
   // التسوية الجماعية: لا تُحسب ديناً ولا إيراداً محصّلاً، ويبقى أثرها
   return { status: 'مسوى',
