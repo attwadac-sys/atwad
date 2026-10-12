@@ -326,6 +326,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 .pay-cash{background:var(--success);}
 .pay-tr{background:var(--sky);}
 .pay-no{background:var(--warning);grid-column:1 / -1;}
+.pay-wr{background:#0B2545;grid-column:1 / -1;}
 .pay-x{background:#fff;color:var(--mist);border:1.5px solid var(--ice);grid-column:1 / -1;font-size:14px;padding:12px;}
 .pay-btn:disabled{opacity:.5;}
 </style>
@@ -668,6 +669,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
       <button class="pay-btn pay-cash" id="payCash">💵 نقداً</button>
       <button class="pay-btn pay-tr"   id="payTrans">🏦 تحويل</button>
       <button class="pay-btn pay-no"   id="payNone">⏳ لم يُدفع — دَيْن</button>
+      <button class="pay-btn pay-wr"   id="payWarranty">🛡️ ضمان — إعادة عمل (بدون مبلغ)</button>
       <button class="pay-btn pay-x"    id="payCancel">إلغاء</button>
     </div>
   </div>
@@ -4105,11 +4107,25 @@ function closePaySheet(){
 function submitPay(method){
   if(!_payCtx || !db) return;
 
+  var isWarranty = (method === 'warranty');
   var amt = parseFloat(document.getElementById('payAmt').value);
-  if(!(amt > 0)){
-    showToast('⚠️ اكتب المبلغ أولاً');
+  if(isWarranty){
+    amt = 0;
+  } else if(!(amt > 0)){
+    showToast('⚠️ اكتب المبلغ أولاً — أو اختر «ضمان — إعادة عمل» إن كانت الزيارة مجانية');
     document.getElementById('payAmt').focus();
     return;
+  }
+
+  var warrantyNote = '';
+  if(isWarranty){
+    warrantyNote = window.prompt('سبب إعادة العمل (الزيارة السابقة، الفني، نوع الخلل):', '');
+    if(warrantyNote === null) return;
+    warrantyNote = String(warrantyNote).trim();
+    if(!warrantyNote){
+      showToast('⚠️ اكتب سبب الضمان حتى يُوثَّق');
+      return;
+    }
   }
 
   var ctx = _payCtx;
@@ -4117,6 +4133,7 @@ function submitPay(method){
   var client = a.client || '—';
   var date = a.date || new Date().toISOString().split('T')[0];
   var paid = (method !== 'none');
+  if(isWarranty) paid = true;
 
   var tx = {
     type: 'income',
@@ -4124,7 +4141,7 @@ function submitPay(method){
     date: date,
     party: client,
     desc: (a.service || 'زيارة صيانة') + ' - ' + client,
-    category: 'خدمة',
+    category: isWarranty ? 'ضمان' : 'خدمة',
     method: (method === 'transfer') ? 'تحويل' : 'كاش',
     status: paid ? 'مدفوع' : 'مؤجل',
     paidAmount: paid ? amt : 0,
@@ -4134,6 +4151,11 @@ function submitPay(method){
   if(!paid){
     tx.dueType = 'open';
     tx.paymentNote = 'لم يُدفع عند إتمام الزيارة';
+  }
+  if(isWarranty){
+    tx.desc = 'ضمان — إعادة عمل: ' + (a.service || 'زيارة صيانة') + ' - ' + client;
+    tx.warrantyRework = true;
+    tx.paymentNote = 'إعادة عمل تحت الضمان — ' + warrantyNote;
   }
 
   // علامة الحجز تمنع زرّ «استيراد إيرادات الحجوزات» من إنشاء قيد ثانٍ لاحقاً
@@ -4148,6 +4170,11 @@ function submitPay(method){
 
   var updates = {};
   updates[apptPath + '/status'] = 'done';
+  if(isWarranty){
+    updates[apptPath + '/warrantyRework'] = true;
+    updates[apptPath + '/warrantyNote'] = warrantyNote;
+    updates[apptPath + '/warrantyAt'] = new Date().toISOString();
+  }
   for(var k in tx){
     if(Object.prototype.hasOwnProperty.call(tx, k)){ updates['transactions/' + txKey + '/' + k] = tx[k]; }
   }
@@ -4165,8 +4192,9 @@ function submitPay(method){
     .then(function(){
       for(var j = 0; j < btns.length; j++){ btns[j].disabled = false; }
       closePaySheet();
-      showToast(paid ? ('✅ تم الإتمام — سُجّل ' + amt + ' ريال')
-                     : ('📌 تم الإتمام — دَيْن على ' + client));
+      showToast(isWarranty ? ('🛡️ تم الإتمام تحت الضمان — بدون مبلغ على ' + client)
+                : paid ? ('✅ تم الإتمام — سُجّل ' + amt + ' ريال')
+                       : ('📌 تم الإتمام — دَيْن على ' + client));
     })
     .catch(function(e){
       for(var j2 = 0; j2 < btns.length; j2++){ btns[j2].disabled = false; }
@@ -4177,6 +4205,7 @@ function submitPay(method){
 document.getElementById('payCash').addEventListener('click', function(){ submitPay('cash'); });
 document.getElementById('payTrans').addEventListener('click', function(){ submitPay('transfer'); });
 document.getElementById('payNone').addEventListener('click', function(){ submitPay('none'); });
+document.getElementById('payWarranty').addEventListener('click', function(){ submitPay('warranty'); });
 document.getElementById('payCancel').addEventListener('click', closePaySheet);
 document.getElementById('payOv').addEventListener('click', function(ev){
   if(ev.target === this) closePaySheet();
