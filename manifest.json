@@ -1,0 +1,16 @@
+{
+  "name": "مؤسسة أطواد لصيانة المكيفات",
+  "short_name": "أطواد",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "/atwad/index.html",
+  "scope": "/atwad/",
+  "display": "standalone",
+  "background_color": "#0B2545",
+  "theme_color": "#0B2545",
+  "icons": [
+    { "src": "/atwad/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/atwad/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/atwad/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
