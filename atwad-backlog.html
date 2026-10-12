@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>المتراكم — أطواد</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--deep:#0A2540;--sky:#38BDF8;--ice:#E2E8F0;--mist:#64748B;--frost:#F8FAFC;
+  --ok:#059669;--warn:#D97706;--bad:#B91C1C;--violet:#7C3AED;}
+*{box-sizing:border-box;}
+body{margin:0;background:#F1F5F9;font-family:'Tajawal',sans-serif;color:var(--deep);padding:18px 16px 70px;}
+.wrap{max-width:780px;margin:0 auto;}
+.head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px;}
+h1{font-size:23px;margin:0;}
+.sub{font-size:13.5px;color:var(--mist);line-height:1.85;margin-bottom:16px;}
+.pill{font-size:12px;font-weight:700;padding:5px 12px;border-radius:99px;background:#E0F2FE;color:#075985;}
+.tot{background:#fff;border:1.5px solid var(--ice);border-radius:14px;padding:14px 16px;margin-bottom:14px;
+  display:flex;gap:22px;flex-wrap:wrap;}
+.tot div span{display:block;font-size:11.5px;color:var(--mist);font-weight:500;}
+.tot div b{font-size:19px;}
+.mo{background:#fff;border:1.5px solid var(--ice);border-radius:16px;margin-bottom:12px;overflow:hidden;}
+.mo > .bar2{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
+  padding:14px 16px;cursor:pointer;background:var(--frost);}
+.mo h2{font-size:16px;margin:0;display:flex;align-items:center;gap:9px;flex-wrap:wrap;}
+.cnt{font-size:12px;font-weight:800;padding:2px 10px;border-radius:99px;background:#fff;
+  color:var(--mist);border:1px solid var(--ice);}
+.mosum{font-size:14px;font-weight:800;white-space:nowrap;}
+.body2{display:none;padding:0 16px 8px;}
+.mo.open .body2{display:block;}
+.mo.open > .bar2{background:#fff;border-bottom:1px solid var(--ice);}
+.allbar{display:flex;gap:9px;flex-wrap:wrap;align-items:center;padding:12px 0 4px;
+  font-size:12px;color:var(--mist);line-height:1.8;}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px;
+  padding:11px 0;border-top:1px solid var(--ice);flex-wrap:wrap;}
+.row .who{font-size:14.5px;font-weight:700;}
+.row .meta{font-size:12px;color:var(--mist);line-height:1.7;}
+.amt{font-size:15px;font-weight:800;white-space:nowrap;}
+.acts{display:flex;gap:7px;flex-wrap:wrap;}
+.mini{font-family:'Tajawal',sans-serif;font-size:12.5px;font-weight:700;border:1px solid var(--ice);
+  border-radius:9px;padding:7px 13px;cursor:pointer;background:var(--frost);color:var(--deep);}
+.mini:disabled{opacity:.4;cursor:default;}
+.mini.p{background:#D1FAE5;color:#065F46;border-color:#A7F3D0;}
+.mini.d{background:#FEF3C7;color:#92400E;border-color:#FDE68A;}
+.mini.g{background:#EDE9FE;color:#5B21B6;border-color:#DDD6FE;}
+.mini.big2{font-size:13px;padding:9px 16px;}
+button.big{font-family:'Tajawal',sans-serif;font-size:15px;font-weight:700;border:0;border-radius:11px;
+  background:var(--sky);color:#fff;padding:11px 22px;cursor:pointer;}
+button.big:disabled{opacity:.45;cursor:default;}
+#backBtn,#fixBtn,#homeBtn{background:rgba(10,37,64,.07);color:var(--deep);}
+.msg{font-size:13px;font-weight:700;margin:12px 0;min-height:20px;line-height:1.8;}
+.clear{background:#fff;border:1.5px solid #A7F3D0;border-radius:16px;padding:40px 20px;text-align:center;}
+.clear .big3{font-size:46px;line-height:1;}
+.clear .t{font-size:19px;font-weight:800;color:var(--ok);margin-top:12px;}
+.clear .s{font-size:14px;color:var(--mist);margin-top:7px;line-height:1.8;}
+.ver{margin-top:18px;font-size:11px;color:var(--mist);opacity:.65;}
+.bar{margin-top:10px;display:flex;flex-wrap:wrap;gap:10px;}
+.note{background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:14px;padding:13px 15px;
+  font-size:12.5px;color:#92400E;line-height:1.85;margin-bottom:14px;}
+</style>
+</head>
+<body>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="atwad-firebase.js"></script>
+<script src="atwad-auth.js"></script>
+
+<div class="wrap">
+  <div class="head">
+    <h1>📦 المتراكم</h1>
+    <span class="pill" id="pill">جارٍ الاتصال…</span>
+  </div>
+  <div class="sub">
+    قيودٌ غير محصّلة مضى عليها أكثر من <b id="staleTxt">14</b> يوماً، ولا توأم مقبوض لها،
+    ولم تُسجَّل ديناً. أكثرها من زمنٍ سابقٍ لورقة الدفع: الزيارة جرت وقُبض ثمنها ولم يُسجَّل.
+  </div>
+
+  <div class="note">
+    <b>قبل أن تضغط «الشهر كلّه قُبض»:</b> هذا إقرارٌ بأن مال الشهر وصلك، وتنازلٌ عن أي دَيْن حقيقي
+    مخفيٍّ فيه. وسنده أن ما حصّله النظام قابَلَ سجلّ الفني المستقلّ بفرقٍ أقلّ من ١٪ —
+    أي أن المال دخل والنقص في التسجيل. استعمله للشهور التي لا تذكر عنها شيئاً،
+    وراجع صفاً صفاً ما تذكره. ولا شيء يُحذف: الحالة تصير «مسوى» ويبقى القيد وأثره.
+  </div>
+
+  <div class="tot" id="tot" style="display:none;"></div>
+  <div class="msg" id="msg">…</div>
+  <div id="out"></div>
+
+  <div class="ver">إصدار الصفحة: <b>v1 · 2026-10-12 10:00</b></div>
+  <div class="bar">
+    <button class="big" id="refBtn" disabled>🔄 تحديث</button>
+    <button class="big" id="backBtn" onclick="location.href='atwad-attention.html'">🎯 ما يحتاج قرارك</button>
+    <button class="big" id="fixBtn" onclick="location.href='atwad-fix-entry.html'">🩹 تصحيح قيد</button>
+    <button class="big" id="homeBtn" onclick="location.href='atwad-finance.html'">💰 الإدارة المالية</button>
+  </div>
+</div>
+
+<script>
+var ADMIN_UID  = 'NU8g25megKefUOBQGvfkVtBOw802';
+var STALE_DAYS = 14;
+var bkDb = null;
+var MONTHS = [];        // [{ key:'2026-09', rows:[...], sum:n }]
+var OPEN   = {};        // أي شهر مفتوح — يُحفظ بين التحديثات
+
+function el(id){ return document.getElementById(id); }
+function esc(s){
+  return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function fmtNum(n){
+  var v = Math.round((parseFloat(n) || 0) * 100) / 100;
+  return v.toLocaleString('en-US', { maximumFractionDigits: 2 });
+}
+function todayStr(){
+  var d = new Date(), m = d.getMonth() + 1, y = d.getDate();
+  return d.getFullYear() + '-' + (m < 10 ? '0' : '') + m + '-' + (y < 10 ? '0' : '') + y;
+}
+function daysAgo(d){
+  if(!d) return 0;
+  var t = new Date(d + 'T00:00:00').getTime();
+  if(isNaN(t)) return 0;
+  return Math.floor((Date.now() - t) / 86400000);
+}
+function dayWord(n){
+  if(n === 1) return 'يوم';
+  if(n === 2) return 'يومين';
+  if(n >= 3 && n <= 10) return n + ' أيام';
+  return n + ' يوماً';
+}
+function txWord(n){
+  if(n === 1) return 'قيد واحد';
+  if(n === 2) return 'قيدان';
+  if(n >= 3 && n <= 10) return n + ' قيود';
+  return n + ' قيداً';
+}
+
+var MO_AR = ['يناير','فبراير','مارس','أبريل','مايو','يونيو',
+             'يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+function moLabel(k){
+  var p = String(k).split('-');
+  var i = parseInt(p[1], 10) - 1;
+  return (MO_AR[i] || p[1]) + ' ' + p[0];
+}
+
+function normStatus(s){ return (s === 'معلق') ? 'غير مدفوع' : (s || 'مدفوع'); }
+
+function collected(e){
+  var s = normStatus(e.status);
+  if(s === 'مدفوع') return parseFloat(e.amount) || 0;
+  if(s === 'مدفوع جزئياً'){
+    if(Array.isArray(e.payments) && e.payments.length){
+      return e.payments.reduce(function(a, p){ return a + (parseFloat(p.amount) || 0); }, 0);
+    }
+    return parseFloat(e.paidAmount) || 0;
+  }
+  return 0;
+}
+
+/* ===== مطابقة الأسماء عبر الأبجديتين ===== */
+var AR2LAT = {
+  'ب':'b','ت':'t','ث':'t','ج':'j','ح':'h','خ':'k','د':'d','ذ':'z','ر':'r','ز':'z',
+  'س':'s','ش':'s','ص':'s','ض':'d','ط':'t','ظ':'z','ع':'','غ':'g','ف':'f','ق':'k',
+  'ك':'k','ل':'l','م':'m','ن':'n','ه':'h','ة':'','و':'','ي':'','ى':'','ا':'',
+  'أ':'','إ':'','آ':'','ء':'','ؤ':'','ئ':''
+};
+function skeleton(s){
+  var t = String(s || '').toLowerCase();
+  t = t.replace(/[ـً-ْ.,_\-()0-9]/g, ' ');
+  t = t.replace(/\b(mr|mrs|ms|miss|dr|eng|al|el)\b/g, ' ');
+  t = t.replace(/^(الاستاذ|الأستاذ|الاستاذة|الدكتور|السيد|السيدة)\s+/, '');
+  t = t.replace(/(^|\s)ال/g, '$1');
+  t = t.replace(/\bal(?=[a-z]{3,})/g, ' ');
+  t = t.replace(/kh/g, 'k').replace(/gh/g, 'g').replace(/sh/g, 's')
+       .replace(/th/g, 't').replace(/ph/g, 'f').replace(/ch/g, 's').replace(/q/g, 'k');
+  var out = '';
+  for(var i = 0; i < t.length; i++){
+    var c = t.charAt(i);
+    if(Object.prototype.hasOwnProperty.call(AR2LAT, c)){ out += AR2LAT[c]; continue; }
+    if(c >= 'a' && c <= 'z'){
+      if('aeiouwy'.indexOf(c) >= 0) continue;
+      out += c;
+    }
+  }
+  return out.replace(/(.)\1+/g, '$1');
+}
+
+function load(){
+  if(!bkDb) return;
+  el('refBtn').disabled = true;
+  el('msg').textContent = '⏳ جارٍ القراءة…';
+
+  bkDb.ref('transactions').once('value').then(function(snap){
+    var rows = [], paidKeys = {};
+
+    snap.forEach(function(c){
+      var e = c.val() || {};
+      if(e.type !== 'income') return;
+      if(e.status === 'ملغي' || e.status === 'مسوى') return;
+
+      var amt = parseFloat(e.amount) || 0;
+      var rem = amt - collected(e);
+      var sk  = skeleton(e.party || e.client || '');
+      var key = (sk.length >= 2 ? sk : 'n') + '|' + (e.date || '');
+
+      // المحصّل يُفهرَس لا يُعرَض: وجودُ توأمٍ مقبوض يُخرج القيد من هنا
+      // إلى لوحة القرارات، حيث يُحسم بقاعدة الزائد لا بالتسوية
+      if(rem <= 0){ paidKeys[key] = true; return; }
+
+      var age = daysAgo(e.date);
+      if(age <= STALE_DAYS) return;              // الجاري مكانه اللوحة
+      if(e.dueType || e.dueDate || e.paymentNote) return;   // دَيْن مسجّل يُطالَب به
+
+      rows.push({ key: c.key, e: e, amount: amt, remaining: rem, age: age, pk: key });
+    });
+
+    // استثناء ما له توأم مقبوض — ذاك قرارُ زائدٍ لا قرارُ تسوية
+    var clean = [];
+    for(var i = 0; i < rows.length; i++){
+      if(paidKeys[rows[i].pk]) continue;
+      clean.push(rows[i]);
+    }
+
+    var byMo = {};
+    for(var j = 0; j < clean.length; j++){
+      var mk = String(clean[j].e.date || '').slice(0, 7) || '؟';
+      if(!byMo[mk]) byMo[mk] = [];
+      byMo[mk].push(clean[j]);
+    }
+
+    MONTHS = [];
+    var keys = Object.keys(byMo).sort();        // الأقدم أولاً: يُحسم من الذيل
+    for(var k = 0; k < keys.length; k++){
+      var list = byMo[keys[k]];
+      list.sort(function(a, b){
+        return String(a.e.date || '').localeCompare(String(b.e.date || ''));
+      });
+      var s = 0;
+      for(var m = 0; m < list.length; m++){ s += list[m].remaining; }
+      MONTHS.push({ key: keys[k], rows: list, sum: s });
+    }
+
+    render();
+    el('refBtn').disabled = false;
+    el('msg').textContent = '';
+  }).catch(function(err){
+    el('refBtn').disabled = false;
+    el('msg').textContent = '❌ تعذّرت القراءة: ' + (err.message || err);
+  });
+}
+
+function render(){
+  var nAll = 0, sAll = 0;
+  for(var i = 0; i < MONTHS.length; i++){ nAll += MONTHS[i].rows.length; sAll += MONTHS[i].sum; }
+
+  if(!nAll){
+    el('tot').style.display = 'none';
+    el('out').innerHTML = '<div class="clear"><div class="big3">✅</div>' +
+      '<div class="t">لا متراكم</div>' +
+      '<div class="s">كل قيدٍ غير محصّلٍ أقدم من ' + STALE_DAYS +
+      ' يوماً صار محسوماً. ما يبقى بعد اليوم تراه في لوحة القرارات قبل أن يتراكم.</div></div>';
+    return;
+  }
+
+  el('tot').style.display = 'flex';
+  el('tot').innerHTML =
+    '<div><span>القيود</span><b>' + nAll + '</b></div>' +
+    '<div><span>الإجمالي</span><b>' + fmtNum(sAll) + ' ﷼</b></div>' +
+    '<div><span>الشهور</span><b>' + MONTHS.length + '</b></div>';
+
+  var html = '';
+  for(var q = 0; q < MONTHS.length; q++){
+    var mo = MONTHS[q];
+    var isOpen = !!OPEN[mo.key];
+    html += '<div class="mo' + (isOpen ? ' open' : '') + '" id="m-' + esc(mo.key) + '">' +
+      '<div class="bar2" onclick="toggleMo(\'' + esc(mo.key) + '\')">' +
+        '<h2>' + (isOpen ? '▾' : '▸') + ' ' + esc(moLabel(mo.key)) +
+          '<span class="cnt">' + txWord(mo.rows.length) + '</span></h2>' +
+        '<span class="mosum">' + fmtNum(mo.sum) + ' ﷼</span>' +
+      '</div>' +
+      '<div class="body2">' +
+      '<div class="allbar">' +
+        '<button class="mini g big2" onclick="allPaid(\'' + esc(mo.key) + '\')">' +
+          '✅ ' + esc(moLabel(mo.key)) + ' كلّه قُبض</button>' +
+        '<span>يُسوّي ' + txWord(mo.rows.length) + ' بمجموع ' + fmtNum(mo.sum) + ' ﷼ دفعةً واحدة</span>' +
+      '</div>';
+
+    for(var r = 0; r < mo.rows.length; r++){
+      var x = mo.rows[r];
+      html += '<div class="row" id="r-' + esc(x.key) + '">' +
+        '<div><div class="who">' + esc(x.e.party || x.e.client || '—') + '</div>' +
+        '<div class="meta">' + esc(x.e.date || '—') + ' · منذ ' + dayWord(x.age) +
+          (x.e.desc ? ' · ' + esc(x.e.desc) : '') + '</div></div>' +
+        '<div style="display:flex;align-items:center;gap:11px;flex-wrap:wrap;">' +
+        '<span class="amt">' + fmtNum(x.remaining) + ' ﷼</span>' +
+        '<div class="acts">' +
+          '<button class="mini p" onclick="one(\'' + esc(x.key) + '\',\'paid\')">قُبض</button>' +
+          '<button class="mini d" onclick="one(\'' + esc(x.key) + '\',\'debt\')">دَيْن قائم</button>' +
+        '</div></div></div>';
+    }
+    html += '</div></div>';
+  }
+  el('out').innerHTML = html;
+}
+
+function toggleMo(k){
+  OPEN[k] = !OPEN[k];
+  render();
+}
+
+function patchFor(what){
+  if(what === 'paid'){
+    return { status: 'مدفوع', paymentNote: 'سُجّل قبضه من لوحة المتراكم — ' + todayStr() };
+  }
+  if(what === 'debt'){
+    return { status: 'مؤجل', dueType: 'open', paidAmount: 0,
+             paymentNote: 'دَيْن قائم — أُدرج للمطالبة من لوحة المتراكم ' + todayStr() };
+  }
+  // التسوية الجماعية: لا تُحسب ديناً ولا إيراداً محصّلاً، ويبقى أثرها
+  return { status: 'مسوى',
+           paymentNote: 'تسوية تاريخية — ما قبل ورقة الدفع · ' + todayStr() };
+}
+
+function one(key, what){
+  if(!bkDb) return;
+  var row = el('r-' + key);
+  var btns = row ? row.querySelectorAll('button') : [];
+  for(var i = 0; i < btns.length; i++){ btns[i].disabled = true; }
+
+  var patch = patchFor(what);
+
+  bkDb.ref('transactions/' + key).once('value').then(function(snap){
+    var v = snap.val() || {};
+    if(what === 'paid'){ patch.paidAmount = parseFloat(v.amount) || 0; }
+    return bkDb.ref('transactions/' + key).update(patch);
+  }).then(function(){
+    if(row) row.style.display = 'none';
+    dropRow(key);
+    el('msg').textContent = '✅ تمّ. الباقي ' + fmtNum(sumAll()) + ' ﷼.';
+  }).catch(function(err){
+    for(var j = 0; j < btns.length; j++){ btns[j].disabled = false; }
+    el('msg').textContent = '❌ تعذّر الحفظ: ' + (err.message || err);
+  });
+}
+
+function sumAll(){
+  var s = 0;
+  for(var i = 0; i < MONTHS.length; i++){ s += MONTHS[i].sum; }
+  return s;
+}
+
+function dropRow(key){
+  for(var i = 0; i < MONTHS.length; i++){
+    var list = MONTHS[i].rows;
+    for(var j = 0; j < list.length; j++){
+      if(list[j].key === key){
+        MONTHS[i].sum -= list[j].remaining;
+        list.splice(j, 1);
+        if(!list.length) MONTHS.splice(i, 1);
+        return;
+      }
+    }
+  }
+}
+
+function allPaid(mk){
+  var mo = null;
+  for(var i = 0; i < MONTHS.length; i++){ if(MONTHS[i].key === mk){ mo = MONTHS[i]; break; } }
+  if(!mo || !mo.rows.length) return;
+
+  if(!confirm('تسوية ' + moLabel(mk) + ' كلّه:\n\n' +
+              txWord(mo.rows.length) + ' بمجموع ' + fmtNum(mo.sum) + ' ﷼\n\n' +
+              'تصير حالتها «مسوى» — لا دَيْن ولا إيراد محصّل، ويبقى أثرها في النظام.\n' +
+              'هذا تنازلٌ عن أي دَيْن حقيقي مخفيٍّ في الشهر. أتابع؟')) return;
+
+  var box = el('m-' + mk);
+  var btns = box ? box.querySelectorAll('button') : [];
+  for(var b = 0; b < btns.length; b++){ btns[b].disabled = true; }
+  el('msg').textContent = '⏳ جارٍ تسوية ' + moLabel(mk) + '…';
+
+  // كتابة واحدة متعدّدة المسارات: إمّا تمّ الشهر كلّه أو لم يتغيّر شيء
+  var updates = {}, patch = patchFor('settle');
+  for(var r = 0; r < mo.rows.length; r++){
+    for(var f in patch){
+      if(Object.prototype.hasOwnProperty.call(patch, f)){
+        updates['transactions/' + mo.rows[r].key + '/' + f] = patch[f];
+      }
+    }
+  }
+
+  bkDb.ref().update(updates).then(function(){
+    var n = mo.rows.length, s = mo.sum;
+    for(var i2 = 0; i2 < MONTHS.length; i2++){
+      if(MONTHS[i2].key === mk){ MONTHS.splice(i2, 1); break; }
+    }
+    delete OPEN[mk];
+    render();
+    el('msg').textContent = '✅ سُوّي ' + moLabel(mk) + ' — ' + txWord(n) +
+                            ' بمجموع ' + fmtNum(s) + ' ﷼. الباقي ' + fmtNum(sumAll()) + ' ﷼.';
+  }).catch(function(err){
+    for(var b2 = 0; b2 < btns.length; b2++){ btns[b2].disabled = false; }
+    el('msg').textContent = '❌ تعذّرت التسوية: ' + (err.message || err);
+  });
+}
+
+window.__atwadInitPage = function(user){
+  if(!user || user.uid !== ADMIN_UID){
+    document.body.innerHTML = '<div style="padding:40px;text-align:center;font-family:Tajawal,sans-serif;">' +
+      'هذا الحساب غير مصرّح له.</div>';
+    return;
+  }
+  bkDb = window.db || null;
+  if(!bkDb){ el('pill').textContent = 'غير متصل'; return; }
+  el('pill').textContent = 'متصل';
+  el('staleTxt').textContent = STALE_DAYS;
+  el('refBtn').disabled = false;
+  el('refBtn').addEventListener('click', load);
+  load();
+};
+</script>
+</body>
+</html>

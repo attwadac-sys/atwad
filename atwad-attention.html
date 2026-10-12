@@ -43,7 +43,7 @@ h1{font-size:23px;margin:0;}
 .msg{font-size:14px;line-height:1.9;margin:14px 0 0;}
 .ver{margin-top:18px;font-size:11px;color:var(--mist);opacity:.65;}
 .bar{margin-top:10px;display:flex;flex-wrap:wrap;gap:10px;}
-#backBtn,#homeBtn,#fixBtn{background:rgba(255,255,255,.10);}
+#backBtn,#homeBtn,#fixBtn,#bkBtn{background:rgba(255,255,255,.10);}
 button.big{font-family:'Tajawal',sans-serif;font-size:15px;font-weight:700;border:0;border-radius:11px;
   background:var(--sky);color:#fff;padding:11px 22px;cursor:pointer;}
 button.big:disabled{background:#CBD5E1;cursor:default;}
@@ -71,11 +71,12 @@ button.big:disabled{background:#CBD5E1;cursor:default;}
   <div class="msg" id="msg"></div>
   <!-- بصمة الإصدار: تُقارَن بما يُطلب رفعه فيُعرف أن المتصفح
        لم يعطِ نسخةً محفوظة. تُغيَّر مع كل تعديل على هذه الصفحة. -->
-  <div class="ver">إصدار اللوحة: <b id="verTag">v7 · 2026-10-12 09:15</b></div>
+  <div class="ver">إصدار اللوحة: <b id="verTag">v8 · 2026-10-12 10:05</b></div>
 
   <div class="bar">
     <button class="big" id="refBtn" disabled>🔄 تحديث</button>
     <button class="big" id="backBtn" onclick="location.href='atwad-finance.html'">💰 الإدارة المالية</button>
+    <button class="big" id="bkBtn" onclick="location.href='atwad-backlog.html'">📦 المتراكم</button>
     <button class="big" id="fixBtn" onclick="location.href='atwad-fix-entry.html'">🩹 تصحيح قيد</button>
     <button class="big" id="homeBtn" onclick="location.href='atwad-customers.html'">🏠 الرئيسية</button>
   </div>
@@ -556,7 +557,7 @@ function render(b, oldCount, oldSum){
   if(oldCount){
     html += '<div class="old">📦 متراكم أقدم من ' + STALE_DAYS + ' يوماً: <b>' + oldCount +
       '</b> قيداً بإجمالي <b>' + fmtNum(oldSum) + ' ﷼</b> — خارج هذه اللوحة عمداً حتى لا تُغرقها. ' +
-      'نظّفه مرة واحدة من <a href="preview-unpaid-audit.html">أداة مراجعة غير المدفوع</a>، ' +
+      'احسمه شهراً شهراً من <a href="atwad-backlog.html">📦 لوحة المتراكم</a>، ' +
       'وبعدها لن يتكوّن تراكم جديد.</div>';
   }
 
