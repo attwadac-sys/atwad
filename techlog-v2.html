@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>مطابقة سجلّ الفني — أطواد</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--deep:#0A2540;--sky:#38BDF8;--ice:#E2E8F0;--mist:#64748B;--frost:#F8FAFC;
+  --ok:#059669;--warn:#D97706;--bad:#B91C1C;--violet:#7C3AED;}
+*{box-sizing:border-box;}
+body{margin:0;background:#F1F5F9;font-family:'Tajawal',sans-serif;color:var(--deep);padding:18px 16px 70px;}
+.wrap{max-width:820px;margin:0 auto;}
+.head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px;}
+h1{font-size:23px;margin:0;}
+.sub{font-size:13.5px;color:var(--mist);line-height:1.85;margin-bottom:16px;}
+.pill{font-size:12px;font-weight:700;padding:5px 12px;border-radius:99px;background:#E0F2FE;color:#075985;}
+.tot{background:#fff;border:1.5px solid var(--ice);border-radius:14px;padding:14px 16px;margin-bottom:14px;
+  display:flex;gap:22px;flex-wrap:wrap;}
+.tot div span{display:block;font-size:11.5px;color:var(--mist);font-weight:500;}
+.tot div b{font-size:19px;}
+.grp{background:#fff;border:1.5px solid var(--ice);border-radius:16px;padding:16px 16px 6px;margin-bottom:13px;}
+.grp.red{border-color:#FECACA;} .grp.amber{border-color:#FDE68A;} .grp.green{border-color:#A7F3D0;}
+.grp h2{font-size:16.5px;margin:0 0 3px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.grp .why{font-size:12.5px;color:var(--mist);line-height:1.85;margin-bottom:11px;}
+.cnt{font-size:12px;font-weight:800;padding:2px 10px;border-radius:99px;background:var(--frost);
+  color:var(--mist);border:1px solid var(--ice);}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px;
+  padding:12px 0;border-top:1px solid var(--ice);flex-wrap:wrap;}
+.row .who{font-size:14.5px;font-weight:700;}
+.row .meta{font-size:12px;color:var(--mist);line-height:1.75;}
+.ev{font-size:12px;line-height:1.75;margin-top:3px;}
+.ev.yes{color:#047857;} .ev.no{color:#B45309;}
+.ev.due{color:#B91C1C;} .ev.warn2{color:#92400E;}
+.why .ok2{color:#047857;} .why .due2{color:#B91C1C;} .why .warn3{color:#B45309;}
+.amt{font-size:15px;font-weight:800;white-space:nowrap;}
+.acts{display:flex;gap:7px;flex-wrap:wrap;}
+.mini{font-family:'Tajawal',sans-serif;font-size:12.5px;font-weight:700;border:1px solid var(--ice);
+  border-radius:9px;padding:7px 13px;cursor:pointer;background:var(--frost);color:var(--deep);}
+.mini:disabled{opacity:.4;cursor:default;}
+.mini.p{background:#D1FAE5;color:#065F46;border-color:#A7F3D0;}
+.mini.d{background:#FEF3C7;color:#92400E;border-color:#FDE68A;}
+.mini.v{background:#FEE2E2;color:#991B1B;border-color:#FECACA;}
+.mini.n{background:#E0E7FF;color:#3730A3;border-color:#C7D2FE;}
+button.big{font-family:'Tajawal',sans-serif;font-size:15px;font-weight:700;border:0;border-radius:11px;
+  background:var(--sky);color:#fff;padding:11px 22px;cursor:pointer;}
+button.big:disabled{opacity:.45;cursor:default;}
+#backBtn,#bkBtn,#fixBtn{background:rgba(10,37,64,.07);color:var(--deep);}
+.msg{font-size:13px;font-weight:700;margin:12px 0;min-height:20px;line-height:1.8;}
+.ver{margin-top:18px;font-size:11px;color:var(--mist);opacity:.65;}
+.bar{margin-top:10px;display:flex;flex-wrap:wrap;gap:10px;}
+.note{background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:14px;padding:13px 15px;
+  font-size:12.5px;color:#92400E;line-height:1.85;margin-bottom:14px;}
+.logln{background:var(--frost);border:1px solid var(--ice);border-radius:8px;padding:5px 9px;
+  font-size:11.5px;color:var(--deep);display:inline-block;margin-top:4px;direction:ltr;text-align:left;}
+.clear{background:#fff;border:1.5px solid #A7F3D0;border-radius:16px;padding:34px 20px;text-align:center;}
+.clear .b3{font-size:42px;line-height:1;}
+.clear .t{font-size:18px;font-weight:800;color:var(--ok);margin-top:10px;}
+</style>
+</head>
+<body>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="atwad-firebase.js"></script>
+<script src="atwad-auth.js"></script>
+
+<div class="wrap">
+  <div class="head">
+    <h1>📋 مطابقة سجلّ الفني</h1>
+    <span class="pill" id="pill">جارٍ الاتصال…</span>
+  </div>
+  <div class="sub">
+    سجلّ الفني في واتساب — <b>٨٧ تقريراً يومياً</b> من ٦ يوليو إلى ١١ أكتوبر — مقروءاً سطراً سطراً
+    ومقابَلاً بقيودك. هو الدليل المستقلّ الوحيد في هذه المسألة، فما وافقه فحكمه مُبرهَن،
+    وما خالفه يحتاج قرارك.
+  </div>
+  <div class="note">
+    السجلّ يقول ما كان <b>يوم الزيارة</b>. فإن قبضتَ المبلغ بعدها بأسبوع فذاكرتك أصدق منه —
+    اضغط «سُدِّد». ولا يُعلَّم شيءٌ ديناً إلا بتأكيدك.
+  </div>
+
+  <div class="tot" id="tot" style="display:none;"></div>
+  <div class="msg" id="msg">…</div>
+  <div id="out"></div>
+
+  <div class="ver">إصدار الصفحة: <b>v2 · 2026-10-12 12:00</b></div>
+  <div class="bar">
+    <button class="big" id="refBtn" disabled>🔄 تحديث</button>
+    <button class="big" id="backBtn" onclick="location.href='atwad-attention.html'">🎯 ما يحتاج قرارك</button>
+    <button class="big" id="bkBtn" onclick="location.href='atwad-backlog.html'">📦 المتراكم</button>
+    <button class="big" id="fixBtn" onclick="location.href='atwad-fix-entry.html'">🩹 تصحيح قيد</button>
+  </div>
+</div>
+
+<script>
+/* ===== سجلّ الفني كما قرأتُه من تصدير واتساب =====
+   ٨٧ تقريراً يومياً · 300 سطر عميل · من ٦ يوليو إلى ١١ أكتوبر ٢٠٢٦
+   got = ما قُبض · pend = ما بقي · mode = كاش أو تحويل
+   بيانات مرجعية ثابتة، لا تُقرأ من الشبكة ولا تُعدَّل من الصفحة. */
+var LOG = [{"date":"2026-07-06","name":"Ms.Umm yazid","got":300.0,"pend":0.0,"mode":"transfer"},{"date":"2026-07-06","name":"Mr.majed al awsi","got":200.0,"pend":0.0,"mode":"transfer"},{"date":"2026-07-06","name":"Mr.muneer al habashi","got":150.0,"pend":0.0,"mode":"transfer"},{"date":"2026-07-06","name":"Mr.tariq raqban","got":200.0,"pend":0.0,"mode":"transfer"},{"date":"2026-07-06","name":"Mr.ibraheem al asiri","got":300.0,"pend":0.0,"mode":"transfer"},{"date":"2026-07-07","name":"Ms.umm sabah","got":330.0,"pend":0.0,"mode":"cash"},{"date":"2026-07-07","name":"Mr.mohammed mahfuz","got":480.0,"pend":0.0,"mode":"cash"},{"date":"2026-07-07","name":"Ms.umm yazid","got":50.0,"pend":0.0,"mode":"transfer"},{"date":"2026-07-08","name":"Mr.nasser al otaibi","got":0.0,"pend":300.0,"mode":"none"},{"date":"2026-07-08","name":"Ms.hayat","got":110.0,"pend":0.0,"mode":"transfer"},{"date":"2026-07-08","name":"Mr.ali Abu issa","got":110.0,"pend":0.0,"mode":"cash"},{"date":"2026-07-08","name":"Mr.adel al awfi","got":420.0,"pend":0.0,"mode":"transfer"},{"date":"2026-07-08","name":"Mr.abdullah al lahabi","got":450.0,"pend":0.0,"mode":"cash"},{"date":"2026-07-09","name":"Mr.ahmad al malki","got":280.0,"pend":0.0,"mode":"transfer"},{"date":"2026-07-09","name":"Mr.adel al awfi","got":300.0,"pend":0.0,"mode":"transfer"},{"date":"2026-07-09","name":"Mr.fahad al harthi","got":400.0,"pend":0.0,"mode":"transfer"},{"date":"2026-07-11","name":"Mr.abdullah","got":240.0,"pend":0.0,"mode":"transfer"},{"date":"2026-07-11","name":"Mr.adel Abu kenan","got":280.0,"pend":0.0,"mode":"transfer"},{"date":"2026-07-11","name":"Mr.mohammed al shaibah","got":650.0,"pend":0.0,"mode":"cash"},{"date":"2026-07-12","name":"Mr.abdullah al gamdi","got":150.0,"pend":0.0,"mode":"transfer"},{"date":"2026-07-12","name":"Mr.saleh usman","got":250.0,"pend":0.0,"mode":"cash"},{"date":"2026-07-12","name":"Mr.saad","got":250.0,"pend":0.0,"mode":"transfer"},{"date":"2026-07-12","name":"Mr.faisal al khazmari","got":480.0,"pend":0.0,"mode":"cash"},{"date":"2026-07-13","name":"Mr.ali","got":420.0,"pend":0.0,"mode":"cash"},{"date":"2026-07-13","name":"Mr.Awaad","got":500.0,"pend":0.0,"mode":"cash"},{"date":"2026-07-14","name":"Mr.muneer fadaak","got":390.0,"pend":0.0,"mode":"transfer"},{"date":"2026-07-14","name":"Ms.umm turky","got":300.0,"pend":0.0,"mode":"transfer"},{"date":"2026-07-14","name":"Ms.nazwa shalbi","got":430.0,"pend":0.0,"mode":"transfer"},{"date":"2026-07-15","name":"Mr.khaled","got":210.0,"pend":0.0,"mode":"cash"},{"date":"2026-07-15","name":"Mr.mohammed","got":100.0,"pend":0.0,"mode":"transfer"},{"date":"2026-07-16","name":"Mr.sultan Abu khalid","got":70.0,"pend":0.0,"mode":"transfer"},{"date":"2026-07-16","name":"MR.SULTAN","got":300.0,"pend":0.0,"mode":"transfer"},{"date":"2026-07-16","name":"Mr.abdulraheem","got":70.0,"pend":0.0,"mode":"cash"},{"date":"2026-07-16","name":"Ms.umm saif","got":180.0,"pend":0.0,"mode":"cash"},{"date":"2026-07-16","name":"Mr.awaad","got":100.0,"pend":0.0,"mode":"transfer"},{"date":"2026-07-18","name":"Mr.hanish al zahrani","got":100.0,"pend":0.0,"mode":"cash"},{"date":"2026-07-18","name":"Mr.waleed","got":150.0,"pend":0.0,"mode":"cash"},{"date":"2026-07-18","name":"Mr.mohammad al attas","got":150.0,"pend":0.0,"mode":"transfer"},{"date":"2026-07-18","name":"Mr.mohammed al hamran","got":200.0,"pend":0.0,"mode":"cash"},{"date":"2026-07-19","name":"Mr.hasan","got":400.0,"pend":0.0,"mode":"transfer"},{"date":"2026-07-19","name":"Mr.hesham","got":120.0,"pend":0.0,"mode":"cash"},{"date":"2026-07-20","name":"Ms.umm sabah","got":150.0,"pend":0.0,"mode":"transfer"},{"date":"2026-07-21","name":"Mr.abdulrahman al maliki","got":250.0,"pend":0.0,"mode":"cash"},{"date":"2026-07-21","name":"Ms.widian","got":0.0,"pend":180.0,"mode":"none"},{"date":"2026-07-21","name":"Ms. Basinah","got":300.0,"pend":0.0,"mode":"transfer"},{"date":"2026-07-22","name":"Mr.awaad","got":250.0,"pend":0.0,"mode":"cash"},{"date":"2026-07-22","name":"Mr.majid basha","got":480.0,"pend":0.0,"mode":"cash"},{"date":"2026-07-22","name":"Mr.ahmad bin bashar","got":250.0,"pend":0.0,"mode":"cash"},{"date":"2026-07-23","name":"Ms.umm shaham","got":100.0,"pend":0.0,"mode":"cash"},{"date":"2026-07-23","name":"Mr.abdullah al harbi","got":360.0,"pend":0.0,"mode":"transfer"},{"date":"2026-07-23","name":"Mr.khaled felamban","got":480.0,"pend":0.0,"mode":"transfer"},{"date":"2026-07-25","name":"Mr.saleh sarhan","got":200.0,"pend":0.0,"mode":"transfer"},{"date":"2026-07-25","name":"Mr.obaidullah","got":180.0,"pend":0.0,"mode":"transfer"},{"date":"2026-07-25","name":"Mr.hasan al shabraqi","got":480.0,"pend":0.0,"mode":"cash"},{"date":"2026-07-25","name":"Mr.abdulajiz zahrani","got":360.0,"pend":0.0,"mode":"cash"},{"date":"2026-07-25","name":"Mr.nayef","got":240.0,"pend":0.0,"mode":"cash"},{"date":"2026-07-26","name":"Mr.sultan","got":420.0,"pend":0.0,"mode":"transfer"},{"date":"2026-07-26","name":"Ms.rana","got":280.0,"pend":0.0,"mode":"transfer"},{"date":"2026-07-26","name":"Mr.saduddin","got":200.0,"pend":0.0,"mode":"transfer"},{"date":"2026-07-27","name":"Mr.ahmad al otaibi","got":780.0,"pend":0.0,"mode":"cash"},{"date":"2026-07-27","name":"Mr.mansoor al jafri","got":100.0,"pend":0.0,"mode":"cash"},{"date":"2026-07-27","name":"Mr.adil al nazidi","got":300.0,"pend":0.0,"mode":"transfer"},{"date":"2026-07-28","name":"Mr.emad al shamrani","got":540.0,"pend":0.0,"mode":"transfer"},{"date":"2026-07-29","name":"Mr.hesham","got":100.0,"pend":0.0,"mode":"transfer"},{"date":"2026-07-29","name":"Mr.saleh","got":420.0,"pend":0.0,"mode":"transfer"},{"date":"2026-07-29","name":"Ms.ehab","got":300.0,"pend":0.0,"mode":"transfer"},{"date":"2026-07-29","name":"Mr.bandar","got":100.0,"pend":0.0,"mode":"transfer"},{"date":"2026-07-30","name":"Ms.aiman","got":300.0,"pend":0.0,"mode":"transfer"},{"date":"2026-07-30","name":"Mr.mazed al kazi","got":390.0,"pend":0.0,"mode":"transfer"},{"date":"2026-07-30","name":"Mr.ahmad al amari","got":300.0,"pend":0.0,"mode":"cash"},{"date":"2026-07-31","name":"Mr.yusuf","got":120.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-01","name":"mr.Nablwi home","got":200.0,"pend":170.0,"mode":"cash"},{"date":"2026-08-01","name":"Mr.mohammed baroodi","got":100.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-01","name":"Mr.turky al awbthani","got":100.0,"pend":0.0,"mode":"cash"},{"date":"2026-08-01","name":"Mr.abdulrahman al sharif","got":280.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-02","name":"Mr.mohammed makeen","got":280.0,"pend":0.0,"mode":"cash"},{"date":"2026-08-02","name":"Mr. Abu emad","got":330.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-02","name":"Mr.turky al otaibi","got":130.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-02","name":"Mr.saad al qarni","got":70.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-03","name":"Mr.ali al aisi","got":360.0,"pend":0.0,"mode":"cash"},{"date":"2026-08-03","name":"Mr.abu faris","got":420.0,"pend":0.0,"mode":"cash"},{"date":"2026-08-03","name":"Mr.adnan","got":200.0,"pend":0.0,"mode":"cash"},{"date":"2026-08-04","name":"Mr.rakan","got":345.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-04","name":"Mr.omar al harazi","got":250.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-04","name":"Mr.khulud adil","got":50.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-04","name":"Mr.yusuf al ghamdi","got":150.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-05","name":"Mr. Hazer al alwi","got":200.0,"pend":0.0,"mode":"cash"},{"date":"2026-08-05","name":"Mr.abdulrahman","got":650.0,"pend":0.0,"mode":"cash"},{"date":"2026-08-05","name":"Mr.saleha al haqwi","got":250.0,"pend":0.0,"mode":"cash"},{"date":"2026-08-06","name":"Mr.osama al mutairy","got":100.0,"pend":0.0,"mode":"cash"},{"date":"2026-08-06","name":"Mr.saleh al saeyri","got":150.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-06","name":"Mr.mzed al raqban","got":320.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-06","name":"Mr.abdul rahman al sharif","got":410.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-06","name":"Mr.turkey al aubthani","got":50.0,"pend":0.0,"mode":"cash"},{"date":"2026-08-08","name":"Mr.anas al ghamdi","got":300.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-08","name":"Mr.faisal al mutairy","got":300.0,"pend":0.0,"mode":"cash"},{"date":"2026-08-08","name":"Mr.badar yahya","got":180.0,"pend":0.0,"mode":"cash"},{"date":"2026-08-08","name":"Ms.zainab al maliki","got":150.0,"pend":0.0,"mode":"cash"},{"date":"2026-08-09","name":"Ms.azwa","got":330.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-09","name":"Mr.mohammed","got":240.0,"pend":0.0,"mode":"cash"},{"date":"2026-08-09","name":"Ms.al shaalaan","got":550.0,"pend":0.0,"mode":"cash"},{"date":"2026-08-09","name":"Mr.abu tameem","got":250.0,"pend":170.0,"mode":"transfer"},{"date":"2026-08-10","name":"Mr.abdullah al shahri","got":360.0,"pend":0.0,"mode":"cash"},{"date":"2026-08-10","name":"Mr.abdulrahman","got":250.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-10","name":"Mr.fahad","got":150.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-10","name":"Mr.khalid","got":240.0,"pend":0.0,"mode":"cash"},{"date":"2026-08-10","name":"Mr.mohammed al aslani","got":100.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-10","name":"Mr.awaad","got":50.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-11","name":"Mr.hamood","got":300.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-11","name":"Ms.al shalaan","got":100.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-11","name":"Dr.hasan al shahri","got":60.0,"pend":0.0,"mode":"cash"},{"date":"2026-08-12","name":"Ms.umm shaham","got":150.0,"pend":0.0,"mode":"cash"},{"date":"2026-08-12","name":"Mr.fahad kamal","got":420.0,"pend":0.0,"mode":"cash"},{"date":"2026-08-13","name":"Mr.hossam","got":300.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-13","name":"Ms.umm shaham","got":100.0,"pend":0.0,"mode":"cash"},{"date":"2026-08-13","name":"Mr.saad al qarni","got":570.0,"pend":0.0,"mode":"cash"},{"date":"2026-08-15","name":"Mr.majed","got":180.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-15","name":"Mr.alaa altef","got":280.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-15","name":"Mr.bandar algamdhi","got":50.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-15","name":"Mr.hossam","got":350.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-15","name":"Mr.mohammed kajim","got":180.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-16","name":"Mr.faisal","got":300.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-16","name":"Mr. Abu yasser","got":600.0,"pend":0.0,"mode":"cash"},{"date":"2026-08-16","name":"Mr.tarq saeed","got":100.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-17","name":"Mr.mohammed baroodi","got":150.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-17","name":"Mr.rawaad","got":720.0,"pend":0.0,"mode":"cash"},{"date":"2026-08-17","name":"Mr.abdulrahman","got":280.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-18","name":"Mr.abdullah al shahri","got":110.0,"pend":0.0,"mode":"cash"},{"date":"2026-08-18","name":"Mr.ali alshaikhi","got":180.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-18","name":"Ms.ahlam","got":700.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-19","name":"Mr.hassan","got":400.0,"pend":0.0,"mode":"cash"},{"date":"2026-08-20","name":"Mr.abdullatif","got":360.0,"pend":0.0,"mode":"cash"},{"date":"2026-08-20","name":"Ms.umm faris","got":50.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-22","name":"Mr.khalifa","got":450.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-22","name":"Mr.bandar al gamdi","got":100.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-22","name":"Mr.omar","got":110.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-22","name":"Mr.abdulhafiz","got":50.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-22","name":"Ms.umm saud","got":280.0,"pend":0.0,"mode":"cash"},{"date":"2026-08-23","name":"Ms.umm sulatn","got":110.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-23","name":"Mr.hossam","got":200.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-24","name":"Mr.salem","got":70.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-24","name":"Mr.abdullah al khajim","got":180.0,"pend":0.0,"mode":"cash"},{"date":"2026-08-24","name":"Mr.fahad al zahrani","got":110.0,"pend":0.0,"mode":"cash"},{"date":"2026-08-24","name":"Mr.hasan","got":360.0,"pend":0.0,"mode":"cash"},{"date":"2026-08-25","name":"Mr.abu shaker","got":650.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-25","name":"Mr.mohammed","got":110.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-25","name":"Mr.abdul ajiz","got":250.0,"pend":0.0,"mode":"cash"},{"date":"2026-08-25","name":"Mr.sultan","got":70.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-26","name":"Mr.badar","got":180.0,"pend":0.0,"mode":"cash"},{"date":"2026-08-26","name":"Mr.bandar","got":70.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-27","name":"Mr.waleed","got":540.0,"pend":0.0,"mode":"cash"},{"date":"2026-08-27","name":"Ms.hayaa al qahtani","got":540.0,"pend":0.0,"mode":"cash"},{"date":"2026-08-27","name":"Mr.saleh","got":70.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-29","name":"Abdullah al abbasi","got":110.0,"pend":0.0,"mode":"cash"},{"date":"2026-08-29","name":"Tariq al ghamdi","got":70.0,"pend":0.0,"mode":"cash"},{"date":"2026-08-29","name":"Mr.abdullah khajim","got":110.0,"pend":0.0,"mode":"cash"},{"date":"2026-08-29","name":"Ms.ahlam","got":0.0,"pend":100.0,"mode":"none"},{"date":"2026-08-29","name":"Mr.saad al qahtani","got":170.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-30","name":"Mr.khozaim al gamdi","got":0.0,"pend":110.0,"mode":"none"},{"date":"2026-08-30","name":"Mr.bandar al gamdi","got":50.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-30","name":"Mr.omar al gamdi","got":100.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-30","name":"Ms.jawaher","got":110.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-30","name":"Mr.hasan al shahri","got":340.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-30","name":"Mr.anas","got":110.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-31","name":"Mr.osam al badwi","got":180.0,"pend":0.0,"mode":"transfer"},{"date":"2026-08-31","name":"Mr.akram","got":450.0,"pend":0.0,"mode":"cash"},{"date":"2026-08-31","name":"Mr.abu shaker","got":400.0,"pend":0.0,"mode":"cash"},{"date":"2026-08-31","name":"Mr.hassan","got":110.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-01","name":"Ms.sayyedah ayesha","got":400.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-01","name":"Ms.wafa al amoodi","got":50.0,"pend":0.0,"mode":"transfer"},{"date":"2026-09-01","name":"Mr.khaled","got":750.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-02","name":"Mr.hamad","got":240.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-02","name":"Mr.majed","got":110.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-02","name":"Mr.abdullah","got":570.0,"pend":0.0,"mode":"transfer"},{"date":"2026-09-02","name":"Mr.rayan","got":150.0,"pend":0.0,"mode":"transfer"},{"date":"2026-09-03","name":"Mr.omar al otaibi","got":110.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-03","name":"Mr.saeed al gamdi","got":150.0,"pend":0.0,"mode":"transfer"},{"date":"2026-09-03","name":"Mr.majed","got":240.0,"pend":0.0,"mode":"transfer"},{"date":"2026-09-05","name":"Mr.Abudulrahman al amari","got":0.0,"pend":690.0,"mode":"none"},{"date":"2026-09-05","name":"Mr.abalelah","got":640.0,"pend":0.0,"mode":"transfer"},{"date":"2026-09-05","name":"Mr.abulrahman al oaimari","got":360.0,"pend":0.0,"mode":"transfer"},{"date":"2026-09-06","name":"Mr.ali Muhammed","got":180.0,"pend":0.0,"mode":"transfer"},{"date":"2026-09-06","name":"Mr.basem","got":110.0,"pend":0.0,"mode":"transfer"},{"date":"2026-09-06","name":"Mr.hesham","got":100.0,"pend":0.0,"mode":"transfer"},{"date":"2026-09-06","name":"Ms.umm yusuf","got":150.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-06","name":"Ms.nauf","got":420.0,"pend":0.0,"mode":"transfer"},{"date":"2026-09-07","name":"Mr.faisal","got":100.0,"pend":0.0,"mode":"transfer"},{"date":"2026-09-07","name":"Mr.sayyed ishaq","got":520.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-07","name":"Mr.abdulaziz","got":100.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-07","name":"Ms.umm saif","got":180.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-08","name":"Mr.nayef","got":550.0,"pend":0.0,"mode":"transfer"},{"date":"2026-09-08","name":"Ms.ahlam","got":280.0,"pend":0.0,"mode":"transfer"},{"date":"2026-09-08","name":"Mr.motaeb","got":500.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-09","name":"Mr.salah","got":100.0,"pend":0.0,"mode":"transfer"},{"date":"2026-09-09","name":"Mr.taufiq","got":100.0,"pend":0.0,"mode":"transfer"},{"date":"2026-09-09","name":"Mr.yusuf al gamdi","got":150.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-09","name":"Mr.edham al sulaimani","got":90.0,"pend":0.0,"mode":"transfer"},{"date":"2026-09-10","name":"Mr.abdullah al abbasi","got":180.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-10","name":"Mr.abu turkey","got":180.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-10","name":"Mr.alaa","got":540.0,"pend":0.0,"mode":"transfer"},{"date":"2026-09-12","name":"Mr.abu jesar","got":50.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-12","name":"Ms.umm shaham","got":50.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-12","name":"Mr.hosam","got":320.0,"pend":0.0,"mode":"transfer"},{"date":"2026-09-12","name":"Mr.majed al harbi","got":300.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-13","name":"Mr.ismail","got":300.0,"pend":0.0,"mode":"transfer"},{"date":"2026-09-13","name":"Mr. Hosam","got":180.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-13","name":"Ms.umm hamza","got":100.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-13","name":"Mr.engg.abu badar","got":100.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-15","name":"Ms.umm yazid","got":300.0,"pend":0.0,"mode":"transfer"},{"date":"2026-09-15","name":"Mr.ahmad","got":540.0,"pend":0.0,"mode":"transfer"},{"date":"2026-09-15","name":"Mr.olyan","got":550.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-16","name":"Ms.nazwa","got":180.0,"pend":0.0,"mode":"transfer"},{"date":"2026-09-16","name":"Mr.ismail","got":360.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-16","name":"Ms.eihab algamdi","got":360.0,"pend":0.0,"mode":"transfer"},{"date":"2026-09-17","name":"Mr.seneura","got":100.0,"pend":0.0,"mode":"transfer"},{"date":"2026-09-17","name":"Mr.tarik al gamdi","got":50.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-17","name":"Mr.abdulkareem","got":120.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-17","name":"Mr.sultan al amari","got":300.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-17","name":"Ms.wafaa al amoodi","got":150.0,"pend":0.0,"mode":"transfer"},{"date":"2026-09-17","name":"Mr.saduddin","got":0.0,"pend":150.0,"mode":"none"},{"date":"2026-09-17","name":"Ms.suzi","got":0.0,"pend":250.0,"mode":"none"},{"date":"2026-09-19","name":"Mr.tayseer","got":50.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-19","name":"Mr.ali al shahri","got":200.0,"pend":0.0,"mode":"transfer"},{"date":"2026-09-19","name":"Mr.ibrahim","got":580.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-19","name":"Mr.abdullah","got":50.0,"pend":0.0,"mode":"transfer"},{"date":"2026-09-19","name":"Mr.mohammed","got":100.0,"pend":0.0,"mode":"transfer"},{"date":"2026-09-20","name":"Mr.bandar","got":50.0,"pend":0.0,"mode":"transfer"},{"date":"2026-09-20","name":"Mr.salah","got":280.0,"pend":0.0,"mode":"transfer"},{"date":"2026-09-20","name":"Mr.mohammed","got":550.0,"pend":0.0,"mode":"transfer"},{"date":"2026-09-20","name":"Ms.umm yusuf","got":100.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-21","name":"Mr.abu Muhammed","got":240.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-21","name":"Ms.umm turkey","got":150.0,"pend":0.0,"mode":"transfer"},{"date":"2026-09-21","name":"Mr.bashar Muhammed","got":600.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-22","name":"Mr.Ibrahim al bishi","got":110.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-22","name":"Mr. Ali Muhammed","got":240.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-22","name":"Mr.basem","got":300.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-22","name":"Mr.abdulrahman al amari","got":0.0,"pend":450.0,"mode":"none"},{"date":"2026-09-23","name":"Mr.abdullah","got":300.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-23","name":"Mr.faisal","got":500.0,"pend":0.0,"mode":"transfer"},{"date":"2026-09-23","name":"Mr.ali","got":300.0,"pend":0.0,"mode":"transfer"},{"date":"2026-09-23","name":"Mr.abdelaal","got":390.0,"pend":0.0,"mode":"transfer"},{"date":"2026-09-24","name":"Mr.ahmad zuhair","got":420.0,"pend":0.0,"mode":"transfer"},{"date":"2026-09-24","name":"Mr.faisal","got":150.0,"pend":0.0,"mode":"transfer"},{"date":"2026-09-24","name":"Mr.mosaid","got":100.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-24","name":"Mr.sultan al oimari","got":50.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-24","name":"Mr.waleed nasif","got":70.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-24","name":"Mr.saber","got":50.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-26","name":"Mr.moataz","got":200.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-26","name":"Ms.sana Muhammed","got":180.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-26","name":"Mr.abdullah","got":280.0,"pend":0.0,"mode":"transfer"},{"date":"2026-09-26","name":"Mr.abdulrahman","got":140.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-27","name":"Mr.omar","got":380.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-27","name":"Ms.umm saif","got":200.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-28","name":"Mr.akram","got":30.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-28","name":"Mr.nasser","got":300.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-28","name":"Mr.abdullah","got":200.0,"pend":0.0,"mode":"transfer"},{"date":"2026-09-28","name":"Mr.hani","got":0.0,"pend":110.0,"mode":"none"},{"date":"2026-09-29","name":"Ms.lamia","got":300.0,"pend":0.0,"mode":"transfer"},{"date":"2026-09-29","name":"Mr.moosa masood","got":180.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-29","name":"Mr.hani","got":110.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-29","name":"Mr.moataz","got":0.0,"pend":150.0,"mode":"none"},{"date":"2026-09-30","name":"Ms.nauf","got":100.0,"pend":0.0,"mode":"cash"},{"date":"2026-09-30","name":"Mr.abdulaziz","got":500.0,"pend":0.0,"mode":"cash"},{"date":"2026-10-01","name":"Mr.abdulaziz","got":300.0,"pend":0.0,"mode":"transfer"},{"date":"2026-10-01","name":"Ms.raseel algamdi","got":180.0,"pend":0.0,"mode":"transfer"},{"date":"2026-10-01","name":"Ms.umm yusuf","got":250.0,"pend":0.0,"mode":"cash"},{"date":"2026-10-01","name":"Mr.mohammed","got":600.0,"pend":0.0,"mode":"cash"},{"date":"2026-10-03","name":"Mr.omar","got":50.0,"pend":0.0,"mode":"transfer"},{"date":"2026-10-03","name":"Mr.wahaab","got":300.0,"pend":0.0,"mode":"cash"},{"date":"2026-10-03","name":"Mr.mohammed","got":70.0,"pend":0.0,"mode":"cash"},{"date":"2026-10-03","name":"Ms.amna","got":100.0,"pend":0.0,"mode":"transfer"},{"date":"2026-10-03","name":"Mr.moataaz","got":150.0,"pend":0.0,"mode":"transfer"},{"date":"2026-10-03","name":"Mr.marwaan","got":390.0,"pend":0.0,"mode":"transfer"},{"date":"2026-10-04","name":"Mr.ahmad","got":110.0,"pend":0.0,"mode":"transfer"},{"date":"2026-10-04","name":"Ms.rania","got":240.0,"pend":0.0,"mode":"transfer"},{"date":"2026-10-04","name":"Mr.hani sulaiman","got":200.0,"pend":0.0,"mode":"transfer"},{"date":"2026-10-04","name":"Mr.abdulrahman","got":480.0,"pend":0.0,"mode":"cash"},{"date":"2026-10-05","name":"Mr.faris","got":510.0,"pend":0.0,"mode":"cash"},{"date":"2026-10-05","name":"Mr.waleed","got":200.0,"pend":0.0,"mode":"cash"},{"date":"2026-10-05","name":"Mr.mohammed","got":180.0,"pend":0.0,"mode":"transfer"},{"date":"2026-10-05","name":"Mr.mohammed al shahri","got":480.0,"pend":0.0,"mode":"transfer"},{"date":"2026-10-06","name":"Ms.Umm faisal","got":250.0,"pend":0.0,"mode":"cash"},{"date":"2026-10-06","name":"Mr.badar","got":100.0,"pend":0.0,"mode":"cash"},{"date":"2026-10-06","name":"Mr.salman al gamdhi","got":300.0,"pend":0.0,"mode":"transfer"},{"date":"2026-10-07","name":"Saad al qarni","got":100.0,"pend":0.0,"mode":"transfer"},{"date":"2026-10-07","name":"Dr.hasan al shahri","got":110.0,"pend":0.0,"mode":"cash"},{"date":"2026-10-07","name":"Mr. Khalid al qahtani","got":0.0,"pend":300.0,"mode":"none"},{"date":"2026-10-08","name":"Mr.hasan shaheen","got":100.0,"pend":0.0,"mode":"transfer"},{"date":"2026-10-08","name":"Mr.jamal Muhammed","got":280.0,"pend":0.0,"mode":"transfer"},{"date":"2026-10-08","name":"Mr.fahad saad","got":360.0,"pend":0.0,"mode":"cash"},{"date":"2026-10-08","name":"Ms.umm Abdullah","got":0.0,"pend":280.0,"mode":"none"},{"date":"2026-10-10","name":"Mr.khozaim","got":0.0,"pend":210.0,"mode":"none"},{"date":"2026-10-10","name":"Mr.abdullah nasser","got":0.0,"pend":200.0,"mode":"none"},{"date":"2026-10-10","name":"Mr.abdullah","got":110.0,"pend":0.0,"mode":"transfer"},{"date":"2026-10-10","name":"Ms.umm hamza","got":180.0,"pend":0.0,"mode":"transfer"},{"date":"2026-10-10","name":"Ms.umm faris","got":150.0,"pend":0.0,"mode":"transfer"},{"date":"2026-10-10","name":"Mr.anas","got":360.0,"pend":0.0,"mode":"cash"},{"date":"2026-10-11","name":"Mr.yasser","got":380.0,"pend":0.0,"mode":"cash"},{"date":"2026-10-11","name":"Mr.abdullah","got":300.0,"pend":0.0,"mode":"cash"},{"date":"2026-10-11","name":"Mr.saad al qarni","got":0.0,"pend":250.0,"mode":"none"}];
+
+var ADMIN_UID  = 'NU8g25megKefUOBQGvfkVtBOw802';
+var STALE_DAYS = 14;
+var mlDb = null;
+var DUE = [], BACK = [], MATCHED = 0;
+
+function el(id){ return document.getElementById(id); }
+function esc(s){
+  return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function fmtNum(n){
+  var v = Math.round((parseFloat(n) || 0) * 100) / 100;
+  return v.toLocaleString('en-US', { maximumFractionDigits: 2 });
+}
+function todayStr(){
+  var d = new Date(), m = d.getMonth() + 1, y = d.getDate();
+  return d.getFullYear() + '-' + (m < 10 ? '0' : '') + m + '-' + (y < 10 ? '0' : '') + y;
+}
+function dnum(d){
+  var p = String(d || '').split('-');
+  if(p.length < 3) return 0;
+  return Date.UTC(+p[0], +p[1] - 1, +p[2]) / 86400000;
+}
+function daysAgo(d){
+  if(!d) return 0;
+  return Math.floor(Date.now() / 86400000) - dnum(d);
+}
+function dayWord(n){
+  if(n === 1) return 'يوم';
+  if(n === 2) return 'يومين';
+  if(n >= 3 && n <= 10) return n + ' أيام';
+  return n + ' يوماً';
+}
+function txWord(n){
+  if(n === 1) return 'قيد واحد';
+  if(n === 2) return 'قيدان';
+  if(n >= 3 && n <= 10) return n + ' قيود';
+  return n + ' قيداً';
+}
+function normStatus(s){ return (s === 'معلق') ? 'غير مدفوع' : (s || 'مدفوع'); }
+function collected(e){
+  var s = normStatus(e.status);
+  if(s === 'مدفوع') return parseFloat(e.amount) || 0;
+  if(s === 'مدفوع جزئياً'){
+    if(Array.isArray(e.payments) && e.payments.length){
+      return e.payments.reduce(function(a,p){ return a + (parseFloat(p.amount) || 0); }, 0);
+    }
+    return parseFloat(e.paidAmount) || 0;
+  }
+  return 0;
+}
+
+/* ===== مطابقة الأسماء عبر الأبجديتين ===== */
+var AR2LAT = {
+  'ب':'b','ت':'t','ث':'t','ج':'j','ح':'h','خ':'k','د':'d','ذ':'z','ر':'r','ز':'z',
+  'س':'s','ش':'s','ص':'s','ض':'d','ط':'t','ظ':'z','ع':'','غ':'g','ف':'f','ق':'k',
+  'ك':'k','ل':'l','م':'m','ن':'n','ه':'h','ة':'','و':'','ي':'','ى':'','ا':'',
+  'أ':'','إ':'','آ':'','ء':'','ؤ':'','ئ':''
+};
+function skeleton(s){
+  var t = String(s || '').toLowerCase();
+  t = t.replace(/[ـً-ْ.,_\-()0-9]/g, ' ');
+  t = t.replace(/\b(mr|mrs|ms|miss|dr|eng|al|el)\b/g, ' ');
+  t = t.replace(/^(الاستاذ|الأستاذ|الاستاذة|الدكتور|السيد|السيدة)\s+/, '');
+  t = t.replace(/(^|\s)ال/g, '$1');
+  t = t.replace(/\bal(?=[a-z]{3,})/g, ' ');
+  t = t.replace(/kh/g, 'k').replace(/gh/g, 'g').replace(/sh/g, 's')
+       .replace(/th/g, 't').replace(/ph/g, 'f').replace(/ch/g, 's').replace(/q/g, 'k');
+  var out = '';
+  for(var i = 0; i < t.length; i++){
+    var c = t.charAt(i);
+    if(Object.prototype.hasOwnProperty.call(AR2LAT, c)){ out += AR2LAT[c]; continue; }
+    if(c >= 'a' && c <= 'z'){
+      if('aeiouwy'.indexOf(c) >= 0) continue;
+      out += c;
+    }
+  }
+  return out.replace(/(.)\1+/g, '$1');
+}
+
+function load(){
+  if(!mlDb) return;
+  el('refBtn').disabled = true;
+  el('msg').textContent = '⏳ جارٍ المطابقة…';
+
+  mlDb.ref('transactions').once('value').then(function(snap){
+    var TX = [];
+    snap.forEach(function(c){
+      var e = c.val() || {};
+      if(e.type !== 'income') return;
+      if(e.status === 'ملغي' || e.status === 'مسوى') return;
+      var amt = parseFloat(e.amount) || 0;
+      TX.push({ key: c.key, e: e, amount: amt, got: collected(e),
+                rem: amt - collected(e), sk: skeleton(e.party || e.client || ''),
+                dn: dnum(e.date) });
+    });
+
+    /* ===== القسم الأول: ما علّمه الفني متبقّياً =====
+       نبحث عن قيدٍ لنفس الاسم في نافذة ±٣ أيام، لأن تاريخ النظام
+       يأتي من الحجز وتاريخ السجلّ من يوم التنفيذ، وقد يختلفان. */
+    DUE = [];
+    for(var i = 0; i < LOG.length; i++){
+      var g = LOG[i];
+      if(!(g.pend > 0)) continue;
+      var gsk = skeleton(g.name), gdn = dnum(g.date);
+      var cands = [], paidNear = null;
+      if(gsk.length >= 2){
+        for(var j = 0; j < TX.length; j++){
+          if(TX[j].sk !== gsk) continue;
+          /* نافذة أسبوع: سعد القرني في السجلّ ١١ أكتوبر وفي النظام ٧ أكتوبر —
+             فرقُ أربعةِ أيام لأن تاريخ النظام من الحجز وتاريخ السجلّ من التنفيذ. */
+          if(Math.abs(TX[j].dn - gdn) > 7) continue;
+          /* القيد المحصّل لا يصلح وعاءً لدَيْن: «Mr.Abudulrahman al amari»
+             و«Mr.abulrahman al oaimari» رجلان مختلفان وهيكلهما الساكن واحد،
+             فتحويل قيدٍ مقبوضٍ إلى دَيْن يمحو تحصيلاً صحيحاً لرجلٍ آخر.
+             نُبقيه تحذيراً للنظر، ولا نكتب عليه أبداً. */
+          if(TX[j].rem <= 0){
+            if(!paidNear || Math.abs(TX[j].dn - gdn) < Math.abs(paidNear.dn - gdn)){
+              paidNear = TX[j];
+            }
+            continue;
+          }
+          cands.push(TX[j]);
+        }
+      }
+      cands.sort(function(a, b){ return Math.abs(a.dn - gdn) - Math.abs(b.dn - gdn); });
+      DUE.push({ g: g, cands: cands, paidNear: paidNear });
+    }
+    DUE.sort(function(a, b){ return String(a.g.date).localeCompare(String(b.g.date)); });
+
+    /* ===== القسم الثاني: المتراكم مقابل السجلّ =====
+       لكل قيدٍ غير محصّلٍ قديم: هل يقول السجلّ إن ماله قُبض ذلك اليوم؟ */
+    BACK = []; MATCHED = 0;
+    for(var k = 0; k < TX.length; k++){
+      var t = TX[k];
+      if(t.rem <= 0) continue;
+      var age = daysAgo(t.e.date);
+      if(age <= STALE_DAYS) continue;
+      if(t.e.dueType || t.e.dueDate || t.e.paymentNote) continue;
+      /* ثلاث حالات لا حالتان: السجلّ يُثبت القبض، أو يُثبت أنه دَيْن،
+         أو يسكت. والسكوت ليس دليلاً على شيء. */
+      var ev = null, evDue = null;
+      if(t.sk.length >= 2){
+        for(var m = 0; m < LOG.length; m++){
+          if(skeleton(LOG[m].name) !== t.sk) continue;
+          if(Math.abs(dnum(LOG[m].date) - t.dn) > 1) continue;
+          if(LOG[m].pend > 0 && !evDue) evDue = LOG[m];
+          if(LOG[m].got > 0 && !ev) ev = LOG[m];
+        }
+      }
+      /* الفارق بين مبلغ القيد وما قُبض: القيد سعرُ الحجز المقدَّر،
+         والسجلّ ما قُبض فعلاً، فالفرق اليسير طبيعي. أمّا الفرق الكبير
+         فقد يعني زيارتين — واحدة قُبضت وأخرى لا — فلا يدخل الدفعة. */
+      var gap = ev ? Math.abs(t.amount - ev.got) : -1;
+      var near = ev && (gap <= 50 || gap <= t.amount * 0.15);
+      if(ev && near) MATCHED += 1;
+      BACK.push({ t: t, ev: ev, evDue: evDue, age: age, gap: gap, near: !!near });
+    }
+    function bRank(r){
+      if(r.ev && r.near) return 0;    // قُبض بمبلغٍ مطابق — قرارٌ مؤكّد
+      if(r.evDue)        return 1;    // السجلّ يقول دَيْن — قرارٌ مؤكّد أيضاً
+      if(r.ev)           return 2;    // قُبض لكن المبلغ يختلف — راجعه
+      return 3;                        // السجلّ ساكت
+    }
+    BACK.sort(function(a, b){
+      var k = bRank(a) - bRank(b);
+      if(k !== 0) return k;
+      return String(a.t.e.date).localeCompare(String(b.t.e.date));
+    });
+
+    render();
+    el('refBtn').disabled = false;
+    el('msg').textContent = '';
+  }).catch(function(err){
+    el('refBtn').disabled = false;
+    el('msg').textContent = '❌ تعذّرت القراءة: ' + (err.message || err);
+  });
+}
+
+function logLine(g){
+  var s = esc(g.name) + ' = ';
+  if(g.got > 0) s += fmtNum(g.got) + (g.mode === 'transfer' ? ' t' : ' cash');
+  if(g.got > 0 && g.pend > 0) s += ' and ';
+  if(g.pend > 0) s += fmtNum(g.pend) + ' pending';
+  return '<span class="logln">📒 ' + g.date + ' · ' + s + '</span>';
+}
+
+function render(){
+  var html = '';
+
+  // ── القسم الأول ──
+  var dSum = 0;
+  for(var a = 0; a < DUE.length; a++){ dSum += DUE[a].g.pend; }
+
+  if(DUE.length){
+    html += '<div class="grp red"><h2>🔴 ذمم أقرّ الفني بأنها لم تُقبض ' +
+      '<span class="cnt">' + DUE.length + '</span></h2>' +
+      '<div class="why">كل سطرٍ هنا علّمه الفني بنفسه <b>pending</b> يوم الزيارة. ' +
+      'ويُعرض تحته سطر السجلّ كما كتبه، وما يُقابله في قيودك إن وُجد.<br>' +
+      '· <b>ما زال ديناً</b> — يُصحّح القيد بمبلغ السجلّ ويُدرج للمطالبة.<br>' +
+      '· <b>سُدِّد</b> — قبضتَه بعد الزيارة. ذاكرتك تسبق السجلّ.<br>' +
+      'المجموع <b>' + fmtNum(dSum) + ' ﷼</b>.</div>';
+
+    for(var i = 0; i < DUE.length; i++){
+      var d = DUE[i], g = d.g, c = d.cands[0];
+      var id = 'd-' + i;
+      var sysTxt;
+      if(c){
+        var dd = Math.abs(c.dn - dnum(g.date));
+        sysTxt = '<div class="ev yes">🗂️ في قيودك: ' + fmtNum(c.amount) + ' ﷼ · ' +
+                 esc(normStatus(c.e.status)) + ' · ' + esc(c.e.date || '—') +
+                 (Math.abs(c.amount - (g.got + g.pend)) > 0.5
+                   ? ' — <b>والمبلغ الصحيح ' + fmtNum(g.got + g.pend) + ' ﷼</b>' : '') +
+                 '</div>' +
+                 (dd >= 3 ? '<div class="ev no">⚠️ تاريخ القيد يختلف عن السجلّ بـ' +
+                   dayWord(dd) + ' — تأكّد أنه نفس الزيارة لا زيارةً أخرى</div>' : '');
+      } else {
+        sysTxt = '<div class="ev no">🗂️ لا قيد غير محصّل له — يُنشأ قيدٌ جديد عند التأكيد</div>';
+      }
+      if(d.paidNear){
+        /* القيد المحصّل قد يكون هذه الزيارة نفسها عُلّم قبضها بعد السجلّ،
+           وقد يكون عميلاً آخر يشترك في هيكل الاسم. لا أخمّن أيّهما،
+           بل أعرض الحقيقتين وأقول ماذا يعني كلُّ قرار. */
+        var same = (d.paidNear.e.date === g.date);
+        sysTxt += '<div class="ev warn2">📎 وفي قيودك قيدٌ <b>محصّل</b> لنفس الاسم: ' +
+          esc(d.paidNear.e.party || '') + ' · ' + fmtNum(d.paidNear.amount) + ' ﷼ · ' +
+          esc(d.paidNear.e.date || '') + (same ? ' <b>(نفس اليوم)</b>' : '') + '<br>' +
+          'إن كان هذه الزيارة نفسها فقد سُجّل قبضها ⇒ اضغط <b>«سُدِّد»</b> ولا تُنشئ ديناً.<br>' +
+          'وإن كان عميلاً آخر يشبه اسمه (al amari ⇄ al oaimari) ⇒ اضغط ' +
+          '<b>«ما زال ديناً»</b> ويُنشأ قيدٌ مستقلّ، ولن يُلمس هو.</div>';
+      }
+      html += '<div class="row" id="' + id + '">' +
+        '<div style="flex:1 1 300px;min-width:0;">' +
+        '<div class="who">' + esc(g.name) + '</div>' +
+        '<div class="meta">' + logLine(g) + '</div>' + sysTxt + '</div>' +
+        '<div style="display:flex;align-items:center;gap:11px;flex-wrap:wrap;">' +
+        '<span class="amt">' + fmtNum(g.pend) + ' ﷼</span>' +
+        '<div class="acts">' +
+          '<button class="mini d" onclick="dueAct(' + i + ',\'debt\')">ما زال ديناً</button>' +
+          '<button class="mini p" onclick="dueAct(' + i + ',\'paid\')">سُدِّد</button>' +
+        '</div></div></div>';
+    }
+    html += '</div>';
+  }
+
+  // ── القسم الثاني ──
+  var bSum = 0, mSum = 0, sDue = 0;
+  var nSure = 0, nDue = 0, nGap = 0, nMute = 0;
+  for(var b = 0; b < BACK.length; b++){
+    var rb = BACK[b];
+    bSum += rb.t.rem;
+    if(rb.ev && rb.near){ nSure++; mSum += rb.t.rem; }
+    else if(rb.evDue){ nDue++; sDue += rb.t.rem; }
+    else if(rb.ev){ nGap++; }
+    else { nMute++; }
+  }
+
+  if(BACK.length){
+    html += '<div class="grp green"><h2>📦 المتراكم مقابل السجلّ ' +
+      '<span class="cnt">' + BACK.length + '</span></h2>' +
+      '<div class="why">قيودٌ غير محصّلة أقدم من ' + STALE_DAYS + ' يوماً، ' +
+      'مرتّبةً بقوّة الدليل:<br>' +
+      '· <b class="ok2">✅ قُبض بمبلغٍ مطابق</b> — ' + nSure + ' قيداً بـ' + fmtNum(mSum) +
+      ' ﷼. قرارٌ مؤكّد، وهذه وحدها تدخل الزرّ الجماعي.<br>' +
+      '· <b class="due2">🔴 السجلّ يقول لم يُقبض</b> — ' + nDue + ' قيداً بـ' + fmtNum(sDue) +
+      ' ﷼. <b>دَيْنٌ حقيقي</b>، فاضغط «دَيْن قائم» لا «قُبض».<br>' +
+      '· <b class="warn3">🟡 قُبض بمبلغٍ مختلف</b> — ' + nGap + ' قيداً. الفارق معروضٌ عند كلٍّ: ' +
+      'زيارةٌ واحدة بسعرٍ تغيّر، أم زيارتان إحداهما لم تُقبض؟<br>' +
+      '· <b>⚠️ لا ذكر</b> — ' + nMute + ' قيداً. لا دليل بأي اتجاه، فذاكرتك وحدها.<br>' +
+      'مجموع القسم <b>' + fmtNum(bSum) + ' ﷼</b>.</div>';
+
+    for(var k = 0; k < BACK.length; k++){
+      var r = BACK[k], t = r.t;
+      var evTxt;
+      if(r.ev && r.near){
+        evTxt = '<div class="ev yes">✅ السجلّ يُثبت القبض بمبلغٍ مطابق: ' + logLine(r.ev) + '</div>';
+      } else if(r.evDue){
+        evTxt = '<div class="ev due">🔴 السجلّ يقول إنه <b>لم يُقبض</b> — دَيْنٌ حقيقي لا قيدٌ زائد: ' +
+                logLine(r.evDue) + '</div>';
+      } else if(r.ev){
+        evTxt = '<div class="ev warn2">🟡 السجلّ يُثبت قبضاً لكن بمبلغٍ مختلف — الفارق ' +
+                fmtNum(r.gap) + ' ﷼: ' + logLine(r.ev) + '<br>' +
+                'إن كانت زيارةً واحدة فالقيد زائد فاضغط «قُبض». وإن كانتا زيارتين ' +
+                'فإحداهما ما زالت ديناً.</div>';
+      } else {
+        evTxt = '<div class="ev no">⚠️ لا ذكر له في سجلّ ذلك اليوم — لا دليل بأي اتجاه</div>';
+      }
+      html += '<div class="row" id="b-' + esc(t.key) + '">' +
+        '<div style="flex:1 1 300px;min-width:0;">' +
+        '<div class="who">' + esc(t.e.party || t.e.client || '—') + '</div>' +
+        '<div class="meta">' + esc(t.e.date || '—') + ' · منذ ' + dayWord(r.age) +
+          (t.e.desc ? ' · ' + esc(t.e.desc) : '') + '</div>' + evTxt + '</div>' +
+        '<div style="display:flex;align-items:center;gap:11px;flex-wrap:wrap;">' +
+        '<span class="amt">' + fmtNum(t.rem) + ' ﷼</span>' +
+        '<div class="acts">' +
+          '<button class="mini p" onclick="backAct(\'' + esc(t.key) + '\',\'paid\')">قُبض</button>' +
+          '<button class="mini d" onclick="backAct(\'' + esc(t.key) + '\',\'debt\')">دَيْن قائم</button>' +
+          '<button class="mini v" onclick="backAct(\'' + esc(t.key) + '\',\'void\')">🧪 تجريبي</button>' +
+        '</div></div></div>';
+    }
+    if(MATCHED > 1){
+      html += '<div class="row" style="border-top:1.5px solid var(--ice);">' +
+        '<div class="meta">المطابق مبلغاً في السجلّ: ' + txWord(MATCHED) +
+        ' بمجموع ' + fmtNum(mSum) + ' ﷼ — ولا يدخل فيه ذو الفارق ولا الدَيْن</div>' +
+        '<button class="mini n" onclick="allProven()">✅ علّم المطابق مبلغاً «قُبض»</button></div>';
+    }
+    html += '</div>';
+  }
+
+  if(!DUE.length && !BACK.length){
+    html = '<div class="clear"><div class="b3">✅</div>' +
+      '<div class="t">لا شيء يخالف السجلّ</div></div>';
+  }
+
+  el('tot').style.display = 'flex';
+  el('tot').innerHTML =
+    '<div><span>ذمم السجلّ</span><b>' + fmtNum(dSum) + ' ﷼</b></div>' +
+    '<div><span>متراكم</span><b>' + fmtNum(bSum) + ' ﷼</b></div>' +
+    '<div><span>مُثبَت قبضه</span><b>' + fmtNum(mSum) + ' ﷼</b></div>' +
+    '<div><span>سطور السجلّ</span><b>' + LOG.length + '</b></div>';
+  el('out').innerHTML = html;
+}
+
+/* ===== كتابة القسم الأول ===== */
+function dueAct(idx, what){
+  if(!mlDb) return;
+  var d = DUE[idx]; if(!d) return;
+  var g = d.g, c = d.cands[0];
+  var total = g.got + g.pend;
+
+  if(!c){
+    var q = (what === 'paid')
+      ? 'لا قيد غير محصّلٍ لهذا السطر، فسيُنشأ قيدٌ جديد:\n\n' +
+        g.name + ' · ' + g.date + ' · ' + fmtNum(total) + ' ﷼ · مدفوع\n\n'
+      : 'لا قيد غير محصّلٍ لهذا السطر، فسيُنشأ قيدٌ جديد:\n\n' +
+        g.name + ' · ' + g.date + ' · ' + fmtNum(total) + ' ﷼ · ' +
+        (g.got > 0 ? 'مدفوع جزئياً، المتبقّي ' + fmtNum(g.pend) : 'دَيْن كامل') + '\n\n';
+    q += 'ولا يُلمس أي قيدٍ قائم.';
+    if(d.paidNear){
+      q += '\n\n⚠️ تنبيه: يوجد قيدٌ محصّل باسمٍ مشابه (' +
+           fmtNum(d.paidNear.amount) + ' ﷼ · ' + d.paidNear.e.date + ').\n' +
+           'إن كان هو نفس هذه الزيارة فلا تُنشئ قيداً — راجعه في صفحة التصحيح.';
+    }
+    q += '\n\nأتابع؟';
+    if(!confirm(q)) return;
+  }
+
+  var row = el('d-' + idx);
+  var btns = row ? row.querySelectorAll('button') : [];
+  for(var i = 0; i < btns.length; i++){ btns[i].disabled = true; }
+
+  var patch;
+  if(what === 'paid'){
+    patch = { status: 'مدفوع', amount: total, paidAmount: total,
+              paymentNote: 'سُدِّد بعد الزيارة — تأكيد من مطابقة سجلّ الفني ' + todayStr() };
+  } else {
+    /* الحساب الصحيح: المبلغ كلّه، والمقبوض منه جزءٌ، والباقي دَيْن.
+       ولو كان قد قُبض شيءٌ يوم الزيارة فالحالة «مدفوع جزئياً» لا «مؤجل». */
+    patch = { status: g.got > 0 ? 'مدفوع جزئياً' : 'مؤجل',
+              amount: total, paidAmount: g.got, dueType: 'open',
+              paymentNote: 'دَيْن بسجلّ الفني ' + g.date + ' — المتبقّي ' +
+                           fmtNum(g.pend) + ' ﷼ · أُدرج للمطالبة ' + todayStr() };
+  }
+
+  var p;
+  if(c){
+    p = mlDb.ref('transactions/' + c.key).update(patch);
+  } else {
+    // لا قيد: يُنشأ بتاريخ السجلّ ومبلغه، ويُوسم بمصدره
+    var tx = {
+      id: 'F' + Date.now().toString().slice(-7),
+      type: 'income', category: 'خدمة', method: g.mode === 'transfer' ? 'تحويل' : 'كاش',
+      party: g.name, date: g.date, desc: 'زيارة صيانة — ' + g.name,
+      payments: [], source: 'tech-log', createdAt: new Date().toISOString()
+    };
+    for(var f in patch){
+      if(Object.prototype.hasOwnProperty.call(patch, f)){ tx[f] = patch[f]; }
+    }
+    p = mlDb.ref('transactions').push().set(tx);
+  }
+
+  p.then(function(){
+    if(row) row.style.display = 'none';
+    el('msg').textContent = (what === 'paid' ? '✅ سُجّل سداده.' : '📌 سُجّل ديناً للمطالبة.') +
+      ' اضغط «تحديث» لإعادة المطابقة.';
+  }).catch(function(err){
+    for(var j = 0; j < btns.length; j++){ btns[j].disabled = false; }
+    el('msg').textContent = '❌ تعذّر الحفظ: ' + (err.message || err);
+  });
+}
+
+/* ===== كتابة القسم الثاني ===== */
+function backPatch(what, amt){
+  if(what === 'paid'){
+    return { status: 'مدفوع', paidAmount: amt,
+             paymentNote: 'قُبض — مُثبَت بسجلّ الفني · ' + todayStr() };
+  }
+  if(what === 'debt'){
+    return { status: 'مؤجل', dueType: 'open', paidAmount: 0,
+             paymentNote: 'دَيْن قائم — أُدرج للمطالبة ' + todayStr() };
+  }
+  return { status: 'ملغي', paidAmount: 0,
+           paymentNote: 'قيد تجريبي — أُلغي ' + todayStr() };
+}
+
+function backAct(key, what){
+  if(!mlDb) return;
+  var row = el('b-' + key);
+  var btns = row ? row.querySelectorAll('button') : [];
+  for(var i = 0; i < btns.length; i++){ btns[i].disabled = true; }
+
+  mlDb.ref('transactions/' + key).once('value').then(function(snap){
+    var v = snap.val() || {};
+    return mlDb.ref('transactions/' + key)
+             .update(backPatch(what, parseFloat(v.amount) || 0));
+  }).then(function(){
+    if(row) row.style.display = 'none';
+    el('msg').textContent = '✅ تمّ.';
+  }).catch(function(err){
+    for(var j = 0; j < btns.length; j++){ btns[j].disabled = false; }
+    el('msg').textContent = '❌ تعذّر الحفظ: ' + (err.message || err);
+  });
+}
+
+function allProven(){
+  var list = [];
+  // المطابق مبلغاً وحده: الفارق الكبير قد يكون زيارةً ثانية لم تُقبض
+  for(var i = 0; i < BACK.length; i++){ if(BACK[i].ev && BACK[i].near) list.push(BACK[i]); }
+  if(!list.length) return;
+  var s = 0;
+  for(var j = 0; j < list.length; j++){ s += list[j].t.rem; }
+
+  if(!confirm('علّم ' + txWord(list.length) + ' بمجموع ' + fmtNum(s) + ' ﷼ بـ«قُبض».\n\n' +
+              'سند كلٍّ منها سطرٌ في سجلّ الفني يُثبت قبض مالها يوم الزيارة.\n' +
+              'ولا يدخل في هذه الدفعة أي قيدٍ لا دليل له. أتابع؟')) return;
+
+  el('msg').textContent = '⏳ جارٍ التعليم…';
+  var updates = {};
+  for(var k = 0; k < list.length; k++){
+    var t = list[k].t;
+    var patch = backPatch('paid', t.amount);
+    for(var f in patch){
+      if(Object.prototype.hasOwnProperty.call(patch, f)){
+        updates['transactions/' + t.key + '/' + f] = patch[f];
+      }
+    }
+  }
+  mlDb.ref().update(updates).then(function(){
+    el('msg').textContent = '✅ عُلّم ' + txWord(list.length) + ' بمجموع ' +
+      fmtNum(s) + ' ﷼ — كلٌّ بدليله. اضغط «تحديث».';
+    load();
+  }).catch(function(err){
+    el('msg').textContent = '❌ تعذّر: ' + (err.message || err);
+  });
+}
+
+window.__atwadInitPage = function(user){
+  if(!user || user.uid !== ADMIN_UID){
+    document.body.innerHTML = '<div style="padding:40px;text-align:center;font-family:Tajawal,sans-serif;">' +
+      'هذا الحساب غير مصرّح له.</div>';
+    return;
+  }
+  mlDb = window.db || null;
+  if(!mlDb){ el('pill').textContent = 'غير متصل'; return; }
+  el('pill').textContent = 'متصل';
+  el('refBtn').disabled = false;
+  el('refBtn').addEventListener('click', load);
+  load();
+};
+
+</script>
+</body>
+</html>
