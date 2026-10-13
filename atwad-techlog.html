@@ -84,7 +84,7 @@ button.big:disabled{opacity:.45;cursor:default;}
   <div class="msg" id="msg">…</div>
   <div id="out"></div>
 
-  <div class="ver">إصدار الصفحة: <b>v2 · 2026-10-12 12:00</b></div>
+  <div class="ver">إصدار الصفحة: <b>v3 · 2026-10-13 08:30</b></div>
   <div class="bar">
     <button class="big" id="refBtn" disabled>🔄 تحديث</button>
     <button class="big" id="backBtn" onclick="location.href='atwad-attention.html'">🎯 ما يحتاج قرارك</button>
@@ -430,21 +430,63 @@ function dueAct(idx, what){
   var g = d.g, c = d.cands[0];
   var total = g.got + g.pend;
 
+  /* القيد المحصّل في نفس اليوم هو هذه الزيارة نفسها على الأغلب،
+     لا عميلٌ آخر. فإنشاء قيدٍ ثانٍ يحتسب الإيراد مرّتين.
+     فنُفرّق ثلاث حالات بالمبلغ لا بالتخمين. */
+  var pn = d.paidNear, sameDay = pn && (pn.e.date === g.date);
+  var mode2 = 'create';
+  if(!c && sameDay){
+    if(Math.abs(pn.amount - total) < 0.5)      mode2 = 'already';   // مسجّلٌ كاملاً
+    else if(Math.abs(pn.amount - g.got) < 0.5) mode2 = 'raise';     // سُجّل المقبوض فقط
+    else                                        mode2 = 'amend';     // مبلغٌ ثالث
+  }
+
   if(!c){
-    var q = (what === 'paid')
-      ? 'لا قيد غير محصّلٍ لهذا السطر، فسيُنشأ قيدٌ جديد:\n\n' +
-        g.name + ' · ' + g.date + ' · ' + fmtNum(total) + ' ﷼ · مدفوع\n\n'
-      : 'لا قيد غير محصّلٍ لهذا السطر، فسيُنشأ قيدٌ جديد:\n\n' +
-        g.name + ' · ' + g.date + ' · ' + fmtNum(total) + ' ﷼ · ' +
-        (g.got > 0 ? 'مدفوع جزئياً، المتبقّي ' + fmtNum(g.pend) : 'دَيْن كامل') + '\n\n';
-    q += 'ولا يُلمس أي قيدٍ قائم.';
-    if(d.paidNear){
-      q += '\n\n⚠️ تنبيه: يوجد قيدٌ محصّل باسمٍ مشابه (' +
-           fmtNum(d.paidNear.amount) + ' ﷼ · ' + d.paidNear.e.date + ').\n' +
-           'إن كان هو نفس هذه الزيارة فلا تُنشئ قيداً — راجعه في صفحة التصحيح.';
+    var q = '';
+    if(what === 'paid'){
+      if(mode2 === 'already'){
+        if(!confirm('قبضُ هذا المبلغ مسجَّلٌ عندك أصلاً:\n\n' +
+            pn.e.party + ' · ' + pn.e.date + ' · ' + fmtNum(pn.amount) + ' ﷼ · مدفوع\n\n' +
+            'فلا حاجة إلى قيدٍ جديد — وإنشاؤه يحتسب الإيراد مرّتين.\n' +
+            'أُخفي السطر دون أي كتابة. أتابع؟')) return;
+        var rw0 = el('d-' + idx);
+        if(rw0) rw0.style.display = 'none';
+        el('msg').textContent = '✅ مسجَّلٌ أصلاً — لم تُكتب أي قيود.';
+        return;
+      }
+      if(mode2 === 'raise' || mode2 === 'amend'){
+        q = 'قيدُ هذه الزيارة مسجَّلٌ مقبوضاً بمبلغٍ أقلّ من الصحيح:\n\n' +
+            'الآن:    ' + fmtNum(pn.amount) + ' ﷼\n' +
+            'والصحيح: ' + fmtNum(total) + ' ﷼  (بحسب السجلّ)\n\n' +
+            'سيُصحّح مبلغُ القيد نفسه ويبقى مقبوضاً كاملاً — ' +
+            'فيعود إلى إيرادك ' + fmtNum(total - pn.amount) + ' ﷼ لم تُسجَّل.\n\n' +
+            'ولا يُنشأ قيدٌ جديد. أتابع؟';
+        if(!confirm(q)) return;
+      } else {
+        q = 'لا قيد لهذا السطر، فسيُنشأ قيدٌ جديد:\n\n' +
+            g.name + ' · ' + g.date + ' · ' + fmtNum(total) + ' ﷼ · مدفوع\n\n' +
+            'ولا يُلمس أي قيدٍ قائم. أتابع؟';
+        if(!confirm(q)) return;
+      }
+    } else {
+      // دَيْن: المحصّل في نفس اليوم يُصحّح إلى «مدفوع جزئياً» لا يُنشأ بجانبه قيد
+      if(mode2 === 'already' || mode2 === 'raise' || mode2 === 'amend'){
+        q = 'السجلّ يقول إن ' + fmtNum(g.pend) + ' ﷼ لم تُقبض من هذه الزيارة، ' +
+            'وقيدُها عندك مسجَّلٌ مقبوضاً كاملاً:\n\n' +
+            'الآن:    ' + fmtNum(pn.amount) + ' ﷼ · مدفوع\n' +
+            'والصحيح: ' + fmtNum(total) + ' ﷼ · مدفوع جزئياً، المقبوض ' +
+            fmtNum(g.got) + ' والمتبقّي ' + fmtNum(g.pend) + '\n\n' +
+            'يُصحّح القيد نفسه فيظهر المتبقّي ديناً يُطالَب به، ' +
+            'ولا يُنشأ قيدٌ ثانٍ. أتابع؟';
+        if(!confirm(q)) return;
+      } else {
+        q = 'لا قيد لهذا السطر، فسيُنشأ قيدٌ جديد:\n\n' +
+            g.name + ' · ' + g.date + ' · ' + fmtNum(total) + ' ﷼ · ' +
+            (g.got > 0 ? 'مدفوع جزئياً، المتبقّي ' + fmtNum(g.pend) : 'دَيْن كامل') + '\n\n' +
+            'ولا يُلمس أي قيدٍ قائم. أتابع؟';
+        if(!confirm(q)) return;
+      }
     }
-    q += '\n\nأتابع؟';
-    if(!confirm(q)) return;
   }
 
   var row = el('d-' + idx);
@@ -467,6 +509,9 @@ function dueAct(idx, what){
   var p;
   if(c){
     p = mlDb.ref('transactions/' + c.key).update(patch);
+  } else if(sameDay && mode2 !== 'create'){
+    // الهدف هو قيد الزيارة نفسه: يُصحّح مبلغه وحالته، ولا يُنشأ غيره
+    p = mlDb.ref('transactions/' + pn.key).update(patch);
   } else {
     // لا قيد: يُنشأ بتاريخ السجلّ ومبلغه، ويُوسم بمصدره
     var tx = {
