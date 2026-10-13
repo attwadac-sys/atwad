@@ -31,6 +31,8 @@ h1{font-size:23px;margin:0;}
 .row .meta{font-size:12px;color:var(--mist);line-height:1.75;}
 .ev{font-size:12px;line-height:1.75;margin-top:3px;}
 .ev.yes{color:#047857;} .ev.no{color:#B45309;}
+.ev.due{color:#B91C1C;} .ev.warn2{color:#92400E;}
+.why .ok2{color:#047857;} .why .due2{color:#B91C1C;} .why .warn3{color:#B45309;}
 .amt{font-size:15px;font-weight:800;white-space:nowrap;}
 .acts{display:flex;gap:7px;flex-wrap:wrap;}
 .mini{font-family:'Tajawal',sans-serif;font-size:12.5px;font-weight:700;border:1px solid var(--ice);
@@ -82,7 +84,7 @@ button.big:disabled{opacity:.45;cursor:default;}
   <div class="msg" id="msg">…</div>
   <div id="out"></div>
 
-  <div class="ver">إصدار الصفحة: <b>v1 · 2026-10-12 11:45</b></div>
+  <div class="ver">إصدار الصفحة: <b>v2 · 2026-10-12 12:00</b></div>
   <div class="bar">
     <button class="big" id="refBtn" disabled>🔄 تحديث</button>
     <button class="big" id="backBtn" onclick="location.href='atwad-attention.html'">🎯 ما يحتاج قرارك</button>
@@ -237,20 +239,34 @@ function load(){
       var age = daysAgo(t.e.date);
       if(age <= STALE_DAYS) continue;
       if(t.e.dueType || t.e.dueDate || t.e.paymentNote) continue;
-      var ev = null;
+      /* ثلاث حالات لا حالتان: السجلّ يُثبت القبض، أو يُثبت أنه دَيْن،
+         أو يسكت. والسكوت ليس دليلاً على شيء. */
+      var ev = null, evDue = null;
       if(t.sk.length >= 2){
         for(var m = 0; m < LOG.length; m++){
-          if(!(LOG[m].got > 0)) continue;
           if(skeleton(LOG[m].name) !== t.sk) continue;
           if(Math.abs(dnum(LOG[m].date) - t.dn) > 1) continue;
-          ev = LOG[m]; break;
+          if(LOG[m].pend > 0 && !evDue) evDue = LOG[m];
+          if(LOG[m].got > 0 && !ev) ev = LOG[m];
         }
       }
-      if(ev) MATCHED += 1;
-      BACK.push({ t: t, ev: ev, age: age });
+      /* الفارق بين مبلغ القيد وما قُبض: القيد سعرُ الحجز المقدَّر،
+         والسجلّ ما قُبض فعلاً، فالفرق اليسير طبيعي. أمّا الفرق الكبير
+         فقد يعني زيارتين — واحدة قُبضت وأخرى لا — فلا يدخل الدفعة. */
+      var gap = ev ? Math.abs(t.amount - ev.got) : -1;
+      var near = ev && (gap <= 50 || gap <= t.amount * 0.15);
+      if(ev && near) MATCHED += 1;
+      BACK.push({ t: t, ev: ev, evDue: evDue, age: age, gap: gap, near: !!near });
+    }
+    function bRank(r){
+      if(r.ev && r.near) return 0;    // قُبض بمبلغٍ مطابق — قرارٌ مؤكّد
+      if(r.evDue)        return 1;    // السجلّ يقول دَيْن — قرارٌ مؤكّد أيضاً
+      if(r.ev)           return 2;    // قُبض لكن المبلغ يختلف — راجعه
+      return 3;                        // السجلّ ساكت
     }
     BACK.sort(function(a, b){
-      if(!!b.ev - !!a.ev !== 0) return (b.ev ? 1 : 0) - (a.ev ? 1 : 0);
+      var k = bRank(a) - bRank(b);
+      if(k !== 0) return k;
       return String(a.t.e.date).localeCompare(String(b.t.e.date));
     });
 
@@ -304,10 +320,16 @@ function render(){
         sysTxt = '<div class="ev no">🗂️ لا قيد غير محصّل له — يُنشأ قيدٌ جديد عند التأكيد</div>';
       }
       if(d.paidNear){
-        sysTxt += '<div class="ev no">⚠️ يوجد قيدٌ <b>محصّل</b> باسمٍ مشابه: ' +
+        /* القيد المحصّل قد يكون هذه الزيارة نفسها عُلّم قبضها بعد السجلّ،
+           وقد يكون عميلاً آخر يشترك في هيكل الاسم. لا أخمّن أيّهما،
+           بل أعرض الحقيقتين وأقول ماذا يعني كلُّ قرار. */
+        var same = (d.paidNear.e.date === g.date);
+        sysTxt += '<div class="ev warn2">📎 وفي قيودك قيدٌ <b>محصّل</b> لنفس الاسم: ' +
           esc(d.paidNear.e.party || '') + ' · ' + fmtNum(d.paidNear.amount) + ' ﷼ · ' +
-          esc(d.paidNear.e.date || '') + ' — قد يكون <b>عميلاً آخر</b> ' +
-          '(«al amari» و«al oaimari» مثلاً). لن يُلمس.</div>';
+          esc(d.paidNear.e.date || '') + (same ? ' <b>(نفس اليوم)</b>' : '') + '<br>' +
+          'إن كان هذه الزيارة نفسها فقد سُجّل قبضها ⇒ اضغط <b>«سُدِّد»</b> ولا تُنشئ ديناً.<br>' +
+          'وإن كان عميلاً آخر يشبه اسمه (al amari ⇄ al oaimari) ⇒ اضغط ' +
+          '<b>«ما زال ديناً»</b> ويُنشأ قيدٌ مستقلّ، ولن يُلمس هو.</div>';
       }
       html += '<div class="row" id="' + id + '">' +
         '<div style="flex:1 1 300px;min-width:0;">' +
@@ -324,27 +346,47 @@ function render(){
   }
 
   // ── القسم الثاني ──
-  var bSum = 0, mSum = 0;
+  var bSum = 0, mSum = 0, sDue = 0;
+  var nSure = 0, nDue = 0, nGap = 0, nMute = 0;
   for(var b = 0; b < BACK.length; b++){
-    bSum += BACK[b].t.rem;
-    if(BACK[b].ev) mSum += BACK[b].t.rem;
+    var rb = BACK[b];
+    bSum += rb.t.rem;
+    if(rb.ev && rb.near){ nSure++; mSum += rb.t.rem; }
+    else if(rb.evDue){ nDue++; sDue += rb.t.rem; }
+    else if(rb.ev){ nGap++; }
+    else { nMute++; }
   }
 
   if(BACK.length){
     html += '<div class="grp green"><h2>📦 المتراكم مقابل السجلّ ' +
       '<span class="cnt">' + BACK.length + '</span></h2>' +
-      '<div class="why">قيودٌ غير محصّلة أقدم من ' + STALE_DAYS + ' يوماً. ' +
-      'وُجد في السجلّ ما يُثبت قبض <b>' + MATCHED + '</b> منها بمجموع <b>' + fmtNum(mSum) +
-      ' ﷼</b> — هذه تُعلَّم «قُبض» بدليل لا بتخمين. ' +
-      'والباقي <b>' + (BACK.length - MATCHED) + '</b> لا ذكر له في السجلّ: ' +
-      'إمّا زيارةٌ لم يُبلّغ عنها، وإمّا قيدٌ لا مقابل له.<br>' +
+      '<div class="why">قيودٌ غير محصّلة أقدم من ' + STALE_DAYS + ' يوماً، ' +
+      'مرتّبةً بقوّة الدليل:<br>' +
+      '· <b class="ok2">✅ قُبض بمبلغٍ مطابق</b> — ' + nSure + ' قيداً بـ' + fmtNum(mSum) +
+      ' ﷼. قرارٌ مؤكّد، وهذه وحدها تدخل الزرّ الجماعي.<br>' +
+      '· <b class="due2">🔴 السجلّ يقول لم يُقبض</b> — ' + nDue + ' قيداً بـ' + fmtNum(sDue) +
+      ' ﷼. <b>دَيْنٌ حقيقي</b>، فاضغط «دَيْن قائم» لا «قُبض».<br>' +
+      '· <b class="warn3">🟡 قُبض بمبلغٍ مختلف</b> — ' + nGap + ' قيداً. الفارق معروضٌ عند كلٍّ: ' +
+      'زيارةٌ واحدة بسعرٍ تغيّر، أم زيارتان إحداهما لم تُقبض؟<br>' +
+      '· <b>⚠️ لا ذكر</b> — ' + nMute + ' قيداً. لا دليل بأي اتجاه، فذاكرتك وحدها.<br>' +
       'مجموع القسم <b>' + fmtNum(bSum) + ' ﷼</b>.</div>';
 
     for(var k = 0; k < BACK.length; k++){
       var r = BACK[k], t = r.t;
-      var evTxt = r.ev
-        ? '<div class="ev yes">✅ السجلّ يُثبت القبض: ' + logLine(r.ev) + '</div>'
-        : '<div class="ev no">⚠️ لا ذكر له في سجلّ ذلك اليوم</div>';
+      var evTxt;
+      if(r.ev && r.near){
+        evTxt = '<div class="ev yes">✅ السجلّ يُثبت القبض بمبلغٍ مطابق: ' + logLine(r.ev) + '</div>';
+      } else if(r.evDue){
+        evTxt = '<div class="ev due">🔴 السجلّ يقول إنه <b>لم يُقبض</b> — دَيْنٌ حقيقي لا قيدٌ زائد: ' +
+                logLine(r.evDue) + '</div>';
+      } else if(r.ev){
+        evTxt = '<div class="ev warn2">🟡 السجلّ يُثبت قبضاً لكن بمبلغٍ مختلف — الفارق ' +
+                fmtNum(r.gap) + ' ﷼: ' + logLine(r.ev) + '<br>' +
+                'إن كانت زيارةً واحدة فالقيد زائد فاضغط «قُبض». وإن كانتا زيارتين ' +
+                'فإحداهما ما زالت ديناً.</div>';
+      } else {
+        evTxt = '<div class="ev no">⚠️ لا ذكر له في سجلّ ذلك اليوم — لا دليل بأي اتجاه</div>';
+      }
       html += '<div class="row" id="b-' + esc(t.key) + '">' +
         '<div style="flex:1 1 300px;min-width:0;">' +
         '<div class="who">' + esc(t.e.party || t.e.client || '—') + '</div>' +
@@ -360,9 +402,9 @@ function render(){
     }
     if(MATCHED > 1){
       html += '<div class="row" style="border-top:1.5px solid var(--ice);">' +
-        '<div class="meta">المُثبَت قبضه في السجلّ: ' + txWord(MATCHED) +
-        ' بمجموع ' + fmtNum(mSum) + ' ﷼</div>' +
-        '<button class="mini n" onclick="allProven()">✅ علّم المُثبَت كلّه «قُبض»</button></div>';
+        '<div class="meta">المطابق مبلغاً في السجلّ: ' + txWord(MATCHED) +
+        ' بمجموع ' + fmtNum(mSum) + ' ﷼ — ولا يدخل فيه ذو الفارق ولا الدَيْن</div>' +
+        '<button class="mini n" onclick="allProven()">✅ علّم المطابق مبلغاً «قُبض»</button></div>';
     }
     html += '</div>';
   }
@@ -484,7 +526,8 @@ function backAct(key, what){
 
 function allProven(){
   var list = [];
-  for(var i = 0; i < BACK.length; i++){ if(BACK[i].ev) list.push(BACK[i]); }
+  // المطابق مبلغاً وحده: الفارق الكبير قد يكون زيارةً ثانية لم تُقبض
+  for(var i = 0; i < BACK.length; i++){ if(BACK[i].ev && BACK[i].near) list.push(BACK[i]); }
   if(!list.length) return;
   var s = 0;
   for(var j = 0; j < list.length; j++){ s += list[j].t.rem; }
