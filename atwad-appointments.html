@@ -547,6 +547,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
             <option>تنظيف الوحدات الداخلية أو الخارجية</option>
             <option>تركيب مكيف</option>
             <option>إعادة فحص</option>
+            <option>معاينة عقد صيانة</option>
           </select>
         </div>
         <div class="form-group" id="unitsGroup"><label>عدد المكيفات</label><input type="number" id="f_units" value="1" min="1" max="30" onchange="onServiceOrUnitsChanged()"></div>
@@ -2721,7 +2722,13 @@ var SERVICE_UNIT_MINUTES = { 'غسيل مكيفات':30, 'الغسيل العم�
   'تنظيف الوحدة الخارجية':15, 'تنظيف الوحدة الداخلية':20,
   'تنظيف مكيف':30, 'صيانة دورية':45, 'باقة صيانة سنوية':45, 'تركيب مكيف جديد':90,
   'كشف تسرّب الفريون':30,
-  'كشف تسرّب الفريون — ضغط النيتروجين':90, 'كشف تسرّب الفريون — الكشف بعد ٤٨ ساعة':30};
+  'كشف تسرّب الفريون — ضغط النيتروجين':90, 'كشف تسرّب الفريون — الكشف بعد ٤٨ ساعة':30,
+  'معاينة عقد صيانة':60};
+
+/* خدمات مدّتها ثابتة للزيارة كلها، لا تُضرب في عدد الوحدات.
+   معاينة عقد الصيانة مثالها: عدد الوحدات مجهول قبل الزيارة،
+   وضربه في المدة ينتج موعداً بطول يوم كامل. */
+var FIXED_DURATION_SERVICES = { 'معاينة عقد صيانة': true };
 
 /* الكشف العميق زيارتان: ضغط النيتروجين للوحدة الداخلية والخارجية والمواسير،
    ثم قراءة النتيجة بعد ٤٨ ساعة (٢٤ ساعة حدٌّ أدنى).
@@ -2800,8 +2807,10 @@ function checkMinUnitsOrException(data){
   return null;
 }
 function suggestDuration(service,units){
-  var per=SERVICE_UNIT_MINUTES[String(service||'').trim()]||45;
+  var svc=String(service||'').trim();
+  var per=SERVICE_UNIT_MINUTES[svc]||45;
   var u=parseInt(units,10); if(!isFinite(u)||u<1) u=1;
+  if(FIXED_DURATION_SERVICES[svc]) u=1;
   var total=Math.min(per*u,480);
   return Math.max(30,Math.round(total/30)*30);
 }
