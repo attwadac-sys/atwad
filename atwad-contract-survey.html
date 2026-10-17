@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>نموذج معاينة عقد صيانة — أطواد</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0B2C5C; --gold:#C9A227; --ink:#1A2433;
+  --line:#9AA8BC; --soft:#EDF2F9; --mute:#5A6B80;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0; background:#5A6B80; padding:18px;
+  font-family:'Tajawal',sans-serif; color:var(--ink);
+  -webkit-print-color-adjust:exact; print-color-adjust:exact;
+}
+
+/* ===== شريط الأدوات — لا يُطبع ===== */
+.bar{
+  max-width:794px; margin:0 auto 14px; display:flex; gap:9px;
+  align-items:center; flex-wrap:wrap;
+}
+.bar .ttl{color:#fff;font-weight:700;font-size:14px;margin-inline-end:auto;}
+.btn{
+  padding:9px 18px; border:0; border-radius:8px; cursor:pointer;
+  font-family:'Tajawal',sans-serif; font-size:13.5px; font-weight:700;
+  background:var(--gold); color:#23354C;
+}
+.btn.alt{background:#fff;color:var(--navy);}
+.hint{color:#D8E2EF;font-size:12px;font-weight:500;width:100%;line-height:1.7;}
+
+/* ===== الورقة ===== */
+.sheet{
+  width:794px; min-height:1123px; margin:0 auto 18px; background:#fff;
+  padding:30px 34px 26px; position:relative;
+  box-shadow:0 3px 18px rgba(0,0,0,.3);
+  display:flex; flex-direction:column;
+}
+
+/* ===== الترويسة ===== */
+.head{
+  display:flex; align-items:flex-start; gap:14px;
+  border-bottom:2.5px solid var(--navy); padding-bottom:11px; margin-bottom:13px;
+}
+.head .brand{margin-inline-end:auto;}
+.head .org{font-size:12.5px;font-weight:700;color:var(--gold);letter-spacing:.3px;}
+.head h1{margin:2px 0 0;font-size:22px;font-weight:900;color:var(--navy);line-height:1.25;}
+.head .sub{font-size:11.5px;color:var(--mute);margin-top:3px;}
+.head .meta{
+  text-align:center;border:1.5px solid var(--line);border-radius:8px;
+  padding:7px 12px;min-width:132px;
+}
+.head .meta .lbl{font-size:10px;color:var(--mute);font-weight:700;}
+.head .meta .num{font-size:15px;font-weight:900;color:var(--navy);letter-spacing:1px;}
+.head .meta .pg{font-size:10px;color:var(--mute);margin-top:3px;}
+
+/* ===== الحقول ===== */
+.sec{
+  font-size:12.5px;font-weight:900;color:#fff;background:var(--navy);
+  padding:5px 11px;border-radius:5px;margin:0 0 9px;
+}
+.grid{display:grid;gap:8px 14px;margin-bottom:14px;}
+.g3{grid-template-columns:repeat(3,1fr);}
+.g2{grid-template-columns:1.6fr 1fr;}
+.f{display:flex;flex-direction:column;gap:2px;}
+.f .l{font-size:10.5px;font-weight:700;color:var(--mute);}
+.f .w{border-bottom:1.2px solid var(--line);height:21px;}
+.f.tall .w{height:34px;}
+
+/* ===== جدول الوحدات ===== */
+table{width:100%;border-collapse:collapse;}
+th,td{border:1px solid var(--line);padding:0;}
+thead th{
+  background:var(--soft); color:var(--navy);
+  font-size:9.5px; font-weight:900; line-height:1.25;
+  padding:5px 2px; text-align:center;
+}
+tbody td{height:25px;text-align:center;font-size:11px;}
+tbody tr:nth-child(even) td{background:#FAFCFF;}
+td.n{background:var(--soft)!important;font-weight:900;color:var(--navy);font-size:10.5px;width:26px;}
+
+/* ===== المفتاح ===== */
+.key{
+  margin-top:9px;border:1px dashed var(--line);border-radius:7px;
+  padding:7px 11px;font-size:10.5px;color:var(--mute);line-height:1.85;
+}
+.key b{color:var(--navy);}
+
+/* ===== الخلاصة ===== */
+.boxes{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:13px;}
+.box{border:1.5px solid var(--line);border-radius:8px;padding:8px 6px;text-align:center;}
+.box .l{font-size:10px;color:var(--mute);font-weight:700;}
+.box .v{height:27px;border-bottom:1.2px solid var(--line);margin-top:4px;}
+.lines{border:1.5px solid var(--line);border-radius:8px;padding:9px 12px 4px;margin-bottom:13px;}
+.lines .ln{border-bottom:1.2px solid #C9D4E2;height:25px;}
+.lines .ln:last-child{border-bottom:0;}
+
+.verdict{
+  display:flex;gap:9px;margin-bottom:14px;
+}
+.vd{
+  flex:1;border:1.5px solid var(--line);border-radius:8px;
+  padding:9px 10px;display:flex;align-items:center;gap:8px;
+  font-size:12px;font-weight:700;color:var(--ink);
+}
+.tick{width:16px;height:16px;border:1.6px solid var(--navy);border-radius:3px;flex:0 0 auto;}
+
+/* ===== التوقيعات ===== */
+.sign{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:auto;padding-top:8px;}
+.sign .s .l{font-size:11px;font-weight:700;color:var(--navy);margin-bottom:16px;}
+.sign .s .w{border-bottom:1.4px solid var(--ink);}
+.sign .s .n{font-size:10px;color:var(--mute);margin-top:4px;}
+
+.foot{
+  margin-top:11px;border-top:1px solid #D4DEEA;padding-top:7px;
+  display:flex;justify-content:space-between;font-size:10px;color:var(--mute);
+}
+
+/* ===== الطباعة ===== */
+@page{size:A4 portrait;margin:9mm;}
+@media print{
+  body{background:#fff;padding:0;}
+  .bar{display:none;}
+  .sheet{
+    width:auto;min-height:auto;margin:0;padding:0;
+    box-shadow:none;page-break-after:always;
+  }
+  .sheet:last-child{page-break-after:auto;}
+}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <span class="ttl">نموذج معاينة عقد صيانة</span>
+  <button class="btn" onclick="window.print()">🖨️ طباعة</button>
+  <button class="btn alt" onclick="addRows()">➕ صفحة وحدات إضافية</button>
+  <p class="hint">
+    ورقتان: الأولى بيانات الجهة وجدول ١٨ وحدة، والثانية ١٢ وحدة إضافية مع الخلاصة والتوقيع.
+    إن زادت وحدات الموقع عن ٣٠، أضيفي صفحة بالزر أعلاه قبل الطباعة.
+  </p>
+</div>
+
+<!-- ══════════ الورقة الأولى ══════════ -->
+<div class="sheet">
+
+  <div class="head">
+    <div class="brand">
+      <div class="org">مؤسسة أطواد لصيانة المكيفات</div>
+      <h1>نموذج معاينة ما قبل عقد الصيانة</h1>
+      <div class="sub">يُعبَّأ في الموقع قبل إصدار عرض السعر — ولا يُعتدّ بأي بند لم يُدوَّن هنا</div>
+    </div>
+    <div class="meta">
+      <div class="lbl">رقم المعاينة</div>
+      <div class="num">—————</div>
+      <div class="pg">صفحة ١ من ٢</div>
+    </div>
+  </div>
+
+  <div class="sec">١ · بيانات الجهة</div>
+  <div class="grid g3">
+    <div class="f"><span class="l">اسم الجهة / الشركة</span><span class="w"></span></div>
+    <div class="f"><span class="l">النشاط</span><span class="w"></span></div>
+    <div class="f"><span class="l">السجل التجاري / الرقم الضريبي</span><span class="w"></span></div>
+    <div class="f"><span class="l">اسم المسؤول</span><span class="w"></span></div>
+    <div class="f"><span class="l">الصفة</span><span class="w"></span></div>
+    <div class="f"><span class="l">الجوال</span><span class="w"></span></div>
+  </div>
+
+  <div class="sec">٢ · الموقع والمعاينة</div>
+  <div class="grid g3">
+    <div class="f"><span class="l">الحي</span><span class="w"></span></div>
+    <div class="f"><span class="l">نوع المبنى (مكتب · محل · مستودع · سكن)</span><span class="w"></span></div>
+    <div class="f"><span class="l">عدد الأدوار / الفروع</span><span class="w"></span></div>
+    <div class="f"><span class="l">تاريخ المعاينة</span><span class="w"></span></div>
+    <div class="f"><span class="l">اسم الفني المعاين</span><span class="w"></span></div>
+    <div class="f"><span class="l">ساعات دخول الفنيين المسموحة</span><span class="w"></span></div>
+  </div>
+
+  <div class="sec">٣ · حصر الوحدات وحالتها</div>
+  <table>
+    <thead>
+      <tr>
+        <th>م</th>
+        <th style="width:15%">الموقع / الغرفة</th>
+        <th style="width:9%">النوع</th>
+        <th style="width:10%">الماركة</th>
+        <th style="width:7%">القدرة</th>
+        <th style="width:7%">سنة التركيب</th>
+        <th>الوحدة<br>الداخلية</th>
+        <th>الوحدة<br>الخارجية</th>
+        <th>كفاءة<br>التبريد</th>
+        <th>الغاز</th>
+        <th>التصريف</th>
+        <th>الضجيج</th>
+        <th style="width:13%">عمل مطلوب قبل العقد</th>
+      </tr>
+    </thead>
+    <tbody id="tb1"></tbody>
+  </table>
+
+  <div class="key">
+    <b>مفتاح التقييم:</b> اكتب في الخانة <b>١</b> سليم · <b>٢</b> يحتاج صيانة · <b>٣</b> يحتاج استبدال.
+    &nbsp;|&nbsp; <b>النوع:</b> سبليت · شباك · كونسيلد · دولابي · مركزي.
+    &nbsp;|&nbsp; <b>الغاز:</b> طبيعي / ناقص.
+    &nbsp;|&nbsp; <b>التصريف:</b> سليم / مسدود / يسرّب.
+    <br><b>تنبيه للفني:</b> كل وحدة تُقيَّم <b>٣</b> تُستثنى من العقد وتُسعَّر منفصلة — ولا تُدرَج ضمن الصيانة الدورية.
+  </div>
+
+  <div class="foot">
+    <span>مؤسسة أطواد لصيانة المكيفات · 0509720382</span>
+    <span>صفحة ١ من ٢</span>
+  </div>
+</div>
+
+<!-- ══════════ الورقة الثانية ══════════ -->
+<div class="sheet">
+
+  <div class="head">
+    <div class="brand">
+      <div class="org">مؤسسة أطواد لصيانة المكيفات</div>
+      <h1>تتمّة الحصر · الخلاصة والتوصية</h1>
+      <div class="sub">الجهة: ————————————————&nbsp;&nbsp;&nbsp;التاريخ: ——————————</div>
+    </div>
+    <div class="meta">
+      <div class="lbl">رقم المعاينة</div>
+      <div class="num">—————</div>
+      <div class="pg">صفحة ٢ من ٢</div>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>م</th>
+        <th style="width:15%">الموقع / الغرفة</th>
+        <th style="width:9%">النوع</th>
+        <th style="width:10%">الماركة</th>
+        <th style="width:7%">القدرة</th>
+        <th style="width:7%">سنة التركيب</th>
+        <th>الوحدة<br>الداخلية</th>
+        <th>الوحدة<br>الخارجية</th>
+        <th>كفاءة<br>التبريد</th>
+        <th>الغاز</th>
+        <th>التصريف</th>
+        <th>الضجيج</th>
+        <th style="width:13%">عمل مطلوب قبل العقد</th>
+      </tr>
+    </thead>
+    <tbody id="tb2"></tbody>
+  </table>
+
+  <div class="sec" style="margin-top:14px;">٤ · الخلاصة العددية</div>
+  <div class="boxes">
+    <div class="box"><div class="l">إجمالي الوحدات</div><div class="v"></div></div>
+    <div class="box"><div class="l">سليمة (١)</div><div class="v"></div></div>
+    <div class="box"><div class="l">تحتاج صيانة (٢)</div><div class="v"></div></div>
+    <div class="box"><div class="l">تحتاج استبدال (٣)</div><div class="v"></div></div>
+  </div>
+
+  <div class="sec">٥ · أعمال لازمة قبل بدء العقد</div>
+  <div class="lines">
+    <div class="ln"></div><div class="ln"></div><div class="ln"></div>
+  </div>
+
+  <div class="sec">٦ · ملاحظات الفني وصعوبات الوصول</div>
+  <div class="lines">
+    <div class="ln"></div><div class="ln"></div>
+  </div>
+
+  <div class="sec">٧ · التوصية</div>
+  <div class="verdict">
+    <div class="vd"><span class="tick"></span> صالح للعقد مباشرة</div>
+    <div class="vd"><span class="tick"></span> صالح بعد تنفيذ الأعمال أعلاه</div>
+    <div class="vd"><span class="tick"></span> غير صالح حالياً</div>
+  </div>
+
+  <div class="grid g2">
+    <div class="f"><span class="l">دورية الزيارات المقترحة</span><span class="w"></span></div>
+    <div class="f"><span class="l">عدد الفنيين لكل زيارة</span><span class="w"></span></div>
+  </div>
+
+  <div class="sign">
+    <div class="s">
+      <div class="l">الفني المعاين</div>
+      <div class="w"></div>
+      <div class="n">الاسم والتوقيع والتاريخ</div>
+    </div>
+    <div class="s">
+      <div class="l">ممثل الجهة</div>
+      <div class="w"></div>
+      <div class="n">الاسم والتوقيع والختم</div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <span>هذا النموذج معاينة فنية ولا يُعدّ عرض سعر ولا التزاماً تعاقدياً</span>
+    <span>صفحة ٢ من ٢</span>
+  </div>
+</div>
+
+<script>
+/* صفوف الجدول تُبنى بالشيفرة بدل تكرار 40 سطراً في الملف،
+   فأي تغيير في عدد الأعمدة لا يحتاج تعديل كل صف يدوياً. */
+var COLS = 13;
+
+function buildRows(tbodyId, from, count){
+  var tb = document.getElementById(tbodyId);
+  if(!tb) return;
+  var html = '';
+  for(var i = 0; i < count; i++){
+    html += '<tr><td class="n">' + (from + i) + '</td>';
+    for(var c = 1; c < COLS; c++) html += '<td></td>';
+    html += '</tr>';
+  }
+  tb.innerHTML = html;
+}
+
+buildRows('tb1', 1, 18);
+buildRows('tb2', 19, 12);
+
+/* صفحة وحدات إضافية لمواقع تتجاوز 40 وحدة — تُدرج قبل الورقة الأخيرة */
+var extra = 0;
+function addRows(){
+  extra++;
+  var start = 31 + (extra - 1) * 32;
+  var sheets = document.querySelectorAll('.sheet');
+  var last = sheets[sheets.length - 1];
+
+  var s = document.createElement('div');
+  s.className = 'sheet';
+  s.innerHTML =
+    '<div class="head"><div class="brand">' +
+      '<div class="org">مؤسسة أطواد لصيانة المكيفات</div>' +
+      '<h1>تتمّة حصر الوحدات</h1>' +
+      '<div class="sub">الجهة: ————————————————&nbsp;&nbsp;&nbsp;التاريخ: ——————————</div>' +
+    '</div><div class="meta">' +
+      '<div class="lbl">رقم المعاينة</div><div class="num">—————</div>' +
+      '<div class="pg">ورقة إضافية ' + extra + '</div>' +
+    '</div></div>' +
+    '<table><thead><tr>' +
+      '<th>م</th><th style="width:15%">الموقع / الغرفة</th><th style="width:9%">النوع</th>' +
+      '<th style="width:10%">الماركة</th><th style="width:7%">القدرة</th><th style="width:7%">سنة التركيب</th>' +
+      '<th>الوحدة<br>الداخلية</th><th>الوحدة<br>الخارجية</th><th>كفاءة<br>التبريد</th>' +
+      '<th>الغاز</th><th>التصريف</th><th>الضجيج</th><th style="width:13%">عمل مطلوب قبل العقد</th>' +
+    '</tr></thead><tbody id="tbx' + extra + '"></tbody></table>' +
+    '<div class="foot"><span>مؤسسة أطواد لصيانة المكيفات · 0509720382</span>' +
+    '<span>ورقة إضافية ' + extra + '</span></div>';
+
+  last.parentNode.insertBefore(s, last);
+  buildRows('tbx' + extra, start, 32);
+}
+</script>
+</body>
+</html>
