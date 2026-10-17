@@ -321,7 +321,7 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
       <div class="svc-card" id="sv7" onclick="selUnitsClean()"><div class="s-icon" style="display:flex;align-items:center;justify-content:center;gap:8px;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 104" style="width:52px;height:auto;" role="img" aria-label="الوحدة الداخلية"><defs><linearGradient id="idTop" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0C3B5E"/><stop offset="100%" stop-color="#0EA5E9"/></linearGradient><linearGradient id="idBody" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#e8f4fd"/><stop offset="100%" stop-color="#cde8f7"/></linearGradient></defs><rect x="6" y="16" width="128" height="40" rx="9" fill="url(#idBody)" stroke="#0EA5E9" stroke-width="2.5"/><path d="M6 25a9 9 0 0 1 9-9h110a9 9 0 0 1 9 9v6H6z" fill="url(#idTop)"/><rect x="24" y="36" width="92" height="3" rx="1.5" fill="#0C3B5E" opacity="0.22"/><rect x="24" y="43" width="92" height="3" rx="1.5" fill="#0C3B5E" opacity="0.22"/><rect x="24" y="50" width="92" height="3" rx="1.5" fill="#0C3B5E" opacity="0.22"/><circle cx="15" cy="46" r="2.4" fill="#0EA5E9" opacity="0.8"/><path d="M18 58q52 14 104 0" fill="none" stroke="#0EA5E9" stroke-width="2.5" opacity="0.55"/><path d="M44 70q5 6 0 9-5-3 0-9z" fill="#0EA5E9" opacity="0.85"/><path d="M70 76q5 6 0 9-5-3 0-9z" fill="#0EA5E9" opacity="0.65"/><path d="M96 70q5 6 0 9-5-3 0-9z" fill="#0EA5E9" opacity="0.85"/><path d="M70 62q4 5 0 7.5-4-2.5 0-7.5z" fill="#0EA5E9" opacity="0.9"/></svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 104" style="width:46px;height:auto;" role="img" aria-label="الوحدة الخارجية"><defs><linearGradient id="odTop" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0C3B5E"/><stop offset="100%" stop-color="#0EA5E9"/></linearGradient><linearGradient id="odBody" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#e8f4fd"/><stop offset="100%" stop-color="#cde8f7"/></linearGradient></defs><rect x="8" y="12" width="104" height="72" rx="9" fill="url(#odBody)" stroke="#0EA5E9" stroke-width="2.5"/><path d="M8 21a9 9 0 0 1 9-9h86a9 9 0 0 1 9 9v5H8z" fill="url(#odTop)"/><circle cx="60" cy="53" r="23" fill="#f4fbff" stroke="#0C3B5E" stroke-width="2" opacity="0.9"/><circle cx="60" cy="53" r="17.5" fill="none" stroke="#0C3B5E" stroke-width="1.2" opacity="0.35"/><circle cx="60" cy="53" r="11" fill="none" stroke="#0C3B5E" stroke-width="1.2" opacity="0.35"/><path d="M60 42q7 6 0 11 -7-5 0-11z" fill="#0EA5E9" opacity="0.85"/><path d="M71 53q-6 7-11 0 5-7 11 0z" fill="#0EA5E9" opacity="0.85"/><path d="M60 64q-7-6 0-11 7 5 0 11z" fill="#0EA5E9" opacity="0.85"/><path d="M49 53q6-7 11 0-5 7-11 0z" fill="#0EA5E9" opacity="0.85"/><circle cx="60" cy="53" r="3.4" fill="#0C3B5E"/><rect x="14" y="34" width="8" height="38" rx="3" fill="#0C3B5E" opacity="0.18"/><rect x="98" y="34" width="8" height="38" rx="3" fill="#0C3B5E" opacity="0.18"/><rect x="20" y="84" width="12" height="8" rx="2.5" fill="#334155"/><rect x="88" y="84" width="12" height="8" rx="2.5" fill="#334155"/><path d="M36 94q4 5 0 7.5-4-2.5 0-7.5z" fill="#0EA5E9" opacity="0.8"/><path d="M60 96q4 5 0 7.5-4-2.5 0-7.5z" fill="#0EA5E9" opacity="0.55"/><path d="M84 94q4 5 0 7.5-4-2.5 0-7.5z" fill="#0EA5E9" opacity="0.8"/></svg></div><div class="s-name">غسيل وحدة واحدة فقط</div><div class="s-price">داخلية أو خارجية — 40 ريال للوحدة، 5 وحدات فأكثر</div></div>
       <div class="svc-card" id="sv6" onclick="selRecheck()"><div class="s-icon">🔁</div><div class="s-name">إعادة فحص</div><div class="s-price">لعمل سابق نفّذناه</div></div>
       <div class="svc-card" id="sv9" onclick="selMixed()"><div class="s-icon">💧🛠️</div><div class="s-name">غسيل وصيانة</div><div class="s-price">مكيفات تُغسل وأخرى تُصان في زيارة واحدة</div></div>
-      <div class="svc-card is-disabled" id="sv5" aria-disabled="true" title="غير متوفر الآن"><div class="s-icon">🔧</div><div class="s-name">تركيب مكيف</div><div class="s-price s-unavailable">غير متوفر الآن</div></div>
+      <div class="svc-card" id="sv5" onclick="selInstall()"><div class="s-icon">🔧</div><div class="s-name">تركيب مكيف</div><div class="s-price">المعاينة 100 ريال مهما كان العدد — تُحتسب من تكلفة التركيب</div></div>
       <div class="recheck-note" id="leak-note" style="background:#EFF6FF;border-color:#BFDBFE;color:#1E40AF;">
         <strong>🔍 كيف يتم كشف التسرّب</strong><br>
         نبدأ بـ<strong>كشف مبدئي — 100 ريال</strong>: فحص نظري لأجزاء الوحدة الداخلية والخارجية، نحو نصف ساعة.<br>
@@ -344,6 +344,15 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
         إن وافقت على الإصلاح حُسبت أجرة الكشف ضمن التكلفة النهائية ولم تدفع عنها شيئاً إضافياً.
         وإن اعتذرت عن الإصلاح دفعت أجرة الكشف وحدها.
         <div id="maint-fee-line" style="margin-top:8px;font-weight:800;"></div>
+      </div>
+      <div class="recheck-note" id="install-note" style="background:#FFFBEB;border-color:#FDE68A;color:#92400E;">
+        <strong>🔧 كيف يتم تركيب المكيف</strong><br>
+        نبدأ بزيارة معاينة: يعاين الفني الموقع والوحدة ويحدّد ما يلزم التركيب،
+        ثم يخبرك بالتكلفة <strong>قبل أن يبدأ</strong>.
+أجرة المعاينة <strong>100 ريال للزيارة، مهما كان عدد المكيفات</strong>.
+        إن وافقت على التركيب حُسبت ضمن تكلفة التركيب ولم تدفع عنها شيئاً إضافياً.
+        وإن اعتذرت دفعت أجرة المعاينة وحدها.
+        <div id="install-fee-line" style="margin-top:8px;font-weight:800;"></div>
       </div>
       <div class="recheck-note" id="units-note" style="background:#EFF6FF;border-color:#BFDBFE;color:#1E40AF;">
         <strong>❄️🌀 غسيل وحدة واحدة فقط</strong><br>
@@ -1640,6 +1649,7 @@ function changeUnits(dir){
   if(S.isClean) S.price=n>=10?n*55:(n>=5?n*60:S.price);
   if(S.serviceAr === UNITS_SERVICE) S.price = n * UNITS_UNIT_PRICE;
   if(S.serviceAr === MAINT_SERVICE){ S.price = maintFee(n); showMaintFee(); }
+  if(S.serviceAr === INSTALL_SERVICE){ S.price = INSTALL_SURVEY_FEE; showInstallFee(); }
   if(S.serviceAr === GAS_SERVICE){ S.price = GAS_MIN_PRICE * n; showGasFee(); }
   if(S.serviceAr === LEAK_SERVICE){ S.price = LEAK_PRICE * n; }
   var note=document.getElementById('large-order-note');
@@ -1648,7 +1658,7 @@ function changeUnits(dir){
 
 // ===== الخدمة =====
 function resetServiceCards(){
-  ['sv1','sv2','sv3','sv6','sv7','sv9','sv11'].forEach(function(id){
+  ['sv1','sv2','sv3','sv5','sv6','sv7','sv9','sv11'].forEach(function(id){
     var el=document.getElementById(id); if(el) el.className=id==='sv1'?'svc-card primary-service':'svc-card';
   });
   var rn=document.getElementById('recheck-note');
@@ -1665,8 +1675,10 @@ function resetServiceCards(){
   if(gf) gf.textContent='';
   var ln=document.getElementById('leak-note');
   if(ln) ln.className='recheck-note';
-  var install=document.getElementById('sv5');
-  if(install) install.className='svc-card is-disabled';
+  var inn=document.getElementById('install-note');
+  if(inn) inn.className='recheck-note';
+  var iff=document.getElementById('install-fee-line');
+  if(iff) iff.textContent='';
   var mb=document.getElementById('mixed-box');
   if(mb) mb.className='units-box';
 }
@@ -1853,6 +1865,27 @@ function maintFee(units){
   return MAINT_FIRST_FEE + MAINT_EXTRA_FEE * (u - 1);
 }
 /** يُظهر أجرة الكشف للعدد المختار، فلا يفاجأ العميل بها عند الزيارة */
+/* التركيب يبدأ بزيارة معاينة، والتكلفة تُحدَّد بعدها — نفس نموذج الصيانة.
+   الموعد المحجوز هنا هو المعاينة؛ أمّا التركيب نفسه فيُجدول بعدها كموعد مستقل. */
+var INSTALL_SERVICE    = 'تركيب مكيف';
+/* أجرة المعاينة مقطوعة للزيارة كلها، لا تتغيّر بعدد المكيفات —
+   بخلاف الصيانة التي تُحسب 100 للأول و50 لكل إضافي. */
+var INSTALL_SURVEY_FEE = 100;
+
+function selInstall(){
+  selSvc(INSTALL_SERVICE, 'AC Installation', INSTALL_SURVEY_FEE, 'sv5');
+  var note = document.getElementById('install-note');
+  if(note) note.className = 'recheck-note show';
+  showInstallFee();
+}
+
+function showInstallFee(){
+  var el = document.getElementById('install-fee-line');
+  if(!el) return;
+  if(S.serviceAr !== INSTALL_SERVICE){ el.textContent = ''; return; }
+  el.textContent = 'أجرة المعاينة: ' + INSTALL_SURVEY_FEE + ' ريال للزيارة.';
+}
+
 function showMaintFee(){
   var el = document.getElementById('maint-fee-line');
   if(!el) return;
@@ -2311,7 +2344,7 @@ function next2(){
 
 // ===== الموعد =====
 var FRIDAY_VAR=true;
-var DUR_MAP={'غسيل مكيفات':30,'صيانة مكيف':30,'تعبئة غاز':45,'تركيب مكيف':90,'إعادة فحص':30,
+var DUR_MAP={'غسيل مكيفات':30,'صيانة مكيف':30,'تعبئة غاز':45,'تركيب مكيف':15,'إعادة فحص':30,
   'الغسيل العميق':90,'كشف تسرّب مبدئي':30,
   'تنظيف الوحدات الداخلية أو الخارجية':20,
   'تنظيف الوحدة الخارجية':15,'تنظيف الوحدة الداخلية':20};
