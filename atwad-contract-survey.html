@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" id="root">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -50,7 +50,7 @@ body{
 .head .sub{font-size:11.5px;color:var(--mute);margin-top:3px;}
 .head .meta{
   text-align:center;border:1.5px solid var(--line);border-radius:8px;
-  padding:7px 12px;min-width:132px;
+  padding:7px 12px;min-width:138px;
 }
 .head .meta .lbl{font-size:10px;color:var(--mute);font-weight:700;}
 .head .meta .num{font-size:15px;font-weight:900;color:var(--navy);letter-spacing:1px;}
@@ -67,7 +67,6 @@ body{
 .f{display:flex;flex-direction:column;gap:2px;}
 .f .l{font-size:10.5px;font-weight:700;color:var(--mute);}
 .f .w{border-bottom:1.2px solid var(--line);height:21px;}
-.f.tall .w{height:34px;}
 
 /* ===== جدول الوحدات ===== */
 table{width:100%;border-collapse:collapse;}
@@ -97,9 +96,7 @@ td.n{background:var(--soft)!important;font-weight:900;color:var(--navy);font-siz
 .lines .ln{border-bottom:1.2px solid #C9D4E2;height:25px;}
 .lines .ln:last-child{border-bottom:0;}
 
-.verdict{
-  display:flex;gap:9px;margin-bottom:14px;
-}
+.verdict{display:flex;gap:9px;margin-bottom:14px;}
 .vd{
   flex:1;border:1.5px solid var(--line);border-radius:8px;
   padding:9px 10px;display:flex;align-items:center;gap:8px;
@@ -134,13 +131,11 @@ td.n{background:var(--soft)!important;font-weight:900;color:var(--navy);font-siz
 <body>
 
 <div class="bar">
-  <span class="ttl">نموذج معاينة عقد صيانة</span>
-  <button class="btn" onclick="window.print()">🖨️ طباعة</button>
-  <button class="btn alt" onclick="addRows()">➕ صفحة وحدات إضافية</button>
-  <p class="hint">
-    ورقتان: الأولى بيانات الجهة وجدول ١٨ وحدة، والثانية ١٢ وحدة إضافية مع الخلاصة والتوقيع.
-    إن زادت وحدات الموقع عن ٣٠، أضيفي صفحة بالزر أعلاه قبل الطباعة.
-  </p>
+  <span class="ttl" data-t="barTitle"></span>
+  <button class="btn" onclick="window.print()" data-t="btnPrint"></button>
+  <button class="btn alt" onclick="addRows()" data-t="btnAdd"></button>
+  <button class="btn alt" onclick="toggleLang()" id="langBtn"></button>
+  <p class="hint" data-t="hint"></p>
 </div>
 
 <!-- ══════════ الورقة الأولى ══════════ -->
@@ -148,70 +143,45 @@ td.n{background:var(--soft)!important;font-weight:900;color:var(--navy);font-siz
 
   <div class="head">
     <div class="brand">
-      <div class="org">مؤسسة أطواد لصيانة المكيفات</div>
-      <h1>نموذج معاينة ما قبل عقد الصيانة</h1>
-      <div class="sub">يُعبَّأ في الموقع قبل إصدار عرض السعر — ولا يُعتدّ بأي بند لم يُدوَّن هنا</div>
+      <div class="org" data-t="org"></div>
+      <h1 data-t="title1"></h1>
+      <div class="sub" data-t="sub1"></div>
     </div>
     <div class="meta">
-      <div class="lbl">رقم المعاينة</div>
+      <div class="lbl" data-t="surveyNo"></div>
       <div class="num">—————</div>
-      <div class="pg">صفحة ١ من ٢</div>
+      <div class="pg" data-t="page1"></div>
     </div>
   </div>
 
-  <div class="sec">١ · بيانات الجهة</div>
+  <div class="sec" data-t="sec1"></div>
   <div class="grid g3">
-    <div class="f"><span class="l">اسم الجهة / الشركة</span><span class="w"></span></div>
-    <div class="f"><span class="l">النشاط</span><span class="w"></span></div>
-    <div class="f"><span class="l">السجل التجاري / الرقم الضريبي</span><span class="w"></span></div>
-    <div class="f"><span class="l">اسم المسؤول</span><span class="w"></span></div>
-    <div class="f"><span class="l">الصفة</span><span class="w"></span></div>
-    <div class="f"><span class="l">الجوال</span><span class="w"></span></div>
+    <div class="f"><span class="l" data-t="company"></span><span class="w"></span></div>
+    <div class="f"><span class="l" data-t="activity"></span><span class="w"></span></div>
+    <div class="f"><span class="l" data-t="cr"></span><span class="w"></span></div>
+    <div class="f"><span class="l" data-t="contact"></span><span class="w"></span></div>
+    <div class="f"><span class="l" data-t="position"></span><span class="w"></span></div>
+    <div class="f"><span class="l" data-t="mobile"></span><span class="w"></span></div>
   </div>
 
-  <div class="sec">٢ · الموقع والمعاينة</div>
+  <div class="sec" data-t="sec2"></div>
   <div class="grid g3">
-    <div class="f"><span class="l">الحي</span><span class="w"></span></div>
-    <div class="f"><span class="l">نوع المبنى (مكتب · محل · مستودع · سكن)</span><span class="w"></span></div>
-    <div class="f"><span class="l">عدد الأدوار / الفروع</span><span class="w"></span></div>
-    <div class="f"><span class="l">تاريخ المعاينة</span><span class="w"></span></div>
-    <div class="f"><span class="l">اسم الفني المعاين</span><span class="w"></span></div>
-    <div class="f"><span class="l">ساعات دخول الفنيين المسموحة</span><span class="w"></span></div>
+    <div class="f"><span class="l" data-t="district"></span><span class="w"></span></div>
+    <div class="f"><span class="l" data-t="bldg"></span><span class="w"></span></div>
+    <div class="f"><span class="l" data-t="floors"></span><span class="w"></span></div>
+    <div class="f"><span class="l" data-t="sdate"></span><span class="w"></span></div>
+    <div class="f"><span class="l" data-t="tech"></span><span class="w"></span></div>
+    <div class="f"><span class="l" data-t="hours"></span><span class="w"></span></div>
   </div>
 
-  <div class="sec">٣ · حصر الوحدات وحالتها</div>
-  <table>
-    <thead>
-      <tr>
-        <th>م</th>
-        <th style="width:15%">الموقع / الغرفة</th>
-        <th style="width:9%">النوع</th>
-        <th style="width:10%">الماركة</th>
-        <th style="width:7%">القدرة</th>
-        <th style="width:7%">سنة التركيب</th>
-        <th>الوحدة<br>الداخلية</th>
-        <th>الوحدة<br>الخارجية</th>
-        <th>كفاءة<br>التبريد</th>
-        <th>الغاز</th>
-        <th>التصريف</th>
-        <th>الضجيج</th>
-        <th style="width:13%">عمل مطلوب قبل العقد</th>
-      </tr>
-    </thead>
-    <tbody id="tb1"></tbody>
-  </table>
+  <div class="sec" data-t="sec3"></div>
+  <table><thead></thead><tbody id="tb1"></tbody></table>
 
-  <div class="key">
-    <b>مفتاح التقييم:</b> اكتب في الخانة <b>١</b> سليم · <b>٢</b> يحتاج صيانة · <b>٣</b> يحتاج استبدال.
-    &nbsp;|&nbsp; <b>النوع:</b> سبليت · شباك · كونسيلد · دولابي · مركزي.
-    &nbsp;|&nbsp; <b>الغاز:</b> طبيعي / ناقص.
-    &nbsp;|&nbsp; <b>التصريف:</b> سليم / مسدود / يسرّب.
-    <br><b>تنبيه للفني:</b> كل وحدة تُقيَّم <b>٣</b> تُستثنى من العقد وتُسعَّر منفصلة — ولا تُدرَج ضمن الصيانة الدورية.
-  </div>
+  <div class="key" data-t="key"></div>
 
   <div class="foot">
-    <span>مؤسسة أطواد لصيانة المكيفات · 0509720382</span>
-    <span>صفحة ١ من ٢</span>
+    <span data-t="footOrg"></span>
+    <span data-t="page1"></span>
   </div>
 </div>
 
@@ -220,91 +190,173 @@ td.n{background:var(--soft)!important;font-weight:900;color:var(--navy);font-siz
 
   <div class="head">
     <div class="brand">
-      <div class="org">مؤسسة أطواد لصيانة المكيفات</div>
-      <h1>تتمّة الحصر · الخلاصة والتوصية</h1>
-      <div class="sub">الجهة: ————————————————&nbsp;&nbsp;&nbsp;التاريخ: ——————————</div>
+      <div class="org" data-t="org"></div>
+      <h1 data-t="title2"></h1>
+      <div class="sub" data-t="sub2"></div>
     </div>
     <div class="meta">
-      <div class="lbl">رقم المعاينة</div>
+      <div class="lbl" data-t="surveyNo"></div>
       <div class="num">—————</div>
-      <div class="pg">صفحة ٢ من ٢</div>
+      <div class="pg" data-t="page2"></div>
     </div>
   </div>
 
-  <table>
-    <thead>
-      <tr>
-        <th>م</th>
-        <th style="width:15%">الموقع / الغرفة</th>
-        <th style="width:9%">النوع</th>
-        <th style="width:10%">الماركة</th>
-        <th style="width:7%">القدرة</th>
-        <th style="width:7%">سنة التركيب</th>
-        <th>الوحدة<br>الداخلية</th>
-        <th>الوحدة<br>الخارجية</th>
-        <th>كفاءة<br>التبريد</th>
-        <th>الغاز</th>
-        <th>التصريف</th>
-        <th>الضجيج</th>
-        <th style="width:13%">عمل مطلوب قبل العقد</th>
-      </tr>
-    </thead>
-    <tbody id="tb2"></tbody>
-  </table>
+  <table><thead></thead><tbody id="tb2"></tbody></table>
 
-  <div class="sec" style="margin-top:14px;">٤ · الخلاصة العددية</div>
+  <div class="sec" style="margin-top:14px;" data-t="sec4"></div>
   <div class="boxes">
-    <div class="box"><div class="l">إجمالي الوحدات</div><div class="v"></div></div>
-    <div class="box"><div class="l">سليمة (١)</div><div class="v"></div></div>
-    <div class="box"><div class="l">تحتاج صيانة (٢)</div><div class="v"></div></div>
-    <div class="box"><div class="l">تحتاج استبدال (٣)</div><div class="v"></div></div>
+    <div class="box"><div class="l" data-t="total"></div><div class="v"></div></div>
+    <div class="box"><div class="l" data-t="good"></div><div class="v"></div></div>
+    <div class="box"><div class="l" data-t="service"></div><div class="v"></div></div>
+    <div class="box"><div class="l" data-t="replace"></div><div class="v"></div></div>
   </div>
 
-  <div class="sec">٥ · أعمال لازمة قبل بدء العقد</div>
-  <div class="lines">
-    <div class="ln"></div><div class="ln"></div><div class="ln"></div>
-  </div>
+  <div class="sec" data-t="sec5"></div>
+  <div class="lines"><div class="ln"></div><div class="ln"></div><div class="ln"></div></div>
 
-  <div class="sec">٦ · ملاحظات الفني وصعوبات الوصول</div>
-  <div class="lines">
-    <div class="ln"></div><div class="ln"></div>
-  </div>
+  <div class="sec" data-t="sec6"></div>
+  <div class="lines"><div class="ln"></div><div class="ln"></div></div>
 
-  <div class="sec">٧ · التوصية</div>
+  <div class="sec" data-t="sec7"></div>
   <div class="verdict">
-    <div class="vd"><span class="tick"></span> صالح للعقد مباشرة</div>
-    <div class="vd"><span class="tick"></span> صالح بعد تنفيذ الأعمال أعلاه</div>
-    <div class="vd"><span class="tick"></span> غير صالح حالياً</div>
+    <div class="vd"><span class="tick"></span><span data-t="v1"></span></div>
+    <div class="vd"><span class="tick"></span><span data-t="v2"></span></div>
+    <div class="vd"><span class="tick"></span><span data-t="v3"></span></div>
   </div>
 
   <div class="grid g2">
-    <div class="f"><span class="l">دورية الزيارات المقترحة</span><span class="w"></span></div>
-    <div class="f"><span class="l">عدد الفنيين لكل زيارة</span><span class="w"></span></div>
+    <div class="f"><span class="l" data-t="freq"></span><span class="w"></span></div>
+    <div class="f"><span class="l" data-t="crew"></span><span class="w"></span></div>
   </div>
 
   <div class="sign">
     <div class="s">
-      <div class="l">الفني المعاين</div>
+      <div class="l" data-t="signTech"></div>
       <div class="w"></div>
-      <div class="n">الاسم والتوقيع والتاريخ</div>
+      <div class="n" data-t="signTechN"></div>
     </div>
     <div class="s">
-      <div class="l">ممثل الجهة</div>
+      <div class="l" data-t="signClient"></div>
       <div class="w"></div>
-      <div class="n">الاسم والتوقيع والختم</div>
+      <div class="n" data-t="signClientN"></div>
     </div>
   </div>
 
   <div class="foot">
-    <span>هذا النموذج معاينة فنية ولا يُعدّ عرض سعر ولا التزاماً تعاقدياً</span>
-    <span>صفحة ٢ من ٢</span>
+    <span data-t="disclaimer"></span>
+    <span data-t="page2"></span>
   </div>
 </div>
 
 <script>
-/* صفوف الجدول تُبنى بالشيفرة بدل تكرار 40 سطراً في الملف،
-   فأي تغيير في عدد الأعمدة لا يحتاج تعديل كل صف يدوياً. */
+/* ============================================================
+   النموذج ثنائي اللغة. كل نص مرئي يحمل data-t ويُملأ من القاموس،
+   فلا توجد نسخة ثانية من الملف تُنسى عند أي تعديل لاحق.
+   ?lang=en يفتحه بالإنجليزية مباشرة، والزرّ يبدّل بلا إعادة تحميل.
+   ============================================================ */
+var T = {
+  ar: {
+    htmlLang:'ar', dir:'rtl', docTitle:'نموذج معاينة عقد صيانة — أطواد',
+    barTitle:'نموذج معاينة عقد صيانة',
+    btnPrint:'🖨️ طباعة', btnAdd:'➕ صفحة وحدات إضافية', langBtn:'🌐 English',
+    hint:'ورقتان: الأولى بيانات الجهة وجدول ١٨ وحدة، والثانية ١٢ وحدة إضافية مع الخلاصة والتوقيع. ' +
+         'إن زادت وحدات الموقع عن ٣٠، أضيفي صفحة بالزر أعلاه قبل الطباعة.',
+    org:'مؤسسة أطواد لصيانة المكيفات',
+    title1:'نموذج معاينة ما قبل عقد الصيانة',
+    sub1:'يُعبَّأ في الموقع قبل إصدار عرض السعر — ولا يُعتدّ بأي بند لم يُدوَّن هنا',
+    title2:'تتمّة الحصر · الخلاصة والتوصية',
+    sub2:'الجهة: ————————————————&nbsp;&nbsp;&nbsp;التاريخ: ——————————',
+    surveyNo:'رقم المعاينة', page1:'صفحة ١ من ٢', page2:'صفحة ٢ من ٢',
+    sec1:'١ · بيانات الجهة',
+    company:'اسم الجهة / الشركة', activity:'النشاط', cr:'السجل التجاري / الرقم الضريبي',
+    contact:'اسم المسؤول', position:'الصفة', mobile:'الجوال',
+    sec2:'٢ · الموقع والمعاينة',
+    district:'الحي', bldg:'نوع المبنى (مكتب · محل · مستودع · سكن)', floors:'عدد الأدوار / الفروع',
+    sdate:'تاريخ المعاينة', tech:'اسم الفني المعاين', hours:'ساعات دخول الفنيين المسموحة',
+    sec3:'٣ · حصر الوحدات وحالتها',
+    cols:['م','الموقع / الغرفة','النوع','الماركة','القدرة','سنة<br>التركيب',
+          'الوحدة<br>الداخلية','الوحدة<br>الخارجية','كفاءة<br>التبريد','الغاز','التصريف','الضجيج',
+          'عمل مطلوب قبل العقد'],
+    key:'<b>مفتاح التقييم:</b> اكتب في الخانة <b>١</b> سليم · <b>٢</b> يحتاج صيانة · <b>٣</b> يحتاج استبدال. ' +
+        '&nbsp;|&nbsp; <b>النوع:</b> سبليت · شباك · كونسيلد · دولابي · مركزي. ' +
+        '&nbsp;|&nbsp; <b>الغاز:</b> طبيعي / ناقص. ' +
+        '&nbsp;|&nbsp; <b>التصريف:</b> سليم / مسدود / يسرّب.' +
+        '<br><b>تنبيه للفني:</b> كل وحدة تُقيَّم <b>٣</b> تُستثنى من العقد وتُسعَّر منفصلة — ' +
+        'ولا تُدرَج ضمن الصيانة الدورية.',
+    footOrg:'مؤسسة أطواد لصيانة المكيفات · 0509720382',
+    sec4:'٤ · الخلاصة العددية',
+    total:'إجمالي الوحدات', good:'سليمة (١)', service:'تحتاج صيانة (٢)', replace:'تحتاج استبدال (٣)',
+    sec5:'٥ · أعمال لازمة قبل بدء العقد',
+    sec6:'٦ · ملاحظات الفني وصعوبات الوصول',
+    sec7:'٧ · التوصية',
+    v1:'صالح للعقد مباشرة', v2:'صالح بعد تنفيذ الأعمال أعلاه', v3:'غير صالح حالياً',
+    freq:'دورية الزيارات المقترحة', crew:'عدد الفنيين لكل زيارة',
+    signTech:'الفني المعاين', signTechN:'الاسم والتوقيع والتاريخ',
+    signClient:'ممثل الجهة', signClientN:'الاسم والتوقيع والختم',
+    disclaimer:'هذا النموذج معاينة فنية ولا يُعدّ عرض سعر ولا التزاماً تعاقدياً',
+    extraTitle:'تتمّة حصر الوحدات', extraPg:'ورقة إضافية '
+  },
+  en: {
+    htmlLang:'en', dir:'ltr', docTitle:'Pre-Contract AC Survey Form — Atwad',
+    barTitle:'Pre-Contract AC Survey Form',
+    btnPrint:'🖨️ Print', btnAdd:'➕ Extra units page', langBtn:'🌐 عربي',
+    hint:'Two pages: client details and 18 units on page one; 12 further units plus summary and ' +
+         'signatures on page two. For sites with more than 30 units, add a page before printing.',
+    org:'Atwad Air Conditioning Maintenance',
+    title1:'Pre-Contract Air Conditioning Survey',
+    sub1:'To be completed on site before a quotation is issued — anything not recorded here is not included',
+    title2:'Inventory continued · Summary &amp; Recommendation',
+    sub2:'Client: ————————————————&nbsp;&nbsp;&nbsp;Date: ——————————',
+    surveyNo:'Survey No.', page1:'Page 1 of 2', page2:'Page 2 of 2',
+    sec1:'1 · Client Details',
+    company:'Company / Organization', activity:'Business activity', cr:'CR / VAT number',
+    contact:'Contact person', position:'Position', mobile:'Mobile',
+    sec2:'2 · Site &amp; Survey',
+    district:'District', bldg:'Building type (office · shop · warehouse · residential)',
+    floors:'Floors / branches', sdate:'Survey date', tech:'Surveying technician',
+    hours:'Permitted access hours',
+    sec3:'3 · Unit Inventory &amp; Condition',
+    cols:['No.','Location / Room','Type','Brand','Capacity','Year<br>installed',
+          'Indoor<br>unit','Outdoor<br>unit','Cooling','Refrigerant','Drainage','Noise',
+          'Work required before contract'],
+    key:'<b>Rating key:</b> write <b>1</b> good · <b>2</b> needs servicing · <b>3</b> needs replacement. ' +
+        '&nbsp;|&nbsp; <b>Type:</b> split · window · concealed · floor-standing · central. ' +
+        '&nbsp;|&nbsp; <b>Refrigerant:</b> normal / low. ' +
+        '&nbsp;|&nbsp; <b>Drainage:</b> clear / blocked / leaking.' +
+        '<br><b>Note to technician:</b> any unit rated <b>3</b> is excluded from the contract and ' +
+        'quoted separately — it is not covered by routine servicing.',
+    footOrg:'Atwad Air Conditioning Maintenance · 0509720382',
+    sec4:'4 · Summary',
+    total:'Total units', good:'Good (1)', service:'Needs servicing (2)', replace:'Needs replacement (3)',
+    sec5:'5 · Works required before the contract starts',
+    sec6:'6 · Technician notes &amp; access constraints',
+    sec7:'7 · Recommendation',
+    v1:'Eligible as is', v2:'Eligible after the works above', v3:'Not eligible at present',
+    freq:'Proposed visit frequency', crew:'Technicians per visit',
+    signTech:'Surveying technician', signTechN:'Name, signature &amp; date',
+    signClient:'Client representative', signClientN:'Name, signature &amp; stamp',
+    disclaimer:'This form is a technical survey; it is neither a quotation nor a contractual commitment',
+    extraTitle:'Unit inventory continued', extraPg:'Extra page '
+  }
+};
+
+var LANG = (location.search.indexOf('lang=en') !== -1) ? 'en' : 'ar';
 var COLS = 13;
+
+function t(k){ return T[LANG][k]; }
+
+function headRow(){
+  var c = t('cols');
+  return '<tr><th>' + c[0] + '</th>' +
+    '<th style="width:15%">' + c[1] + '</th>' +
+    '<th style="width:9%">'  + c[2] + '</th>' +
+    '<th style="width:10%">' + c[3] + '</th>' +
+    '<th style="width:7%">'  + c[4] + '</th>' +
+    '<th style="width:7%">'  + c[5] + '</th>' +
+    '<th>' + c[6] + '</th><th>' + c[7] + '</th><th>' + c[8] + '</th>' +
+    '<th>' + c[9] + '</th><th>' + c[10] + '</th><th>' + c[11] + '</th>' +
+    '<th style="width:13%">' + c[12] + '</th></tr>';
+}
 
 function buildRows(tbodyId, from, count){
   var tb = document.getElementById(tbodyId);
@@ -318,10 +370,33 @@ function buildRows(tbodyId, from, count){
   tb.innerHTML = html;
 }
 
+function applyLang(){
+  var root = document.getElementById('root');
+  root.lang = t('htmlLang');
+  root.dir  = t('dir');
+  document.title = t('docTitle');
+
+  var nodes = document.querySelectorAll('[data-t]');
+  for(var i = 0; i < nodes.length; i++){
+    nodes[i].innerHTML = t(nodes[i].getAttribute('data-t'));
+  }
+  var heads = document.querySelectorAll('thead');
+  for(var h = 0; h < heads.length; h++) heads[h].innerHTML = headRow();
+
+  var lb = document.getElementById('langBtn');
+  if(lb) lb.textContent = t('langBtn');
+}
+
+function toggleLang(){
+  LANG = (LANG === 'ar') ? 'en' : 'ar';
+  applyLang();
+}
+
+applyLang();
 buildRows('tb1', 1, 18);
 buildRows('tb2', 19, 12);
 
-/* صفحة وحدات إضافية لمواقع تتجاوز 40 وحدة — تُدرج قبل الورقة الأخيرة */
+/* صفحة وحدات إضافية للمواقع التي تتجاوز 30 وحدة — تُدرج قبل الورقة الأخيرة */
 var extra = 0;
 function addRows(){
   extra++;
@@ -333,21 +408,17 @@ function addRows(){
   s.className = 'sheet';
   s.innerHTML =
     '<div class="head"><div class="brand">' +
-      '<div class="org">مؤسسة أطواد لصيانة المكيفات</div>' +
-      '<h1>تتمّة حصر الوحدات</h1>' +
-      '<div class="sub">الجهة: ————————————————&nbsp;&nbsp;&nbsp;التاريخ: ——————————</div>' +
+      '<div class="org" data-t="org">' + t('org') + '</div>' +
+      '<h1 data-t="extraTitle">' + t('extraTitle') + '</h1>' +
+      '<div class="sub" data-t="sub2">' + t('sub2') + '</div>' +
     '</div><div class="meta">' +
-      '<div class="lbl">رقم المعاينة</div><div class="num">—————</div>' +
-      '<div class="pg">ورقة إضافية ' + extra + '</div>' +
+      '<div class="lbl" data-t="surveyNo">' + t('surveyNo') + '</div>' +
+      '<div class="num">—————</div>' +
+      '<div class="pg">' + t('extraPg') + extra + '</div>' +
     '</div></div>' +
-    '<table><thead><tr>' +
-      '<th>م</th><th style="width:15%">الموقع / الغرفة</th><th style="width:9%">النوع</th>' +
-      '<th style="width:10%">الماركة</th><th style="width:7%">القدرة</th><th style="width:7%">سنة التركيب</th>' +
-      '<th>الوحدة<br>الداخلية</th><th>الوحدة<br>الخارجية</th><th>كفاءة<br>التبريد</th>' +
-      '<th>الغاز</th><th>التصريف</th><th>الضجيج</th><th style="width:13%">عمل مطلوب قبل العقد</th>' +
-    '</tr></thead><tbody id="tbx' + extra + '"></tbody></table>' +
-    '<div class="foot"><span>مؤسسة أطواد لصيانة المكيفات · 0509720382</span>' +
-    '<span>ورقة إضافية ' + extra + '</span></div>';
+    '<table><thead>' + headRow() + '</thead><tbody id="tbx' + extra + '"></tbody></table>' +
+    '<div class="foot"><span data-t="footOrg">' + t('footOrg') + '</span>' +
+    '<span>' + t('extraPg') + extra + '</span></div>';
 
   last.parentNode.insertBefore(s, last);
   buildRows('tbx' + extra, start, 32);
