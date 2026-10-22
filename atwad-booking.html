@@ -20,7 +20,6 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
 .header{background:linear-gradient(90deg,#0C3B5E,#0EA5E9);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;}
 .header h1{color:#fff;font-size:22px;font-weight:800;}
 .header p{color:rgba(255,255,255,.7);font-size:12px;}
-.lang-btn{padding:8px 16px;background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.4);border-radius:8px;color:#fff;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
 .steps-bar{display:flex;justify-content:center;background:#fff;padding:4px;border-bottom:2px solid var(--ice);position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.05);}
 .step-item{display:flex;flex-direction:column;align-items:center;padding:10px 18px;border-bottom:3px solid transparent;flex:1;max-width:160px;}
 .step-item.active{border-bottom-color:var(--sky);}
@@ -296,7 +295,6 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
     <h1>مؤسسة أطواد ❄️</h1>
     <p>صيانة وتنظيف المكيفات الاحترافية</p>
   </div>
-  <button class="lang-btn" onclick="toggleLang()">🌐 EN</button>
 </div>
 
 <div class="steps-bar">
@@ -797,7 +795,6 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
 <script>
-var LANG = 'ar';
 var db = null;
 // يمنع إرسال الحجز أكثر من مرة أثناء انتظار رد Firebase.
 // يجب تعريفه مسبقًا؛ غيابه كان يوقف submitBooking فور الضغط على الزر.
@@ -3171,11 +3168,6 @@ function goStep(n){
     else{sb.className='step-item done';sn.textContent='✓';}
   }
   window.scrollTo({top:0,behavior:'smooth'});
-}
-
-function toggleLang(){
-  LANG=LANG==='ar'?'en':'ar';
-  document.querySelector('.lang-btn').textContent=LANG==='ar'?'🌐 EN':'🌐 عر';
 }
 
 /* ============================================================
