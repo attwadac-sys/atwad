@@ -11,7 +11,7 @@
   --slate:#334155;--mist:#94A3B8;--success:#10B981;--warning:#F59E0B;--danger:#EF4444;--purple:#8B5CF6;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
+body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);overflow-x:hidden;}
 
 .sidebar{position:fixed;right:0;top:0;bottom:0;width:230px;background:linear-gradient(180deg,var(--deep),var(--steel));z-index:200;display:flex;flex-direction:column;}
 .sidebar-logo{padding:22px 18px 18px;border-bottom:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:12px;}
@@ -63,7 +63,10 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 
 /* CHART AREA */
 .charts-row{display:grid;grid-template-columns:2fr 1fr;gap:16px;padding:16px 22px 0;}
-.chart-card{background:#fff;border-radius:16px;padding:18px 20px;box-shadow:0 2px 12px rgba(0,0,0,.05);}
+.chart-card{background:#fff;border-radius:16px;padding:18px 20px;box-shadow:0 2px 12px rgba(0,0,0,.05);min-width:0;}
+/* عناصر الشبكة تأخذ افتراضيًا أدنى عرض لمحتواها، فرسمٌ بيانيّ عريض
+   يمدّ العمود ويمدّ الصفحة كلها. min-width:0 يسمح لها بالانكماش. */
+.charts-row > *,.tables-row > *,.kpi-row > *{min-width:0;}
 .chart-title{font-size:14px;font-weight:700;color:var(--deep);margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;}
 .chart-legend{display:flex;gap:14px;}
 .legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--mist);}
@@ -75,7 +78,11 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 .bar{border-radius:4px 4px 0 0;min-width:12px;transition:all .3s;cursor:pointer;position:relative;}
 .bar:hover::after{content:attr(data-val);position:absolute;top:-22px;right:50%;transform:translateX(50%);background:var(--deep);color:#fff;font-size:10px;padding:2px 6px;border-radius:4px;white-space:nowrap;font-family:'Tajawal',sans-serif;}
 .bar-label{font-size:10px;color:var(--mist);text-align:center;margin-top:4px;}
-.bar-chart-wrap{display:flex;flex-direction:column;}
+.bar-chart-wrap{display:flex;flex-direction:column;min-width:0;overflow-x:auto;
+  -webkit-overflow-scrolling:touch;scrollbar-width:thin;}
+/* الأعمدة لها حدّ أدنى 12px، فإن ضاقت الشاشة انزلق الرسم داخل بطاقته
+   بدل أن يدفع الصفحة أفقيًا ويخفي المحتوى خلف حافة الجوال. */
+.bar-chart,.bar-x-labels{min-width:max-content;}
 .bar-x-labels{display:flex;gap:6px;padding-top:4px;}
 .bar-x-label{flex:1;text-align:center;font-size:10px;color:var(--mist);}
 
