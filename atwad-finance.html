@@ -608,6 +608,39 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);over
   </div>
 </div>
 
+<!-- Modal موعد السداد -->
+<div class="modal-overlay" id="dueModal">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-hdr">
+      <h3>📅 موعد السداد</h3>
+      <button class="modal-close" onclick="closeDueModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>نوع الموعد</label>
+        <select id="due_type_edit" onchange="onDueModalTypeChange(this.value)">
+          <option value="specific">📅 تاريخ محدد</option>
+          <option value="end_of_month">🗓 نهاية الشهر</option>
+          <option value="salary">💼 عند نزول الراتب</option>
+          <option value="open">❓ موعد غير محدد</option>
+        </select>
+      </div>
+      <div class="form-group" id="dueDateEditGroup">
+        <label>التاريخ</label>
+        <input type="date" id="due_date_edit">
+      </div>
+      <div class="form-group">
+        <label>ملاحظة</label>
+        <input type="text" id="due_note_edit" placeholder="مثال: وعد بالسداد بعد أسبوع">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeDueModal()">إلغاء</button>
+      <button class="btn-save" onclick="saveDueDate()">💾 حفظ الموعد</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ===== DATA =====
 let entries = JSON.parse(localStorage.getItem('atwad_finance') || '[]');
@@ -911,6 +944,7 @@ function openRecDetail(fbKey) {
     paymentsHtml +
     '<div class="rec-modal-btns">' +
       '<button class="rec-modal-btns btn-register-pay" onclick="openPayModal()">💵 تسجيل سداد</button>' +
+      '<button class="rec-modal-btns btn-change-due" onclick="openDueModal()">📅 موعد السداد</button>' +
       (phone ? '<a class="rec-modal-btns btn-wa-collect" href="'+wa+'" target="_blank" onclick="recordReminderSent(\''+fbKey+'\')">📲 طلب سداد واتساب</a>' : '') +
       '<button class="rec-modal-btns btn-settle" onclick="settleReceivable(\''+fbKey+'\')">✅ تسوية المستحق</button>' +
       '<button class="rec-modal-btns btn-cancel-rec" onclick="cancelReceivable(\''+fbKey+'\')">🚫 إلغاء المستحق</button>' +
@@ -940,6 +974,56 @@ function recordReminderSent(fbKey) {
   e.lastReminderAt = new Date().toISOString();
   saveSingleEntry(e);
   renderAll();
+}
+
+/* ===== موعد السداد لقيد قائم =====
+   القيود المستوردة من الحجوزات تصل بلا موعد استحقاق، ونموذج الإضافة
+   وحده كان يسأل عنه — فبقيت تلك القيود خارج تنبيهات التحصيل.
+   هذه النافذة تضيف الموعد أو تعدّله بعد الإنشاء. */
+function openDueModal() {
+  var e = entries.find(function(x){ return x._fbKey === _currentRecKey; });
+  if(!e) return;
+  document.getElementById('due_type_edit').value = e.dueType || 'specific';
+  document.getElementById('due_date_edit').value = e.dueDate || '';
+  document.getElementById('due_note_edit').value = e.paymentNote || '';
+  onDueModalTypeChange(document.getElementById('due_type_edit').value);
+  document.getElementById('dueModal').classList.add('open');
+}
+
+function closeDueModal() {
+  document.getElementById('dueModal').classList.remove('open');
+}
+
+function onDueModalTypeChange(val) {
+  var showDate = (val === 'specific' || val === 'salary');
+  document.getElementById('dueDateEditGroup').style.display = showDate ? 'block' : 'none';
+  if(val === 'end_of_month') document.getElementById('due_date_edit').value = calcDueDate('end_of_month');
+}
+
+function saveDueDate() {
+  var e = entries.find(function(x){ return x._fbKey === _currentRecKey; });
+  if(!e) return;
+
+  var type = document.getElementById('due_type_edit').value;
+  var date = document.getElementById('due_date_edit').value;
+  var note = document.getElementById('due_note_edit').value.trim();
+
+  if(type === 'end_of_month') date = calcDueDate('end_of_month');
+  if(type === 'open') date = '';
+  if((type === 'specific' || type === 'salary') && !date) {
+    showToast('❌ اختر التاريخ');
+    return;
+  }
+
+  e.dueType = type;
+  if(date) e.dueDate = date; else delete e.dueDate;
+  if(note) e.paymentNote = note; else delete e.paymentNote;
+
+  saveSingleEntry(e);
+  closeDueModal();
+  renderAll();
+  openRecDetail(_currentRecKey);   // تُعاد البطاقة لتُرى القيمة الجديدة فوراً
+  showToast(date ? '✅ موعد السداد: ' + fmtDate(date) : '✅ حُفظ: موعد غير محدد');
 }
 
 // ===== Modal تسجيل سداد =====
