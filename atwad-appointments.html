@@ -352,6 +352,23 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 .ts-rate-ok{color:#047857;font-weight:800;}
 .ts-case{background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:10px 12px;margin-bottom:8px;font-size:12px;line-height:1.7;}
 .ts-sub{font-size:11px;color:var(--mist);margin:14px 0 6px;font-weight:700;}
+/* مكافأة الفريق — قائمة الإغلاق */
+.bn-card{border:1.5px solid #E2E8F0;border-radius:12px;padding:12px 14px;margin-bottom:10px;background:#fff;}
+.bn-card.due{border-color:#10B981;background:#ECFDF5;}
+.bn-card.paid{border-color:#CBD5E1;background:#F8FAFC;opacity:.85;}
+.bn-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;}
+.bn-month{font-size:14px;font-weight:800;color:var(--deep);}
+.bn-amt{font-size:18px;font-weight:900;color:#047857;}
+.bn-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:10px 0 6px;}
+.bn-grid > div{background:rgba(255,255,255,.7);border:1px solid #E2E8F0;border-radius:8px;padding:6px 8px;text-align:center;}
+.bn-grid .l{font-size:10px;color:var(--mist);}
+.bn-grid .v{font-size:14px;font-weight:800;color:var(--slate);}
+.bn-st{font-size:11px;font-weight:700;margin-top:6px;}
+.bn-btn{margin-top:8px;width:100%;padding:9px;border:none;border-radius:9px;background:#047857;color:#fff;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:800;cursor:pointer;}
+.bn-btn:disabled{background:#CBD5E1;cursor:not-allowed;}
+.bn-tabs{display:flex;gap:6px;margin:14px 0 8px;}
+.bn-tab{flex:1;padding:8px;border-radius:9px;border:1.5px solid #E2E8F0;background:#fff;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;color:var(--mist);cursor:pointer;}
+.bn-tab.active{border-color:#047857;color:#047857;background:#ECFDF5;}
 .pay-x{background:#fff;color:var(--mist);border:1.5px solid var(--ice);grid-column:1 / -1;font-size:14px;padding:12px;}
 .pay-btn:disabled{opacity:.5;}
 </style>
@@ -780,7 +797,12 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
         <button class="ts-chip" data-days="365" onclick="setTechStatsRange(365,this)">سنة</button>
         <button class="ts-chip" data-days="0" onclick="setTechStatsRange(0,this)">الكل</button>
       </div>
+      <div class="bn-tabs">
+        <button class="bn-tab active" id="tsTabPerf" onclick="switchTechStatsTab('perf')">📊 الأداء</button>
+        <button class="bn-tab" id="tsTabBonus" onclick="switchTechStatsTab('bonus')">💰 مكافأة الفريق</button>
+      </div>
       <div id="techStatsBody"></div>
+      <div id="bonusBody" style="display:none;"></div>
     </div>
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeTechStats()">إغلاق</button>
@@ -1030,7 +1052,7 @@ let pendingNewApptApprovedCallback = null;
 
 const TECHS = { Abrar:'أحمد', 'أبرار':'أحمد', 'Abrar':'أحمد', Shoib:'شعيب', Suhail:'سهيل' };
 // مفاتيح الفنيين الفعلية (بدون الأسماء المستعارة) — تُستخدم في قوائم الاختيار والإحصائيات
-const TECH_KEYS = ['Abrar','Shoib','Suhail'];
+const TECH_KEYS = ['Abrar','Shoib']; // الفنيون الحاليون — سهيل غادر (أكتوبر 2026)، يبقى اسمه للعرض في السجلات القديمة
 // أنواع الخلل في حالات إعادة العمل تحت الضمان
 const WARRANTY_FAULTS = {
   water_leak:'تقطير ماء من المكيف',
@@ -4605,6 +4627,7 @@ function setTechStatsRange(days, el){
 
 function openTechStats(){
   document.getElementById('techStatsModal').classList.add('open');
+  switchTechStatsTab('perf');
   renderTechStats();
 }
 function closeTechStats(){ document.getElementById('techStatsModal').classList.remove('open'); }
@@ -4692,6 +4715,154 @@ function renderTechStats(){
   html += '<div style="margin-top:12px;font-size:11px;color:var(--mist);line-height:1.7;">النسبة = حالات إعادة العمل المنسوبة للفني ÷ زياراته المكتملة في الفترة نفسها. زيارات الضمان لا تُحسب ضمن إنجاز الفني. «إغلاق موثق» = زيارات أُكملت فيها قائمة الإغلاق (اختبار التصريف) كاملة.</div>';
   body.innerHTML = html;
 }
+// ============================================================
+// مكافأة الفريق — 5 ريال لكل وحدة أُغلقت بقائمة موثقة ولم تعد خلال 30 يوماً
+// تُصرف بعد نهاية الشهر التالي، وتُسجَّل كمصروف في transactions
+// ============================================================
+const BONUS_PER_UNIT = 5;
+const BONUS_CATEGORY = 'مكافآت';
+var _bonusPosted = null; // { 'YYYY-MM': {key, amount, date} }
+
+function switchTechStatsTab(tab){
+  var perf = document.getElementById('techStatsBody');
+  var bonus = document.getElementById('bonusBody');
+  document.getElementById('tsTabPerf').classList.toggle('active', tab === 'perf');
+  document.getElementById('tsTabBonus').classList.toggle('active', tab === 'bonus');
+  perf.style.display = tab === 'perf' ? '' : 'none';
+  bonus.style.display = tab === 'bonus' ? '' : 'none';
+  document.getElementById('tsFilters').style.display = tab === 'perf' ? '' : 'none';
+  if(tab === 'bonus') renderBonus();
+}
+
+function _monthLabel(ym){
+  var names = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  var p = ym.split('-');
+  return (names[parseInt(p[1], 10) - 1] || p[1]) + ' ' + p[0];
+}
+function _monthAdd(ym, n){
+  var p = ym.split('-');
+  var d = new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1 + n, 1);
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+}
+
+// يحسب شهور المكافأة من المواعيد المكتملة بقائمة إغلاق كاملة
+function computeBonusMonths(){
+  var months = {};
+  for(var i = 0; i < appointments.length; i++){
+    var a = appointments[i];
+    if(!a || a.status !== 'done' || !a.closing || !a.closing.complete || !a.date) continue;
+    var ym = String(a.date).slice(0, 7);
+    if(!months[ym]) months[ym] = { units: 0, visits: 0, returns: 0, returnCases: [] };
+    var u = parseInt(a.closing.units, 10) || 1;
+    months[ym].units += u;
+    months[ym].visits += 1;
+    // عودة تنقيط منسوبة لهذه الزيارة تُسقط مكافأة وحدة واحدة
+    if(a.causedRework && (!a.causedReworkFault || a.causedReworkFault === 'water_leak')){
+      months[ym].returns += 1;
+      months[ym].returnCases.push((a.client || '—') + ' · ' + a.date);
+    }
+  }
+  return months;
+}
+
+function loadBonusPosted(){
+  if(_bonusPosted || !db) return Promise.resolve();
+  return db.ref('transactions').orderByChild('bonusMonth').startAt('2000-01').once('value').then(function(snap){
+    _bonusPosted = {};
+    snap.forEach(function(c){
+      var v = c.val() || {};
+      if(v.bonusMonth && v.status !== 'ملغي') _bonusPosted[v.bonusMonth] = { key: c.key, amount: parseFloat(v.amount) || 0, date: v.date || '' };
+    });
+  }).catch(function(err){
+    console.warn('تعذّرت قراءة مكافآت مصروفة:', err);
+    _bonusPosted = {};
+  });
+}
+
+function renderBonus(){
+  var body = document.getElementById('bonusBody');
+  body.innerHTML = '<div style="padding:14px;color:var(--mist);font-size:12px;">⏳ جارٍ الحساب…</div>';
+  loadBonusPosted().then(function(){
+    var months = computeBonusMonths();
+    var keys = Object.keys(months).sort().reverse();
+    var today = new Date().toISOString().slice(0, 10);
+    var thisMonth = today.slice(0, 7);
+    var techCount = TECH_KEYS.length || 1;
+    var html = '<div style="font-size:11px;color:var(--mist);line-height:1.7;margin-bottom:10px;">' +
+      BONUS_PER_UNIT + ' ريال لكل وحدة أُغلقت بقائمة إغلاق كاملة، تُخصم وحدة عن كل عودة تنقيط، وتُقسم بالتساوي على ' + techCount + ' فنيين. تُستحق بعد نهاية الشهر التالي لضمان انقضاء 30 يوماً.</div>';
+    if(!keys.length){
+      html += '<div style="padding:14px;color:var(--mist);font-size:12px;">لا توجد زيارات مُغلقة بقائمة إغلاق كاملة بعد.</div>';
+      body.innerHTML = html; return;
+    }
+    for(var k = 0; k < keys.length; k++){
+      var ym = keys[k];
+      var m = months[ym];
+      var net = Math.max(0, m.units - m.returns);
+      var amount = net * BONUS_PER_UNIT;
+      var perTech = Math.floor(amount / techCount);
+      var eligibleFrom = _monthAdd(ym, 2) + '-01';
+      var posted = _bonusPosted[ym];
+      var cls = '', st = '', btn = '';
+      if(posted){
+        cls = 'paid';
+        st = '<div class="bn-st" style="color:#475569;">✅ تم الصرف بتاريخ ' + _wrEsc(posted.date) + ' — ' + posted.amount + ' ريال</div>';
+      } else if(ym === thisMonth){
+        st = '<div class="bn-st" style="color:#B45309;">⏳ الشهر الحالي — الرقم يتغير حتى نهاية الشهر</div>';
+      } else if(today < eligibleFrom){
+        st = '<div class="bn-st" style="color:#B45309;">🛡️ قيد فترة الضمان — يُستحق من ' + _wrEsc(eligibleFrom) + '</div>';
+      } else {
+        cls = 'due';
+        st = '<div class="bn-st" style="color:#047857;">💵 مستحق للصرف الآن</div>';
+        btn = '<button class="bn-btn" onclick="postBonusExpense(\'' + ym + '\',' + amount + ',' + m.units + ',' + m.returns + ')"' + (amount > 0 ? '' : ' disabled') + '>💰 تسجيل الصرف كمصروف (' + amount + ' ريال)</button>';
+      }
+      html += '<div class="bn-card ' + cls + '">' +
+        '<div class="bn-head"><div class="bn-month">' + _wrEsc(_monthLabel(ym)) + '</div><div class="bn-amt">' + amount + ' ريال</div></div>' +
+        '<div class="bn-grid">' +
+          '<div><div class="l">وحدات موثقة</div><div class="v">' + m.units + '</div></div>' +
+          '<div><div class="l">عودات تنقيط</div><div class="v" style="color:' + (m.returns ? '#B91C1C' : 'var(--slate)') + '">' + m.returns + '</div></div>' +
+          '<div><div class="l">نصيب كل فني</div><div class="v">' + perTech + '</div></div>' +
+        '</div>' +
+        '<div style="font-size:11px;color:var(--mist);">' + m.visits + ' زيارة · صافي ' + net + ' وحدة × ' + BONUS_PER_UNIT + '</div>' +
+        (m.returnCases.length ? '<div style="font-size:11px;color:#B91C1C;margin-top:4px;">عودات: ' + _wrEsc(m.returnCases.join(' — ')) + '</div>' : '') +
+        st + btn + '</div>';
+    }
+    body.innerHTML = html;
+  });
+}
+
+function postBonusExpense(ym, amount, units, returns){
+  if(!db || !(amount > 0)) return;
+  if(_bonusPosted && _bonusPosted[ym]){ showToast('⚠️ مكافأة ' + _monthLabel(ym) + ' مسجلة مسبقاً'); return; }
+  if(!confirm('تسجيل مكافأة الفريق لشهر ' + _monthLabel(ym) + ' بمبلغ ' + amount + ' ريال كمصروف؟')) return;
+  var today = new Date().toISOString().slice(0, 10);
+  var key = db.ref('transactions').push().key;
+  var tx = {
+    id: 'F' + Date.now().toString().slice(-7),
+    type: 'expense',
+    category: BONUS_CATEGORY,
+    desc: 'مكافأة الفريق — قائمة الإغلاق — ' + _monthLabel(ym),
+    party: 'الفنيون (' + TECH_KEYS.map(techDisplayName).join('، ') + ')',
+    amount: amount,
+    date: today,
+    method: 'كاش',
+    status: 'مدفوع',
+    paidAmount: amount,
+    payments: [],
+    bonusMonth: ym,
+    bonusUnits: units,
+    bonusReturns: returns,
+    bonusPerUnit: BONUS_PER_UNIT,
+    createdAt: new Date().toISOString()
+  };
+  db.ref('transactions/' + key).set(tx).then(function(){
+    if(!_bonusPosted) _bonusPosted = {};
+    _bonusPosted[ym] = { key: key, amount: amount, date: today };
+    if(_txCache) _txCache.push({ key: key, v: tx });
+    showToast('✅ سُجّلت مكافأة ' + _monthLabel(ym) + ' — ' + amount + ' ريال');
+    renderBonus();
+  }).catch(function(e){ showToast('❌ خطأ: ' + e.message); });
+}
+
 document.getElementById('payCancel').addEventListener('click', closePaySheet);
 document.getElementById('payOv').addEventListener('click', function(ev){
   if(ev.target === this) closePaySheet();
