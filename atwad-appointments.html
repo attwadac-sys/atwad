@@ -331,6 +331,17 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 .wr-field label{display:block;font-size:12px;font-weight:700;color:var(--slate);margin-bottom:5px;}
 .wr-field select,.wr-field textarea{width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid #E2E8F0;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;color:var(--slate);background:#fff;}
 .wr-field textarea{min-height:70px;resize:vertical;}
+/* قائمة الإغلاق — فحص إلزامي قبل تسجيل القبض */
+.cl-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1.5px solid #E2E8F0;border-radius:10px;margin-bottom:8px;cursor:pointer;background:#fff;transition:all .15s;}
+.cl-item:has(input:checked){border-color:#10B981;background:#ECFDF5;}
+.cl-item input{width:20px;height:20px;margin-top:2px;flex-shrink:0;accent-color:#10B981;cursor:pointer;}
+.cl-item .cl-t{font-size:13px;font-weight:700;color:var(--slate);line-height:1.5;}
+.cl-item .cl-s{font-size:11px;color:var(--mist);line-height:1.5;margin-top:2px;}
+.cl-progress{height:6px;border-radius:6px;background:#E2E8F0;overflow:hidden;margin:4px 0 12px;}
+.cl-progress > div{height:100%;background:#10B981;width:0;transition:width .2s;}
+.cl-skip{margin-top:10px;padding:10px 12px;border:1.5px dashed #FCA5A5;border-radius:10px;background:#FFF1F2;}
+.cl-skip summary{font-size:12px;font-weight:700;color:#B91C1C;cursor:pointer;}
+.cl-skip textarea{width:100%;box-sizing:border-box;margin-top:8px;padding:8px 10px;border:1.5px solid #FCA5A5;border-radius:8px;font-family:'Tajawal',sans-serif;font-size:12px;min-height:56px;resize:vertical;}
 .ts-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
 .ts-chip{padding:6px 14px;border-radius:20px;border:1.5px solid #E2E8F0;background:#fff;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:600;color:var(--mist);cursor:pointer;}
 .ts-chip.active{border-color:var(--sky);color:var(--sky);background:var(--ice);}
@@ -720,6 +731,37 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeWarrantyModal()">إلغاء</button>
       <button class="btn-save" id="wrConfirmBtn" onclick="confirmWarranty()">🛡️ إتمام تحت الضمان</button>
+    </div>
+  </div>
+</div>
+
+<!-- قائمة الإغلاق — تظهر عند «✓ إتمام» قبل ورقة القبض -->
+<div class="modal-overlay" id="closingModal">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-hdr">
+      <h3>✅ قائمة الإغلاق — فحص ما قبل المغادرة</h3>
+      <button class="modal-close" onclick="closeClosingModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="clWho" style="font-size:12px;color:var(--mist);margin-bottom:10px;"></div>
+      <div class="cl-progress"><div id="clBar"></div></div>
+      <div id="clItems"></div>
+      <div class="wr-field" style="margin-top:12px;">
+        <label for="clTech">الفني المسؤول عن إغلاق الوحدات</label>
+        <select id="clTech"></select>
+      </div>
+      <div class="wr-field">
+        <label for="clNote">ملاحظة (اختياري)</label>
+        <textarea id="clNote" placeholder="مثال: الخرطوم كان مسدودًا وتم تنظيفه، رُكّبت صينية جديدة…" style="min-height:56px;"></textarea>
+      </div>
+      <details class="cl-skip" id="clSkipBox">
+        <summary>⚠️ القائمة لا تنطبق على هذه الزيارة (معاينة فقط / لم يُفتح المكيف)</summary>
+        <textarea id="clSkipReason" placeholder="اكتب السبب — إلزامي"></textarea>
+      </details>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeClosingModal()">إلغاء</button>
+      <button class="btn-save" id="clConfirmBtn" onclick="confirmClosing()">✅ تأكيد الفحص والمتابعة للقبض</button>
     </div>
   </div>
 </div>
@@ -4046,6 +4088,7 @@ function openDetail(id){
     ${renderTechnicianNotificationBadge(a)?`<div style="margin-bottom:12px;">${renderTechnicianNotificationBadge(a)}</div>`:''}
     ${a.leadSource?`<div style="display:inline-block;background:#EEF2FF;border:1.5px solid #C7D2FE;border-radius:999px;padding:4px 12px;margin-bottom:10px;font-size:12px;color:#3730A3;">📣 المصدر: ${leadSourceLabel(a.leadSource)}</div>`:''}
     ${a.notes?`<div style="background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:10px;padding:12px;margin-bottom:14px;font-size:13px;color:#92400E;">📝 ${a.notes}</div>`:''}
+    ${renderClosingSummary(a)}
     <div id="detailLocImgBox" style="margin-bottom:0;"></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
       <a href="${atwadWaUrl(a.phone, buildReminderMessage(a))}" target="atwadWhatsApp" style="flex:1;text-align:center;padding:10px;background:#25D366;color:#fff;border-radius:9px;font-weight:700;text-decoration:none;font-size:13px;min-width:100px;">📲 تذكير</a>
@@ -4062,6 +4105,28 @@ function openDetail(id){
     </div>`;
   document.getElementById('detailModal').classList.add('open');
   renderDetailLocationImage(a);
+}
+
+/** ملخص قائمة الإغلاق في بطاقة التفاصيل — للزيارات المكتملة */
+function renderClosingSummary(a){
+  if(a.status !== 'done') return '';
+  var c = a.closing;
+  if(!c){
+    return '<div style="background:#F1F5F9;border:1.5px solid #CBD5E1;border-radius:10px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:#475569;">☑️ أُغلقت قبل اعتماد قائمة الإغلاق — لا يوجد فحص موثق</div>';
+  }
+  var who = c.tech === 'team' ? 'الفريق' : techDisplayName(c.tech);
+  if(c.skipped){
+    return '<div style="background:#FFF1F2;border:1.5px solid #FCA5A5;border-radius:10px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:#B91C1C;">⚠️ قائمة الإغلاق لم تُطبّق — 👷 ' + _wrEsc(who) + '<br>السبب: ' + _wrEsc(c.skipReason || '—') + '</div>';
+  }
+  var rows = '';
+  for(var i = 0; i < CLOSING_ITEMS.length; i++){
+    var it = CLOSING_ITEMS[i];
+    var ok = c.checks && c.checks[it.k];
+    rows += '<span style="display:inline-block;margin:2px 0 2px 6px;font-size:11px;">' + (ok ? '✅' : '❌') + ' ' + _wrEsc(it.t) + '</span>';
+  }
+  return '<div style="background:#ECFDF5;border:1.5px solid #6EE7B7;border-radius:10px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:#065F46;">' +
+    '<div style="font-weight:800;margin-bottom:4px;">✅ قائمة الإغلاق موثقة — 👷 ' + _wrEsc(who) + ' · ' + _wrEsc(String(c.at || '').slice(0, 16).replace('T', ' ')) + '</div>' +
+    rows + (c.note ? '<div style="margin-top:4px;color:#047857;">📝 ' + _wrEsc(c.note) + '</div>' : '') + '</div>';
 }
 
 /** يملأ صورة الموقع في بطاقة التفاصيل بعد فتحها، إن وُجدت صورة */
@@ -4173,10 +4238,116 @@ function loadTxCache(){
   });
 }
 
+// ============================================================
+// قائمة الإغلاق — لا تُفتح ورقة القبض قبل تأكيد فحص التصريف
+// ============================================================
+var _closingData = null;
+const CLOSING_ITEMS = [
+  { k:'drainTest', t:'اختبار صرف الماء', s:'صُبّ ماء في صينية التصريف وخرج من طرف الخرطوم — وأُرسل فيديو الاختبار' },
+  { k:'tilt',      t:'ميلان الوحدة الداخلية والصينية باتجاه الصرف', s:'لا ميلان عكسي يحبس الماء في الصينية' },
+  { k:'hose',      t:'خرطوم الصرف نظيف وبلا ثنيات', s:'لا سدد من بقايا الغسيل ولا انحناء يرفع الخرطوم' },
+  { k:'cover',     t:'الحشوات والغطاء والفلاتر مُعادة بإحكام', s:'أي فجوة في العزل تسبب تكاثفًا خارج الصينية' },
+  { k:'runTest',   t:'تشغيل المكيف 10 دقائق ومعاينة بلا تنقيط', s:'المعاينة بعد التشغيل الفعلي، لا قبله' },
+  { k:'customer',  t:'العميل شاهد الاختبار', s:'العميل حضر اختبار الصرف أو التشغيل قبل المغادرة' }
+];
+
 function markDone(id){
   const a = findAppt(id);
   if(!a || !db) return;
   _payCtx = { id: id, appt: a };
+  _closingData = null;
+  openClosingModal(a);
+}
+
+function openClosingModal(a){
+  document.getElementById('clWho').textContent =
+    (a.client || '—') + (a.service ? ' · ' + a.service : '') + ' · ' + (a.units || 1) + ' وحدة';
+  var html = '';
+  for(var i = 0; i < CLOSING_ITEMS.length; i++){
+    var it = CLOSING_ITEMS[i];
+    html += '<label class="cl-item"><input type="checkbox" data-k="' + it.k + '" onchange="updateClosingBar()">' +
+      '<div><div class="cl-t">' + _wrEsc(it.t) + '</div><div class="cl-s">' + _wrEsc(it.s) + '</div></div></label>';
+  }
+  document.getElementById('clItems').innerHTML = html;
+  var techSel = document.getElementById('clTech');
+  var th = '<option value="">— اختر الفني —</option>';
+  for(var t = 0; t < TECH_KEYS.length; t++){
+    th += '<option value="' + TECH_KEYS[t] + '">' + _wrEsc(techDisplayName(TECH_KEYS[t])) + '</option>';
+  }
+  th += '<option value="team">الفريق كاملاً (غير محدد)</option>';
+  techSel.innerHTML = th;
+  if(a.tech && TECH_KEYS.indexOf(a.tech) >= 0) techSel.value = a.tech;
+  document.getElementById('clNote').value = '';
+  document.getElementById('clSkipReason').value = '';
+  document.getElementById('clSkipBox').open = false;
+  updateClosingBar();
+  document.getElementById('closingModal').classList.add('open');
+}
+
+function updateClosingBar(){
+  var boxes = document.querySelectorAll('#clItems input[type=checkbox]');
+  var n = 0;
+  for(var i = 0; i < boxes.length; i++){ if(boxes[i].checked) n++; }
+  var pct = boxes.length ? Math.round(n / boxes.length * 100) : 0;
+  document.getElementById('clBar').style.width = pct + '%';
+  var btn = document.getElementById('clConfirmBtn');
+  btn.textContent = (n === boxes.length) ? '✅ تأكيد الفحص والمتابعة للقبض' : ('✅ تأكيد الفحص (' + n + '/' + boxes.length + ')');
+}
+
+function closeClosingModal(){
+  document.getElementById('closingModal').classList.remove('open');
+  _payCtx = null;
+  _closingData = null;
+}
+
+function confirmClosing(){
+  if(!_payCtx) return;
+  var a = _payCtx.appt;
+  var techSel = document.getElementById('clTech');
+  var tech = techSel.value;
+  if(!tech){ showToast('⚠️ حدّد الفني المسؤول عن الإغلاق'); techSel.focus(); return; }
+
+  var skipBox = document.getElementById('clSkipBox');
+  var skipReason = String(document.getElementById('clSkipReason').value || '').trim();
+  var checks = {};
+  var boxes = document.querySelectorAll('#clItems input[type=checkbox]');
+  var missing = [];
+  for(var i = 0; i < boxes.length; i++){
+    var k = boxes[i].getAttribute('data-k');
+    checks[k] = !!boxes[i].checked;
+    if(!boxes[i].checked){
+      for(var j = 0; j < CLOSING_ITEMS.length; j++){ if(CLOSING_ITEMS[j].k === k) missing.push(CLOSING_ITEMS[j].t); }
+    }
+  }
+
+  var skipped = false;
+  if(missing.length){
+    if(skipBox.open && skipReason){
+      skipped = true;
+    } else {
+      showToast('⚠️ لم يُؤكَّد: ' + missing[0] + (missing.length > 1 ? ' (+' + (missing.length - 1) + ')' : '') + ' — أكمل القائمة أو اكتب سبب عدم انطباقها');
+      return;
+    }
+  }
+
+  _closingData = {
+    checks: checks,
+    complete: !missing.length,
+    skipped: skipped,
+    skipReason: skipped ? skipReason : '',
+    tech: tech,
+    units: parseInt(a.units, 10) || 1,
+    note: String(document.getElementById('clNote').value || '').trim(),
+    at: new Date().toISOString()
+  };
+
+  document.getElementById('closingModal').classList.remove('open');
+  openPaySheet();
+}
+
+function openPaySheet(){
+  if(!_payCtx) return;
+  var a = _payCtx.appt;
 
   document.getElementById('payWho').textContent =
     (a.client || '—') + (a.service ? ' · ' + a.service : '');
@@ -4195,6 +4366,7 @@ function markDone(id){
 function closePaySheet(){
   document.getElementById('payOv').classList.remove('show');
   _payCtx = null;
+  _closingData = null;
 }
 
 function submitPay(method, warranty){
@@ -4261,6 +4433,11 @@ function submitPay(method, warranty){
 
   var updates = {};
   updates[apptPath + '/status'] = 'done';
+  if(_closingData){
+    updates[apptPath + '/closing'] = _closingData;
+    updates[apptPath + '/closingTech'] = _closingData.tech || '';
+    updates[apptPath + '/closingComplete'] = !!_closingData.complete;
+  }
   if(isWarranty){
     updates[apptPath + '/warrantyRework'] = true;
     updates[apptPath + '/warrantyTech'] = warranty.tech || '';
@@ -4292,6 +4469,10 @@ function submitPay(method, warranty){
     })
     .then(function(){
       for(var j = 0; j < btns.length; j++){ btns[j].disabled = false; }
+      if(_closingData){
+        a.closing = _closingData; a.closingTech = _closingData.tech || ''; a.closingComplete = !!_closingData.complete;
+        _closingData = null;
+      }
       if(isWarranty){
         a.warrantyRework = true; a.warrantyTech = warranty.tech || ''; a.warrantyFault = warranty.fault || 'other';
         a.warrantyPrevKey = warranty.prevKey || ''; a.warrantyPrevDate = warranty.prevDate || '';
@@ -4436,8 +4617,8 @@ function renderTechStats(){
     since = d.toISOString().split('T')[0];
   }
   var stats = {};
-  for(var t = 0; t < TECH_KEYS.length; t++){ stats[TECH_KEYS[t]] = { done: 0, rework: 0, faults: {} }; }
-  stats.team = { done: 0, rework: 0, faults: {} };
+  for(var t = 0; t < TECH_KEYS.length; t++){ stats[TECH_KEYS[t]] = { done: 0, rework: 0, closed: 0, faults: {} }; }
+  stats.team = { done: 0, rework: 0, closed: 0, faults: {} };
   var cases = [];
   var faultTotals = {};
 
@@ -4446,12 +4627,18 @@ function renderTechStats(){
     if(!a || a.status !== 'done') continue;
     if(since && a.date && a.date < since) continue;
     var tk = a.tech || 'Abrar';
-    if(!stats[tk]) stats[tk] = { done: 0, rework: 0, faults: {} };
+    if(!stats[tk]) stats[tk] = { done: 0, rework: 0, closed: 0, faults: {} };
     // زيارات الضمان نفسها لا تُحسب إنجازاً للفني
     if(!a.warrantyRework) stats[tk].done += 1;
+    // قائمة إغلاق مكتملة تُنسب لمن أغلق الوحدات
+    if(a.closing && a.closing.complete){
+      var ck = a.closingTech || tk;
+      if(!stats[ck]) stats[ck] = { done: 0, rework: 0, closed: 0, faults: {} };
+      stats[ck].closed += 1;
+    }
     if(a.warrantyRework){
       var who = a.warrantyTech || 'team';
-      if(!stats[who]) stats[who] = { done: 0, rework: 0, faults: {} };
+      if(!stats[who]) stats[who] = { done: 0, rework: 0, closed: 0, faults: {} };
       var f = a.warrantyFault || 'other';
       stats[who].rework += 1;
       stats[who].faults[f] = (stats[who].faults[f] || 0) + 1;
@@ -4460,7 +4647,7 @@ function renderTechStats(){
     }
   }
 
-  var html = '<table class="ts-table"><thead><tr><th>الفني</th><th>زيارات مكتملة</th><th>إعادة عمل</th><th>النسبة</th><th>أكثر خلل</th></tr></thead><tbody>';
+  var html = '<table class="ts-table"><thead><tr><th>الفني</th><th>زيارات مكتملة</th><th>إغلاق موثق</th><th>إعادة عمل</th><th>النسبة</th><th>أكثر خلل</th></tr></thead><tbody>';
   var keys = TECH_KEYS.slice();
   for(var sk in stats){ if(Object.prototype.hasOwnProperty.call(stats, sk) && keys.indexOf(sk) < 0 && sk !== 'team') keys.push(sk); }
   keys.push('team');
@@ -4474,7 +4661,8 @@ function renderTechStats(){
     for(var ff in st.faults){ if(Object.prototype.hasOwnProperty.call(st.faults, ff) && st.faults[ff] > topN){ topN = st.faults[ff]; topF = ff; } }
     var rateCls = rate >= 10 ? 'ts-rate-bad' : 'ts-rate-ok';
     var label = key === 'team' ? 'الفريق (غير محدد)' : techDisplayName(key);
-    html += '<tr><td><strong>' + _wrEsc(label) + '</strong></td><td>' + st.done + '</td><td>' + st.rework + '</td>' +
+    var closedPct = st.done ? Math.round((st.closed || 0) / st.done * 100) : 0;
+    html += '<tr><td><strong>' + _wrEsc(label) + '</strong></td><td>' + st.done + '</td><td>' + (st.closed || 0) + (key === 'team' ? '' : ' <span style="color:var(--mist);font-size:11px;">(' + closedPct + '%)</span>') + '</td><td>' + st.rework + '</td>' +
       '<td class="' + rateCls + '">' + (key === 'team' ? '—' : rate + '%') + '</td>' +
       '<td>' + (topF ? _wrEsc(WARRANTY_FAULTS[topF] || topF) + ' (' + topN + ')' : '—') + '</td></tr>';
   }
@@ -4501,7 +4689,7 @@ function renderTechStats(){
   } else {
     html += '<div style="padding:14px;color:#64748B;font-size:12px;">لا توجد حالات إعادة عمل موثقة في هذه الفترة. تُسجَّل الحالات من زر «🛡️ ضمان — إعادة عمل» عند إتمام الموعد.</div>';
   }
-  html += '<div style="margin-top:12px;font-size:11px;color:var(--mist);line-height:1.7;">النسبة = حالات إعادة العمل المنسوبة للفني ÷ زياراته المكتملة في الفترة نفسها. زيارات الضمان لا تُحسب ضمن إنجاز الفني.</div>';
+  html += '<div style="margin-top:12px;font-size:11px;color:var(--mist);line-height:1.7;">النسبة = حالات إعادة العمل المنسوبة للفني ÷ زياراته المكتملة في الفترة نفسها. زيارات الضمان لا تُحسب ضمن إنجاز الفني. «إغلاق موثق» = زيارات أُكملت فيها قائمة الإغلاق (اختبار التصريف) كاملة.</div>';
   body.innerHTML = html;
 }
 document.getElementById('payCancel').addEventListener('click', closePaySheet);
