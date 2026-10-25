@@ -26,6 +26,14 @@ firebase.initializeApp({
 
 var messaging = firebase.messaging();
 
+/* بدون هذين، يُنزّل المتصفحُ العاملَ الجديد ويتركه «منتظراً» ما دامت
+   صفحةٌ من الموقع مفتوحة، فيظلّ القديم هو العامل ولا يظهر أثر أي إصلاح.
+   skipWaiting يُنصّب الجديد فوراً، و clients.claim يُسلّمه الصفحات المفتوحة. */
+self.addEventListener('install', function(){ self.skipWaiting(); });
+self.addEventListener('activate', function(event){
+  event.waitUntil(self.clients.claim());
+});
+
 /* تنبيه المساء يُرسَل من نوع data كي نتحكّم بالعنوان والنصّ والوجهة.
    لكن حملات Firebase Console تُرسل من نوع notification، وتعريفُ هذه
    الدالة يمنع العرض التلقائي — فلو قرأنا data وحدها لظهر إشعارٌ بلا
