@@ -26,14 +26,17 @@ firebase.initializeApp({
 
 var messaging = firebase.messaging();
 
-/* الرسالة من نوع data لا notification، كي نتحكّم نحن بالعنوان
-   والنصّ والوجهة. ولو أُرسلت notification لعرضها المتصفح بنفسه
-   وتجاهل هذه الدالة، فتضيع الوجهة. */
+/* تنبيه المساء يُرسَل من نوع data كي نتحكّم بالعنوان والنصّ والوجهة.
+   لكن حملات Firebase Console تُرسل من نوع notification، وتعريفُ هذه
+   الدالة يمنع العرض التلقائي — فلو قرأنا data وحدها لظهر إشعارٌ بلا
+   عنوانٍ ولا نصّ، أو لم يظهر. فنقرأ الاثنين، data أولاً. */
 messaging.onBackgroundMessage(function(payload) {
   var d = (payload && payload.data) || {};
-  var title = d.title || 'أطواد';
-  var body  = d.body  || '';
+  var n = (payload && payload.notification) || {};
+  var title = d.title || n.title || 'أطواد';
+  var body  = d.body  || n.body  || '';
   var url   = d.url   || 'atwad-attention.html';
+  if(self.console && console.log){ console.log('[atwad-sw] وصلت رسالة:', payload); }
 
   self.registration.showNotification(title, {
     body: body,
