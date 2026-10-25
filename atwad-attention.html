@@ -33,6 +33,20 @@ h1{font-size:23px;margin:0;}
 .row .twinline .warn{color:#fcd34d;}
 .row .amt{font-size:16px;font-weight:800;direction:ltr;font-variant-numeric:tabular-nums;}
 .acts{display:flex;gap:7px;flex-wrap:wrap;}
+/* صفّ الزيارة العائدة: زيارةٌ قادمة ومعها ديونها */
+.vrow{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;
+  padding:13px 0;border-top:1px solid var(--ice);flex-wrap:wrap;}
+.vrow:first-of-type{border-top:0;}
+.vrow .who{font-size:14.5px;font-weight:700;display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+.vrow .meta{font-size:12px;color:var(--mist);line-height:1.75;margin-top:3px;}
+.vrow .dbt{font-size:12px;line-height:1.8;margin-top:4px;color:#B91C1C;}
+.vrow .amt{font-size:16px;font-weight:800;direction:ltr;font-variant-numeric:tabular-nums;color:#B91C1C;}
+.vrow .rt{display:flex;flex-direction:column;align-items:flex-end;gap:7px;}
+.tag{font-size:10.5px;font-weight:800;padding:2px 9px;border-radius:99px;white-space:nowrap;}
+.tag.sure{background:#D1FAE5;color:#065F46;}
+.tag.chk{background:#FEF3C7;color:#92400E;}
+a.mini{text-decoration:none;display:inline-block;}
+.mini.wa{background:#25D366;color:#fff;}
 .mini{font-family:'Tajawal',sans-serif;font-size:12.5px;font-weight:700;border:0;border-radius:9px;
   padding:7px 13px;cursor:pointer;color:#fff;background:var(--ok);}
 .mini.g{background:#fff;color:var(--mist);border:1.5px solid var(--ice);}
@@ -54,6 +68,8 @@ button.big:disabled{background:#CBD5E1;cursor:default;}
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 <script src="atwad-firebase.js"></script>
 <script src="atwad-auth.js"></script>
+<!-- محرّك مطابقة الديون: يُحمَّل بعد السلسلة، ولا يلمس قاعدة البيانات بنفسه -->
+<script src="atwad-debt.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -71,7 +87,7 @@ button.big:disabled{background:#CBD5E1;cursor:default;}
   <div class="msg" id="msg"></div>
   <!-- بصمة الإصدار: تُقارَن بما يُطلب رفعه فيُعرف أن المتصفح
        لم يعطِ نسخةً محفوظة. تُغيَّر مع كل تعديل على هذه الصفحة. -->
-  <div class="ver">إصدار اللوحة: <b id="verTag">v8 · 2026-10-12 10:05</b></div>
+  <div class="ver">إصدار اللوحة: <b id="verTag">v9 · 2026-10-25 19:10</b></div>
 
   <div class="bar">
     <button class="big" id="refBtn" disabled>🔄 تحديث</button>
@@ -237,6 +253,23 @@ function load(){
 
     var tday = todayStr();
     var buckets = { twin:[], dup:[], unpaid:[], debt:[], future:[], test:[] };
+    // الزيارات القادمة، تُفحص لاحقاً بعد أن يُبنى فهرس الديون
+    var upcoming = [];
+    function scanUpcoming(snap, src){
+      snap.forEach(function(c){
+        var v = c.val() || {};
+        var nm = v.client || v.customerName || v.name || '';
+        var dt = String(v.date || '');
+        if(!nm || !dt || dt < tday) return;
+        var raw = String(v.status || '').trim();
+        if(SKIP_ST[raw.toLowerCase()] || SKIP_ST[raw]) return;
+        upcoming.push({ key: c.key, src: src, name: nm, date: dt,
+                        time: String(v.time || ''), service: String(v.service || ''),
+                        phone: String(v.phone || '') });
+      });
+    }
+    scanUpcoming(res[1], 'appointments');
+    scanUpcoming(res[2], 'bookings');
     var oldCount = 0, oldSum = 0;
 
     // كل القيود غير المحصّلة أولاً، ثم نكتشف التكرار قبل التوزيع.
@@ -382,6 +415,36 @@ function load(){
     buckets.debt.sort(byAge);
     buckets.future.sort(function(a,b){ return String(a.e.date).localeCompare(String(b.e.date)); });
 
+    /* عميلٌ مدين حجز موعداً جديداً — يُبنى من القيود نفسها لا من نسخةٍ منها،
+       فلا يختلف الرقم هنا عن الرقم في بقية اللوحة. */
+    var returning = [];
+    if(window.AtwadDebt){
+      var ix = window.AtwadDebt.build(res[0].val() || {}, res[2].val() || {}, res[1].val() || {});
+      var seen = {};
+      for(var u = 0; u < upcoming.length; u++){
+        var vst = upcoming[u];
+        var hit = window.AtwadDebt.lookup(ix, {
+          phone: vst.phone, name: vst.name,
+          beforeDate: vst.date,          // زيارة اليوم نفسها ليست ديناً سابقاً
+          excludeRef: vst.key
+        });
+        if(!hit.count) continue;
+        /* الزيارة الواحدة قد تكون في appointments و bookings معاً،
+           فنُميّزها بالعميل واليوم والوقت لا بمفتاحها */
+        var sig = (hit.certain ? 'p:' + window.AtwadDebt.normPhone(vst.phone)
+                               : 'n:' + window.AtwadDebt.skeleton(vst.name)) +
+                  '|' + vst.date + '|' + vst.time;
+        if(seen[sig]) continue;
+        seen[sig] = true;
+        returning.push({ v: vst, hit: hit });
+      }
+      returning.sort(function(a, b){
+        if(a.v.date !== b.v.date) return a.v.date < b.v.date ? -1 : 1;
+        return b.hit.total - a.hit.total;
+      });
+    }
+    buckets.returning = returning;
+
     render(buckets, oldCount, oldSum);
     el('refBtn').disabled = false;
     el('msg').textContent = '';
@@ -438,16 +501,83 @@ function rowHtml(r, acts, extra){
     '<div class="acts">' + acts + '</div></div></div>';
 }
 
+function returningHtml(b){
+  var list = b.returning || [];
+  if(!list.length) return '';
+  /* المجموع يُحسب بالقيود المتميّزة لا بمجموع الصفوف:
+     الدَّيْن الواحد قد يظهر تحت زيارتين (زيارة بهاتفٍ مطابق وأخرى
+     بالاسم)، فجمع الصفوف يُضخّم الرقم — وهذا بالضبط ما قضينا
+     أسابيع في تنظيفه. */
+  var seenTx = {}, sum = 0, nSure = 0, nDbt = 0;
+  for(var i = 0; i < list.length; i++){
+    if(list[i].hit.certain) nSure++;
+    var hr = list[i].hit.rows;
+    for(var q = 0; q < hr.length; q++){
+      if(seenTx[hr[q].key]) continue;
+      seenTx[hr[q].key] = true;
+      sum += hr[q].rem;
+      nDbt++;
+    }
+  }
+  var h = '<div class="grp red"><h2>🔁 عميل مدين حجز موعداً جديداً ' +
+    '<span class="cnt">' + list.length + '</span></h2>' +
+    '<div class="why">زيارةٌ قادمة لعميلٍ عليه مبلغٌ من زيارةٍ سابقة. ' +
+    'أفضل لحظة للتحصيل هي وجود الفني عنده.<br>' +
+    '· <b class="tag sure">🔒 بالهاتف</b> مطابقةٌ برقم الجوال — يقين، ' +
+    'ويظهر الدَّيْن للفني على بطاقته.<br>' +
+    '· <b class="tag chk">⚠️ بالاسم</b> مطابقةٌ بالاسم وحده لأن القيد بلا هاتف. ' +
+    'قد يكون شخصاً آخر باسمٍ مشابه — <b>راجعه قبل أن تُرسل شيئاً</b>، ' +
+    'ولا يظهر للفني ولا يُرسَل للعميل.<br>' +
+    'الدَّيْن الواحد قد يظهر تحت زيارتين، فالمجموع هنا بالقيود المتميّزة: ' +
+    '<b>' + nDbt + '</b> ' + (nDbt === 1 ? 'قيد' : (nDbt === 2 ? 'قيدان' : (nDbt <= 10 ? 'قيود' : 'قيداً'))) +
+    ' بإجمالي <b>' + fmtNum(sum) + ' ﷼</b>' +
+    (nSure ? '، و<b>' + nSure + '</b> من الزيارات مؤكّدة المطابقة بالهاتف.' : '.') +
+    '</div>';
+
+  for(var j = 0; j < list.length; j++){
+    var r = list[j], v = r.v, hit = r.hit;
+    var parts = [];
+    for(var k = 0; k < hit.rows.length; k++){
+      parts.push('<b>' + fmtNum(hit.rows[k].rem) + ' ﷼</b> (' + esc(hit.rows[k].date) + ')');
+    }
+    var acts = '';
+    if(hit.certain && v.phone){
+      var url = window.AtwadDebt.waUrl(v.phone,
+        window.AtwadDebt.reminderText(v.name, hit, v.date));
+      if(url){
+        acts += '<a class="mini wa" href="' + esc(url) + '" target="_blank" rel="noopener">📲 ذكّره</a>';
+      }
+    }
+    acts += '<a class="mini g" href="atwad-fix-entry.html" target="_blank" rel="noopener">🩹 راجع القيود</a>';
+
+    h += '<div class="vrow"><div>' +
+      '<div class="who">' + esc(v.name) +
+        '<span class="tag ' + (hit.certain ? 'sure">🔒 بالهاتف' : 'chk">⚠️ بالاسم') + '</span></div>' +
+      '<div class="meta">زيارة ' + esc(v.date) +
+        (v.time ? ' · ' + esc(v.time) : '') +
+        (v.service ? ' · ' + esc(v.service) : '') + '</div>' +
+      '<div class="dbt">دَيْن سابق: ' + parts.join(' · ') + '</div>' +
+      '</div><div class="rt">' +
+      '<div class="amt">' + fmtNum(hit.total) + ' ﷼</div>' +
+      '<div class="acts">' + acts + '</div></div></div>';
+  }
+  return h + '</div>';
+}
+
 function render(b, oldCount, oldSum){
   var html = '';
   var total = b.twin.length + b.dup.length + b.unpaid.length +
-              b.debt.length + b.future.length + b.test.length;
+              b.debt.length + b.future.length + b.test.length +
+              ((b.returning || []).length);
 
   if(total === 0){
     html = '<div class="clear"><div class="big">✅</div>' +
       '<div class="t">لا شيء يحتاج قرارك</div>' +
-      '<div class="s">كل زيارة مكتملة سُجّل قبضها، ولا دَيْن تجاوز ' + STALE_DAYS + ' يوماً.</div></div>';
+      '<div class="s">كل زيارة مكتملة سُجّل قبضها، ولا دَيْن تجاوز ' + STALE_DAYS +
+      ' يوماً، ولا عميلٍ مدينٍ له موعدٌ قادم.</div></div>';
   }
+
+  html += returningHtml(b);
 
   if(b.twin.length){
     var tSum = 0, nSure = 0, nNone = 0, sSure = 0;

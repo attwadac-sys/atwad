@@ -115,6 +115,14 @@ body{font-family:'Cairo',sans-serif;background:#F1F5F9;color:var(--slate);min-he
 .pay-no{background:var(--warning);grid-column:1 / -1;}
 .pay-x{background:#fff;color:var(--mist);border:1.5px solid var(--ice);grid-column:1 / -1;font-size:14px;padding:12px;}
 .pay-btn:disabled{opacity:.5;}
+/* شريط الدَّيْن السابق على بطاقة الزيارة */
+.debt-strip{background:#FEF2F2;border:1.5px solid #FCA5A5;border-radius:11px;
+  padding:10px 12px;margin-bottom:10px;}
+.debt-strip .dt{font-size:14px;font-weight:900;color:#B91C1C;line-height:1.6;}
+.debt-strip .dd{font-size:12px;color:#991B1B;margin-top:3px;line-height:1.8;direction:ltr;
+  text-align:start;unicode-bidi:plaintext;}
+.debt-strip .ds{font-size:12px;color:#7F1D1D;margin-top:5px;line-height:1.85;}
+
 /* ===== قائمة الإغلاق — فحص إلزامي قبل ورقة القبض ===== */
 .cl-ov{position:fixed;inset:0;background:rgba(12,59,94,.55);display:none;z-index:1250;
   align-items:flex-end;justify-content:center;font-family:'Cairo',sans-serif;}
@@ -178,6 +186,8 @@ body{font-family:'Cairo',sans-serif;background:#F1F5F9;color:var(--slate);min-he
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 <script src="atwad-firebase.js"></script>
 <script src="atwad-auth.js"></script>
+<!-- محرّك مطابقة الديون: الفني لا يرى منه إلا المطابق بالهاتف -->
+<script src="atwad-debt.js"></script>
 </head>
 <body>
 
@@ -327,6 +337,9 @@ var I18N = {
     clCancel:'إلغاء', clGoAll:'✅ تأكيد الفحص والمتابعة للقبض', clGoPart:'✅ تأكيد الفحص',
     clMiss:'⚠️ لم يُؤكَّد: ', clMissTail:' — أكمل القائمة أو اكتب سبب عدم انطباقها',
     clUnit:'وحدة',
+    debtT:'⚠️ دَيْن سابق على هذا العميل:',
+    debtS:'حصّله مع مبلغ اليوم. وإن رفض فسجّل مبلغ اليوم فقط وأبلغ الإدارة — لا تجادله.',
+    debtVisit:'زيارة', sar:'ريال',
     odoFail:'تعذّر الحفظ: ', other:'English'
   },
   en: {
@@ -362,6 +375,9 @@ var I18N = {
     clCancel:'Cancel', clGoAll:'✅ Confirm and continue to payment', clGoPart:'✅ Confirm',
     clMiss:'⚠️ Not confirmed: ', clMissTail:' — complete the list or write why it does not apply',
     clUnit:'unit(s)',
+    debtT:'⚠️ This customer has an old unpaid amount:',
+    debtS:'Collect it together with today\u2019s amount. If they refuse, record today\u2019s amount only and tell the office — do not argue.',
+    debtVisit:'visit', sar:'SAR',
     odoFail:'Could not save: ', other:'عربي'
   }
 };
@@ -510,7 +526,9 @@ function loadAppts() {
   document.getElementById('apptList').innerHTML = '<div class="loading"><div class="spinner"></div><div>' + t('loading') + '</div></div>';
 
   var combined = [];
+  var apptsVal = {}, bkVal = {};
   db.ref('appointments').once('value', function(snap) {
+    apptsVal = snap.val() || {};
     var linkedBookingKeys = {};
     snap.forEach(function(c) {
       var a = c.val() || {};
@@ -527,6 +545,7 @@ function loadAppts() {
     });
 
     db.ref('bookings').once('value', function(snap2) {
+      bkVal = snap2.val() || {};
       snap2.forEach(function(c) {
         var b = c.val() || {};
         if(!b.date || !b.time) return;
@@ -570,6 +589,7 @@ function loadAppts() {
         });
       updateStats();
       renderAppts();
+      attachDebts(apptsVal, bkVal);
     });
   });
 }
@@ -590,6 +610,44 @@ function filterAppts(filter, btn) {
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
   renderAppts();
+}
+
+/* يُعلّق على كل زيارة دَيْنَ صاحبها السابق، ثم يُعيد الرسم.
+   lookup يُعيد certain=false حين تكون المطابقة بالاسم وحده —
+   ونحن هنا نُسقط ذلك كلّه: الفني لا يُطالب بناءً على تشابه اسم. */
+function attachDebts(apptsVal, bkVal){
+  if(!window.AtwadDebt || !db) return;
+  db.ref('transactions').once('value').then(function(snap){
+    var ix = window.AtwadDebt.build(snap.val() || {}, bkVal || {}, apptsVal || {});
+    for(var i = 0; i < allAppts.length; i++){
+      var a = allAppts[i];
+      if(a.status === 'done' || a.status === 'cancelled'){ a._debt = null; continue; }
+      var hit = window.AtwadDebt.lookup(ix, {
+        phone: a.phone, name: a.client,
+        beforeDate: a.date,          // زيارة اليوم نفسها ليست ديناً سابقاً
+        excludeRef: a._fbKey
+      });
+      a._debt = (hit.certain && hit.count) ? hit : null;
+    }
+    renderAppts();
+  }).catch(function(e){
+    if(window.console && console.warn){ console.warn('[tech] تعذّرت قراءة الديون:', e); }
+  });
+}
+
+function debtStripHtml(a){
+  if(!a || !a._debt) return '';
+  var h = a._debt;
+  var parts = [];
+  for(var i = 0; i < h.rows.length; i++){
+    parts.push(Number(h.rows[i].rem).toLocaleString('en-US') + ' ' + t('sar') +
+               ' (' + t('debtVisit') + ' ' + h.rows[i].date + ')');
+  }
+  return '<div class="debt-strip">' +
+    '<div class="dt">' + t('debtT') + ' ' +
+      Number(h.total).toLocaleString('en-US') + ' ' + t('sar') + '</div>' +
+    '<div class="dd">' + parts.join(' · ') + '</div>' +
+    '<div class="ds">' + t('debtS') + '</div></div>';
 }
 
 function renderAppts() {
@@ -661,6 +719,7 @@ function renderAppts() {
             <span class="time-badge">⏰ ${a.time||'--:--'}</span>
             <span style="font-size:12px;color:var(--mist);">${a.duration||60} ${t('minutes')}</span>
           </div>
+          ${debtStripHtml(a)}
           <div class="loc-slot" data-key="${a._fbKey||''}" data-src="${a._source||'appointments'}"><div class="no-img">${t('noImg')}</div></div>
           <div class="info-row"><span class="icon">📍</span><span>${a.address||'—'}</span></div>
           ${a.phone ? `<div class="info-row"><span class="icon">📱</span><span>${a.phone}</span></div>` : ''}
