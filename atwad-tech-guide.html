@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Atwad — Technician Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;800&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --deep:#0C3B5E; --steel:#1E5F8A; --sky:#0EA5E9; --ice:#E8F4FD; --frost:#F0F9FF;
+  --slate:#334155; --mist:#94A3B8; --line:#E2E8F0;
+  --success:#10B981; --purple:#8B5CF6; --wa:#25D366; --bad:#DC2626; --warn:#D97706;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Tajawal','Noto Sans Devanagari',sans-serif;background:#F1F5F9;
+  color:var(--slate);padding-bottom:40px;}
+html[lang="hi"] body{font-family:'Noto Sans Devanagari','Tajawal',sans-serif;}
+
+.header{background:linear-gradient(135deg,var(--deep),var(--steel),var(--sky));color:#fff;
+  padding:26px 20px;text-align:center;position:relative;}
+.lang{position:absolute;top:16px;inset-inline-start:16px;background:rgba(255,255,255,.18);
+  border:1.5px solid rgba(255,255,255,.4);color:#fff;font-family:inherit;
+  font-weight:800;font-size:13px;padding:7px 15px;border-radius:9px;cursor:pointer;white-space:nowrap;}
+.header h1{font-size:22px;font-weight:900;line-height:1.5;}
+.header p{font-size:13.5px;opacity:.92;margin-top:7px;line-height:1.7;}
+.wrap{max-width:560px;margin:0 auto;padding:0 14px;}
+
+.alert{margin-top:18px;background:#FEF2F2;border:2px solid #FCA5A5;border-radius:15px;padding:16px;}
+.alert .big{font-size:17px;font-weight:900;color:var(--bad);line-height:1.6;}
+.alert p{font-size:13.5px;color:#7F1D1D;margin-top:9px;line-height:1.9;}
+
+.sec{margin-top:20px;background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:16px;}
+.sec h2{font-size:16.5px;font-weight:900;color:var(--deep);margin-bottom:4px;line-height:1.5;}
+.sec .lead{font-size:12.5px;color:var(--mist);margin-bottom:12px;line-height:1.8;}
+
+.step{display:flex;gap:11px;align-items:flex-start;padding:11px 0;border-top:1px solid var(--line);}
+.step:first-of-type{border-top:0;padding-top:2px;}
+.num{flex:0 0 auto;width:25px;height:25px;border-radius:99px;background:var(--ice);color:var(--deep);
+  font-size:12.5px;font-weight:900;display:flex;align-items:center;justify-content:center;margin-top:2px;}
+.step .body{font-size:14px;line-height:1.85;}
+.step .body .sub{font-size:12.5px;color:var(--mist);display:block;margin-top:3px;line-height:1.8;}
+kbd{font-family:inherit;font-weight:800;background:var(--deep);color:#fff;
+  padding:2px 9px;border-radius:7px;font-size:13px;white-space:nowrap;display:inline-block;}
+kbd.g{background:var(--success);} kbd.b{background:#2563EB;} kbd.w{background:var(--warn);}
+
+.chk{border:1.5px solid #A7F3D0;background:#F0FDF4;border-radius:13px;padding:12px 13px;margin-bottom:9px;}
+.chk .t{font-size:14px;font-weight:800;color:#065F46;line-height:1.6;}
+.chk .s{font-size:12.5px;color:#047857;margin-top:4px;line-height:1.85;opacity:.9;}
+.chk .n{font-size:11.5px;font-weight:900;color:#10B981;}
+
+.note{border:1.5px solid #FDE68A;background:#FFFBEB;border-radius:13px;padding:13px;margin-top:13px;}
+.note .t{font-size:14px;font-weight:900;color:#92400E;line-height:1.6;}
+.note p{font-size:13px;color:#78350F;margin-top:7px;line-height:1.9;}
+
+.rules{list-style:none;}
+.rules li{font-size:13.5px;line-height:1.9;padding:10px 0;border-top:1px solid var(--line);
+  display:flex;gap:9px;align-items:flex-start;}
+.rules li:first-child{border-top:0;}
+.rules li::before{content:'•';color:var(--bad);font-weight:900;font-size:18px;line-height:1.2;}
+
+.wabtn{display:block;text-align:center;margin-top:18px;padding:15px;border-radius:12px;
+  font-size:16px;font-weight:900;text-decoration:none;color:#fff;background:var(--wa);}
+.back{display:block;text-align:center;margin-top:9px;padding:13px;border-radius:12px;
+  font-size:15px;font-weight:800;text-decoration:none;color:var(--deep);
+  background:#fff;border:1.5px solid var(--line);}
+.foot{text-align:center;padding:22px 14px 0;font-size:12px;color:var(--mist);line-height:1.9;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <button class="lang" id="langBtn" onclick="toggleLang()">हिन्दी</button>
+  <h1 id="hTitle">Technician Guide</h1>
+  <p><span id="hOrg">Atwad AC Maintenance</span><br><span id="hUpd">Updated 25 October 2026</span></p>
+</div>
+
+<div class="wrap">
+
+  <div class="alert">
+    <div class="big" id="aBig"></div>
+    <p id="aTxt"></p>
+  </div>
+
+  <div class="sec">
+    <h2 id="s1h"></h2>
+    <div class="lead" id="s1l"></div>
+    <div id="s1"></div>
+  </div>
+
+  <div class="sec">
+    <h2 id="s2h"></h2>
+    <div class="lead" id="s2l"></div>
+    <div id="s2"></div>
+    <div id="chk" style="margin-top:12px;"></div>
+    <div id="s2b"></div>
+    <div class="note">
+      <div class="t" id="nT"></div>
+      <p id="nP"></p>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h2 id="s3h"></h2>
+    <div class="lead" id="s3l"></div>
+    <div id="s3"></div>
+  </div>
+
+  <div class="sec">
+    <h2 id="s4h"></h2>
+    <div id="s4"></div>
+  </div>
+
+  <div class="sec">
+    <h2 id="s5h"></h2>
+    <ul class="rules" id="s5"></ul>
+  </div>
+
+  <a class="wabtn" id="waBtn" href="https://wa.me/966509720382" target="_blank" rel="noopener"></a>
+  <a class="back" id="bkBtn" href="atwad-tech-links.html"></a>
+
+  <div class="foot">
+    <span id="fOrg">Atwad AC Maintenance</span><br>
+    <span id="fOnly"></span>
+  </div>
+</div>
+
+<script>
+/* صفحة تعليمات صِرفة — لا قاعدة بيانات ولا تسجيل دخول،
+   تُطابق tech-instructions.txt نصاً بنص. */
+var G = {
+  en: {
+    other:'हिन्दी', title:'Technician Guide', org:'Atwad AC Maintenance',
+    upd:'Updated 25 October 2026', docTitle:'Atwad — Technician Guide',
+    aBig:'STOP sending the money report on WhatsApp.',
+    aTxt:'From now on you record the money IN THE PAGE, on the same screen, right after each job. What you type in the page goes straight to the office. Nothing else is needed.',
+
+    s1h:'Start of day', s1l:'Five taps and you are working.',
+    s1:[
+      ['Open your jobs page.', 'Save the link on your phone home screen so you do not search for it every morning.'],
+      ['Top right, press <kbd>English</kbd>.', 'This switches the page to English.'],
+      ['Under <b>Select technician</b>, press <kbd class="b">Ahmed</kbd>.', ''],
+      ['You now see your jobs.', 'Tabs: <b>Today</b> / <b>This week</b> / <b>All</b>'],
+      ['On each job you can press <kbd class="g">WhatsApp</kbd> or <kbd class="b">Map</kbd>.',
+       'WhatsApp messages the customer. Map opens the location.']
+    ],
+
+    s2h:'When you finish a job', s2l:'The checklist comes before the money. Always.',
+    s2:[
+      ['Press the green <kbd class="g">✓ Complete</kbd>.', ''],
+      ['A new screen opens: <b>Closing checklist — before you leave</b>.',
+       'Six items. Tick each one ONLY after you have really done it.']
+    ],
+    chkTitle:'',
+    chk:[
+      ['Drain-water test', 'Pour water in the drain tray. Watch it come out of the hose end. RECORD A VIDEO and send it on WhatsApp.'],
+      ['Indoor unit and tray tilted towards the drain', 'No reverse tilt. Water must not sit in the tray.'],
+      ['Drain hose clean and without kinks', 'No blockage from washing residue. No bend that lifts the hose.'],
+      ['Insulation, cover and filters refitted tightly', 'Any gap causes water drops outside the tray.'],
+      ['Run the AC for 10 minutes and check for no dripping', 'Check AFTER it really runs. Not before.'],
+      ['Customer watched the test', 'The customer must see the drain test or the run test before you leave.']
+    ],
+    s2b:[
+      ['The bar at the top fills as you tick.',
+       'When all six are ticked the button reads <kbd class="g">Confirm and continue to payment</kbd>.'],
+      ['Press it.', '']
+    ],
+    nT:'If the checklist does not apply (inspection only, or you did not open the unit)',
+    nP:'Open the yellow box <b>“This checklist does not apply to this visit”</b> and write the reason inside. The reason is required. Then press Confirm. The office reads your reason — do not leave it empty.',
+
+    s3h:'Recording the money', s3l:'At the customer. Before you drive away.',
+    s3:[
+      ['The next screen says <b>Amount received</b>.', ''],
+      ['Type the amount you ACTUALLY received.', 'Not the quoted price. The real amount.'],
+      ['Press one button.',
+       '<kbd class="g">💵 Cash</kbd> paid cash &nbsp; <kbd class="b">🏦 Transfer</kbd> bank transfer &nbsp; <kbd class="w">⏳ Not paid — debt</kbd> paid nothing'],
+      ['If the customer did not pay, you MUST press <kbd class="w">⏳ Not paid — debt</kbd>.',
+       'Do not skip the job and do not leave it. The office needs to know.'],
+      ['The job turns to <b>Completed</b>. Done.', '']
+    ],
+
+    s4h:'End of day',
+    s4:[
+      ['At the bottom of the page: <b>End-of-day odometer</b>.',
+       'Type the car total odometer reading — NOT the trip meter. Press <kbd>Save</kbd>.']
+    ],
+
+    s5h:'Rules — read these',
+    s5:[
+      'Never tick a box for work you did not do. The office checks the drain-test video.',
+      'Record the money on the SAME DAY, at the customer’s place, before you drive away.',
+      'If you pressed the wrong button, tell the office the same day. It can be corrected.',
+      'If the page does not open, or the amount does not save, send a screenshot to the office at once. Do not record it on WhatsApp instead.'
+    ],
+    wa:'📲 Message the office', bk:'🔧 Back to technician links',
+    only:'This page is for technicians only · 0509720382'
+  },
+
+  hi: {
+    other:'English', title:'टेक्नीशियन गाइड', org:'अतवाद एसी मेंटेनेंस',
+    upd:'अपडेट: 25 अक्टूबर 2026', docTitle:'अतवाद — टेक्नीशियन गाइड',
+    aBig:'अब WhatsApp पर पैसे की रिपोर्ट मत भेजिए।',
+    aTxt:'अब से आप पैसा पेज के अंदर दर्ज करेंगे, हर काम खत्म होते ही, उसी स्क्रीन पर। जो आप पेज में लिखेंगे वह सीधे ऑफ़िस पहुँच जाएगा। और कुछ भेजने की ज़रूरत नहीं।',
+
+    s1h:'दिन की शुरुआत', s1l:'पाँच बार दबाइए और काम शुरू।',
+    s1:[
+      ['अपना जॉब पेज खोलें।', 'लिंक को फ़ोन की होम स्क्रीन पर सेव कर लें, ताकि हर सुबह ढूँढना न पड़े।'],
+      ['ऊपर दाईं ओर <kbd>English</kbd> दबाएँ।', 'इससे पेज अंग्रेज़ी में हो जाएगा।'],
+      ['<b>Select technician</b> के नीचे <kbd class="b">Ahmed</kbd> दबाएँ।', ''],
+      ['अब आपके काम दिखेंगे।', 'टैब: <b>Today</b> / <b>This week</b> / <b>All</b>'],
+      ['हर काम पर आप <kbd class="g">WhatsApp</kbd> या <kbd class="b">Map</kbd> दबा सकते हैं।',
+       'WhatsApp से ग्राहक को संदेश जाता है। Map से लोकेशन खुलती है।']
+    ],
+
+    s2h:'जब काम पूरा हो जाए', s2l:'चेकलिस्ट पहले, पैसा बाद में। हमेशा।',
+    s2:[
+      ['हरा बटन <kbd class="g">✓ Complete</kbd> दबाएँ।', ''],
+      ['नई स्क्रीन खुलेगी: <b>Closing checklist — before you leave</b>',
+       'छह बिंदु। हर बिंदु पर निशान तभी लगाएँ जब आपने वह काम सच में किया हो।']
+    ],
+    chkTitle:'',
+    chk:[
+      ['Drain-water test', 'ड्रेन ट्रे में पानी डालें। देखें कि पानी पाइप के सिरे से निकल रहा है। वीडियो बनाएँ और WhatsApp पर भेजें।'],
+      ['Indoor unit and tray tilted towards the drain', 'उल्टा ढलान न हो। ट्रे में पानी रुकना नहीं चाहिए।'],
+      ['Drain hose clean and without kinks', 'धुलाई के कचरे से रुकावट न हो। पाइप में ऐसा मोड़ न हो जो उसे ऊपर उठा दे।'],
+      ['Insulation, cover and filters refitted tightly', 'कोई भी खाली जगह ट्रे के बाहर पानी टपकाएगी।'],
+      ['Run the AC for 10 minutes and check for no dripping', 'चलाने के बाद जाँचें। पहले नहीं।'],
+      ['Customer watched the test', 'जाने से पहले ग्राहक को ड्रेन टेस्ट या चलाकर दिखाना ज़रूरी है।']
+    ],
+    s2b:[
+      ['निशान लगाते ही ऊपर की पट्टी भरती जाएगी।',
+       'जब छहों पर निशान लग जाएँ तो बटन पर लिखा आएगा <kbd class="g">Confirm and continue to payment</kbd>।'],
+      ['उसे दबाएँ।', '']
+    ],
+    nT:'अगर यह चेकलिस्ट इस विज़िट पर लागू नहीं होती (सिर्फ़ मुआयना, या यूनिट खोली ही नहीं)',
+    nP:'पीला बॉक्स <b>“This checklist does not apply to this visit”</b> खोलें और उसमें कारण लिखें। कारण लिखना अनिवार्य है। फिर Confirm दबाएँ। ऑफ़िस आपका कारण पढ़ता है — खाली मत छोड़िए।',
+
+    s3h:'पैसा दर्ज करना', s3l:'ग्राहक के यहाँ ही। गाड़ी चलाने से पहले।',
+    s3:[
+      ['अगली स्क्रीन पर लिखा होगा <b>Amount received</b>।', ''],
+      ['जितना पैसा आपको सच में मिला, वही लिखें।', 'बताई गई कीमत नहीं। असली रकम।'],
+      ['एक बटन दबाएँ।',
+       '<kbd class="g">💵 Cash</kbd> नकद &nbsp; <kbd class="b">🏦 Transfer</kbd> बैंक ट्रांसफ़र &nbsp; <kbd class="w">⏳ Not paid — debt</kbd> कुछ नहीं दिया'],
+      ['अगर ग्राहक ने पैसा नहीं दिया तो <kbd class="w">⏳ Not paid — debt</kbd> दबाना ही होगा।',
+       'काम को छोड़िए मत। ऑफ़िस को पता होना चाहिए।'],
+      ['काम <b>Completed</b> हो जाएगा। बस।', '']
+    ],
+
+    s4h:'दिन के अंत में',
+    s4:[
+      ['पेज के सबसे नीचे: <b>End-of-day odometer</b>',
+       'गाड़ी का कुल ओडोमीटर नंबर लिखें — ट्रिप मीटर नहीं। <kbd>Save</kbd> दबाएँ।']
+    ],
+
+    s5h:'नियम — इन्हें पढ़ें',
+    s5:[
+      'जो काम आपने नहीं किया, उस पर कभी निशान न लगाएँ। ऑफ़िस ड्रेन टेस्ट का वीडियो जाँचता है।',
+      'पैसा उसी दिन दर्ज करें, ग्राहक के यहाँ ही, गाड़ी चलाने से पहले।',
+      'अगर गलत बटन दब गया हो तो उसी दिन ऑफ़िस को बताएँ। उसे ठीक किया जा सकता है।',
+      'अगर पेज नहीं खुलता, या रकम सेव नहीं होती, तो तुरंत ऑफ़िस को स्क्रीनशॉट भेजें। उसकी जगह WhatsApp पर दर्ज मत कीजिए।'
+    ],
+    wa:'📲 ऑफ़िस को संदेश भेजें', bk:'🔧 टेक्नीशियन लिंक पर वापस',
+    only:'यह पेज सिर्फ़ टेक्नीशियन के लिए है · 0509720382'
+  }
+};
+
+var lang = 'en';
+var START = 1;   // ترقيم متّصل عبر الأقسام، كما في الورقة المطبوعة
+
+function el(i){ return document.getElementById(i); }
+
+function steps(list, n){
+  var h = '';
+  for(var i = 0; i < list.length; i++){
+    h += '<div class="step"><span class="num">' + (n++) + '</span><div class="body">' +
+         list[i][0] + (list[i][1] ? '<span class="sub">' + list[i][1] + '</span>' : '') +
+         '</div></div>';
+  }
+  return { html: h, next: n };
+}
+
+function applyLang(){
+  var g = G[lang];
+  var html = document.documentElement;
+  html.lang = lang;
+  document.title = g.docTitle;
+
+  el('langBtn').textContent = g.other;
+  el('hTitle').textContent = g.title;
+  el('hOrg').textContent = g.org;
+  el('hUpd').textContent = g.upd;
+  el('aBig').textContent = g.aBig;
+  el('aTxt').textContent = g.aTxt;
+
+  var n = START;
+  var r1 = steps(g.s1, n); el('s1').innerHTML = r1.html; n = r1.next;
+  var r2 = steps(g.s2, n); el('s2').innerHTML = r2.html; n = r2.next;
+
+  var ch = '';
+  for(var i = 0; i < g.chk.length; i++){
+    ch += '<div class="chk"><div class="n">' + (i + 1) + '</div>' +
+          '<div class="t">' + g.chk[i][0] + '</div>' +
+          '<div class="s">' + g.chk[i][1] + '</div></div>';
+  }
+  el('chk').innerHTML = ch;
+
+  var r2b = steps(g.s2b, n); el('s2b').innerHTML = r2b.html; n = r2b.next;
+  el('nT').textContent = g.nT;
+  el('nP').innerHTML = g.nP;
+
+  var r3 = steps(g.s3, n); el('s3').innerHTML = r3.html; n = r3.next;
+  var r4 = steps(g.s4, n); el('s4').innerHTML = r4.html; n = r4.next;
+
+  el('s1h').textContent = g.s1h; el('s1l').textContent = g.s1l;
+  el('s2h').textContent = g.s2h; el('s2l').textContent = g.s2l;
+  el('s3h').textContent = g.s3h; el('s3l').textContent = g.s3l;
+  el('s4h').textContent = g.s4h;
+  el('s5h').textContent = g.s5h;
+
+  var ru = '';
+  for(var j = 0; j < g.s5.length; j++){ ru += '<li><span>' + g.s5[j] + '</span></li>'; }
+  el('s5').innerHTML = ru;
+
+  el('waBtn').textContent = g.wa;
+  el('bkBtn').textContent = g.bk;
+  el('fOrg').textContent = g.org;
+  el('fOnly').textContent = g.only;
+}
+
+function toggleLang(){
+  lang = (lang === 'en') ? 'hi' : 'en';
+  try { window.localStorage.setItem('atwad_guide_lang', lang); }
+  catch(err) { /* التخزين معطّل — اللغة لهذه الجلسة فقط */ }
+  applyLang();
+}
+
+try {
+  var saved = window.localStorage.getItem('atwad_guide_lang');
+  if(saved === 'en' || saved === 'hi') lang = saved;
+} catch(err) { /* لا تخزين — نبدأ بالإنجليزية */ }
+applyLang();
+</script>
+</body>
+</html>
