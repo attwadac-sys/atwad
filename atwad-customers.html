@@ -548,6 +548,8 @@
     <div class="nav-item" id="nav-reports" onclick="location.href='atwad-reports.html'"><span class="nav-icon">📊</span> التقارير</div>
     <div class="nav-item" id="nav-attention" onclick="location.href='atwad-attention.html'"><span class="nav-icon">🎯</span> ما يحتاج قرارك</div>
     <div class="nav-item" id="nav-fix" onclick="location.href='atwad-fix-entry.html'"><span class="nav-icon">🩹</span> تصحيح قيد</div>
+    <div class="nav-item" id="nav-backlog" onclick="location.href='atwad-backlog.html'"><span class="nav-icon">📦</span> المتراكم</div>
+    <div class="nav-item" id="nav-techlog" onclick="location.href='atwad-techlog.html'"><span class="nav-icon">📋</span> سجلّ الفني</div>
   </div>
   <div class="nav-section" style="margin-top:auto;border-top:1px solid rgba(255,255,255,0.08);padding-top:12px;">
     <div class="nav-item" id="nav-settings" onclick="alert('Settings — Coming Soon / قريباً ✨')"><span class="nav-icon">⚙️</span> الإعدادات</div>
@@ -2598,8 +2600,8 @@ if(db) {
 var LANG = localStorage.getItem('atwad_lang') || 'ar';
 
 var NAV_TEXT = {
-  ar: {clients:'العملاء', appts:'المواعيد', wo:'أوامر العمل', finance:'الإدارة المالية', reports:'التقارير', attention:'ما يحتاج قرارك', fix:'تصحيح قيد', settings:'الإعدادات', brand:'أطواد', brandSub:'لصيانة المكيفات'},
-  en: {clients:'Clients', appts:'Appointments', wo:'Work Orders', finance:'Finance', reports:'Reports', attention:'Needs Your Call', fix:'Fix an Entry', settings:'Settings', brand:'Atwad', brandSub:'AC Maintenance'}
+  ar: {clients:'العملاء', appts:'المواعيد', wo:'أوامر العمل', finance:'الإدارة المالية', reports:'التقارير', attention:'ما يحتاج قرارك', fix:'تصحيح قيد', techlog:'سجلّ الفني', backlog:'المتراكم', settings:'الإعدادات', brand:'أطواد', brandSub:'لصيانة المكيفات'},
+  en: {clients:'Clients', appts:'Appointments', wo:'Work Orders', finance:'Finance', reports:'Reports', attention:'Needs Your Call', fix:'Fix an Entry', techlog:'Tech Log', backlog:'Backlog', settings:'Settings', brand:'Atwad', brandSub:'AC Maintenance'}
 };
 
 function applySharedLang() {
@@ -2619,6 +2621,8 @@ function applySharedLang() {
   setTxt('nav-reports', t.reports);
   setTxt('nav-attention', t.attention);
   setTxt('nav-fix', t.fix);
+  setTxt('nav-backlog', t.backlog);
+  setTxt('nav-techlog', t.techlog);
   setTxt('nav-settings', t.settings);
   // page specific
   if(typeof applyPageLang === 'function') applyPageLang(l);
