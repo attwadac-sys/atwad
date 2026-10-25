@@ -886,6 +886,8 @@ function syncCreditToFinance(w){
       category: 'خدمة',
       method: 'كاش',
       party: w.client || '',
+      // الهاتف هو مفتاح ربط الدَّيْن بصاحبه — الاسم وحده يُخطئ
+      phone: String(w.phone || ''),
       // لا نُرجع قيداً محصّلاً إلى «مؤجل» عند تعديل أمر العمل بعد التحصيل
       status: (existing && (existing.status === 'مدفوع' || existing.status === 'مسوى'))
                 ? existing.status : 'مؤجل',

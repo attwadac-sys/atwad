@@ -4427,6 +4427,8 @@ function submitPay(method, warranty){
     amount: amt,
     date: date,
     party: client,
+    // الهاتف هو مفتاح ربط الدَّيْن بصاحبه — الاسم وحده يُخطئ
+    phone: String((a && a.phone) || ''),
     desc: (a.service || 'زيارة صيانة') + ' - ' + client,
     category: isWarranty ? 'ضمان' : 'خدمة',
     method: (method === 'transfer') ? 'تحويل' : 'كاش',
