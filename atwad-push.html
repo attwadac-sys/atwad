@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>تنبيهات الجوال — أطواد</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--deep:#0A2540;--sky:#38BDF8;--ice:#E2E8F0;--mist:#64748B;--frost:#F8FAFC;
+  --ok:#059669;--warn:#D97706;--bad:#B91C1C;--violet:#7C3AED;}
+*{box-sizing:border-box;}
+body{margin:0;background:#F1F5F9;font-family:'Tajawal',sans-serif;color:var(--deep);padding:18px 16px 70px;}
+.wrap{max-width:760px;margin:0 auto;}
+.head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px;}
+h1{font-size:23px;margin:0;}
+.sub{font-size:13.5px;color:var(--mist);line-height:1.85;margin-bottom:18px;}
+.pill{font-size:12px;font-weight:700;padding:5px 12px;border-radius:99px;background:#E0F2FE;color:#075985;}
+.card{background:#fff;border:1.5px solid var(--ice);border-radius:16px;padding:16px;margin-bottom:13px;}
+.card h2{font-size:16px;margin:0 0 10px;}
+button.big{font-family:'Tajawal',sans-serif;font-size:16px;font-weight:800;border:0;border-radius:12px;
+  background:var(--sky);color:#fff;padding:14px 24px;cursor:pointer;width:100%;}
+button.big:disabled{opacity:.45;cursor:default;}
+.mini{font-family:'Tajawal',sans-serif;font-size:12.5px;font-weight:700;border-radius:9px;
+  padding:7px 13px;cursor:pointer;background:var(--frost);color:var(--deep);border:1px solid var(--ice);}
+.mini:disabled{opacity:.4;cursor:default;}
+.mini.bad{background:#FEE2E2;color:#991B1B;border-color:#FECACA;}
+.steps{list-style:none;margin:0;padding:0;}
+.steps li{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-top:1px solid var(--ice);
+  font-size:13.5px;line-height:1.8;}
+.steps li:first-child{border-top:0;}
+.dot{flex:0 0 auto;width:21px;height:21px;border-radius:99px;background:var(--ice);color:var(--mist);
+  font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;margin-top:2px;}
+.steps li.on .dot{background:#D1FAE5;color:#065F46;}
+.steps li.no .dot{background:#FEE2E2;color:#991B1B;}
+.steps li.go .dot{background:#FEF3C7;color:#92400E;}
+.steps .why{font-size:12px;color:var(--mist);display:block;}
+.tok{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;direction:ltr;text-align:left;
+  width:100%;min-height:96px;padding:11px;border:1.5px solid var(--ice);border-radius:11px;
+  color:var(--deep);background:var(--frost);resize:vertical;line-height:1.6;word-break:break-all;}
+.msg{font-size:13.5px;font-weight:700;margin-top:12px;min-height:20px;line-height:1.85;}
+.msg.ok{color:var(--ok);} .msg.bad{color:var(--bad);} .msg.warn{color:var(--warn);}
+.hint{font-size:12px;color:var(--mist);line-height:1.85;margin-top:10px;}
+.dev{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 0;
+  border-top:1px solid var(--ice);flex-wrap:wrap;}
+.dev:first-child{border-top:0;}
+.dev .who{font-size:13.5px;font-weight:700;}
+.dev .meta{font-size:11.5px;color:var(--mist);line-height:1.7;direction:ltr;text-align:right;}
+.badge{font-size:11px;font-weight:800;padding:3px 9px;border-radius:99px;background:#D1FAE5;color:#065F46;}
+.empty{font-size:13.5px;color:var(--mist);padding:14px 0;line-height:1.8;}
+.ver{margin-top:18px;font-size:11px;color:var(--mist);opacity:.65;}
+.bar{margin-top:10px;display:flex;flex-wrap:wrap;gap:10px;}
+.bar button{width:auto;font-size:15px;padding:11px 20px;background:rgba(10,37,64,.07);color:var(--deep);}
+</style>
+</head>
+<body>
+<!-- Firebase SDK أولاً: atwad-firebase.js يستدعي firebase.initializeApp
+     فلا بد أن تُحمَّل هذه قبله، وإلا بقي window.auth فارغاً
+     فيُظهر atwad-auth.js «تعذر تهيئة نظام تسجيل الدخول».
+     و messaging-compat زيادةٌ تخصّ هذه الصفحة وحدها. -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-messaging-compat.js"></script>
+<script src="atwad-firebase.js"></script>
+<script src="atwad-auth.js"></script>
+
+<div class="wrap">
+  <div class="head">
+    <h1>🔔 تنبيهات الجوال</h1>
+    <span class="pill" id="pill">جارٍ الاتصال…</span>
+  </div>
+  <div class="sub">
+    سجّل هذا الجهاز مرةً واحدة، فيصلك تنبيه المساء إشعاراً حقيقياً على الجوال —
+    والمتصفح مغلق. افتح هذه الصفحة <b>من جوالك</b>، لا من الحاسب.
+  </div>
+
+  <div class="card">
+    <h2>١ — سجّل هذا الجهاز</h2>
+    <button class="big" id="regBtn" disabled>🔔 فعّل التنبيه على هذا الجهاز</button>
+    <div class="msg" id="msg"></div>
+    <ul class="steps" id="steps"></ul>
+    <div class="hint">
+      سيسألك المتصفح «السماح بالإشعارات؟» — اضغط «السماح».
+      ولو ضغطت «الحجب» سابقاً، فافتح 🔒 بجانب العنوان ← الإشعارات ← السماح، ثم أعِد المحاولة.
+    </div>
+  </div>
+
+  <div class="card" id="tokCard" style="display:none;">
+    <h2>٢ — رمز هذا الجهاز</h2>
+    <div class="hint" style="margin:0 0 10px;">
+      انسخه، ثم في Firebase:
+      <br>Engage ← Messaging ← Create your first campaign ← Firebase Notification messages،
+      اكتب عنواناً ونصاً، ثم <b>Send test message</b> والصق الرمز هنا واضغط Test.
+      <br>يجب أن يصل الإشعار إلى جوالك في ثوانٍ.
+    </div>
+    <textarea class="tok" id="tok" readonly></textarea>
+    <div class="bar" style="margin-top:10px;">
+      <button class="mini" id="cpBtn">📋 انسخ الرمز</button>
+      <button class="mini" id="selfBtn">🧪 جرّب إشعاراً محلياً</button>
+    </div>
+    <div class="msg" id="msg2"></div>
+  </div>
+
+  <div class="card">
+    <h2>الأجهزة المسجّلة</h2>
+    <div id="devs"><div class="empty">جارٍ القراءة…</div></div>
+    <div class="hint">
+      الرمز يتغيّر إن مسحت بيانات المتصفح أو أعدت تثبيته — فسجّل الجهاز من جديد حينها،
+      واحذف الصفَّ القديم من هنا كي لا تُرسَل التنبيهات إلى رمزٍ ميّت.
+    </div>
+  </div>
+
+  <div class="ver">إصدار الصفحة: <b>v1 · 2026-10-25</b></div>
+  <div class="bar">
+    <button id="backBtn" onclick="location.href='atwad-attention.html'">🎯 ما يحتاج قرارك</button>
+    <button id="homeBtn" onclick="location.href='index.html'">🏠 الرئيسية</button>
+  </div>
+</div>
+
+<script>
+var ADMIN_UID = 'NU8g25megKefUOBQGvfkVtBOw802';
+var VAPID_KEY = 'BCTxpfJ6_AfvVR8zBL6zZXCs6srxDUOe1JrNSKdYul6PpAKSYZ4tgSjE0p6cczHaP-2T61WGQvq0QEot2eTsmH8';
+var TOKEN_PATH = 'settings/pushTokens';   // تحت settings: صلاحيتها للمدير أصلاً، فلا تعديل للقواعد
+var pDb = null;
+var pMsg = null;
+var MYTOK = '';
+
+function el(i){ return document.getElementById(i); }
+function say(t, cls){ var m = el('msg'); m.textContent = t; m.className = 'msg ' + (cls || ''); }
+function say2(t, cls){ var m = el('msg2'); m.textContent = t; m.className = 'msg ' + (cls || ''); }
+function esc(s){
+  return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ---- معرّف ثابت لهذا الجهاز، فإعادة التسجيل تُحدّث صفّه ولا تُنشئ صفاً جديداً.
+       ونتجنّب استعمال الرمز نفسه مفتاحاً: طويل، وقد يحمل محارف ترفضها قاعدة البيانات. */
+function deviceId(){
+  var k = '';
+  try { k = window.localStorage.getItem('atwadDevId') || ''; }
+  catch(e){ k = ''; }   // متصفح يمنع التخزين — نعمل بمعرّف مؤقّت
+  if(!k){
+    k = 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    try { window.localStorage.setItem('atwadDevId', k); }
+    catch(e2){ k = k; }
+  }
+  return k;
+}
+
+function deviceName(){
+  var u = navigator.userAgent || '';
+  var os = /Android/i.test(u) ? 'Android' : (/iPhone|iPad|iPod/i.test(u) ? 'iPhone/iPad'
+         : (/Windows/i.test(u) ? 'Windows' : (/Mac OS/i.test(u) ? 'Mac' : 'جهاز')));
+  var br = /SamsungBrowser/i.test(u) ? 'Samsung Internet'
+         : (/EdgA?\//i.test(u) ? 'Edge'
+         : (/Chrome\//i.test(u) ? 'Chrome'
+         : (/Firefox\//i.test(u) ? 'Firefox'
+         : (/Safari\//i.test(u) ? 'Safari' : 'متصفح'))));
+  return os + ' · ' + br;
+}
+
+/* ---- قائمة الخطوات: تُرسم مرة، وتُلوّن مع التقدّم ---- */
+var STEPS = [
+  { id:'https', t:'الاتصال آمن (https)', why:'الإشعارات لا تعمل على http' },
+  { id:'sw',    t:'المتصفح يدعم عامل الخدمة', why:'هو من يستقبل الإشعار والصفحة مغلقة' },
+  { id:'sup',   t:'المتصفح يدعم إشعارات Firebase', why:'' },
+  { id:'perm',  t:'إذن الإشعارات ممنوح', why:'' },
+  { id:'reg',   t:'عامل الخدمة مثبَّت', why:'firebase-messaging-sw.js' },
+  { id:'tok',   t:'رمز الجهاز صدر وحُفظ', why:'' }
+];
+
+function drawSteps(){
+  var h = '';
+  for(var i = 0; i < STEPS.length; i++){
+    h += '<li id="st-' + STEPS[i].id + '"><span class="dot">' + (i + 1) + '</span><span>' +
+         esc(STEPS[i].t) +
+         (STEPS[i].why ? '<span class="why">' + esc(STEPS[i].why) + '</span>' : '') +
+         '</span></li>';
+  }
+  el('steps').innerHTML = h;
+}
+
+function mark(id, state, extra){
+  var li = el('st-' + id);
+  if(!li) return;
+  li.className = state || '';
+  var dot = li.querySelector('.dot');
+  if(dot){ dot.textContent = state === 'on' ? '✓' : (state === 'no' ? '✕' : (state === 'go' ? '…' : dot.textContent)); }
+  if(extra){
+    var w = li.querySelector('.why');
+    if(w){ w.textContent = extra; }
+    else {
+      var s = li.querySelector('span:last-child');
+      if(s){ var n = document.createElement('span'); n.className = 'why'; n.textContent = extra; s.appendChild(n); }
+    }
+  }
+}
+
+/* ---- الفحص القبلي: يُظهر العائق قبل الضغط لا بعده ---- */
+function precheck(){
+  var ok = true;
+
+  if(location.protocol === 'https:' || location.hostname === 'localhost'){ mark('https','on'); }
+  else { mark('https','no','العنوان الحالي: ' + location.protocol); ok = false; }
+
+  if('serviceWorker' in navigator){ mark('sw','on'); }
+  else { mark('sw','no','غير مدعوم في هذا المتصفح'); ok = false; }
+
+  var sup = false;
+  try { sup = !!(firebase && firebase.messaging && firebase.messaging.isSupported && firebase.messaging.isSupported()); }
+  catch(e){ sup = false; }
+  if(sup){ mark('sup','on'); }
+  else {
+    var ios = /iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+    mark('sup','no', ios
+      ? 'على الآيفون: أضف الصفحة إلى الشاشة الرئيسية ثم افتحها من الأيقونة'
+      : 'المتصفح لا يدعمها — جرّب Chrome');
+    ok = false;
+  }
+
+  if(!('Notification' in window)){ mark('perm','no','غير مدعوم'); ok = false; }
+  else if(Notification.permission === 'granted'){ mark('perm','on'); }
+  else if(Notification.permission === 'denied'){ mark('perm','no','محجوب — اسمح به من 🔒 بجانب العنوان'); ok = false; }
+  else { mark('perm','go','سيُطلب عند الضغط'); }
+
+  return ok;
+}
+
+/* ---- التسجيل ---- */
+function register(){
+  el('regBtn').disabled = true;
+  say('جارٍ التسجيل…', 'warn');
+
+  if(!precheck()){
+    el('regBtn').disabled = false;
+    say('أصلِح العلامة ✕ أعلاه ثم أعِد المحاولة.', 'bad');
+    return;
+  }
+
+  Notification.requestPermission().then(function(p){
+    if(p !== 'granted'){
+      mark('perm','no','الإذن: ' + p);
+      el('regBtn').disabled = false;
+      say('لم يُمنح الإذن. لا يمكن إرسال إشعار بدونه.', 'bad');
+      return null;
+    }
+    mark('perm','on');
+    mark('reg','go');
+    /* المسار نسبي، فنطاق العامل يصبح /atwad/ — ولو جعلناه مطلقاً
+       لرفضه المتصفح، لأن النطاق لا يتجاوز مجلّد الملف. */
+    return navigator.serviceWorker.register('firebase-messaging-sw.js');
+  }).then(function(reg){
+    if(!reg) return null;
+    mark('reg','on', 'النطاق: ' + reg.scope);
+    mark('tok','go');
+    /* ready يضمن أن العامل صار نشطاً؛ التسجيل وحده قد يكون ما زال installing
+       فيفشل getToken بصمت. */
+    return navigator.serviceWorker.ready.then(function(){ return reg; });
+  }).then(function(reg){
+    if(!reg) return null;
+    pMsg = firebase.messaging();
+    return pMsg.getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: reg });
+  }).then(function(tok){
+    if(!tok) return null;
+    MYTOK = tok;
+    el('tok').value = tok;
+    el('tokCard').style.display = '';
+    return saveToken(tok);
+  }).then(function(saved){
+    if(saved === null || saved === undefined) return;
+    mark('tok','on');
+    say('✅ تمّ. انسخ الرمز من الأسفل وأرسِل إشعار اختبار من Firebase.', 'ok');
+    el('regBtn').textContent = '✅ هذا الجهاز مسجّل — سجّله مرة أخرى';
+    el('regBtn').disabled = false;
+    listenForeground();
+    loadDevices();
+  }).catch(function(err){
+    var m = (err && err.message) ? err.message : String(err);
+    mark('tok','no', m.slice(0, 120));
+    el('regBtn').disabled = false;
+    if(m.indexOf('messaging/token-subscribe-failed') >= 0 || m.indexOf('401') >= 0){
+      say('رُفض الرمز. تحقّق أن مفتاح Web Push في Firebase هو نفسه الموضوع في هذه الصفحة.', 'bad');
+    } else if(m.indexOf('messaging/failed-service-worker') >= 0 || m.indexOf('404') >= 0){
+      say('لم يُعثر على firebase-messaging-sw.js — تأكّد أنه مرفوع في جذر المستودع.', 'bad');
+    } else {
+      say('تعذّر التسجيل: ' + m, 'bad');
+    }
+    if(window.console && console.error){ console.error('[atwad-push]', err); }
+  });
+}
+
+function saveToken(tok){
+  if(!pDb) return null;
+  var d = new Date();
+  var iso = d.getFullYear() + '-' +
+            ('0' + (d.getMonth() + 1)).slice(-2) + '-' +
+            ('0' + d.getDate()).slice(-2) + ' ' +
+            ('0' + d.getHours()).slice(-2) + ':' +
+            ('0' + d.getMinutes()).slice(-2);
+  return pDb.ref(TOKEN_PATH + '/' + deviceId()).set({
+    token: tok,
+    at: iso,
+    name: deviceName(),
+    ua: String(navigator.userAgent || '').slice(0, 180)
+  }).then(function(){ return true; });
+}
+
+/* ---- الأجهزة المسجّلة ---- */
+function loadDevices(){
+  if(!pDb) return;
+  pDb.ref(TOKEN_PATH).once('value').then(function(snap){
+    var v = snap.val() || {};
+    var ks = Object.keys(v);
+    if(!ks.length){
+      el('devs').innerHTML = '<div class="empty">لا جهاز مسجّل بعد.</div>';
+      return;
+    }
+    var mine = deviceId();
+    var h = '';
+    for(var i = 0; i < ks.length; i++){
+      var r = v[ks[i]] || {};
+      h += '<div class="dev"><div><div class="who">' + esc(r.name || 'جهاز') +
+           (ks[i] === mine ? ' <span class="badge">هذا الجهاز</span>' : '') +
+           '</div><div class="meta">' + esc(r.at || '') + ' · ' +
+           esc(String(r.token || '').slice(0, 14)) + '…</div></div>' +
+           '<button class="mini bad" data-k="' + esc(ks[i]) + '">🗑 احذف</button></div>';
+    }
+    el('devs').innerHTML = h;
+    var bs = el('devs').querySelectorAll('button[data-k]');
+    for(var j = 0; j < bs.length; j++){
+      bs[j].addEventListener('click', function(ev){
+        var k = ev.currentTarget.getAttribute('data-k');
+        ev.currentTarget.disabled = true;
+        pDb.ref(TOKEN_PATH + '/' + k).remove().then(function(){ loadDevices(); })
+          .catch(function(e){
+            ev.currentTarget.disabled = false;
+            if(window.console && console.error){ console.error('[atwad-push] delete', e); }
+          });
+      });
+    }
+  }).catch(function(e){
+    el('devs').innerHTML = '<div class="empty">تعذّرت القراءة: ' + esc(e && e.message) + '</div>';
+  });
+}
+
+/* ---- إشعار والصفحة مفتوحة: العامل لا يعرضه، فنعرضه نحن ---- */
+function listenForeground(){
+  if(!pMsg) return;
+  pMsg.onMessage(function(payload){
+    var d = (payload && payload.data) || {};
+    var t = d.title || (payload && payload.notification && payload.notification.title) || 'أطواد';
+    var b = d.body  || (payload && payload.notification && payload.notification.body)  || '';
+    say2('📬 وصل إشعار والصفحة مفتوحة: ' + t + (b ? ' — ' + b : ''), 'ok');
+    if(Notification.permission === 'granted'){
+      navigator.serviceWorker.ready.then(function(reg){
+        reg.showNotification(t, { body: b, icon: 'icon-192.png', dir: 'rtl', lang: 'ar',
+          tag: 'atwad-fg', data: { url: d.url || 'atwad-attention.html' } });
+      }).catch(function(e){
+        if(window.console && console.warn){ console.warn('[atwad-push] fg show', e); }
+      });
+    }
+  });
+}
+
+/* ---- أزرار مساعدة ---- */
+function copyTok(){
+  var ta = el('tok');
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(ta.value).then(function(){
+      say2('📋 نُسخ الرمز.', 'ok');
+    }).catch(function(){
+      ta.select(); say2('اضغط مطوّلاً على الرمز وانسخه يدوياً.', 'warn');
+    });
+  } else {
+    ta.select(); say2('اضغط مطوّلاً على الرمز وانسخه يدوياً.', 'warn');
+  }
+}
+
+/* إشعار محلي: يُثبت أن الجوال يعرض الإشعارات،
+   ولا يُثبت أن Firebase يصل إليه — ذاك اختبار Firebase وحده. */
+function selfTest(){
+  if(Notification.permission !== 'granted'){ say2('الإذن غير ممنوح.', 'bad'); return; }
+  navigator.serviceWorker.ready.then(function(reg){
+    return reg.showNotification('أطواد — تجربة محلية', {
+      body: 'لو رأيت هذا، فجوالك يعرض الإشعارات. يبقى اختبار الوصول من Firebase.',
+      icon: 'icon-192.png', dir: 'rtl', lang: 'ar', tag: 'atwad-self',
+      data: { url: 'atwad-push.html' }
+    });
+  }).then(function(){
+    say2('أُرسل إشعار محلي. انظر شريط الإشعارات.', 'ok');
+  }).catch(function(e){
+    say2('تعذّر: ' + (e && e.message), 'bad');
+  });
+}
+
+drawSteps();
+
+window.__atwadInitPage = function(user){
+  if(!user || user.uid !== ADMIN_UID){
+    document.body.innerHTML = '<div style="padding:40px;text-align:center;font-family:Tajawal,sans-serif;">' +
+      'هذا الحساب غير مصرّح له.</div>';
+    return;
+  }
+  pDb = window.db || null;
+  if(!pDb){ el('pill').textContent = 'غير متصل'; say('لا اتصال بقاعدة البيانات.', 'bad'); return; }
+  el('pill').textContent = 'متصل';
+  precheck();
+  el('regBtn').disabled = false;
+  el('regBtn').addEventListener('click', register);
+  el('cpBtn').addEventListener('click', copyTok);
+  el('selfBtn').addEventListener('click', selfTest);
+  loadDevices();
+
+  /* إن كان مسجّلاً من قبل على هذا الجهاز، أظهِر الرمز دون سؤال الإذن من جديد */
+  if(Notification.permission === 'granted' && ('serviceWorker' in navigator)){
+    navigator.serviceWorker.getRegistration('firebase-messaging-sw.js').then(function(reg){
+      if(!reg) return null;
+      pMsg = firebase.messaging();
+      return pMsg.getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: reg });
+    }).then(function(tok){
+      if(!tok) return;
+      MYTOK = tok;
+      el('tok').value = tok;
+      el('tokCard').style.display = '';
+      mark('reg','on'); mark('tok','on');
+      say('هذا الجهاز مسجّل. الرمز في الأسفل.', 'ok');
+      el('regBtn').textContent = '✅ هذا الجهاز مسجّل — سجّله مرة أخرى';
+      listenForeground();
+    }).catch(function(e){
+      if(window.console && console.warn){ console.warn('[atwad-push] silent', e); }
+    });
+  }
+};
+</script>
+</body>
+</html>

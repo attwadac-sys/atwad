@@ -1,0 +1,66 @@
+// ================================================================
+// firebase-messaging-sw.js — عامل الخدمة الذي يستقبل الإشعار
+//                             والصفحة مغلقة أو الجوال نائم
+//
+// موضعه: جذر المستودع، فيُخدَم من /atwad/firebase-messaging-sw.js
+// ونطاقه /atwad/ — أي أنه يغطّي صفحات النظام كلها ولا يتجاوزها.
+//
+// تنبيه: مكتبة Firebase تبحث افتراضياً عن هذا الملف في جذر النطاق
+// (/firebase-messaging-sw.js) لا في /atwad/. ولهذا تُسجّله صفحة
+// atwad-push.html بنفسها وتُمرّر التسجيل إلى getToken — بدون ذلك
+// لا يُعثر على العامل ويفشل الحصول على الرمز.
+// ================================================================
+
+importScripts('https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/9.22.2/firebase-messaging-compat.js');
+
+firebase.initializeApp({
+  apiKey: "AIzaSyAjq2PVCkAVYwqpIpKIGx01LkbCB3TmW6w",
+  authDomain: "atwad-booking.firebaseapp.com",
+  databaseURL: "https://atwad-booking-default-rtdb.firebaseio.com",
+  projectId: "atwad-booking",
+  storageBucket: "atwad-booking.firebasestorage.app",
+  messagingSenderId: "110922546416",
+  appId: "1:110922546416:web:d8cd48aa90f2d6ce9cd635"
+});
+
+var messaging = firebase.messaging();
+
+/* الرسالة من نوع data لا notification، كي نتحكّم نحن بالعنوان
+   والنصّ والوجهة. ولو أُرسلت notification لعرضها المتصفح بنفسه
+   وتجاهل هذه الدالة، فتضيع الوجهة. */
+messaging.onBackgroundMessage(function(payload) {
+  var d = (payload && payload.data) || {};
+  var title = d.title || 'أطواد';
+  var body  = d.body  || '';
+  var url   = d.url   || 'atwad-attention.html';
+
+  self.registration.showNotification(title, {
+    body: body,
+    icon: 'icon-192.png',
+    badge: 'favicon-32.png',
+    tag: d.tag || 'atwad-evening',   // يستبدل القديم بدل تكديس الإشعارات
+    renotify: true,
+    dir: 'rtl',
+    lang: 'ar',
+    data: { url: url },
+    requireInteraction: d.sticky === '1'
+  });
+});
+
+// ضغط الإشعار يفتح الصفحة المقصودة، ويستعمل تبويباً مفتوحاً إن وُجد
+self.addEventListener('notificationclick', function(event) {
+  event.notification.close();
+  var target = (event.notification.data && event.notification.data.url) || 'atwad-attention.html';
+  var full = new URL(target, self.registration.scope).href;
+
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(list) {
+      for (var i = 0; i < list.length; i++) {
+        if (list[i].url === full && 'focus' in list[i]) return list[i].focus();
+      }
+      if (self.clients.openWindow) return self.clients.openWindow(full);
+      return null;
+    })
+  );
+});
