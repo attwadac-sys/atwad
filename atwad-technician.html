@@ -382,9 +382,12 @@ var I18N = {
   }
 };
 var LANG = 'ar';
+/* نُميّز «لم يختر أحدٌ لغةً بعد» عن «اختار العربية صراحةً»:
+   الأولى تقبل الافتراض بحسب الحساب، والثانية لا تُنقض. */
+var LANG_CHOSEN = false;
 try {
   var _sl = window.localStorage.getItem('atwad_tech_page_lang');
-  if(_sl === 'en' || _sl === 'ar') LANG = _sl;
+  if(_sl === 'en' || _sl === 'ar'){ LANG = _sl; LANG_CHOSEN = true; }
 } catch(err) { /* التخزين معطّل — نبدأ بالعربية */ }
 function t(k){ return I18N[LANG][k]; }
 function statusLabel(s){ return t('st_' + s) || s; }
@@ -1436,6 +1439,20 @@ function saveOdometer(){
   });
 }
 applyStaticLang();
-window.__atwadInitPage = function(user) { console.log("[technician] مسجّل:", user.email); if(typeof syncFromFirebase==="function") syncFromFirebase(); else if(typeof loadData==="function") loadData(); loadLastOdometer(); };
+/* حساب الفني الميداني — تُفتح له الصفحة إنجليزيةً، وتبقى عربيةً لحساب الإدارة.
+   وأيُّهما بدّل اللغة بالزر حُفظ اختياره لجهازه فلا يُنقَض بعدها. */
+var TECH_UID = '0zGIJyaLAjSrLOzSRt2YaDUe4xv2';
+
+window.__atwadInitPage = function(user) {
+  console.log("[technician] مسجّل:", user && user.email);
+  if(user && user.uid === TECH_UID && !LANG_CHOSEN){
+    LANG = 'en';
+    applyStaticLang();
+    updateDate();
+  }
+  if(typeof syncFromFirebase === "function") syncFromFirebase();
+  else if(typeof loadData === "function") loadData();
+  loadLastOdometer();
+};
 
 </script>
