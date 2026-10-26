@@ -548,7 +548,9 @@ function returningHtml(b){
         acts += '<a class="mini wa" href="' + esc(url) + '" target="_blank" rel="noopener">📲 ذكّره</a>';
       }
     }
-    acts += '<a class="mini g" href="atwad-fix-entry.html" target="_blank" rel="noopener">🩹 راجع القيود</a>';
+    /* يمرّر الاسم فتفتح صفحة التصحيح وقد بحثت عنه — ولا تُعيد كتابته بيدك */
+    acts += '<a class="mini g" href="atwad-fix-entry.html?q=' + encodeURIComponent(v.name) +
+            '" target="_blank" rel="noopener">🩹 راجع القيود</a>';
 
     h += '<div class="vrow"><div>' +
       '<div class="who">' + esc(v.name) +

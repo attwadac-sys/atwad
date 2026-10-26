@@ -45,6 +45,17 @@ button.big:disabled{opacity:.45;cursor:default;}
 .amtfix input{font-family:'Tajawal',sans-serif;font-size:14px;font-weight:700;width:104px;
   padding:7px 10px;border:1.5px solid var(--ice);border-radius:9px;color:var(--deep);direction:ltr;text-align:center;}
 .amtfix input:focus{outline:0;border-color:var(--sky);}
+.phfix{display:flex;align-items:center;gap:7px;flex-wrap:wrap;width:100%;
+  font-size:12px;color:var(--mist);padding-top:8px;}
+.phfix input{font-family:'Tajawal',sans-serif;font-size:14px;font-weight:700;width:132px;
+  padding:7px 10px;border:1.5px solid var(--ice);border-radius:9px;color:var(--deep);
+  direction:ltr;text-align:center;}
+.phfix input:focus{outline:0;border-color:var(--sky);}
+.phfix .has{color:#065F46;font-weight:800;direction:ltr;}
+.phfix .non{color:#B91C1C;font-weight:800;}
+.chip{font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;border:1.5px solid #BFDBFE;
+  background:#EFF6FF;color:#1D4ED8;border-radius:99px;padding:5px 11px;cursor:pointer;direction:ltr;}
+.chip:hover{background:#DBEAFE;}
 .msg{font-size:13px;font-weight:700;margin-top:12px;min-height:20px;line-height:1.8;}
 .empty{font-size:13.5px;color:var(--mist);padding:16px 0;line-height:1.8;}
 .ver{margin-top:18px;font-size:11px;color:var(--mist);opacity:.65;}
@@ -61,6 +72,8 @@ button.big:disabled{opacity:.45;cursor:default;}
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 <script src="atwad-firebase.js"></script>
 <script src="atwad-auth.js"></script>
+<!-- للـ normPhone وحدها: توحيد صيغ الأرقام قبل الحفظ -->
+<script src="atwad-debt.js"></script>
 
 <div class="wrap">
   <div class="head">
@@ -86,7 +99,7 @@ button.big:disabled{opacity:.45;cursor:default;}
 
   <div id="out"></div>
 
-  <div class="ver">إصدار الصفحة: <b>v5 · 2026-10-12 10:05</b></div>
+  <div class="ver">إصدار الصفحة: <b>v6 · 2026-10-25 20:35</b></div>
   <div class="bar">
     <button class="big" id="backBtn" onclick="location.href='atwad-attention.html'">🎯 ما يحتاج قرارك</button>
     <button class="big" id="bkBtn" onclick="location.href='atwad-backlog.html'">📦 المتراكم</button>
@@ -98,6 +111,8 @@ button.big:disabled{opacity:.45;cursor:default;}
 var ADMIN_UID = 'NU8g25megKefUOBQGvfkVtBOw802';
 var fxDb = null;
 var ROWS = [];
+var PHONES = [];   // هواتف مقترحة من حجوزات العميل ومواعيده
+var REFPH = {};    // هاتف الحجز بمفتاحه، لاستخراجه عبر firebaseRef
 
 function el(id){ return document.getElementById(id); }
 function esc(s){
@@ -198,7 +213,40 @@ function search(){
   el('msg').textContent = '⏳ جارٍ البحث في القيود…';
   el('out').innerHTML = '';
 
-  fxDb.ref('transactions').once('value').then(function(snap){
+  Promise.all([
+    fxDb.ref('transactions').once('value'),
+    fxDb.ref('bookings').once('value'),
+    fxDb.ref('appointments').once('value')
+  ]).then(function(res){
+    var snap = res[0];
+
+    /* هواتف هذا العميل من حجوزاته ومواعيده — اقتراحاتٌ تُعرض ولا تُكتب.
+       والمفتاح بالرقم الموحَّد فلا يتكرّر 0555 و+966555. */
+    PHONES = [];
+    var seenPh = {};
+    function pick(sn){
+      sn.forEach(function(c){
+        var b = c.val() || {};
+        if(!nameHit(qWords, b.client || b.name || '')) return;
+        var raw = String(b.phone || '').trim();
+        if(!raw) return;
+        var key = window.AtwadDebt ? window.AtwadDebt.normPhone(raw) : raw;
+        if(!key || seenPh[key]) return;
+        seenPh[key] = true;
+        PHONES.push({ phone: raw, name: String(b.client || b.name || ''), date: String(b.date || '') });
+      });
+    }
+    pick(res[1]); pick(res[2]);
+    PHONES.sort(function(a, b){ return String(b.date).localeCompare(String(a.date)); });
+    if(PHONES.length > 4) PHONES = PHONES.slice(0, 4);
+
+    /* هاتفٌ يُستخرج من حجز القيد نفسه عبر firebaseRef — أوثق من الاسم */
+    REFPH = {};
+    res[1].forEach(function(c){
+      var b = c.val() || {};
+      if(b.phone) REFPH[c.key] = String(b.phone);
+    });
+
     ROWS = [];
     snap.forEach(function(c){
       var v = c.val() || {};
@@ -258,10 +306,86 @@ function render(){
         '<input type="number" step="0.01" min="0" id="a-' + esc(r.key) + '" value="' + amt + '">' +
         '<span>﷼</span>' +
         '<button class="mini" onclick="setAmt(\'' + esc(r.key) + '\')">احفظ المبلغ</button>' +
-      '</div></div>';
+      '</div>' +
+      phoneRowHtml(r) +
+      '</div>';
   }
   html += '</div>';
   el('out').innerHTML = html;
+}
+
+/* الهاتف هو ما يرفع القيد من «⚠️ بالاسم» إلى «🔒 بالهاتف»،
+   فتصل العميلَ رسالةُ التذكير ويصل الفنيَّ شريطُ الدَّيْن. */
+function phoneRowHtml(r){
+  var v = r.v;
+  var own = String(v.phone || '').trim();
+  var fromRef = (!own && v.firebaseRef && REFPH[v.firebaseRef]) ? String(REFPH[v.firebaseRef]) : '';
+  var cur = own || fromRef;
+
+  var h = '<div class="phfix"><span>الهاتف:</span>';
+  if(own){
+    h += '<span class="has">' + esc(own) + '</span><span>✔ محفوظ في القيد</span>';
+  } else if(fromRef){
+    h += '<span class="has">' + esc(fromRef) + '</span>' +
+         '<span>من حجزه — يُطابَق تلقائياً، واحفظه هنا ليثبت</span>';
+  } else {
+    h += '<span class="non">بلا هاتف</span><span>— يُطابَق بالاسم وحده</span>';
+  }
+  h += '<input type="tel" inputmode="numeric" id="p-' + esc(r.key) + '" placeholder="05xxxxxxxx" value="' +
+       esc(cur) + '">' +
+       '<button class="mini" onclick="setPhone(\'' + esc(r.key) + '\')">احفظ الهاتف</button>';
+
+  for(var i = 0; i < PHONES.length; i++){
+    h += '<button class="chip" onclick="fillPhone(\'' + esc(r.key) + '\',\'' +
+         esc(PHONES[i].phone) + '\')">' + esc(PHONES[i].phone) +
+         (PHONES[i].date ? ' · ' + esc(PHONES[i].date) : '') + '</button>';
+  }
+  return h + '</div>';
+}
+
+function fillPhone(key, ph){
+  var inp = el('p-' + key);
+  if(!inp) return;
+  inp.value = ph;
+  inp.focus();
+  el('msg').textContent = 'اضغط «احفظ الهاتف» لإثباته في القيد.';
+}
+
+function setPhone(key){
+  if(!fxDb) return;
+  var inp = el('p-' + key);
+  if(!inp) return;
+  var raw = String(inp.value || '').trim();
+
+  // الفراغ يعني حذف الهاتف، لا خطأً
+  if(raw === ''){
+    fxDb.ref('transactions/' + key).update({ phone: null }).then(function(){
+      for(var j = 0; j < ROWS.length; j++){
+        if(ROWS[j].key === key){ delete ROWS[j].v.phone; break; }
+      }
+      render();
+      el('msg').textContent = '🗑 حُذف الهاتف من القيد.';
+    }).catch(function(e){ el('msg').textContent = '❌ تعذّر الحفظ: ' + (e.message || e); });
+    return;
+  }
+
+  var n9 = window.AtwadDebt ? window.AtwadDebt.normPhone(raw) : '';
+  if(!n9){
+    el('msg').textContent = '⚠️ الرقم غير صالح — يجب أن يحمل تسعة أرقام على الأقل (05xxxxxxxx).';
+    inp.focus();
+    return;
+  }
+
+  fxDb.ref('transactions/' + key).update({ phone: raw }).then(function(){
+    for(var j = 0; j < ROWS.length; j++){
+      if(ROWS[j].key === key){ ROWS[j].v.phone = raw; break; }
+    }
+    render();
+    el('msg').textContent = '✅ حُفظ الهاتف. صار القيد يُطابَق بالرقم لا بالاسم — ' +
+      'فيظهر في لوحة القرارات بعلامة 🔒 ويصل الفنيَّ على بطاقته.';
+  }).catch(function(e){
+    el('msg').textContent = '❌ تعذّر الحفظ: ' + (e.message || e);
+  });
 }
 
 function setAmt(key){
@@ -367,7 +491,16 @@ window.__atwadInitPage = function(user){
   el('pill').textContent = 'متصل';
   el('goBtn').disabled = false;
   el('goBtn').addEventListener('click', search);
-  el('q').focus();
+
+  /* ?q=الاسم — تأتي به لوحة القرارات من زرّ «راجع القيود»،
+     فلا تُعيد كتابة الاسم بيدك. */
+  var qs = '';
+  try {
+    var m = String(window.location.search || '').match(/[?&]q=([^&]*)/);
+    if(m) qs = decodeURIComponent(m[1].replace(/\+/g, ' '));
+  } catch(e){ qs = ''; }   // رابطٌ مشوّه — نتجاهله ونفتح الصفحة فارغة
+  if(qs){ el('q').value = qs; search(); }
+  else { el('q').focus(); }
 };
 </script>
 </body>
