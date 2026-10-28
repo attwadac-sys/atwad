@@ -146,7 +146,8 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 .invoice-top{background:linear-gradient(90deg,var(--deep),var(--steel));padding:16px 20px;display:flex;justify-content:space-between;align-items:center;}
 .invoice-top h2{color:#fff;font-size:16px;font-weight:800;}
 .invoice-top .inv-legal{color:rgba(255,255,255,.72);font-size:11px;margin-top:3px;}
-.invoice-top .inv-num{color:rgba(255,255,255,.7);font-size:12px;}
+.invoice-top .inv-kind{color:#fff;font-size:12px;font-weight:800;background:rgba(255,255,255,.16);border-radius:6px;padding:3px 9px;text-align:center;}
+.invoice-top .inv-num{color:rgba(255,255,255,.7);font-size:12px;margin-top:5px;text-align:center;}
 .invoice-body{padding:16px 20px;}
 .inv-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px dashed var(--ice);font-size:13px;}
 .inv-row:last-child{border-bottom:none;}
@@ -159,6 +160,10 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 .inv-seal{padding:14px 20px 18px;display:flex;justify-content:flex-start;align-items:flex-end;gap:10px;}
 .inv-seal img{width:118px;height:118px;object-fit:contain;}
 .inv-seal .seal-cap{font-size:11px;color:var(--mist);padding-bottom:6px;}
+.inv-seal .seal-spacer{flex:1;}
+.inv-qr-wrap{display:flex;flex-direction:column;align-items:center;gap:2px;}
+.inv-qr-wrap .seal-cap{padding-bottom:0;}
+.inv-seal .inv-qr{width:104px;height:104px;image-rendering:pixelated;}
 
 /* RATING */
 .rating-stars{display:flex;gap:8px;font-size:32px;cursor:pointer;margin:8px 0 16px;}
@@ -187,6 +192,8 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
 <script src="atwad-admin-auth.js"></script>
+<!-- مولّد رمز الفاتورة الضريبية. إن تعذّر تحميله طُبعت الفاتورة بلا رمز ولم تتعطّل. -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 </head>
 <body>
 
@@ -346,7 +353,15 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
           <div class="form-group"><label>تكلفة قطع الغيار (ريال)</label><input type="number" id="w_parts_cost" placeholder="0" min="0" value="0" oninput="updateInvoice()"></div>
         </div>
         <div class="form-row">
+          <div class="form-group"><label>السعر المُدخل أعلاه</label>
+            <select id="w_vat_mode" onchange="updateInvoice()">
+              <option value="inc">شامل ضريبة القيمة المضافة</option>
+              <option value="exc">قبل الضريبة — تُضاف 15%</option>
+            </select>
+          </div>
           <div class="form-group"><label>خصم (ريال)</label><input type="number" id="w_discount" placeholder="0" min="0" value="0" oninput="updateInvoice()"></div>
+        </div>
+        <div class="form-row">
           <div class="form-group"><label>طريقة الدفع</label>
             <select id="w_payment" onchange="onPaymentChange(this.value)"><option value="كاش">💵 كاش</option><option value="تحويل">🏦 تحويل بنكي</option><option value="مدى">💳 مدى</option><option value="آجل">⏳ آجل (مديونية)</option></select>
           </div>
@@ -363,9 +378,13 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
           <div class="invoice-top">
             <div>
               <h2>مؤسسة أطواد لصيانة المكيفات</h2>
-              <div class="inv-legal">مؤسسة أطواد السراه للمقاولات · سجل تجاري 4030067284</div>
+              <div class="inv-legal">مؤسسة أطواد السراه للمقاولات</div>
+              <div class="inv-legal">الرقم الضريبي 300088102300003 · سجل تجاري 4030067284</div>
             </div>
-            <div class="inv-num" id="invNum">WO-00000</div>
+            <div>
+              <div class="inv-kind">فاتورة ضريبية مبسطة</div>
+              <div class="inv-num" id="invNum">WO-00000</div>
+            </div>
           </div>
           <div class="invoice-body">
             <div class="inv-row"><span class="label">العميل</span><span class="value" id="inv_client">—</span></div>
@@ -376,14 +395,18 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
             <div class="inv-row"><span class="label">التاريخ</span><span class="value" id="inv_date">—</span></div>
             <div class="inv-row"><span class="label">الفني</span><span class="value" id="inv_tech">—</span></div>
             <div class="inv-row"><span class="label">طريقة الدفع</span><span class="value" id="inv_payment">—</span></div>
-            <div class="inv-row"><span class="label">سعر الخدمة</span><span class="value" id="inv_price">0 ريال</span></div>
+            <div class="inv-row"><span class="label" id="lbl_price">سعر الخدمة</span><span class="value" id="inv_price">0 ريال</span></div>
             <div class="inv-row" id="row_parts"><span class="label">قطع الغيار</span><span class="value" id="inv_parts">0 ريال</span></div>
             <div class="inv-row" id="row_discount"><span class="label">خصم</span><span class="value" id="inv_discount" style="color:var(--success)">0 ريال</span></div>
+            <div class="inv-row"><span class="label">المبلغ الخاضع للضريبة</span><span class="value" id="inv_net">0 ريال</span></div>
+            <div class="inv-row"><span class="label">ضريبة القيمة المضافة (15%)</span><span class="value" id="inv_vat">0 ريال</span></div>
           </div>
-          <div class="inv-total"><span class="t-label">الإجمالي</span><span class="t-price" id="inv_total">0 ريال</span></div>
+          <div class="inv-total"><span class="t-label">الإجمالي شامل الضريبة</span><span class="t-price" id="inv_total">0 ريال</span></div>
           <div class="inv-seal">
             <img class="inv-stamp" src="https://attwadac-sys.github.io/atwad/atwad-stamp.png" alt="ختم مؤسسة أطواد السراه للمقاولات">
             <span class="seal-cap">ختم المؤسسة</span>
+            <span class="seal-spacer"></span>
+            <span class="inv-qr-wrap"><img class="inv-qr" id="invQR" alt="رمز الفاتورة الضريبية"><span class="seal-cap">رمز الفاتورة</span></span>
           </div>
         </div>
         <div style="background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:10px;padding:10px 14px;font-size:12px;color:#92400E;">⚠️ الأسعار لا تشمل قطع الغيار إلا إذا مذكورة. الضمان أسبوع على أعمال التنظيف.</div>
@@ -1045,6 +1068,7 @@ function openNewWO(){
   document.getElementById('w_parts_cost').value='0';
   document.getElementById('w_discount').value='0';
   document.getElementById('w_payment').value='كاش';
+  document.getElementById('w_vat_mode').value='inc';
   var dd=document.getElementById('w_due_date'); if(dd) dd.value='';
   var dn=document.getElementById('w_due_note'); if(dn) dn.value='';
   onPaymentChange('كاش');
@@ -1149,10 +1173,13 @@ function nextStep(){
 function prevStep(){ if(currentStep>1) showStep(currentStep-1); }
 
 function saveWO(){
-  const price = parseFloat(document.getElementById('w_price').value)||0;
-  const parts = parseFloat(document.getElementById('w_parts_cost').value)||0;
-  const disc = parseFloat(document.getElementById('w_discount').value)||0;
-  const total = Math.max(0, price + parts - disc);
+  /* الحساب من الدالة المشتركة: الإجمالي شاملُ الضريبة دائماً، وإلا نقصت
+     الذمّةُ المدينة في المالية ١٥٪ على كل أمرٍ سعرُه قبل الضريبة. */
+  const calcSave = computeInvoiceTotals();
+  const price = calcSave.price;
+  const parts = calcSave.parts;
+  const disc  = calcSave.discount;
+  const total = calcSave.gross;
   const id = editingWO || genId();
   currentWOId = id;
   const data = {
@@ -1169,6 +1196,10 @@ function saveWO(){
     problem: document.getElementById('w_problem').value.trim(),
     parts: document.getElementById('w_parts').value.trim(),
     price, partsCost: parts, discount: disc, total,
+    /* يُحفظ ليخرج إعادةُ الطباعة بالأرقام نفسها بعد شهر */
+    vatInclusive: calcSave.inclusive,
+    vatAmount: calcSave.vat,
+    netAmount: calcSave.net,
     payment: document.getElementById('w_payment').value,
     dueDate: document.getElementById('w_payment').value==='آجل'
       ? (document.getElementById('w_due_date').value||'') : '',
@@ -1335,11 +1366,123 @@ function getInvoiceDate(appt) {
  * ملاحظة: inv_price_text / inv_parts_text / inv_discount_text
  *   غير موجودة في HTML الحالي — تُستخدم IDs الفعلية بدلاً منها
  */
+/* ===== الفاتورة الضريبية ===== */
+var VAT_RATE   = 0.15;
+var VAT_NUMBER = '300088102300003';
+var SELLER_LEGAL_NAME = 'مؤسسة اطواد السراه للمقاولات';
+
+function round2(n) { return Math.round((Number(n) || 0) * 100) / 100; }
+
+/** أشاملٌ السعرُ المُدخل الضريبةَ؟ أسعار الأفراد شاملة، فهي الأصل */
+function isVatInclusive() {
+  var el = document.getElementById('w_vat_mode');
+  return !el || el.value !== 'exc';
+}
+
+/**
+ * حسابُ الفاتورة كلِّه في موضعٍ واحد، تستعمله المعاينةُ والحفظ معاً —
+ * فلا يختلف ما يراه العميل عمّا يُسجَّل في المالية.
+ *
+ * و«الإجمالي» هو ما يدفعه العميل دائماً، شاملَ الضريبة في الحالين.
+ * ولو خُزِّن الصافي في الأمر غير الشامل لَنقصت الذمّةُ المدينة ١٥٪.
+ */
+function computeInvoiceTotals() {
+  var price = safeInvoiceNumber(document.getElementById('w_price')       ? document.getElementById('w_price').value       : 0);
+  var parts = safeInvoiceNumber(document.getElementById('w_parts_cost')  ? document.getElementById('w_parts_cost').value  : 0);
+  var disc  = safeInvoiceNumber(document.getElementById('w_discount')    ? document.getElementById('w_discount').value    : 0);
+  var base  = Math.max(0, price + parts - disc);
+  var inclusive = isVatInclusive();
+  var net, vat, gross;
+  if (inclusive) {
+    gross = round2(base);
+    net   = round2(base / (1 + VAT_RATE));
+    vat   = round2(gross - net);
+  } else {
+    net   = round2(base);
+    vat   = round2(base * VAT_RATE);
+    gross = round2(net + vat);
+  }
+  return { price: price, parts: parts, discount: disc, base: base,
+           inclusive: inclusive, net: net, vat: vat, gross: gross };
+}
+
+/** بايتات UTF-8 — طول الحقل في الترميز بالبايت لا بالحرف، والاسم عربي */
+function utf8Bytes(str) {
+  if (typeof TextEncoder !== 'undefined') {
+    return Array.prototype.slice.call(new TextEncoder().encode(str));
+  }
+  var out = [], esc = unescape(encodeURIComponent(str));
+  for (var i = 0; i < esc.length; i++) out.push(esc.charCodeAt(i));
+  return out;
+}
+
+/** حقلٌ واحد بترميز Tag-Length-Value */
+function tlvField(tag, value) {
+  var b = utf8Bytes(String(value));
+  return [tag, b.length].concat(b);
+}
+
+/** حمولة رمز الفاتورة: خمسة حقول يفرضها النظام */
+function zatcaPayload(isoTime, grossStr, vatStr) {
+  var bytes = []
+    .concat(tlvField(1, SELLER_LEGAL_NAME))
+    .concat(tlvField(2, VAT_NUMBER))
+    .concat(tlvField(3, isoTime))
+    .concat(tlvField(4, grossStr))
+    .concat(tlvField(5, vatStr));
+  var bin = '';
+  for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin);
+}
+
+/** وقت الإصدار: تاريخ الزيارة بتوقيت الرياض، فالفاتورة تخصّ يومها لا يوم الطباعة */
+function invoiceIsoTime(dateStr) {
+  var d = String(dateStr || '').slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) d = new Date().toISOString().slice(0, 10);
+  return d + 'T12:00:00+03:00';
+}
+
+function renderInvoiceQR(dateStr, gross, vat) {
+  var img = document.getElementById('invQR');
+  if (!img) return;
+  if (typeof qrcode !== 'function') {
+    console.error('[atwad] مكتبة رمز الفاتورة لم تُحمَّل — الفاتورة بلا رمز');
+    img.removeAttribute('src');
+    return;
+  }
+  if (!(gross > 0)) { img.removeAttribute('src'); return; }
+  try {
+    var payload = zatcaPayload(invoiceIsoTime(dateStr), gross.toFixed(2), vat.toFixed(2));
+    var qr = qrcode(0, 'M');
+    qr.addData(payload);
+    qr.make();
+    img.src = qr.createDataURL(5, 2);
+  } catch (err) {
+    console.error('[atwad] تعذّر توليد رمز الفاتورة:', err);
+    img.removeAttribute('src');
+  }
+}
+
+/** يُظهر صفّ الفاتورة إن كانت له قيمة، ويُخفيه إن خلا */
+function setInvRow(rowId, valId, text) {
+  var row = document.getElementById(rowId);
+  var val = document.getElementById(valId);
+  if(val) val.textContent = text || '—';
+  if(row) row.style.display = text ? 'flex' : 'none';
+}
+
+/** يُخفي صفّاً مبلغه صفر */
+function hideIfZero(rowId, amount) {
+  var row = document.getElementById(rowId);
+  if(row) row.style.display = (Number(amount) > 0) ? 'flex' : 'none';
+}
+
 function updateInvoice() {
-  var servicePrice = safeInvoiceNumber(document.getElementById('w_price')     ? document.getElementById('w_price').value     : 0);
-  var partsCost    = safeInvoiceNumber(document.getElementById('w_parts_cost') ? document.getElementById('w_parts_cost').value : 0);
-  var discount     = safeInvoiceNumber(document.getElementById('w_discount')   ? document.getElementById('w_discount').value   : 0);
-  var total        = Math.max(0, servicePrice + partsCost - discount);
+  var calc         = computeInvoiceTotals();
+  var servicePrice = calc.price;
+  var partsCost    = calc.parts;
+  var discount     = calc.discount;
+  var total        = calc.gross;
 
   // بيانات نصية من حقول النموذج
   var clientEl  = document.getElementById('inv_client');
@@ -1369,8 +1512,37 @@ function updateInvoice() {
   var totalEl    = document.getElementById('inv_total');
   if(priceEl)    priceEl.textContent    = formatInvoiceMoney(servicePrice) + ' ريال';
   if(partsEl)    partsEl.textContent    = formatInvoiceMoney(partsCost)    + ' ريال';
-  if(discountEl) discountEl.textContent = '- ' + formatInvoiceMoney(discount) + ' ريال';
+  /* «− ٠ ريال» في الخصم كان يُقرأ خطأً مطبعياً على فاتورةٍ رسمية،
+     فالإشارة لا تظهر إلا مع خصمٍ له قيمة. */
+  if(discountEl) discountEl.textContent = (discount > 0 ? '- ' : '') + formatInvoiceMoney(discount) + ' ريال';
   if(totalEl)    totalEl.textContent    = formatInvoiceMoney(total)        + ' ريال';
+
+  /* بيانات العميل والدفع: موجودةٌ في النموذج ولم تكن تظهر في الفاتورة */
+  var phoneVal   = document.getElementById('w_phone')   ? document.getElementById('w_phone').value.trim()   : '';
+  var addressVal = document.getElementById('w_address') ? document.getElementById('w_address').value.trim() : '';
+  var payVal     = document.getElementById('w_payment') ? document.getElementById('w_payment').value        : '';
+  setInvRow('row_phone',   'inv_phone',   phoneVal);
+  setInvRow('row_address', 'inv_address', addressVal);
+  var payEl2 = document.getElementById('inv_payment');
+  if(payEl2) payEl2.textContent = payVal === 'آجل' ? 'آجل — غير محصّلة' : (payVal || '—');
+
+  /* الصفّان الصفريّان يُخفيان: الفاتورة النظيفة لا تذكر ما لا قيمة له */
+  hideIfZero('row_parts',    partsCost);
+  hideIfZero('row_discount', discount);
+
+  /* تفكيك الضريبة ورمز الفاتورة */
+  var netEl = document.getElementById('inv_net');
+  var vatEl = document.getElementById('inv_vat');
+  if(netEl) netEl.textContent = formatInvoiceMoney(calc.net) + ' ريال';
+  if(vatEl) vatEl.textContent = formatInvoiceMoney(calc.vat) + ' ريال';
+
+  /* يُصرَّح في الفاتورة بأيّ المعنيين أُدخل السعر، فلا يحسب العميل مرتين */
+  var lblPrice = document.getElementById('lbl_price');
+  if(lblPrice) lblPrice.textContent = calc.inclusive ? 'سعر الخدمة (شامل الضريبة)'
+                                                     : 'سعر الخدمة (قبل الضريبة)';
+
+  renderInvoiceQR(document.getElementById('w_date') ? document.getElementById('w_date').value : '',
+                  calc.gross, calc.vat);
 
   return {servicePrice: servicePrice, partsCost: partsCost, discount: discount, total: total};
 }
@@ -1440,6 +1612,12 @@ function loadInvoiceData(wo) {
   var payEl = document.getElementById('w_payment');
   if(payEl) {
     payEl.value = invoice.paymentMethod || wo.paymentMethod || wo.payment || 'كاش';
+  }
+
+  /* وضع الضريبة: الأوامر القديمة بلا حقلٍ لها، وأسعارها كانت شاملة */
+  var vatEl2 = document.getElementById('w_vat_mode');
+  if(vatEl2) {
+    vatEl2.value = (wo.vatInclusive === false) ? 'exc' : 'inc';
   }
 
   // تحديث معاينة الفاتورة (inv_price / inv_parts / inv_discount / inv_total)
@@ -1575,12 +1753,19 @@ function printInvoicePDF() {
   printWin.document.write('body{font-family:Tajawal,Arial,sans-serif;margin:20px;direction:rtl;}');
   printWin.document.write('.invoice-top{background:#0C3B5E;color:#fff;padding:16px;border-radius:8px 8px 0 0;}');
   printWin.document.write('.invoice-top h2{margin:0;font-size:18px;}');
+  printWin.document.write('.invoice-top .inv-legal{font-size:11.5px;opacity:.85;margin-top:4px;}');
+  printWin.document.write('.invoice-top .inv-num{font-size:12px;opacity:.8;margin-top:6px;}');
   printWin.document.write('.invoice-body{border:1px solid #E2E8F0;padding:16px;border-radius:0 0 8px 8px;}');
   printWin.document.write('.inv-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed #E2E8F0;}');
   printWin.document.write('.inv-total{background:#0C3B5E;color:#fff;padding:12px;border-radius:8px;margin-top:12px;display:flex;justify-content:space-between;font-size:18px;font-weight:800;}');
   printWin.document.write('.inv-seal{padding:14px 4px 6px;display:flex;justify-content:flex-start;align-items:flex-end;gap:10px;}');
   printWin.document.write('.inv-seal img{width:130px;height:130px;object-fit:contain;}');
   printWin.document.write('.inv-seal .seal-cap{font-size:11px;color:#64748B;padding-bottom:8px;}');
+  printWin.document.write('.inv-seal .seal-spacer{flex:1;}');
+  printWin.document.write('.inv-qr-wrap{display:flex;flex-direction:column;align-items:center;gap:2px;}');
+  printWin.document.write('.inv-qr-wrap .seal-cap{padding-bottom:0;}');
+  printWin.document.write('.inv-seal .inv-qr{width:112px;height:112px;image-rendering:pixelated;}');
+  printWin.document.write('.invoice-top .inv-kind{font-size:12px;font-weight:800;border:1px solid rgba(255,255,255,.5);border-radius:6px;padding:3px 9px;display:inline-block;}');
   printWin.document.write('@media print{button{display:none!important;}}');
   printWin.document.write('</style></head><body>');
   printWin.document.write(invEl.outerHTML);
