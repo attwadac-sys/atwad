@@ -145,6 +145,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 .invoice-preview{border:1.5px solid var(--ice);border-radius:14px;overflow:hidden;margin-bottom:16px;}
 .invoice-top{background:linear-gradient(90deg,var(--deep),var(--steel));padding:16px 20px;display:flex;justify-content:space-between;align-items:center;}
 .invoice-top h2{color:#fff;font-size:16px;font-weight:800;}
+.invoice-top .inv-legal{color:rgba(255,255,255,.72);font-size:11px;margin-top:3px;}
 .invoice-top .inv-num{color:rgba(255,255,255,.7);font-size:12px;}
 .invoice-body{padding:16px 20px;}
 .inv-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px dashed var(--ice);font-size:13px;}
@@ -359,16 +360,25 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
           </div>
         </div>
         <div class="invoice-preview">
-          <div class="invoice-top"><h2>مؤسسة أطواد لصيانة المكيفات</h2><div class="inv-num" id="invNum">WO-00000</div></div>
+          <div class="invoice-top">
+            <div>
+              <h2>مؤسسة أطواد لصيانة المكيفات</h2>
+              <div class="inv-legal">مؤسسة أطواد السراه للمقاولات · سجل تجاري 4030067284</div>
+            </div>
+            <div class="inv-num" id="invNum">WO-00000</div>
+          </div>
           <div class="invoice-body">
             <div class="inv-row"><span class="label">العميل</span><span class="value" id="inv_client">—</span></div>
+            <div class="inv-row" id="row_phone"><span class="label">رقم الجوال</span><span class="value" id="inv_phone">—</span></div>
+            <div class="inv-row" id="row_address"><span class="label">العنوان</span><span class="value" id="inv_address">—</span></div>
             <div class="inv-row"><span class="label">الخدمة</span><span class="value" id="inv_service">—</span></div>
             <div class="inv-row"><span class="label">عدد الوحدات</span><span class="value" id="inv_units">—</span></div>
             <div class="inv-row"><span class="label">التاريخ</span><span class="value" id="inv_date">—</span></div>
             <div class="inv-row"><span class="label">الفني</span><span class="value" id="inv_tech">—</span></div>
+            <div class="inv-row"><span class="label">طريقة الدفع</span><span class="value" id="inv_payment">—</span></div>
             <div class="inv-row"><span class="label">سعر الخدمة</span><span class="value" id="inv_price">0 ريال</span></div>
-            <div class="inv-row"><span class="label">قطع الغيار</span><span class="value" id="inv_parts">0 ريال</span></div>
-            <div class="inv-row"><span class="label">خصم</span><span class="value" id="inv_discount" style="color:var(--success)">0 ريال</span></div>
+            <div class="inv-row" id="row_parts"><span class="label">قطع الغيار</span><span class="value" id="inv_parts">0 ريال</span></div>
+            <div class="inv-row" id="row_discount"><span class="label">خصم</span><span class="value" id="inv_discount" style="color:var(--success)">0 ريال</span></div>
           </div>
           <div class="inv-total"><span class="t-label">الإجمالي</span><span class="t-price" id="inv_total">0 ريال</span></div>
           <div class="inv-seal">
