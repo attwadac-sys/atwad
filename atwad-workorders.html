@@ -154,6 +154,10 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 .inv-total{background:var(--deep);color:#fff;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;}
 .inv-total .t-label{font-size:14px;font-weight:600;}
 .inv-total .t-price{font-size:22px;font-weight:800;color:var(--sky);}
+/* ختم المؤسسة — داخل .invoice-preview عمداً، لأن الطباعة تنسخ هذا العنصر وحده */
+.inv-seal{padding:14px 20px 18px;display:flex;justify-content:flex-start;align-items:flex-end;gap:10px;}
+.inv-seal img{width:118px;height:118px;object-fit:contain;}
+.inv-seal .seal-cap{font-size:11px;color:var(--mist);padding-bottom:6px;}
 
 /* RATING */
 .rating-stars{display:flex;gap:8px;font-size:32px;cursor:pointer;margin:8px 0 16px;}
@@ -367,6 +371,10 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
             <div class="inv-row"><span class="label">خصم</span><span class="value" id="inv_discount" style="color:var(--success)">0 ريال</span></div>
           </div>
           <div class="inv-total"><span class="t-label">الإجمالي</span><span class="t-price" id="inv_total">0 ريال</span></div>
+          <div class="inv-seal">
+            <img class="inv-stamp" src="https://attwadac-sys.github.io/atwad/atwad-stamp.png" alt="ختم مؤسسة أطواد السراه للمقاولات">
+            <span class="seal-cap">ختم المؤسسة</span>
+          </div>
         </div>
         <div style="background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:10px;padding:10px 14px;font-size:12px;color:#92400E;">⚠️ الأسعار لا تشمل قطع الغيار إلا إذا مذكورة. الضمان أسبوع على أعمال التنظيف.</div>
       </div>
@@ -1529,13 +1537,42 @@ function printInvoicePDF() {
   printWin.document.write('.invoice-body{border:1px solid #E2E8F0;padding:16px;border-radius:0 0 8px 8px;}');
   printWin.document.write('.inv-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed #E2E8F0;}');
   printWin.document.write('.inv-total{background:#0C3B5E;color:#fff;padding:12px;border-radius:8px;margin-top:12px;display:flex;justify-content:space-between;font-size:18px;font-weight:800;}');
+  printWin.document.write('.inv-seal{padding:14px 4px 6px;display:flex;justify-content:flex-start;align-items:flex-end;gap:10px;}');
+  printWin.document.write('.inv-seal img{width:130px;height:130px;object-fit:contain;}');
+  printWin.document.write('.inv-seal .seal-cap{font-size:11px;color:#64748B;padding-bottom:8px;}');
   printWin.document.write('@media print{button{display:none!important;}}');
   printWin.document.write('</style></head><body>');
   printWin.document.write(invEl.outerHTML);
   printWin.document.write('<br><button onclick="window.print()" style="padding:10px 20px;background:#0C3B5E;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;">طباعة / حفظ PDF</button>');
   printWin.document.write('</body></html>');
   printWin.document.close();
-  setTimeout(function(){ printWin.print(); }, 500);
+
+  /* الختم صورةٌ من الشبكة. والطباعة بعد نصف ثانيةٍ ثابتة كانت تسبق
+     تحميلها أحياناً، فتخرج الورقة بلا ختم. فيُنتظر تحميلها، وإن
+     تعذّرت طُبعت الفاتورة بدونها ولا تتعطّل. */
+  var printed = false;
+  function goPrint() {
+    if (printed) { return; }
+    printed = true;
+    try {
+      printWin.focus();
+      printWin.print();
+    } catch (err) {
+      console.error('[atwad] تعذّرت الطباعة:', err);
+      showToast('❌ تعذّرت الطباعة — اضغط زر «طباعة / حفظ PDF» في النافذة');
+    }
+  }
+  var sealImg = printWin.document.querySelector('.inv-stamp');
+  if (sealImg && !sealImg.complete) {
+    sealImg.onload  = goPrint;
+    sealImg.onerror = function() {
+      console.error('[atwad] لم يُحمَّل ملف الختم atwad-stamp.png');
+      goPrint();
+    };
+    setTimeout(goPrint, 4000);
+  } else {
+    setTimeout(goPrint, 500);
+  }
 }
 
 // ===== ⭐ طلب تقييم العميل — رابط صفحة التقييم =====
