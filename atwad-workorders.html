@@ -930,6 +930,24 @@ function isCredit(w){
   return w && w.payment==='آجل' && w.paymentSettled!==true;
 }
 
+/* توحيد الحروف قبل المطابقة: الألف بهمزتها وبلا همزة، والتاء المربوطة
+   والهاء، والياء والألف المقصورة — يكتبها الناس كيفما اتفق. */
+function normSearch(t){
+  return String(t || '')
+    .toLowerCase()
+    .replace(/[ً-ْـ]/g, '')
+    .replace(/[آأإٱ]/g, 'ا')
+    .replace(/ة/g, 'ه')
+    .replace(/ى/g, 'ي')
+    .replace(/\s+/g, '');
+}
+
+function filterLabel(f){
+  var L = { all:'الكل', open:'مفتوح', inprogress:'قيد التنفيذ',
+            done:'مكتمل', invoiced:'فاتورة صادرة' };
+  return L[f] || f;
+}
+
 /* نصُّ البحث يُحفظ هنا لا في وسيط الدالة وحده: مستمع Firebase و setFilter
    ينادِيان renderWOs() بلا وسيط، فكان البحث يُمحى بعد كتابته بلحظة —
    يبقى النصّ في الصندوق والقائمة غير مفلترة، فيظنّ المستخدم أن البحث لا يعمل. */
@@ -956,7 +974,14 @@ function renderWOs(search){
   const sLabel = { open:'مفتوح', inprogress:'قيد التنفيذ', done:'مكتمل', invoiced:'فاتورة صادرة' };
 
   if(list.length === 0){
-    document.getElementById('woGrid').innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--mist);"><div style="font-size:48px;margin-bottom:12px;">🔧</div><p>لا توجد أوامر عمل بعد<br><small>اضغط "+ أمر عمل جديد" للبدء</small></p></div>`;
+    /* الرسالة تختلف بحسب السبب: البحثُ بلا نتيجة ليس كغياب الأوامر،
+       والرسالة الواحدة كانت تُوهم أن الأوامر نفسها غير موجودة. */
+    var emptyMsg = q
+      ? '<p>لا يوافق البحث «' + escapeHTML(q) + '» أيُّ أمرٍ في تصنيف «'
+        + escapeHTML(filterLabel(currentFilter)) + '»'
+        + '<br><small>جرّب تصنيف «الكل»، أو ابحث باسمٍ أقصر، أو بالحروف اللاتينية إن كان الاسم محفوظاً بها</small></p>'
+      : '<p>لا توجد أوامر عمل بعد<br><small>اضغط "+ أمر عمل جديد" للبدء</small></p>';
+    document.getElementById('woGrid').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--mist);"><div style="font-size:48px;margin-bottom:12px;">🔧</div>' + emptyMsg + '</div>';
     return;
   }
 
