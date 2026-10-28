@@ -238,7 +238,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
     <button class="filter-btn" id="fInprog" onclick="setFilter('inprogress',this)">⚡ قيد التنفيذ</button>
     <button class="filter-btn" id="fDone" onclick="setFilter('done',this)">✅ مكتمل</button>
     <button class="filter-btn" id="fInvoiced" onclick="setFilter('invoiced',this)">🧾 فاتورة</button>
-    <div class="search-wrap"><span class="search-icon">🔍</span><input placeholder="ابحث باسم العميل أو رقم الأمر..." oninput="renderWOs(this.value)"></div>
+    <div class="search-wrap"><span class="search-icon">🔍</span><input id="woSearchBox" placeholder="ابحث باسم العميل أو رقم الأمر..." oninput="renderWOs(this.value)"></div>
   </div>
 
   <div class="wo-grid" id="woGrid"></div>
@@ -930,14 +930,20 @@ function isCredit(w){
   return w && w.payment==='آجل' && w.paymentSettled!==true;
 }
 
-function renderWOs(search=''){
+/* نصُّ البحث يُحفظ هنا لا في وسيط الدالة وحده: مستمع Firebase و setFilter
+   ينادِيان renderWOs() بلا وسيط، فكان البحث يُمحى بعد كتابته بلحظة —
+   يبقى النصّ في الصندوق والقائمة غير مفلترة، فيظنّ المستخدم أن البحث لا يعمل. */
+var woSearch = '';
+function renderWOs(search){
+  if(typeof search === 'string') woSearch = search;
+  var q = woSearch.trim();
   let list = workOrders.slice();
   if(currentFilter !== 'all') list = list.filter(w=>w.status===currentFilter);
-  if(search) list = list.filter(function(w){
-    var s = search.toLowerCase();
-    return (w.client||'').toLowerCase().includes(s)
-        || (w.id||'').includes(s)
-        || (w.phone||'').includes(search);
+  if(q) list = list.filter(function(w){
+    var s = normSearch(q);
+    return normSearch(w.client||'').indexOf(s) > -1
+        || String(w.id||'').toLowerCase().indexOf(q.toLowerCase()) > -1
+        || String(w.phone||'').indexOf(q) > -1;
   });
   // الترتيب: تاريخ الخدمة تنازلياً — createdAt وحده كان يترك السجلات المستوردة بلا ترتيب
   list.sort(function(a, b){
