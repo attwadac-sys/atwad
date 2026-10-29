@@ -1,0 +1,1871 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>أطواد - صفحة الفني</title><style>
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
+:root{
+  --deep:#0C3B5E; --sky:#0EA5E9; --ice:#E8F4FD; --frost:#F0F9FF;
+  --success:#10B981; --warning:#F59E0B; --danger:#EF4444;
+  --slate:#334155; --mist:#94A3B8;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Cairo',sans-serif;background:#F1F5F9;color:var(--slate);min-height:100vh;}
+
+/* HEADER */
+.header{background:linear-gradient(135deg,var(--deep),#0e5fa8,var(--sky));padding:20px 16px;position:relative;overflow:hidden;}
+.header::before{content:'❄';position:absolute;inset-inline-end:16px;top:-10px;font-size:80px;opacity:.07;color:#fff;}
+.header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.logo{display:flex;align-items:center;gap:10px;}
+.logo-icon{width:44px;height:44px;background:rgba(255,255,255,.15);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;}
+.logo-text h1{color:#fff;font-size:18px;font-weight:900;}
+.logo-text p{color:rgba(255,255,255,.6);font-size:11px;}
+.date-badge{background:rgba(255,255,255,.15);border-radius:10px;padding:8px 14px;text-align:center;}
+.date-badge .day{color:#fff;font-size:14px;font-weight:700;}
+.date-badge .date{color:rgba(255,255,255,.7);font-size:11px;}
+
+/* TECH SELECTOR */
+/* زرُّ الخروج الذي يضعه atwad-auth.js أسفل الشاشة صار مكرَّراً بعد بيان
+   الحساب أعلى الصفحة، وكان يحجب نصّاً تحته على الجوال. ويُنشَأ بعد تهيئة
+   الصفحة لا قبلها، فإخفاؤه بالأنماط أضمن من إخفائه بالشفرة. */
+#authSignOutBtn{display:none !important;}
+.acct-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;
+  background:rgba(255,255,255,.12);border-radius:12px;padding:9px 12px;margin-bottom:10px;flex-wrap:wrap;}
+.acct-who{display:flex;flex-direction:column;gap:2px;min-width:0;}
+.acct-lbl{font-size:11px;color:rgba(255,255,255,.65);font-weight:700;}
+.acct-mail{font-size:13px;color:#fff;font-weight:800;direction:ltr;word-break:break-all;}
+.acct-out{font-family:inherit;font-size:12.5px;font-weight:800;border:0;border-radius:10px;
+  background:#EF4444;color:#fff;padding:9px 16px;cursor:pointer;white-space:nowrap;}
+.acct-warn{background:#FEF3C7;color:#92400E;border:1.5px solid #FDE68A;border-radius:12px;
+  padding:10px 13px;font-size:12.5px;font-weight:800;line-height:1.8;margin-bottom:10px;}
+.tech-selector{background:rgba(255,255,255,.1);border-radius:12px;padding:12px;}
+.tech-selector p{color:rgba(255,255,255,.7);font-size:12px;margin-bottom:8px;}
+.tech-btns{display:flex;gap:8px;}
+.tech-btn{flex:1;padding:9px;border:2px solid rgba(255,255,255,.2);border-radius:10px;background:transparent;color:rgba(255,255,255,.7);font-family:'Cairo',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;}
+.tech-btn.active{background:#fff;color:var(--deep);border-color:#fff;}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:16px;}
+.stat{background:#fff;border-radius:12px;padding:14px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.05);}
+.stat .num{font-size:24px;font-weight:900;color:var(--deep);}
+.stat .lbl{font-size:11px;color:var(--mist);margin-top:2px;}
+.stat.today{border-top:3px solid var(--sky);}
+.stat.pending{border-top:3px solid var(--warning);}
+.stat.done{border-top:3px solid var(--success);}
+
+/* FILTER TABS */
+.tabs{display:flex;background:#fff;padding:4px;margin:0 16px 16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.05);}
+.tab{flex:1;padding:9px;text-align:center;border:none;border-radius:9px;font-family:'Cairo',sans-serif;font-size:12px;font-weight:700;cursor:pointer;background:transparent;color:var(--mist);transition:all .2s;}
+.tab.active{background:var(--deep);color:#fff;}
+
+/* APPOINTMENT CARDS */
+.list{padding:0 16px 100px;}
+
+.appt-card{background:#fff;border-radius:16px;margin-bottom:14px;box-shadow:0 3px 12px rgba(0,0,0,.07);overflow:hidden;border-inline-start:4px solid transparent;}
+.lang-btn{background:rgba(255,255,255,.18);border:1.5px solid rgba(255,255,255,.4);color:#fff;font-family:'Cairo',sans-serif;
+  font-weight:800;font-size:12px;padding:6px 12px;border-radius:9px;cursor:pointer;white-space:nowrap;}
+.appt-card.pending{border-color:var(--warning);}
+.appt-card.confirmed{border-color:var(--sky);}
+.appt-card.done{border-color:var(--success);opacity:.75;}
+.appt-card.cancelled{border-color:var(--danger);opacity:.6;}
+
+.card-header{padding:14px 16px 10px;display:flex;align-items:center;justify-content:space-between;}
+.client-info{display:flex;align-items:center;gap:10px;}
+.client-avatar{width:42px;height:42px;border-radius:11px;background:linear-gradient(135deg,var(--deep),var(--sky));display:flex;align-items:center;justify-content:center;color:#fff;font-size:17px;font-weight:900;flex-shrink:0;}
+.client-name{font-size:15px;font-weight:700;color:var(--deep);}
+.client-service{font-size:12px;color:var(--mist);margin-top:1px;}
+.status-badge{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+.badge-pending{background:#FEF3C7;color:#92400E;}
+.badge-confirmed{background:#DBEAFE;color:#1E40AF;}
+.badge-done{background:#D1FAE5;color:#065F46;}
+.badge-cancelled{background:#FEE2E2;color:#991B1B;}
+
+.card-body{padding:0 16px 14px;}
+
+.info-row{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--slate);margin-bottom:6px;}
+.info-row .icon{width:20px;text-align:center;flex-shrink:0;}
+
+/* صورة الموقع */
+.location-img{width:100%;height:140px;object-fit:cover;border-radius:10px;margin-bottom:10px;cursor:pointer;border:1.5px solid var(--ice);}
+.no-img{width:100%;height:80px;background:var(--frost);border-radius:10px;margin-bottom:10px;display:flex;align-items:center;justify-content:center;color:var(--mist);font-size:12px;border:1.5px dashed #E2E8F0;}
+
+/* ACTIONS */
+.card-actions{display:flex;gap:8px;padding:0 16px 14px;}
+.act-btn{flex:1;padding:10px;border:none;border-radius:10px;font-family:'Cairo',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:5px;}
+.act-btn:active{transform:scale(.97);}
+.btn-wa{background:#25D366;color:#fff;}
+.btn-map{background:var(--ice);color:var(--sky);}
+.btn-done{background:linear-gradient(135deg,var(--success),#34D399);color:#fff;}
+.btn-done:disabled{opacity:.5;cursor:not-allowed;}
+
+/* TIME BADGE */
+.time-badge{background:var(--deep);color:#fff;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:700;display:inline-flex;align-items:center;gap:5px;}
+
+/* EMPTY STATE */
+.empty{text-align:center;padding:60px 20px;color:var(--mist);}
+.empty .icon{font-size:52px;margin-bottom:12px;}
+
+/* TOAST */
+/* ===== ورقة تسجيل القبض عند إتمام الزيارة ===== */
+.pay-ov{position:fixed;inset:0;background:rgba(12,59,94,.55);display:none;z-index:1200;
+  align-items:flex-end;justify-content:center;font-family:'Cairo',sans-serif;}
+.pay-ov.show{display:flex;}
+.pay-sheet{background:#fff;width:100%;max-width:460px;border-radius:20px 20px 0 0;padding:20px 18px 26px;
+  box-shadow:0 -10px 40px rgba(0,0,0,.25);}
+.pay-sheet h3{margin:0 0 3px;font-size:18px;color:var(--deep);}
+.pay-who{font-size:13.5px;color:var(--mist);margin-bottom:14px;line-height:1.7;}
+.pay-amt{width:100%;font-size:30px;font-weight:800;text-align:center;color:var(--deep);
+  border:2px solid var(--ice);border-radius:14px;padding:12px;font-family:'Cairo',sans-serif;
+  direction:ltr;background:var(--frost);}
+.pay-amt:focus{outline:none;border-color:var(--sky);}
+.pay-lbl{font-size:12.5px;color:var(--mist);text-align:center;margin:9px 0 13px;}
+.pay-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.pay-btn{font-family:'Cairo',sans-serif;font-size:15.5px;font-weight:700;border:0;border-radius:14px;
+  padding:15px 10px;cursor:pointer;color:#fff;}
+.pay-cash{background:var(--success);}
+.pay-tr{background:var(--sky);}
+.pay-no{background:var(--warning);grid-column:1 / -1;}
+.pay-x{background:#fff;color:var(--mist);border:1.5px solid var(--ice);grid-column:1 / -1;font-size:14px;padding:12px;}
+.pay-btn:disabled{opacity:.5;}
+/* شريط الدَّيْن السابق على بطاقة الزيارة */
+.debt-strip{background:#FEF2F2;border:1.5px solid #FCA5A5;border-radius:11px;
+  padding:10px 12px;margin-bottom:10px;}
+.debt-strip .dt{font-size:14px;font-weight:900;color:#B91C1C;line-height:1.6;}
+.debt-strip .dd{font-size:12px;color:#991B1B;margin-top:3px;line-height:1.8;direction:ltr;
+  text-align:start;unicode-bidi:plaintext;}
+.debt-strip .ds{font-size:12px;color:#7F1D1D;margin-top:5px;line-height:1.85;}
+
+/* ===== قائمة الإغلاق — فحص إلزامي قبل ورقة القبض ===== */
+.cl-ov{position:fixed;inset:0;background:rgba(12,59,94,.55);display:none;z-index:1250;
+  align-items:flex-end;justify-content:center;font-family:'Cairo',sans-serif;}
+.cl-ov.show{display:flex;}
+.cl-sheet{background:#fff;width:100%;max-width:460px;border-radius:20px 20px 0 0;
+  padding:18px 16px 22px;box-shadow:0 -10px 40px rgba(0,0,0,.25);max-height:92vh;overflow-y:auto;}
+.cl-sheet h3{margin:0 0 3px;font-size:17px;color:var(--deep);line-height:1.6;}
+.cl-who{font-size:13px;color:var(--mist);margin-bottom:12px;line-height:1.7;}
+.cl-progress{height:6px;background:var(--ice);border-radius:99px;overflow:hidden;margin-bottom:13px;}
+.cl-progress > div{height:100%;width:0;background:var(--success);transition:width .25s;}
+.cl-item{display:flex;gap:11px;align-items:flex-start;padding:12px 13px;margin-bottom:9px;
+  border:1.5px solid var(--ice);border-radius:13px;cursor:pointer;background:#fff;}
+.cl-item input{width:22px;height:22px;flex:0 0 auto;margin-top:1px;accent-color:var(--success);}
+.cl-item.on{border-color:var(--success);background:#F0FDF4;}
+.cl-t{font-size:14.5px;font-weight:700;color:var(--deep);line-height:1.6;}
+.cl-s{font-size:12px;color:var(--mist);line-height:1.7;margin-top:3px;}
+.cl-lbl{font-size:12.5px;font-weight:700;color:var(--mist);margin:11px 0 5px;}
+.cl-note{width:100%;font-family:'Cairo',sans-serif;font-size:13.5px;padding:10px 12px;
+  border:1.5px solid var(--ice);border-radius:12px;min-height:54px;color:var(--deep);resize:vertical;}
+.cl-note:focus{outline:none;border-color:var(--sky);}
+.cl-skip{border:1.5px solid #FDE68A;background:#FFFBEB;border-radius:12px;padding:10px 12px;margin-top:11px;}
+.cl-skip summary{font-size:12.5px;font-weight:700;color:#92400E;cursor:pointer;line-height:1.75;}
+.cl-skip textarea{width:100%;margin-top:9px;font-family:'Cairo',sans-serif;font-size:13px;color:var(--deep);
+  padding:9px 11px;border:1.5px solid #FDE68A;border-radius:10px;min-height:48px;resize:vertical;}
+.cl-skip textarea:focus{outline:none;border-color:var(--warning);}
+.cl-btns{display:grid;grid-template-columns:1fr;gap:9px;margin-top:14px;}
+.cl-go{font-family:'Cairo',sans-serif;font-size:15.5px;font-weight:700;border:0;border-radius:14px;
+  padding:15px 10px;cursor:pointer;color:#fff;background:var(--success);}
+.cl-x{font-family:'Cairo',sans-serif;background:#fff;color:var(--mist);border:1.5px solid var(--ice);
+  font-size:14px;padding:12px;border-radius:14px;cursor:pointer;}
+
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--deep);color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.2);transition:transform .3s;z-index:999;font-family:'Cairo',sans-serif;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+/* LOADING */
+.loading{text-align:center;padding:40px;color:var(--mist);}
+.spinner{width:36px;height:36px;border:3px solid var(--ice);border-top-color:var(--sky);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 10px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* DAY SECTION */
+.day-header{font-size:13px;font-weight:700;color:var(--mist);margin-bottom:8px;margin-top:4px;padding-inline-start:4px;display:flex;align-items:center;gap:6px;}
+.day-count{background:var(--ice);color:var(--sky);padding:2px 8px;border-radius:10px;font-size:11px;}
+.today-tag{background:var(--sky);color:#fff;padding:2px 8px;border-radius:10px;font-size:11px;}
+
+.odo-card{margin:14px 16px 0;background:#fff;border-radius:14px;padding:14px 16px;
+  box-shadow:0 2px 8px rgba(0,0,0,.06);border-inline-start:5px solid #8B5CF6;}
+.odo-title{font-size:15px;font-weight:900;color:#0C3B5E;}
+.odo-sub{font-size:12px;color:#94A3B8;margin-top:4px;line-height:1.7;}
+.odo-row{display:flex;gap:8px;margin-top:10px;}
+.odo-row input{flex:1;font-family:inherit;font-size:16px;padding:11px 12px;border:1.5px solid #E2E8F0;
+  border-radius:10px;background:#F0F9FF;direction:ltr;text-align:center;}
+.odo-row input:focus{outline:none;border-color:#0EA5E9;}
+.odo-row button{font-family:inherit;font-weight:800;font-size:14px;padding:11px 20px;border:none;
+  border-radius:10px;background:#7C3AED;color:#fff;cursor:pointer;}
+.odo-row button:disabled{background:#94A3B8;}
+.odo-msg{font-size:12.5px;font-weight:700;margin-top:8px;display:none;line-height:1.8;}
+.odo-msg.ok{display:block;color:#065F46;}
+.odo-msg.bad{display:block;color:#991B1B;}
+
+/* ===== فحص المركبة الأسبوعي ===== */
+.veh-card{margin:14px 16px 0;background:#fff;border-radius:14px;padding:14px 16px;
+  box-shadow:0 2px 10px rgba(0,0,0,.06);border-inline-start:5px solid #10B981;}
+.veh-card.late{border-color:#EF4444;background:#FEF2F2;}
+.veh-card.soon{border-color:#F59E0B;}
+.veh-h{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+.veh-t{font-size:15px;font-weight:900;color:#0C3B5E;line-height:1.6;}
+.veh-s{font-size:12px;color:#94A3B8;margin-top:4px;line-height:1.7;}
+.veh-pill{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:800;white-space:nowrap;}
+.vp-ok{background:#D1FAE5;color:#065F46;}
+.vp-late{background:#FEE2E2;color:#991B1B;}
+.vp-soon{background:#FEF3C7;color:#92400E;}
+.veh-ck{margin-top:11px;display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.ck{display:flex;align-items:center;gap:7px;background:#F0F9FF;border:1.5px solid #E2E8F0;
+  border-radius:10px;padding:9px 10px;cursor:pointer;font-size:13px;font-weight:700;color:#334155;}
+.ck.on{background:#D1FAE5;border-color:#10B981;color:#065F46;}
+.ck input{width:17px;height:17px;accent-color:#10B981;flex:none;}
+.veh-odo{margin-top:9px;}
+.veh-odo input{width:100%;font-family:inherit;font-size:16px;padding:11px 12px;
+  border:1.5px solid #E2E8F0;border-radius:11px;direction:ltr;text-align:start;color:#0C3B5E;}
+.veh-odo input:focus{outline:none;border-color:#0EA5E9;}
+.veh-note{margin-top:9px;width:100%;font-family:inherit;font-size:14px;padding:10px 12px;
+  border:1.5px solid #E2E8F0;border-radius:11px;min-height:44px;resize:vertical;color:#0C3B5E;}
+.veh-note:focus{outline:none;border-color:#0EA5E9;}
+.veh-btn{margin-top:10px;width:100%;font-family:inherit;font-weight:800;font-size:14.5px;
+  padding:12px;border:none;border-radius:11px;background:#0C3B5E;color:#fff;cursor:pointer;}
+.veh-btn:disabled{background:#94A3B8;}
+.veh-msg{font-size:12.5px;font-weight:700;margin-top:8px;display:none;line-height:1.8;}
+.veh-msg.ok{display:block;color:#065F46;}
+.veh-msg.bad{display:block;color:#991B1B;}
+</style><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="atwad-firebase.js"></script>
+<script src="atwad-auth.js"></script>
+<!-- قوائم الإغلاق الثلاث — مشتركة مع صفحة الإدارة -->
+<script src="atwad-closing.js"></script>
+<!-- محرّك مطابقة الديون: الفني لا يرى منه إلا المطابق بالهاتف -->
+<script src="atwad-debt.js"></script>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-top">
+    <div class="logo">
+      <div class="logo-icon">❄️</div>
+      <div class="logo-text">
+        <h1 data-i18n="brand">أطواد</h1>
+        <p data-i18n="subtitle">لوحة الفني الميداني</p>
+      </div>
+    </div>
+    <button class="lang-btn" id="langBtn" onclick="toggleLang()">English</button>
+    <div class="date-badge">
+      <div class="day" id="dayName">--</div>
+      <div class="date" id="todayDate">--</div>
+    </div>
+  </div>
+
+  <!-- بيانُ الحساب: كان الفنيّ يعمل أحياناً بحساب المؤسسة ولا شيء يُنبّهه،
+       فصار الحساب ظاهراً في رأس الصفحة، ومعه زرُّ خروجٍ لا يُخطئه بصر. -->
+  <div class="acct-bar" id="acctBar" style="display:none;">
+    <div class="acct-who">
+      <span class="acct-lbl" id="acctLbl">الحساب</span>
+      <span class="acct-mail" id="acctMail">—</span>
+    </div>
+    <button class="acct-out" id="acctOut" onclick="techSignOut()">خروج</button>
+  </div>
+  <div class="acct-warn" id="acctWarn" style="display:none;"></div>
+
+  <!-- اختيار الفني -->
+  <div class="tech-selector">
+    <p data-i18n="pickTech">👷 اختر الفني:</p>
+    <div class="tech-btns">
+      <button class="tech-btn" onclick="selectTech('Abrar','أحمد',this)" data-i18n="techAbrar">أحمد</button>
+      <button class="tech-btn" onclick="selectTech('Shoib','شعيب',this)" data-i18n="techShoib">شعيب</button>
+    </div>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats">
+  <div class="stat today">
+    <div class="num" id="statToday">0</div>
+    <div class="lbl" data-i18n="statToday">مواعيد اليوم</div>
+  </div>
+  <div class="stat pending">
+    <div class="num" id="statPending">0</div>
+    <div class="lbl" data-i18n="statPending">في الانتظار</div>
+  </div>
+  <div class="stat done">
+    <div class="num" id="statDone">0</div>
+    <div class="lbl" data-i18n="statDone">مكتملة</div>
+  </div>
+</div>
+
+<!-- بطاقة العداد أُزيلت: القراءة تُسجَّل في صفحة الوقود عند كل تعبئة،
+     فلا يُطلب من الفني إدخالها مرتين. الدوال أدناه تُركت فلا ضرر منها
+     لأنها لا تجد عناصرها في الصفحة. -->
+
+<!-- فحص المركبة الأسبوعي — يُبنى من مسار vehicles ولا يظهر إن لم تُسند مركبة -->
+<div id="vehWrap"></div>
+
+<!-- FILTER TABS -->
+<div class="tabs">
+  <button class="tab active" onclick="filterAppts('today',this)" data-i18n="tabToday">اليوم</button>
+  <button class="tab" onclick="filterAppts('week',this)" data-i18n="tabWeek">الأسبوع</button>
+  <button class="tab" onclick="filterAppts('all',this)" data-i18n="tabAll">الكل</button>
+</div>
+
+<!-- LIST -->
+<div class="list" id="apptList">
+  <div class="loading">
+    <div class="spinner"></div>
+    <div data-i18n="pickFirst">اختر الفني لعرض مواعيده...</div>
+  </div>
+</div>
+
+<!-- قائمة الإغلاق — تُفتح عند «إتمام» قبل ورقة القبض -->
+<div class="cl-ov" id="clOv">
+  <div class="cl-sheet">
+    <h3 id="clTitle">قائمة الإغلاق</h3>
+    <div class="cl-who" id="clWho"></div>
+    <div class="cl-progress"><div id="clBar"></div></div>
+    <div id="clItems"></div>
+    <div class="cl-lbl" id="clNoteLbl">ملاحظة (اختياري)</div>
+    <textarea class="cl-note" id="clNote"></textarea>
+    <details class="cl-skip" id="clSkipBox">
+      <summary id="clSkipSum"></summary>
+      <textarea id="clSkipReason"></textarea>
+    </details>
+    <div class="cl-btns">
+      <button class="cl-go" id="clConfirmBtn">تأكيد الفحص</button>
+      <button class="cl-x"  id="clCancel">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<!-- ورقة تسجيل القبض — تظهر عند الضغط على «إتمام» -->
+<div class="pay-ov" id="payOv">
+  <div class="pay-sheet">
+    <h3 id="payTitle">المبلغ المستلم</h3>
+    <div class="pay-who" id="payWho"></div>
+    <input type="number" inputmode="decimal" min="0" step="1" class="pay-amt" id="payAmt" placeholder="0">
+    <div class="pay-lbl" id="payLbl">ريال</div>
+    <div class="pay-btns">
+      <button class="pay-btn pay-cash" id="payCash">💵 نقداً</button>
+      <button class="pay-btn pay-tr"   id="payTrans">🏦 تحويل</button>
+      <button class="pay-btn pay-no"   id="payNone">⏳ لم يُدفع — دَيْن</button>
+      <button class="pay-btn pay-x"    id="payCancel">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// Firebase
+var db = window.db; // من atwad-firebase.js — لا تهيئة محلية
+
+var allAppts = [];
+var currentTech = '';
+var currentTechAr = '';
+var currentFilter = 'today';
+
+
+/* ===== اللغة: عربي / English =====
+   رسالة واتساب المرسلة للعميل تبقى عربية دائماً — العميل عربي. */
+var I18N = {
+  ar: {
+    acctLbl:'الحساب المسجَّل', acctOut:'خروج',
+    acctConfirm:'تسجيل الخروج من هذا الحساب؟',
+    acctWrong:'⚠️ هذا حساب المؤسسة. إن كنتَ الفنيَّ فاخرج وادخل ببريدك أنت، فالصفحة لا تفتح بالإنجليزية إلا بحسابك.',
+    brand:'أطواد', subtitle:'لوحة الفني الميداني', pickTech:'👷 اختر الفني:',
+    techAbrar:'أحمد', techShoib:'شعيب', techSuhail:'سهيل',
+    statToday:'مواعيد اليوم', statPending:'في الانتظار', statDone:'مكتملة',
+    odoTitle:'🚗 قراءة العداد نهاية اليوم', odoHint:'سجّل قراءة عداد السيارة بعد آخر موعد', save:'حفظ',
+    vehTitle:'🚗 فحص المركبة الأسبوعي', vehDue:'مطلوب هذا الأسبوع',
+    vehOk:'تم هذا الأسبوع', vehLate:'متأخر', vehSoon:'ينتهي قريباً',
+    vehOil:'مستوى الزيت', vehWater:'الماء والرديتر', vehTires:'الإطارات', vehSound:'لا أصوات غريبة',
+    vehOdoPh:'قراءة العداد الكلي (كم)', vehNotePh:'ملاحظة إن وُجد خلل (اختياري)',
+    vehSave:'حفظ الفحص', vehSaved:'✅ سُجِّل الفحص — شكراً',
+    vehNeedOdo:'اكتب قراءة العداد الكلي.', vehNeedAll:'علّم كل البنود، وإن كان أحدها غير سليم فاكتب ملاحظة.',
+    vehOdoLess:'القراءة أقل من المسجَّل سابقاً. تأكد من الرقم.',
+    vehBlock:'⛔ فحص المركبة لهذا الأسبوع لم يُسجَّل. سجّله أولاً قبل إغلاق المواعيد.',
+    vehNone:'لا مركبة مسندة إليك.', vehFail:'تعذّر الحفظ: ',
+    tabToday:'اليوم', tabWeek:'الأسبوع', tabAll:'الكل',
+    pickFirst:'اختر الفني لعرض مواعيده...', loading:'جاري تحميل المواعيد...',
+    emptyToday:'لا توجد مواعيد اليوم', emptyWeek:'لا توجد مواعيد هذا الأسبوع', emptyAll:'لا توجد مواعيد',
+    todayTag:'اليوم', apptCount:'موعد', units:'وحدات', minutes:'دقيقة',
+    noImg:'📷 لا توجد صورة للموقع', imgAlt:'صورة الموقع',
+    wa:'📲 واتساب', map:'🗺️ خريطة', noPin:'📍 لا يوجد دبوس',
+    noPinTitle:'لم يشارك العميل موقعه — اطلب الدبوس من الإدارة',
+    complete:'✓ إتمام', completed:'✅ مكتمل',
+    st_confirmed:'مؤكد', st_pending:'في الانتظار', st_done:'مكتمل', st_cancelled:'ملغي',
+    days:['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'],
+    locale:'ar-SA-u-ca-gregory',
+    tNotFound:'❌ تعذر إيجاد الموعد', tNoPin:'⚠️ لا يوجد دبوس دقيق — سيُفتح العنوان النصي فقط',
+    tNoFb:'❌ Firebase غير متاح', confirmDone:'هل تم إتمام العمل؟',
+    tDone:'🎉 تم إتمام العمل بنجاح!', tErr:'❌ خطأ: ',
+    odoToday:'✅ سُجّلت قراءة اليوم: ', odoEdit:' — يمكنك تعديلها',
+    odoLast:'آخر قراءة: ', odoOn:' بتاريخ ',
+    odoBad:'اكتب قراءة العداد الكلي (لا عداد الرحلة).',
+    odoLess1:'القراءة أقل من آخر قراءة (', odoLess2:'). تأكد من الرقم.',
+    odoBig1:'المسافة منذ آخر قراءة ', odoBig2:' كم. هل الرقم صحيح؟',
+    odoNoDb:'قاعدة البيانات غير متاحة.', odoSaved:'✅ حُفظت القراءة', odoKm:' — مسافة اليوم: ', km:' كم',
+    clTitle:'✅ قائمة الإغلاق — فحص ما قبل المغادرة',
+    clNoteLbl:'ملاحظة (اختياري)', clNoteReq:'ملاحظة — ما الخلل وما أُصلح (إلزامي)',
+    clNotePh:'مثال: الخرطوم كان مسدودًا وتم تنظيفه، رُكّبت صينية جديدة…',
+    clSkipSum:'⚠️ القائمة لا تنطبق على هذه الزيارة (معاينة فقط / لم يُفتح المكيف)',
+    clSkipPh:'اكتب السبب — إلزامي',
+    clCancel:'إلغاء', clGoAll:'✅ تأكيد الفحص والمتابعة للقبض', clGoPart:'✅ تأكيد الفحص',
+    clMiss:'⚠️ لم يُؤكَّد: ', clMissTail:' — أكمل القائمة أو اكتب سبب عدم انطباقها',
+    clNeedNote:'⚠️ اكتب في الملاحظة ما كان الخلل وما أُصلح — زيارة الصيانة لا تُغلق بدونها',
+    clUnit:'وحدة',
+    debtT:'⚠️ دَيْن سابق على هذا العميل:',
+    debtS:'حصّله مع مبلغ اليوم. وإن رفض فسجّل مبلغ اليوم فقط وأبلغ الإدارة — لا تجادله.',
+    debtVisit:'زيارة', sar:'ريال',
+    odoFail:'تعذّر الحفظ: ', other:'English'
+  },
+  en: {
+    acctLbl:'Signed in as', acctOut:'Sign out',
+    acctConfirm:'Sign out of this account?',
+    acctWrong:'⚠️ This is the company account. If you are the technician, sign out and sign in with your own email.',
+    brand:'Atwad', subtitle:'Field technician board', pickTech:'👷 Select technician:',
+    techAbrar:'Ahmed', techShoib:'Shoaib', techSuhail:'Suhail',
+    statToday:'Today', statPending:'Pending', statDone:'Completed',
+    odoTitle:'🚗 End-of-day odometer', odoHint:'Record the car odometer after the last job', save:'Save',
+    vehTitle:'🚗 Weekly vehicle check', vehDue:'Due this week',
+    vehOk:'Done this week', vehLate:'Overdue', vehSoon:'Ends soon',
+    vehOil:'Oil level', vehWater:'Water & radiator', vehTires:'Tyres', vehSound:'No odd noises',
+    vehOdoPh:'Total odometer (km)', vehNotePh:'Note any fault (optional)',
+    vehSave:'Save check', vehSaved:'✅ Check saved — thank you',
+    vehNeedOdo:'Enter the total odometer.', vehNeedAll:'Tick every item; if one is not fine, write a note.',
+    vehOdoLess:'Reading is lower than the last one. Check the number.',
+    vehBlock:'⛔ This week\u2019s vehicle check is missing. Record it before closing jobs.',
+    vehNone:'No vehicle assigned to you.', vehFail:'Could not save: ',
+    tabToday:'Today', tabWeek:'This week', tabAll:'All',
+    pickFirst:'Select a technician to see the jobs...', loading:'Loading appointments...',
+    emptyToday:'No appointments today', emptyWeek:'No appointments this week', emptyAll:'No appointments',
+    todayTag:'Today', apptCount:'jobs', units:'units', minutes:'min',
+    noImg:'📷 No location photo', imgAlt:'Location photo',
+    wa:'📲 WhatsApp', map:'🗺️ Map', noPin:'📍 No pin',
+    noPinTitle:'Customer has not shared a location — ask the office for the pin',
+    complete:'✓ Complete', completed:'✅ Completed',
+    st_confirmed:'Confirmed', st_pending:'Pending', st_done:'Completed', st_cancelled:'Cancelled',
+    days:['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'],
+    locale:'en-GB',
+    tNotFound:'❌ Appointment not found', tNoPin:'⚠️ No exact pin — opening the text address only',
+    tNoFb:'❌ Firebase unavailable', confirmDone:'Is the job finished?',
+    tDone:'🎉 Job marked as completed!', tErr:'❌ Error: ',
+    odoToday:'✅ Today\'s reading saved: ', odoEdit:' — you can update it',
+    odoLast:'Last reading: ', odoOn:' on ',
+    odoBad:'Enter the total odometer (not the trip meter).',
+    odoLess1:'Reading is lower than the last one (', odoLess2:'). Please check.',
+    odoBig1:'Distance since last reading is ', odoBig2:' km. Is that correct?',
+    odoNoDb:'Database unavailable.', odoSaved:'✅ Reading saved', odoKm:' — today\'s distance: ', km:' km',
+    clTitle:'✅ Closing checklist — before you leave',
+    clNoteLbl:'Note (optional)', clNoteReq:'Note — what was the fault and what you fixed (required)',
+    clNotePh:'e.g. the drain hose was blocked and was cleaned, a new tray was fitted…',
+    clSkipSum:'⚠️ This checklist does not apply to this visit (inspection only / unit not opened)',
+    clSkipPh:'Write the reason — required',
+    clCancel:'Cancel', clGoAll:'✅ Confirm and continue to payment', clGoPart:'✅ Confirm',
+    clMiss:'⚠️ Not confirmed: ', clMissTail:' — complete the list or write why it does not apply',
+    clNeedNote:'⚠️ Write in the note what the fault was and what you fixed — a repair visit cannot close without it',
+    clUnit:'unit(s)',
+    debtT:'⚠️ This customer has an old unpaid amount:',
+    debtS:'Collect it together with today\u2019s amount. If they refuse, record today\u2019s amount only and tell the office — do not argue.',
+    debtVisit:'visit', sar:'SAR',
+    odoFail:'Could not save: ', other:'عربي'
+  }
+};
+var LANG = 'ar';
+/* نُميّز «لم يختر أحدٌ لغةً بعد» عن «اختار العربية صراحةً»:
+   الأولى تقبل الافتراض بحسب الحساب، والثانية لا تُنقض. */
+var LANG_CHOSEN = false;
+try {
+  var _sl = window.localStorage.getItem('atwad_tech_page_lang');
+  if(_sl === 'en' || _sl === 'ar'){ LANG = _sl; LANG_CHOSEN = true; }
+} catch(err) { /* التخزين معطّل — نبدأ بالعربية */ }
+function t(k){ return I18N[LANG][k]; }
+function statusLabel(s){ return t('st_' + s) || s; }
+
+function applyStaticLang(){
+  document.documentElement.lang = LANG;
+  document.documentElement.dir = (LANG === 'ar') ? 'rtl' : 'ltr';
+  document.title = (LANG === 'ar') ? 'أطواد - صفحة الفني' : 'Atwad - Technician';
+  var nodes = document.querySelectorAll('[data-i18n]');
+  for(var i = 0; i < nodes.length; i++){
+    var v = t(nodes[i].getAttribute('data-i18n'));
+    if(v !== undefined) nodes[i].textContent = v;
+  }
+  var lb = document.getElementById('langBtn');
+  if(lb) lb.textContent = t('other');
+}
+function toggleLang(){
+  LANG = (LANG === 'ar') ? 'en' : 'ar';
+  try { window.localStorage.setItem('atwad_tech_page_lang', LANG); }
+  catch(err) { /* تبقى اللغة لهذه الجلسة فقط */ }
+  applyStaticLang();
+  updateDate();
+  if(typeof renderAcctBar === 'function') renderAcctBar();
+  if(currentTech) renderAppts();
+  if(typeof loadLastOdometer === 'function') loadLastOdometer();
+  if(typeof vehRender === 'function') vehRender();
+}
+const STATUS_LABELS = {confirmed:'مؤكد', pending:'في الانتظار', done:'مكتمل', cancelled:'ملغي'};
+const STATUS_BADGES = {confirmed:'badge-confirmed', pending:'badge-pending', done:'badge-done', cancelled:'badge-cancelled'};
+
+function today(){
+  try {
+    var parts=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Riyadh',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+    var out={}; parts.forEach(function(p){ if(p.type!=='literal') out[p.type]=p.value; });
+    return out.year+'-'+out.month+'-'+out.day;
+  } catch(e) {
+    var d=new Date(Date.now()+3*60*60*1000);
+    return d.toISOString().split('T')[0];
+  }
+}
+/** تاريخ بعد n يوماً من اليوم بتوقيت الرياض */
+function dateOffset(n){
+  var base=today().split('-');
+  var d=new Date(Date.UTC(parseInt(base[0],10), parseInt(base[1],10)-1, parseInt(base[2],10)));
+  d.setUTCDate(d.getUTCDate()+n);
+  return d.toISOString().split('T')[0];
+}
+function formatDate(d){ try{ return new Date(d+'T00:00:00').toLocaleDateString(t('locale'),{weekday:'long',month:'long',day:'numeric'}); } catch{ return d; } }
+function formatDateShort(d){ try{ return new Date(d+'T00:00:00').toLocaleDateString(t('locale'),{month:'short',day:'numeric'}); } catch{ return d; } }
+
+function getWeekDates(){
+  const dates = [];
+  for(let i=0; i<7; i++){
+    dates.push(dateOffset(i));
+  }
+  return dates;
+}
+
+// تحديث التاريخ
+function updateDate(){
+  // نفس مرجع التاريخ المستخدم في الفلترة حتى لا يختلف الشريط عن القائمة
+  const ref = new Date(today()+'T00:00:00');
+  document.getElementById('dayName').textContent = t('days')[ref.getDay()];
+  document.getElementById('todayDate').textContent = ref.toLocaleDateString(t('locale'),{year:'numeric',month:'long',day:'numeric'});
+}
+
+// اختيار الفني
+function selectTech(tech, techAr, btn) {
+  currentTech = tech;
+  currentTechAr = techAr;
+  document.querySelectorAll('.tech-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  loadAppts();
+  if(typeof vehRender === 'function') vehRender();
+}
+
+// تحميل المواعيد من Firebase
+function techStatusLogic(raw) {
+  var t=String(raw==null?'':raw).trim().toLowerCase();
+  var aliases={
+    confirmed:'confirmed',confirm:'confirmed',approved:'confirmed',accepted:'confirmed','مؤكد':'confirmed','مؤكدة':'confirmed','تم التأكيد':'confirmed',
+    pending:'pending',new:'pending',open:'pending',waiting:'pending',scheduled:'pending','في الانتظار':'pending','قيد الانتظار':'pending','جديد':'pending','معلق':'pending','قيد التنفيذ':'pending',
+    done:'done',completed:'done',complete:'done',finished:'done',closed:'done','مكتمل':'done','منجز':'done','تم':'done','منتهي':'done',
+    cancelled:'cancelled',canceled:'cancelled',rejected:'cancelled',declined:'cancelled','ملغي':'cancelled','ملغى':'cancelled','مرفوض':'cancelled'
+  };
+  return aliases[t] || 'pending';
+}
+
+function techNormalizePhone(v){
+  var p=String(v==null?'':v).replace(/\D/g,'');
+  if(p.indexOf('00966')===0) p=p.slice(5);
+  else if(p.indexOf('966')===0) p=p.slice(3);
+  if(p.charAt(0)==='0') p=p.slice(1);
+  return p;
+}
+function techStartTime(v){
+  var m=String(v||'').match(/(\d{1,2})\s*:\s*(\d{2})/);
+  if(!m) return '';
+  return String(parseInt(m[1],10)).padStart(2,'0')+':'+m[2];
+}
+function techDisplayIdentity(a){
+  if(!a) return '';
+  var date=String(a.date||'').trim(), time=techStartTime(a.time);
+  if(!date||!time) return '';
+  var phone=techNormalizePhone(a.phone||'');
+  var client=String(a.client||a.name||'').trim().toLowerCase().replace(/\s+/g,' ');
+  return date+'|'+time+'|'+(phone?('p:'+phone):('n:'+client));
+}
+function techDedupeForDisplay(items){
+  var out=[], exact={}, links={}, phones={}, names={};
+  function nm(a){ return String((a&&(a.client||a.name))||'').trim().toLowerCase().replace(/\s+/g,' '); }
+  function base(a){
+    var d=String((a&&a.date)||'').trim(), t=techStartTime(a&&a.time);
+    return d&&t ? d+'|'+t : '';
+  }
+  (items||[]).forEach(function(a){
+    if(!a) return;
+    var ex=(a._source||'appointments')+':'+(a._fbKey||a.id||'');
+    if(ex && exact[ex]!==undefined) return;
+    var b=base(a), ph=techNormalizePhone(a.phone||''), name=nm(a);
+    var pk=b&&ph ? b+'|p:'+ph : '';
+    var nk=b&&name ? b+'|n:'+name : '';
+    var lk=a.sourceBookingKey ? 'booking:'+String(a.sourceBookingKey) : '';
+    var idx = lk&&links[lk]!==undefined ? links[lk] :
+              pk&&phones[pk]!==undefined ? phones[pk] :
+              nk&&names[nk]!==undefined ? names[nk] : undefined;
+    if(idx!==undefined){
+      var prev=out[idx];
+      if(prev && prev._source==='bookings' && a._source==='appointments') out[idx]=a;
+      if(ex) exact[ex]=idx; if(lk) links[lk]=idx; if(pk) phones[pk]=idx; if(nk) names[nk]=idx;
+      return;
+    }
+    idx=out.length; out.push(a);
+    if(ex) exact[ex]=idx; if(lk) links[lk]=idx; if(pk) phones[pk]=idx; if(nk) names[nk]=idx;
+  });
+  return out;
+}
+
+// تحميل موحّد من Firebase: نفس المصدرين ونفس أولوية الدمج المستخدمة في صفحة المواعيد
+function loadAppts() {
+  if(!db || !currentTech) return;
+  document.getElementById('apptList').innerHTML = '<div class="loading"><div class="spinner"></div><div>' + t('loading') + '</div></div>';
+
+  var combined = [];
+  var apptsVal = {}, bkVal = {};
+  db.ref('appointments').once('value', function(snap) {
+    apptsVal = snap.val() || {};
+    var linkedBookingKeys = {};
+    snap.forEach(function(c) {
+      var a = c.val() || {};
+      var status = techStatusLogic(a.status);
+      var row = {};
+      Object.keys(a).forEach(function(k){ row[k] = a[k]; });
+      row.tech = a.tech || 'Abrar';
+      row.status = status;
+      row._statusRaw = a.status;
+      row._fbKey = c.key;
+      row._source = 'appointments';
+      combined.push(row);
+      if(a.sourceBookingKey) linkedBookingKeys[a.sourceBookingKey]=true;
+    });
+
+    db.ref('bookings').once('value', function(snap2) {
+      bkVal = snap2.val() || {};
+      snap2.forEach(function(c) {
+        var b = c.val() || {};
+        if(!b.date || !b.time) return;
+        if(linkedBookingKeys[c.key]) return;
+        var assignedTech = b.tech || 'Abrar';
+        combined.push({
+          _fbKey: c.key,
+          _source: 'bookings',
+          id: 'B_' + c.key,
+          client: b.client || b.name || '—',
+          phone: b.phone || '',
+          address: b.address || b.district || b.city || 'جدة',
+          service: b.service || 'تنظيف مكيف',
+          units: b.units || 1,
+          date: b.date,
+          time: techStartTime(b.time) || '09:00',
+          tech: assignedTech,
+          status: techStatusLogic(b.status),
+          _statusRaw: b.status,
+          notes: 'حجز إلكتروني',
+          locationImage: b.locationImage || '',
+          duration: b.duration || 60,
+          sourceBookingKey: c.key,
+          // حقول الموقع الدقيق — كانت مفقودة، فكان زر الخريطة يفتح المدينة كاملة
+          mapsLink: b.mapsLink || b.mapLink || b.mapUrl || b.mapsUrl || b.locationUrl ||
+                    b.googleMapsUrl || b.googleMapsLink || b.locationLink ||
+                    b.customerLocation || b.addressUrl || '',
+          lat: b.lat != null ? b.lat : (b.latitude != null ? b.latitude : ''),
+          lng: b.lng != null ? b.lng : (b.longitude != null ? b.longitude : ''),
+          accuracy: b.accuracy != null ? b.accuracy : ''
+        });
+      });
+
+      // إزالة التكرار من الواجهة فقط، ثم تطبيق نفس قاعدة إخفاء الملغي.
+      var merged = techDedupeForDisplay(combined).filter(function(a){ return techStatusLogic(a._statusRaw!==undefined?a._statusRaw:a.status)!=='cancelled'; });
+      allAppts = merged.filter(function(a){ return (a.tech || 'Abrar') === currentTech; })
+        .sort(function(a,b){
+          var dc=String(a.date||'').localeCompare(String(b.date||''));
+          if(dc!==0) return dc;
+          return String(techStartTime(a.time)||'23:59').localeCompare(String(techStartTime(b.time)||'23:59'));
+        });
+      updateStats();
+      renderAppts();
+      attachDebts(apptsVal, bkVal);
+    });
+  });
+}
+function autoAssign(date, existing) {
+  // تعيين أحمد افتراضياً للحجوزات الجديدة
+  return 'Abrar';
+}
+
+function updateStats() {
+  const tod = today();
+  document.getElementById('statToday').textContent = allAppts.filter(a=>a.date===tod).length;
+  document.getElementById('statPending').textContent = allAppts.filter(a=>a.status==='pending'||a.status==='confirmed').length;
+  document.getElementById('statDone').textContent = allAppts.filter(a=>a.status==='done').length;
+}
+
+function filterAppts(filter, btn) {
+  currentFilter = filter;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  renderAppts();
+}
+
+/* يُعلّق على كل زيارة دَيْنَ صاحبها السابق، ثم يُعيد الرسم.
+   lookup يُعيد certain=false حين تكون المطابقة بالاسم وحده —
+   ونحن هنا نُسقط ذلك كلّه: الفني لا يُطالب بناءً على تشابه اسم. */
+function attachDebts(apptsVal, bkVal){
+  if(!window.AtwadDebt || !db) return;
+  db.ref('transactions').once('value').then(function(snap){
+    var ix = window.AtwadDebt.build(snap.val() || {}, bkVal || {}, apptsVal || {});
+    for(var i = 0; i < allAppts.length; i++){
+      var a = allAppts[i];
+      if(a.status === 'done' || a.status === 'cancelled'){ a._debt = null; continue; }
+      var hit = window.AtwadDebt.lookup(ix, {
+        phone: a.phone, name: a.client,
+        beforeDate: a.date,          // زيارة اليوم نفسها ليست ديناً سابقاً
+        excludeRef: a._fbKey
+      });
+      a._debt = (hit.certain && hit.count) ? hit : null;
+    }
+    renderAppts();
+  }).catch(function(e){
+    if(window.console && console.warn){ console.warn('[tech] تعذّرت قراءة الديون:', e); }
+  });
+}
+
+function debtStripHtml(a){
+  if(!a || !a._debt) return '';
+  var h = a._debt;
+  var parts = [];
+  for(var i = 0; i < h.rows.length; i++){
+    parts.push(Number(h.rows[i].rem).toLocaleString('en-US') + ' ' + t('sar') +
+               ' (' + t('debtVisit') + ' ' + h.rows[i].date + ')');
+  }
+  return '<div class="debt-strip">' +
+    '<div class="dt">' + t('debtT') + ' ' +
+      Number(h.total).toLocaleString('en-US') + ' ' + t('sar') + '</div>' +
+    '<div class="dd">' + parts.join(' · ') + '</div>' +
+    '<div class="ds">' + t('debtS') + '</div></div>';
+}
+
+function renderAppts() {
+  const tod = today();
+  const weekDates = getWeekDates();
+  let appts = allAppts.slice();
+
+  if(currentFilter === 'today') appts = appts.filter(a => a.date === tod);
+  else if(currentFilter === 'week') appts = appts.filter(a => weekDates.includes(a.date));
+
+  const list = document.getElementById('apptList');
+
+  if(appts.length === 0) {
+    list.innerHTML = `<div class="empty"><div class="icon">📅</div><p>${currentFilter==='today'?t('emptyToday'):currentFilter==='week'?t('emptyWeek'):t('emptyAll')}</p></div>`;
+    return;
+  }
+
+  // ترتيب نهائي حسب تاريخ ووقت الموعد الفعلي، وليس حسب وقت إنشاء الحجز
+  appts.sort((a,b) => {
+    const dateCmp = String(a.date || '').localeCompare(String(b.date || ''));
+    if(dateCmp !== 0) return dateCmp;
+    const timeA = String(a.time || '23:59').trim().slice(0,5);
+    const timeB = String(b.time || '23:59').trim().slice(0,5);
+    return timeA.localeCompare(timeB);
+  });
+
+  // تجميع بالتاريخ مع ترتيب مواعيد كل يوم حسب الوقت تصاعدياً
+  const grouped = {};
+  appts.forEach(a => { if(!grouped[a.date]) grouped[a.date]=[]; grouped[a.date].push(a); });
+  Object.keys(grouped).forEach(date => {
+    grouped[date].sort((a,b) => {
+      const timeA = String(a.time || '23:59').trim().slice(0,5);
+      const timeB = String(b.time || '23:59').trim().slice(0,5);
+      return timeA.localeCompare(timeB);
+    });
+  });
+
+  let html = '';
+  Object.keys(grouped).sort().forEach(date => {
+    const isToday = date === tod;
+    html += `<div class="day-header">
+      ${formatDate(date)}
+      ${isToday ? '<span class="today-tag">'+t('todayTag')+'</span>' : ''}
+      <span class="day-count">${grouped[date].length} ${t('apptCount')}</span>
+    </div>`;
+
+    grouped[date].forEach(a => {
+      const aId = a.id || a._fbKey;
+      const initial = (a.client||'ع')[0];
+      const badgeClass = STATUS_BADGES[a.status||'pending'];
+      const stLabel = statusLabel(a.status||'pending');
+      const isDone = a.status === 'done';
+
+      html += `<div class="appt-card ${a.status||'pending'}" id="card-${aId}">
+        <div class="card-header">
+          <div class="client-info">
+            <div class="client-avatar">${initial}</div>
+            <div>
+              <div class="client-name">${a.client}</div>
+              <div class="client-service">🛠️ ${a.service||'—'} ${a.units>1?'('+a.units+' '+t('units')+')':''}</div>
+            </div>
+          </div>
+          <div>
+            <span class="status-badge ${badgeClass}">${stLabel}</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <span class="time-badge">⏰ ${a.time||'--:--'}</span>
+            <span style="font-size:12px;color:var(--mist);">${a.duration||60} ${t('minutes')}</span>
+          </div>
+          ${debtStripHtml(a)}
+          <div class="loc-slot" data-key="${a._fbKey||''}" data-src="${a._source||'appointments'}"><div class="no-img">${t('noImg')}</div></div>
+          <div class="info-row"><span class="icon">📍</span><span>${a.address||'—'}</span></div>
+          ${a.phone ? `<div class="info-row"><span class="icon">📱</span><span>${a.phone}</span></div>` : ''}
+          ${a.notes ? `<div class="info-row"><span class="icon">📝</span><span style="font-size:12px;color:var(--mist);">${a.notes}</span></div>` : ''}
+        </div>
+        <div class="card-actions">
+          ${a.phone ? `<button class="act-btn btn-wa" onclick="openWhatsApp('${a.phone}','${a.client}','${a.service}','${a.time}')">${t('wa')}</button>` : ''}
+          ${apptHasPin(a)
+            ? `<button class="act-btn btn-map" onclick="openMapForAppt('${aId}')">${t('map')}</button>`
+            : `<button class="act-btn btn-map" disabled style="opacity:.55;cursor:not-allowed;" title="${t('noPinTitle')}">${t('noPin')}</button>`}
+          <button class="act-btn btn-done" ${isDone?'disabled':''} onclick="markDone('${aId}','${a._source}','${a._fbKey}')">
+            ${isDone ? t('completed') : t('complete')}
+          </button>
+        </div>
+      </div>`;
+    });
+  });
+
+  list.innerHTML = html;
+  hydrateLocationImages();
+}
+
+/* ===== صور المواقع تُجلب لبطاقات اليوم فقط ===== */
+/*
+ * كانت الصور مخزَّنة داخل كل سجل، فكان الفني ينزّل صور كل المواعيد
+ * والحجوزات عند كل فتح. الآن تُجلب صورة كل بطاقة معروضة وحدها، ومع
+ * الإبقاء على القراءة من داخل السجل حتى يكتمل نقل الصور القديمة.
+ */
+var techImageCache = {};
+
+function fillLocSlot(slot, img) {
+  if(!img) return;
+  slot.innerHTML = '<img class="location-img" alt="' + t('imgAlt') + '">';
+  var im = slot.querySelector('img');
+  im.src = img;
+  im.addEventListener('click', function() {
+    var w = window.open('', '_blank');
+    if(!w) return;
+    w.document.write('<img src="' + img + '" style="max-width:100%">');
+    w.document.close();
+  });
+}
+
+/** الصور التي لم تُنقل بعد لا تزال داخل السجل نفسه */
+function inlineImageFor(key) {
+  for(var i = 0; i < allAppts.length; i++) {
+    if(allAppts[i] && allAppts[i]._fbKey === key) return allAppts[i].locationImage || '';
+  }
+  return '';
+}
+
+function hydrateLocationImages() {
+  if(!db) return;
+  var slots = document.querySelectorAll('.loc-slot');
+  for(var i = 0; i < slots.length; i++) {
+    (function(slot) {
+      var key = slot.getAttribute('data-key');
+      if(!key) return;
+      var node = slot.getAttribute('data-src') === 'bookings' ? 'bookingImages' : 'apptImages';
+      var path = node + '/' + key;
+
+      if(Object.prototype.hasOwnProperty.call(techImageCache, path)) {
+        fillLocSlot(slot, techImageCache[path]);
+        return;
+      }
+      db.ref(path).once('value').then(function(snap) {
+        var v = snap.val();
+        var img = (typeof v === 'string' && v) ? v : inlineImageFor(key);
+        techImageCache[path] = img;
+        fillLocSlot(slot, img);
+      }).catch(function(err) {
+        console.warn('تعذّر تحميل صورة الموقع:', err);
+        fillLocSlot(slot, inlineImageFor(key));
+      });
+    })(slots[i]);
+  }
+}
+
+
+/* ===== وجهة واتساب حسب الجهاز =====
+   الجوال  → whatsapp:// يفتح التطبيق مباشرة.
+   الكمبيوتر → web.whatsapp.com يفتح تبويباً واحداً ويحافظ على ترميز
+   الرموز التعبيرية، بعكس تطبيق ويندوز الذي يكسرها.
+   في الحالتين لا تظهر الصفحة الوسيطة. */
+function atwadIsMobileDevice(){
+  try {
+    if(navigator.userAgentData && typeof navigator.userAgentData.mobile === 'boolean'){
+      return navigator.userAgentData.mobile;
+    }
+  } catch(e) { /* المتصفحات القديمة لا تدعم userAgentData */ }
+  return /Android|iPhone|iPad|iPod|Windows Phone|Mobile/i.test(navigator.userAgent || '');
+}
+function atwadWaPhone(raw){
+  var p = String(raw || '').replace(/[^0-9]/g,'');
+  if(!p) return '';
+  if(p.indexOf('966') === 0) return p;
+  if(p.indexOf('00966') === 0) return p.slice(2);
+  if(p.indexOf('0') === 0) return '966' + p.slice(1);
+  if(p.length === 9) return '966' + p;
+  return p;
+}
+function atwadWaUrl(phone, message){
+  var p = atwadWaPhone(phone);
+  var t = encodeURIComponent(String(message == null ? '' : message));
+  if(atwadIsMobileDevice()){
+    return 'whatsapp://send?phone=' + p + (t ? '&text=' + t : '');
+  }
+  return 'https://web.whatsapp.com/send?phone=' + p + (t ? '&text=' + t : '');
+}
+
+function openWhatsApp(phone, name, service, time) {
+  const msg = `مرحباً ${name}،\nنود إبلاغكم بأن الفني في طريقه إليكم لتنفيذ خدمة: ${service}\nالوقت المتوقع للوصول: ${time}\nمؤسسة أطواد ❄️`;
+  window.open(atwadWaUrl(phone, msg), 'atwadWhatsApp');   // تبويب واحد يُعاد استخدامه
+}
+
+/* ===== الموقع الدقيق — نفس منطق صفحة المواعيد ===== */
+function locationUrlFields(record){
+  if(!record) return [];
+  return [
+    record.mapsLink, record.mapLink, record.mapUrl, record.mapsUrl,
+    record.locationUrl, record.googleMapsUrl, record.googleMapsLink,
+    record.locationLink, record.customerLocation, record.addressUrl,
+    typeof record.location === 'string' ? record.location : ''
+  ];
+}
+function isValidCoordinates(lat, lng){
+  return Number.isFinite(lat) && Number.isFinite(lng) &&
+         lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180 &&
+         !(lat === 0 && lng === 0);
+}
+function isGenericCityMapsUrl(value){
+  var raw = String(value || '').trim();
+  if(!raw) return false;
+  var decoded = raw;
+  try { decoded = decodeURIComponent(raw); } catch(e) {}
+  decoded = decoded.replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069]/g,'')
+                   .replace(/\+/g,' ').toLowerCase();
+  var plainCity  = /^(?:جدة|jeddah|jeddah\s*\/\s*جدة|جدة\s*\/\s*jeddah)$/i.test(decoded.trim());
+  var cityPlace  = /\/maps\/(?:place|search)\/(?:جدة|jeddah)(?:\/|@|\?|$)/i.test(decoded);
+  var cityQuery  = /[?&](?:q|query|destination)=(?:جدة|jeddah)(?:&|$)/i.test(decoded);
+  var veryWide   = /,\d{5,}m(?:\/|$)/i.test(decoded);
+  return plainCity || cityPlace || cityQuery || veryWide;
+}
+function extractCoordinatesFromMapUrl(url){
+  if(!url || typeof url !== 'string') return null;
+  var s = url.trim();
+  if(s.indexOf('maps.app.goo.gl') !== -1 || s.indexOf('goo.gl/maps') !== -1) return null;
+  try { s = decodeURIComponent(s); } catch(e) {}
+  var rawPair = s.match(/^\s*(-?\d+(?:\.\d+)?)\s*[,،]\s*(-?\d+(?:\.\d+)?)\s*$/);
+  if(rawPair){
+    var rl = Number(rawPair[1]), rg = Number(rawPair[2]);
+    if(isValidCoordinates(rl,rg)) return {lat:rl,lng:rg};
+  }
+  var placeMatch = s.match(/!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/);
+  if(placeMatch){
+    var pl = Number(placeMatch[1]), pg = Number(placeMatch[2]);
+    if(isValidCoordinates(pl,pg)) return {lat:pl,lng:pg};
+  }
+  var qm = s.match(/[?&](?:q|query|destination|ll)=\s*(-?\d+(?:\.\d+)?)\s*[,،]\s*(-?\d+(?:\.\d+)?)/i);
+  if(qm){
+    var ql = Number(qm[1]), qg = Number(qm[2]);
+    if(isValidCoordinates(ql,qg)) return {lat:ql,lng:qg};
+  }
+  return null;
+}
+function isTrustedGoogleMapsLocationUrl(value){
+  var link = String(value||'').trim();
+  if(!/^https?:\/\//i.test(link) || isGenericCityMapsUrl(link)) return false;
+  try {
+    var parsed = new URL(link);
+    var host = parsed.hostname.toLowerCase().replace(/^www\./,'');
+    return host === 'maps.app.goo.gl' ||
+      (host === 'goo.gl' && parsed.pathname.toLowerCase().indexOf('/maps') === 0) ||
+      ((host === 'google.com' || /(^|\.)google\.[a-z.]+$/i.test(host)) &&
+        (parsed.pathname.toLowerCase().indexOf('/maps') === 0 ||
+         parsed.searchParams.has('q') || parsed.searchParams.has('query') ||
+         parsed.searchParams.has('destination')));
+  } catch(e){ return false; }
+}
+function exactCoordinatesFromRecord(record){
+  if(!record) return null;
+  var links = locationUrlFields(record).map(function(v){ return String(v||'').trim(); });
+  var pairs = [
+    [record.lat,record.lng], [record.latitude,record.longitude],
+    [record.customerLat,record.customerLng], [record.locationLat,record.locationLng],
+    [record.geoLat,record.geoLng]
+  ];
+  var nested = [record.location, record.coordinates, record.coords, record.position];
+  nested.forEach(function(item){
+    if(item && typeof item === 'object'){
+      pairs.push([item.lat,item.lng],[item.latitude,item.longitude]);
+    }
+  });
+  for(var p=0;p<pairs.length;p++){
+    var la = Number(pairs[p][0]), ln = Number(pairs[p][1]);
+    if(isValidCoordinates(la,ln)) return {lat:la,lng:ln};
+  }
+  for(var i=0;i<links.length;i++){
+    if(!links[i] || isGenericCityMapsUrl(links[i])) continue;
+    var ex = extractCoordinatesFromMapUrl(links[i]);
+    if(ex) return ex;
+  }
+  return null;
+}
+function trustedLocationUrl(record){
+  var links = locationUrlFields(record);
+  for(var i=0;i<links.length;i++){
+    var link = String(links[i]||'').trim();
+    if(isTrustedGoogleMapsLocationUrl(link)) return link;
+  }
+  return '';
+}
+
+/** هل للموعد دبوس دقيق (إحداثيات أو رابط خرائط موثوق)؟ */
+function apptHasPin(record){
+  if(!record) return false;
+  if(exactCoordinatesFromRecord(record)) return true;
+  return trustedLocationUrl(record) !== '';
+}
+
+/** فتح خريطة الموعد: الدبوس الدقيق أولاً، والعنوان النصي آخر الحلول */
+function openMapForAppt(id){
+  var a = null;
+  for(var i=0;i<allAppts.length;i++){
+    var x = allAppts[i];
+    if(x.id === id || x._fbKey === id || ('B_' + x._fbKey) === id){ a = x; break; }
+  }
+  if(!a){ showToast(t('tNotFound')); return; }
+
+  var coords = exactCoordinatesFromRecord(a);
+  if(coords){
+    window.open('https://www.google.com/maps/dir/?api=1&destination=' +
+      encodeURIComponent(coords.lat + ',' + coords.lng), '_blank');
+    return;
+  }
+  var link = trustedLocationUrl(a);
+  if(link){ window.open(link, '_blank'); return; }
+
+  showToast(t('tNoPin'));
+  openMap(a.address || '');
+}
+
+function openMap(address) {
+  // إذا كان الرابط من Google Maps يفتحه مباشرة
+  if(address.includes('maps.app.goo.gl') || address.includes('google.com/maps') || address.includes('goo.gl/maps')) {
+    window.open(address, '_blank');
+  } else {
+    window.open('https://maps.google.com?q=' + encodeURIComponent(address), '_blank');
+  }
+}
+
+/* ============================================================
+   تسجيل القبض لحظة إتمام الزيارة
+   السبب: المال يستلمه الفني، فيُسجَّل حيث يُستلم لا بعد أيام.
+   الافتراضي «نقداً» لأنه الواقع الغالب، و«لم يُدفع» استثناء مقصود.
+   ============================================================ */
+var _payCtx = null;          // {id, source, fbKey, appt}
+var _txCache = null;         // قيود الدخل المقروءة مرة واحدة لكل جلسة
+
+function bindClosingButtons(){
+  var go = document.getElementById('clConfirmBtn');
+  var x  = document.getElementById('clCancel');
+  if(go) go.addEventListener('click', confirmClosing);
+  if(x)  x.addEventListener('click', closeClosingModal);
+  var ov = document.getElementById('clOv');
+  if(ov) ov.addEventListener('click', function(ev){ if(ev.target === ov) closeClosingModal(); });
+}
+
+function payText(ar, en){ return (typeof LANG !== 'undefined' && LANG === 'en') ? en : ar; }
+
+function payNorm(s){
+  var x = String(s || '').toLowerCase();
+  x = x.replace(/[ـ.,_\-]/g, ' ').replace(/\b(mr|mrs|ms|miss|dr|eng)\b/g, ' ');
+  x = x.replace(/[أإآ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه');
+  return x.replace(/\s+/g, ' ').trim();
+}
+
+// البحث عن قيد دخل غير محصّل لنفس العميل ونفس التاريخ، لتحديثه بدل إنشاء قيد ثانٍ
+function findOpenTx(client, date, bookingKey){
+  if(!_txCache) return null;
+  // أولاً: القيد المرتبط بالحجز نفسه — مطابقة قاطعة لا تحتمل الخطأ
+  if(bookingKey){
+    for(var k = 0; k < _txCache.length; k++){
+      var b = _txCache[k];
+      if(b.v.type !== 'income') continue;
+      var bs = b.v.status || '';
+      if(bs === 'ملغي' || bs === 'مسوى') continue;
+      if(b.v.firebaseRef === bookingKey) return b;
+    }
+  }
+  // ثانياً: نفس العميل ونفس اليوم وغير محصّل
+  var nm = payNorm(client);
+  for(var i = 0; i < _txCache.length; i++){
+    var r = _txCache[i];
+    if(r.v.type !== 'income') continue;
+    var st = r.v.status || '';
+    if(st === 'مدفوع' || st === 'ملغي' || st === 'مسوى') continue;
+    if(r.v.date !== date) continue;
+    if(payNorm(r.v.party || r.v.client || '') !== nm) continue;
+    return r;
+  }
+  return null;
+}
+
+function loadTxCache(){
+  if(_txCache || !db) return Promise.resolve();
+  return db.ref('transactions').limitToLast(400).once('value').then(function(snap){
+    _txCache = [];
+    snap.forEach(function(c){ _txCache.push({ key: c.key, v: c.val() || {} }); });
+  }).catch(function(err){
+    console.warn('تعذّرت قراءة القيود المالية:', err);
+    _txCache = [];
+  });
+}
+
+// ============================================================
+// قائمة الإغلاق — لا تُفتح ورقة القبض قبل تأكيد فحص التصريف.
+// المفاتيح ونوع البيانات مطابقة لما تكتبه صفحة الإدارة.
+// ============================================================
+var _closingData = null;
+/* بنود الزيارة المفتوحة الآن — تُملأ في openClosingModal بحسب نوع الخدمة.
+   وتبدأ بقائمة الغسيل احتياطاً إن لم يُحمَّل atwad-closing.js. */
+var _clItems = [];
+var _clKind  = '';
+var _clSkipAllowed = true;
+var CLOSING_ITEMS = [
+  { k:'drainTest',
+    ar:'اختبار صرف الماء',
+    arS:'صُبّ ماء في صينية التصريف وخرج من طرف الخرطوم — وأُرسل فيديو الاختبار',
+    en:'Drain-water test',
+    enS:'Pour water into the drain tray and see it come out of the hose end — send the test video' },
+  { k:'tilt',
+    ar:'ميلان الوحدة الداخلية والصينية باتجاه الصرف',
+    arS:'لا ميلان عكسي يحبس الماء في الصينية',
+    en:'Indoor unit and tray tilted towards the drain',
+    enS:'No reverse tilt that traps water in the tray' },
+  { k:'hose',
+    ar:'خرطوم الصرف نظيف وبلا ثنيات',
+    arS:'لا سدد من بقايا الغسيل ولا انحناء يرفع الخرطوم',
+    en:'Drain hose clean and without kinks',
+    enS:'No blockage from washing residue and no bend lifting the hose' },
+  { k:'cover',
+    ar:'الحشوات والغطاء والفلاتر مُعادة بإحكام',
+    arS:'أي فجوة في العزل تسبب تكاثفًا خارج الصينية',
+    en:'Insulation, cover and filters refitted tightly',
+    enS:'Any gap in the insulation causes condensation outside the tray' },
+  { k:'runTest',
+    ar:'تشغيل المكيف 10 دقائق ومعاينة بلا تنقيط',
+    arS:'المعاينة بعد التشغيل الفعلي، لا قبله',
+    en:'Run the AC for 10 minutes and check for no dripping',
+    enS:'Check after it actually runs, not before' },
+  { k:'customer',
+    ar:'العميل شاهد الاختبار',
+    arS:'العميل حضر اختبار الصرف أو التشغيل قبل المغادرة',
+    en:'Customer watched the test',
+    enS:'The customer was present for the drain or run test before you left' }
+];
+
+/* جمع «وحدة» على أصوله: مفرد، مثنّى، جمع قلّة (٣–١٠)، ثم تمييز مفرد */
+function clUnitWord(n){
+  if(LANG === 'en'){ return n + (n === 1 ? ' unit' : ' units'); }
+  if(n === 1) return 'وحدة واحدة';
+  if(n === 2) return 'وحدتان';
+  if(n >= 3 && n <= 10) return n + ' وحدات';
+  return n + ' وحدة';
+}
+
+function clSetTexts(){
+  document.getElementById('clTitle').textContent = t('clTitle');
+  document.getElementById('clNoteLbl').textContent = t('clNoteLbl');
+  document.getElementById('clNote').placeholder = t('clNotePh');
+  document.getElementById('clSkipSum').textContent = t('clSkipSum');
+  document.getElementById('clSkipReason').placeholder = t('clSkipPh');
+  document.getElementById('clCancel').textContent = t('clCancel');
+}
+
+function openClosingModal(id, source, fbKey){
+  var a = allAppts.find(function(x){
+    return x.id === id || x._fbKey === id || ('B_' + x._fbKey) === id;
+  });
+  _payCtx = { id: id, source: source, fbKey: fbKey, appt: a || null };
+  _closingData = null;
+
+  clSetTexts();
+  var svc = (a && a.service) || '';
+  var un  = (a && parseInt(a.units, 10)) || 1;
+
+  /* القائمة تُختار بنوع الخدمة: الغسيل غير الصيانة غير التركيب.
+     وإن غاب الملف المشترك بقيت قائمة الغسيل كما كانت. */
+  if(window.AtwadClosing){
+    _clKind  = window.AtwadClosing.kindOf(svc);
+    _clItems = window.AtwadClosing.itemsFor(_clKind);
+  } else {
+    console.warn('[technician] لم يُحمَّل atwad-closing.js — قائمة الغسيل احتياطاً');
+    _clKind  = 'wash';
+    _clItems = CLOSING_ITEMS;
+  }
+
+  var kindTxt = window.AtwadClosing
+    ? window.AtwadClosing.kindLabel(_clKind, LANG)
+    : payText('غسيل', 'Washing');
+  document.getElementById('clWho').textContent =
+    ((a && a.client) || '—') + (svc ? ' · ' + svc : '') + ' · ' + clUnitWord(un) +
+    ' · ' + kindTxt;
+
+  var html = '';
+  for(var i = 0; i < _clItems.length; i++){
+    var it = _clItems[i];
+    html += '<label class="cl-item"><input type="checkbox" data-k="' + it.k + '">' +
+      '<div><div class="cl-t">' + payText(it.ar, it.en) + '</div>' +
+      '<div class="cl-s">' + payText(it.arS, it.enS) + '</div></div></label>';
+  }
+  var box = document.getElementById('clItems');
+  box.innerHTML = html;
+  var boxes = box.querySelectorAll('input[type=checkbox]');
+  for(var b = 0; b < boxes.length; b++){
+    boxes[b].addEventListener('change', function(ev){
+      var lab = ev.target.parentNode;
+      if(lab){ lab.className = ev.target.checked ? 'cl-item on' : 'cl-item'; }
+      updateClosingBar();
+    });
+  }
+
+  /* عنوان الملاحظة يصدق على حالها: إلزاميةٌ في زيارة الإصلاح لا اختيارية */
+  var noteLbl = document.getElementById('clNoteLbl');
+  if(noteLbl){
+    noteLbl.textContent = (window.AtwadClosing && window.AtwadClosing.needsNote(_clKind))
+      ? t('clNoteReq') : t('clNoteLbl');
+  }
+
+  document.getElementById('clNote').value = '';
+  document.getElementById('clSkipReason').value = '';
+
+  /* بابُ التخطّي: مفتوحٌ لغسل الوحدة الخارجية وحدها وللكشف والمعاينة،
+     مسدودٌ في كل غسيلٍ كامل وإصلاحٍ وتركيب — بقرارٍ منك. */
+  _clSkipAllowed = !window.AtwadClosing || window.AtwadClosing.allowSkip(svc, _clKind);
+  var skipBox = document.getElementById('clSkipBox');
+  if(skipBox){
+    skipBox.open = false;
+    skipBox.style.display = _clSkipAllowed ? '' : 'none';
+  }
+
+  updateClosingBar();
+  document.getElementById('clOv').classList.add('show');
+}
+
+function updateClosingBar(){
+  var boxes = document.querySelectorAll('#clItems input[type=checkbox]');
+  var n = 0;
+  for(var i = 0; i < boxes.length; i++){ if(boxes[i].checked) n++; }
+  var pct = boxes.length ? Math.round(n / boxes.length * 100) : 0;
+  document.getElementById('clBar').style.width = pct + '%';
+  document.getElementById('clConfirmBtn').textContent = (n === boxes.length && boxes.length)
+    ? t('clGoAll')
+    : (t('clGoPart') + ' (' + n + '/' + boxes.length + ')');
+}
+
+function closeClosingModal(){
+  document.getElementById('clOv').classList.remove('show');
+  _payCtx = null;
+  _closingData = null;
+}
+
+function confirmClosing(){
+  if(!_payCtx) return;
+  var a = _payCtx.appt || {};
+  var skipBox = document.getElementById('clSkipBox');
+  var skipReason = String(document.getElementById('clSkipReason').value || '').trim();
+
+  var checks = {};
+  var missing = [];
+  var boxes = document.querySelectorAll('#clItems input[type=checkbox]');
+  for(var i = 0; i < boxes.length; i++){
+    var k = boxes[i].getAttribute('data-k');
+    checks[k] = !!boxes[i].checked;
+    if(!boxes[i].checked){
+      for(var j = 0; j < _clItems.length; j++){
+        if(_clItems[j].k === k){ missing.push(payText(_clItems[j].ar, _clItems[j].en)); }
+      }
+    }
+  }
+
+  // النقص مسموحٌ بسببٍ مكتوب فقط — وإلا فالقائمة إلزامية
+  var skipped = false;
+  if(missing.length){
+    if(_clSkipAllowed && skipBox.open && skipReason){
+      skipped = true;
+    } else {
+      showToast(t('clMiss') + missing[0] +
+        (missing.length > 1 ? ' (+' + (missing.length - 1) + ')' : '') + t('clMissTail'));
+      return;
+    }
+  }
+
+  /* زيارة الإصلاح بلا وصفٍ للخلل لا تُغلق: بعد شهرٍ لا يُعرف ما أُصلح،
+     ولا يُحتجّ بها في ضمانٍ ولا يُراجَع بها عطلٌ عاد. */
+  var noteTxt = String(document.getElementById('clNote').value || '').trim();
+  if(window.AtwadClosing && window.AtwadClosing.needsNote(_clKind) && noteTxt.length < 3){
+    showToast(t('clNeedNote'));
+    document.getElementById('clNote').focus();
+    return;
+  }
+
+  _closingData = {
+    checks: checks,
+    kind: _clKind,
+    complete: !missing.length,
+    skipped: skipped,
+    skipReason: skipped ? skipReason : '',
+    tech: currentTech || (a && a.tech) || '',
+    units: parseInt(a && a.units, 10) || 1,
+    note: noteTxt,
+    at: new Date().toISOString()
+  };
+
+  document.getElementById('clOv').classList.remove('show');
+  openPaySheet(_payCtx.id, _payCtx.source, _payCtx.fbKey);
+}
+
+function openPaySheet(id, source, fbKey){
+  var a = allAppts.find(function(x){
+    return x.id === id || x._fbKey === id || ('B_' + x._fbKey) === id;
+  });
+  _payCtx = { id: id, source: source, fbKey: fbKey, appt: a || null };
+
+  var client = (a && a.client) || '—';
+  var svc    = (a && a.service) || '';
+  document.getElementById('payTitle').textContent =
+    payText('المبلغ المستلم', 'Amount received');
+  document.getElementById('payWho').textContent =
+    client + (svc ? ' · ' + svc : '');
+  document.getElementById('payLbl').textContent = payText('ريال', 'SAR');
+  document.getElementById('payCash').textContent  = payText('💵 نقداً', '💵 Cash');
+  document.getElementById('payTrans').textContent = payText('🏦 تحويل', '🏦 Transfer');
+  document.getElementById('payNone').textContent  = payText('⏳ لم يُدفع — دَيْن', '⏳ Not paid — debt');
+  document.getElementById('payCancel').textContent = payText('إلغاء', 'Cancel');
+
+  var amtEl = document.getElementById('payAmt');
+  amtEl.value = '';
+  document.getElementById('payOv').classList.add('show');
+
+  loadTxCache().then(function(){
+    var hit = findOpenTx(client, (a && a.date) || '',
+      (source === 'bookings') ? fbKey : '');
+    if(hit && !amtEl.value){ amtEl.value = parseFloat(hit.v.amount) || ''; }
+    amtEl.focus();
+  });
+}
+
+function closePaySheet(){
+  document.getElementById('payOv').classList.remove('show');
+  _payCtx = null;
+  _closingData = null;
+}
+
+function submitPay(method){
+  if(!_payCtx) return;
+  if(!db) { showToast(t('tNoFb')); closePaySheet(); return; }
+
+  var amt = parseFloat(document.getElementById('payAmt').value);
+  if(!(amt > 0)){
+    showToast(payText('⚠️ اكتب المبلغ أولاً', '⚠️ Enter the amount first'));
+    document.getElementById('payAmt').focus();
+    return;
+  }
+
+  var ctx = _payCtx;
+  var a = ctx.appt || {};
+  var client = a.client || '—';
+  var date = a.date || new Date().toISOString().split('T')[0];
+  var paid = (method !== 'none');
+
+  var tx = {
+    type: 'income',
+    amount: amt,
+    date: date,
+    party: client,
+    // الهاتف هو مفتاح ربط الدَّيْن بصاحبه — الاسم وحده يُخطئ
+    phone: String((a && a.phone) || ''),
+    desc: (a.service || 'زيارة صيانة') + ' - ' + client,
+    category: 'خدمة',
+    method: (method === 'transfer') ? 'تحويل' : 'كاش',
+    status: paid ? 'مدفوع' : 'مؤجل',
+    paidAmount: paid ? amt : 0,
+    payments: [],
+    source: 'technician',
+    createdBy: (a.tech === 'Abrar' || a.tech === 'أبرار') ? 'أحمد' : (a.tech || 'أحمد'),
+    createdAt: new Date().toISOString()
+  };
+  if(!paid){
+    tx.dueType = 'open';
+    tx.paymentNote = 'لم يُدفع عند إتمام الزيارة — سجّله الفني';
+  }
+
+  // علامة الحجز تمنع زرّ «استيراد إيرادات الحجوزات» من إنشاء قيد ثانٍ لاحقاً
+  var bookingKey = (ctx.source === 'bookings') ? ctx.fbKey : '';
+  if(bookingKey) tx.firebaseRef = bookingKey;
+
+  var hit = findOpenTx(client, date, bookingKey);
+  var txPath = hit ? ('transactions/' + hit.key) : ('transactions/' + db.ref('transactions').push().key);
+  if(!hit){ tx.id = 'F' + Date.now().toString().slice(-7); }
+
+  var apptPath = (ctx.source === 'bookings' ? 'bookings/' : 'appointments/') + ctx.fbKey;
+
+  var updates = {};
+  updates[apptPath + '/status'] = 'done';
+  if(_closingData){
+    updates[apptPath + '/closing'] = _closingData;
+    updates[apptPath + '/closingTech'] = _closingData.tech || '';
+    updates[apptPath + '/closingComplete'] = !!_closingData.complete;
+  }
+  for(var k in tx){
+    if(Object.prototype.hasOwnProperty.call(tx, k)){ updates[txPath + '/' + k] = tx[k]; }
+  }
+
+  var btns = document.querySelectorAll('.pay-btn');
+  for(var i = 0; i < btns.length; i++){ btns[i].disabled = true; }
+
+  db.ref().update(updates).then(function(){
+    if(hit){ hit.v.status = tx.status; hit.v.paidAmount = tx.paidAmount; }
+    else if(_txCache){ _txCache.push({ key: txPath.split('/')[1], v: tx }); }
+    for(var j = 0; j < btns.length; j++){ btns[j].disabled = false; }
+    closePaySheet();
+    finishDoneUI(ctx.id);
+    showToast(paid
+      ? payText('✅ تمّ — سُجّل ' + amt + ' ريال', '✅ Done — ' + amt + ' SAR recorded')
+      : payText('📌 سُجّل كدَيْن على ' + client, '📌 Recorded as debt for ' + client));
+  }).catch(function(e){
+    for(var j2 = 0; j2 < btns.length; j2++){ btns[j2].disabled = false; }
+    showToast(t('tErr') + e.message);
+  });
+}
+
+function finishDoneUI(id){
+  const card = document.getElementById('card-' + id);
+  if(card) {
+    card.className = 'appt-card done';
+    const badge = card.querySelector('.status-badge');
+    if(badge) { badge.className='status-badge badge-done'; badge.textContent=statusLabel('done'); }
+    const doneBtn = card.querySelector('.btn-done');
+    if(doneBtn) { doneBtn.disabled=true; doneBtn.textContent=t('completed'); }
+  }
+  const a = allAppts.find(x => (x.id===id || x._fbKey===id || ('B_'+x._fbKey)===id));
+  if(a) a.status = 'done';
+  updateStats();
+}
+
+function markDone(id, source, fbKey) {
+  if(!db) { showToast(t('tNoFb')); return; }
+  // فحص المركبة قبل كل شيء — يُفعَّل بمفتاح الإعدادات وحده.
+  // الوضع الافتراضي تنبيهٌ فقط، فلا يُعطَّل عمل الفني قبل أن تقرر ذلك الإدارة.
+  if(VEH_SET.enforce === 'block' && !vehCheckDone()){
+    showToast(t('vehBlock'));
+    var w = document.getElementById('vehWrap');
+    if(w && w.scrollIntoView) w.scrollIntoView({ behavior:'smooth', block:'center' });
+    return;
+  }
+  // القائمة أولاً، ثم القبض — لا يُسجَّل قبضٌ بلا فحص
+  openClosingModal(id, source, fbKey);
+}
+
+// المسار القديم — يُبقى للرجوع إليه إن لزم (لا يُستدعى الآن)
+function markDoneNoPayment(id, source, fbKey) {
+  if(!db) { showToast(t('tNoFb')); return; }
+  if(!confirm(t('confirmDone'))) return;
+
+  const ref = source === 'bookings' ? 'bookings/' + fbKey : 'appointments/' + fbKey;
+  db.ref(ref).update({status: 'done'})
+    .then(() => {
+      // تحديث البطاقة محلياً
+      const card = document.getElementById('card-' + id);
+      if(card) {
+        card.className = 'appt-card done';
+        const badge = card.querySelector('.status-badge');
+        if(badge) { badge.className='status-badge badge-done'; badge.textContent=statusLabel('done'); }
+        const doneBtn = card.querySelector('.btn-done');
+        if(doneBtn) { doneBtn.disabled=true; doneBtn.textContent=t('completed'); }
+      }
+      // تحديث الإحصاء
+      const a = allAppts.find(x => (x.id===id || x._fbKey===id || ('B_'+x._fbKey)===id));
+      if(a) a.status = 'done';
+      updateStats();
+      showToast(t('tDone'));
+    })
+    .catch(e => showToast(t('tErr') + e.message));
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ربط أزرار ورقة القبض
+document.getElementById('payCash').addEventListener('click', function(){ submitPay('cash'); });
+document.getElementById('payTrans').addEventListener('click', function(){ submitPay('transfer'); });
+document.getElementById('payNone').addEventListener('click', function(){ submitPay('none'); });
+document.getElementById('payCancel').addEventListener('click', closePaySheet);
+bindClosingButtons();
+document.getElementById('payOv').addEventListener('click', function(ev){
+  if(ev.target === this) closePaySheet();
+});
+
+// تهيئة
+updateDate();
+
+
+/* ============================================================
+   فحص المركبة الأسبوعي
+   المسارات: vehicles (بطاقة المركبة) / vehicleChecks/<id>/<أسبوع>
+             vehicleSettings (حدود الصيانة ودرجة الإلزام)
+   الأسبوع يبدأ السبت — بداية أسبوع العمل في السعودية.
+   ============================================================ */
+var VEH_LIST = {};                 // id -> بيانات المركبة
+var VEH_SET  = { oilKm:5000, warnKm:500, enforce:'notify' };
+var VEH_CHECKS = {};               // id -> { أسبوع: سجل }
+
+/* مفتاح الأسبوع: YYYY-Www محسوباً من سبتٍ إلى جمعة بتوقيت الرياض */
+function vehWeekKey(){
+  var d;
+  try{
+    d = new Date(new Intl.DateTimeFormat('en-CA',{ timeZone:'Asia/Riyadh',
+      year:'numeric', month:'2-digit', day:'2-digit' }).format(new Date()));
+  } catch(e){
+    d = new Date(Date.now() + 3*3600*1000);
+  }
+  var day = d.getDay();                       // 0 أحد .. 6 سبت
+  var back = (day + 1) % 7;                   // المسافة رجوعاً إلى السبت
+  var sat = new Date(d.getTime() - back*86400000);
+  var y = sat.getFullYear();
+  var start = new Date(y, 0, 1);
+  var wk = Math.ceil(((sat - start) / 86400000 + start.getDay() + 1) / 7);
+  return y + '-W' + (wk < 10 ? '0' + wk : wk);
+}
+
+/* المركبة المسندة للفني: مطابقة الاسم في حقل driver، وإلا كل المركبات */
+function vehForTech(){
+  var out = [];
+  var who = String(currentTechAr || currentTech || '').trim();
+  for(var id in VEH_LIST){
+    if(!Object.prototype.hasOwnProperty.call(VEH_LIST, id)) continue;
+    var v = VEH_LIST[id];
+    if(v.active === false) continue;
+    var drv = String(v.driver || '');
+    if(!who || !drv || drv.indexOf(who) !== -1) out.push(id);
+  }
+  return out;
+}
+
+function vehEsc(x){
+  return String(x == null ? '' : x)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function vehNum(x){ var n = Number(x); return isFinite(n) ? n : 0; }
+
+/* هل سُجِّل فحص هذا الأسبوع لكل المركبات المسندة؟ */
+function vehCheckDone(){
+  var ids = vehForTech();
+  if(!ids.length) return true;                // لا مركبة = لا إلزام
+  var wk = vehWeekKey();
+  for(var i = 0; i < ids.length; i++){
+    var c = VEH_CHECKS[ids[i]];
+    if(!c || !c[wk]) return false;
+  }
+  return true;
+}
+
+function vehRender(){
+  var wrap = document.getElementById('vehWrap');
+  if(!wrap) return;
+  var ids = vehForTech();
+  if(!ids.length){ wrap.innerHTML = ''; return; }
+
+  var wk = vehWeekKey();
+  var html = '';
+  for(var i = 0; i < ids.length; i++){
+    var id = ids[i], v = VEH_LIST[id];
+    var done = !!(VEH_CHECKS[id] && VEH_CHECKS[id][wk]);
+
+    // حالة الزيت تُعرض للفني ليعرف لماذا يُطلب منه الفحص
+    var odo = vehNum(v.odometer), oil = vehNum(v.lastOilKm);
+    var left = (odo && oil) ? (VEH_SET.oilKm - (odo - oil)) : null;
+    var cls = done ? '' : 'soon';
+    var pill = done ? 'vp-ok' : 'vp-soon';
+    var pillTxt = done ? t('vehOk') : t('vehDue');
+    if(left !== null && left <= 0){ cls = 'late'; pill = 'vp-late'; pillTxt = t('vehLate'); }
+
+    var sub = vehEsc(v.name || '');
+    if(v.plate) sub += ' · ' + vehEsc(v.plate);
+    if(left !== null){
+      sub += ' · ' + (left > 0
+        ? (LANG === 'ar' ? 'للزيت ' + left.toLocaleString('en-US') + ' كم'
+                         : left.toLocaleString('en-US') + ' km to oil')
+        : (LANG === 'ar' ? '⛔ تجاوز الزيت ' + (-left).toLocaleString('en-US') + ' كم'
+                         : '⛔ oil overdue by ' + (-left).toLocaleString('en-US') + ' km'));
+    }
+
+    html += '<div class="veh-card ' + cls + '">' +
+      '<div class="veh-h"><div><div class="veh-t">' + t('vehTitle') + '</div>' +
+      '<div class="veh-s">' + sub + '</div></div>' +
+      '<span class="veh-pill ' + pill + '">' + pillTxt + '</span></div>';
+
+    if(!done){
+      html += '<div class="veh-ck">' +
+        vehBox(id,'oil',   t('vehOil')) +
+        vehBox(id,'water', t('vehWater')) +
+        vehBox(id,'tires', t('vehTires')) +
+        vehBox(id,'sound', t('vehSound')) +
+      '</div>' +
+      '<div class="veh-odo"><input type="number" inputmode="numeric" id="vehOdo-' + vehEsc(id) + '" placeholder="' + t('vehOdoPh') + '" value="' + (odo || '') + '"></div>' +
+      '<textarea class="veh-note" id="vehNote-' + vehEsc(id) + '" placeholder="' + t('vehNotePh') + '"></textarea>' +
+      '<button class="veh-btn" id="vehBtn-' + vehEsc(id) + '" data-veh="' + vehEsc(id) + '">' + t('vehSave') + '</button>' +
+      '<div class="veh-msg" id="vehMsg-' + vehEsc(id) + '"></div>';
+    }
+    html += '</div>';
+  }
+  wrap.innerHTML = html;
+
+  var btns = wrap.querySelectorAll('button[data-veh]');
+  for(var b = 0; b < btns.length; b++){
+    btns[b].addEventListener('click', function(ev){
+      vehSaveCheck(ev.currentTarget.getAttribute('data-veh'));
+    });
+  }
+  var boxes = wrap.querySelectorAll('.ck input');
+  for(var c = 0; c < boxes.length; c++){
+    boxes[c].addEventListener('change', function(ev){
+      var lab = ev.currentTarget.parentNode;
+      if(ev.currentTarget.checked) lab.classList.add('on');
+      else lab.classList.remove('on');
+    });
+  }
+}
+
+function vehBox(id, key, label){
+  return '<label class="ck"><input type="checkbox" id="vehCk-' + vehEsc(id) + '-' + key + '"><span>' +
+         vehEsc(label) + '</span></label>';
+}
+
+function vehSaveCheck(id){
+  var btn  = document.getElementById('vehBtn-' + id);
+  var msgEl = document.getElementById('vehMsg-' + id);
+  var odoEl = document.getElementById('vehOdo-' + id);
+  var noteEl = document.getElementById('vehNote-' + id);
+  if(!btn || !odoEl) return;
+
+  function fail(txt){ msgEl.className = 'veh-msg bad'; msgEl.textContent = txt; }
+
+  var odo = vehNum(odoEl.value);
+  if(odo <= 0){ fail(t('vehNeedOdo')); return; }
+
+  var v = VEH_LIST[id] || {};
+  if(vehNum(v.odometer) && odo < vehNum(v.odometer)){ fail(t('vehOdoLess')); return; }
+
+  var keys = ['oil','water','tires','sound'];
+  var items = {}, allOk = true;
+  for(var i = 0; i < keys.length; i++){
+    var el = document.getElementById('vehCk-' + id + '-' + keys[i]);
+    var on = !!(el && el.checked);
+    items[keys[i]] = on;
+    if(!on) allOk = false;
+  }
+  var note = String(noteEl ? noteEl.value : '').trim();
+  // بندٌ غير سليم يلزمه سببٌ مكتوب — وإلا صار التعليم بلا معنى
+  if(!allOk && !note){ fail(t('vehNeedAll')); return; }
+
+  if(!db){ fail(t('vehFail') + 'no db'); return; }
+
+  var wk = vehWeekKey();
+  var rec = {
+    week: wk,
+    date: today(),
+    odometer: odo,
+    items: items,
+    allOk: allOk,
+    note: note,
+    by: currentTechAr || currentTech || 'فني',
+    at: new Date().toISOString()
+  };
+
+  var updates = {};
+  for(var k in rec){
+    if(Object.prototype.hasOwnProperty.call(rec, k)){
+      updates['vehicleChecks/' + id + '/' + wk + '/' + k] = rec[k];
+    }
+  }
+  if(odo > vehNum(v.odometer)) updates['vehicles/' + id + '/odometer'] = odo;
+
+  btn.disabled = true;
+  db.ref().update(updates).then(function(){
+    btn.disabled = false;
+    if(!VEH_CHECKS[id]) VEH_CHECKS[id] = {};
+    VEH_CHECKS[id][wk] = rec;
+    if(odo > vehNum(v.odometer)){ v.odometer = odo; VEH_LIST[id] = v; }
+    showToast(t('vehSaved'));
+    vehRender();
+  }).catch(function(err){
+    btn.disabled = false;
+    fail(t('vehFail') + err.message);
+  });
+}
+
+function vehLoad(){
+  if(!db) return;
+  db.ref('vehicleSettings').once('value').then(function(snap){
+    var x = snap.val();
+    if(x){
+      VEH_SET.oilKm   = vehNum(x.oilKm)  || VEH_SET.oilKm;
+      VEH_SET.warnKm  = vehNum(x.warnKm) || VEH_SET.warnKm;
+      VEH_SET.enforce = x.enforce || VEH_SET.enforce;
+    }
+    return db.ref('vehicles').once('value');
+  }).then(function(snap){
+    VEH_LIST = snap.val() || {};
+    return db.ref('vehicleChecks').once('value');
+  }).then(function(snap){
+    VEH_CHECKS = snap.val() || {};
+    vehRender();
+  }).catch(function(err){
+    // لا نُعطّل عمل الفني إن تعذّر تحميل المركبات
+    console.warn('[vehicles] تعذّر التحميل:', err && err.message);
+  });
+}
+
+/* ===== قراءة العداد اليومية =====
+   تُحفظ في odometerLogs/<التاريخ>، وتُقارن الإدارة الفرق بين يومين
+   بالمسار التقديري لمواعيد اليوم على الخريطة. */
+var _lastOdo = null;   // آخر قراءة قبل اليوم: {date, reading}
+
+function loadLastOdometer(){
+  if(!db) return;
+  db.ref('odometerLogs').orderByKey().limitToLast(10).once('value').then(function(snap){
+    var tday = today(), prev = null, todays = null;
+    snap.forEach(function(c){
+      var v = c.val() || {};
+      if(c.key < tday) prev = { date:c.key, reading:Number(v.reading) };
+      if(c.key === tday) todays = Number(v.reading);
+    });
+    _lastOdo = prev;
+    var el = document.getElementById('odoLast');
+    if(!el) return;
+    if(todays !== null){
+      el.innerHTML = t('odoToday') + '<b>' + todays.toLocaleString('en-US') + '</b>' + t('odoEdit');
+      document.getElementById('odoInput').value = todays;
+    } else if(prev){
+      el.innerHTML = t('odoLast') + '<b>' + prev.reading.toLocaleString('en-US') + '</b>' + t('odoOn') + prev.date;
+    }
+  }).catch(function(err){ console.error('odometer read:', err); });
+}
+
+function saveOdometer(){
+  var input = document.getElementById('odoInput');
+  var btn = document.getElementById('odoBtn');
+  var msg = document.getElementById('odoMsg');
+  var val = Number(input.value);
+
+  msg.className = 'odo-msg';
+  if(!input.value || !isFinite(val) || val <= 0){
+    msg.className = 'odo-msg bad'; msg.textContent = t('odoBad'); return;
+  }
+  if(_lastOdo && val < _lastOdo.reading){
+    msg.className = 'odo-msg bad';
+    msg.textContent = t('odoLess1') + _lastOdo.reading.toLocaleString('en-US') + t('odoLess2');
+    return;
+  }
+  if(_lastOdo && val - _lastOdo.reading > 600){
+    if(!confirm(t('odoBig1') + (val - _lastOdo.reading) + t('odoBig2'))) return;
+  }
+  if(!db){ msg.className = 'odo-msg bad'; msg.textContent = t('odoNoDb'); return; }
+
+  btn.disabled = true; btn.textContent = '⏳';
+  db.ref('odometerLogs/' + today()).set({
+    reading: val,
+    at: new Date().toISOString(),
+    by: currentTechAr || currentTech || 'فني'
+  }).then(function(){
+    btn.disabled = false; btn.textContent = t('save');
+    var km = _lastOdo ? (val - _lastOdo.reading) : null;
+    msg.className = 'odo-msg ok';
+    msg.textContent = t('odoSaved') + (km !== null ? t('odoKm') + km + t('km') : '');
+    loadLastOdometer();
+  }).catch(function(err){
+    btn.disabled = false; btn.textContent = t('save');
+    msg.className = 'odo-msg bad'; msg.textContent = t('odoFail') + err.message;
+  });
+}
+applyStaticLang();
+/* حساب الفني الميداني — تُفتح له الصفحة إنجليزيةً، وتبقى عربيةً لحساب الإدارة.
+   وأيُّهما بدّل اللغة بالزر حُفظ اختياره لجهازه فلا يُنقَض بعدها. */
+var TECH_UID = '0zGIJyaLAjSrLOzSRt2YaDUe4xv2';
+
+/* الحساب المسجَّل — يُحفظ ليُعاد رسم البيان عند تبديل اللغة */
+var _acctUser = null;
+
+/** يرسم بيان الحساب في رأس الصفحة، ويُحذّر إن لم يكن حساب الفني */
+function renderAcctBar(){
+  var bar = document.getElementById('acctBar');
+  var warn = document.getElementById('acctWarn');
+  if(!bar) return;
+  if(!_acctUser){
+    bar.style.display = 'none';
+    if(warn) warn.style.display = 'none';
+    return;
+  }
+  bar.style.display = 'flex';
+  document.getElementById('acctLbl').textContent  = t('acctLbl');
+  document.getElementById('acctMail').textContent = _acctUser.email || '—';
+  document.getElementById('acctOut').textContent  = t('acctOut');
+  /* الحساب الخطأ يُقال صراحةً: العمل بحساب المؤسسة يمرّ بلا خطأ، فلا
+     ينتبه له أحد إلا حين تُراجَع الإحصاءات بعد شهر. */
+  if(warn){
+    if(_acctUser.uid === TECH_UID){
+      warn.style.display = 'none';
+    } else {
+      /* باللغتين معاً: حين يحمل أحمد الجوال وفيه حسابُ المؤسسة تبقى
+         الصفحة عربيةً، فتحذيرٌ بالعربية وحدها لا يبلغه — وهي الحالة
+         التي أُنشئ هذا التحذير من أجلها. */
+      warn.innerHTML = '<div>' + I18N.ar.acctWrong + '</div>' +
+                       '<div style="direction:ltr;text-align:left;margin-top:6px;">' +
+                       I18N.en.acctWrong + '</div>';
+      warn.style.display = 'block';
+    }
+  }
+}
+
+/** خروجٌ من داخل الصفحة — أوضح من زرّ atwad-auth.js أسفل الشاشة */
+function techSignOut(){
+  if(!window.confirm(t('acctConfirm'))) return;
+  if(!window.auth || typeof window.auth.signOut !== 'function'){
+    console.error('[technician] لا نظام دخول — تعذّر الخروج');
+    return;
+  }
+  if(typeof window.__atwadCleanup === 'function') window.__atwadCleanup();
+  window.auth.signOut().then(function(){
+    window.location.reload();
+  }).catch(function(err){
+    console.error('[technician] تعذّر الخروج:', err);
+  });
+}
+
+window.__atwadInitPage = function(user) {
+  console.log("[technician] مسجّل:", user && user.email);
+  _acctUser = user || null;
+  if(user && user.uid === TECH_UID && !LANG_CHOSEN){
+    LANG = 'en';
+    applyStaticLang();
+    updateDate();
+  }
+  renderAcctBar();
+  if(typeof syncFromFirebase === "function") syncFromFirebase();
+  else if(typeof loadData === "function") loadData();
+  loadLastOdometer();
+  vehLoad();
+};
+
+</script>

@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>أطواد — مصروف البنزين</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
+:root{
+  --deep:#0C3B5E; --steel:#1E5F8A; --sky:#0EA5E9; --ice:#E8F4FD; --frost:#F0F9FF;
+  --slate:#334155; --mist:#94A3B8; --line:#E2E8F0;
+  --success:#10B981; --warning:#F59E0B; --danger:#EF4444;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);padding-bottom:50px;}
+.header{background:linear-gradient(135deg,var(--deep),var(--steel),var(--sky));color:#fff;padding:20px 18px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:nowrap;}
+.header > div{min-width:0;}
+.header h1{font-size:19px;font-weight:900;}
+.header p{font-size:12px;opacity:.85;margin-top:4px;}
+.lang{background:rgba(255,255,255,.16);border:1.5px solid rgba(255,255,255,.35);color:#fff;
+  font-family:'Tajawal',sans-serif;font-weight:800;font-size:13px;padding:7px 14px;border-radius:9px;cursor:pointer;
+  white-space:nowrap;flex-shrink:0;min-width:76px;}
+.lang:hover{background:rgba(255,255,255,.26);}
+.wrap{max-width:880px;margin:0 auto;padding:0 14px;}
+
+.month-bar{background:#fff;border-radius:14px;box-shadow:0 2px 10px rgba(12,59,94,.07);
+  margin-top:-14px;padding:12px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.month-bar label{font-size:13px;font-weight:700;color:var(--deep);}
+.month-bar input[type=month]{font-family:'Tajawal',sans-serif;font-size:14px;padding:8px 10px;
+  border:1.5px solid var(--line);border-radius:9px;color:var(--slate);}
+.spacer{flex:1;}
+.ghost{background:#fff;border:1.5px solid var(--line);color:var(--slate);font-family:'Tajawal',sans-serif;
+  font-weight:700;font-size:13px;padding:8px 14px;border-radius:9px;cursor:pointer;}
+.ghost:hover{border-color:var(--sky);color:var(--deep);}
+
+.total-card{background:linear-gradient(135deg,var(--deep),var(--steel));color:#fff;border-radius:16px;
+  padding:22px;margin-top:14px;display:flex;align-items:flex-end;gap:18px;flex-wrap:wrap;}
+.total-card .big{font-size:46px;font-weight:900;line-height:1;letter-spacing:-1px;}
+.total-card .cur{font-size:16px;font-weight:700;opacity:.75;margin-inline-start:6px;}
+.total-card .lbl{font-size:13px;opacity:.8;margin-bottom:8px;}
+.total-card .delta{margin-inline-start:auto;font-size:13px;font-weight:700;background:rgba(255,255,255,.14);
+  padding:7px 12px;border-radius:9px;}
+
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px;}
+.stat{background:#fff;border-radius:12px;padding:13px;text-align:center;box-shadow:0 1px 6px rgba(12,59,94,.06);}
+.stat b{display:block;font-size:20px;font-weight:900;color:var(--deep);}
+.stat span{font-size:11px;color:var(--mist);}
+
+.card{background:#fff;border-radius:14px;box-shadow:0 2px 10px rgba(12,59,94,.06);padding:16px;margin-top:14px;}
+.card h2{font-size:15px;font-weight:800;color:var(--deep);margin-bottom:12px;}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;}
+.field{display:flex;flex-direction:column;gap:5px;flex:1;min-width:130px;}
+.field label{font-size:12px;font-weight:700;color:var(--mist);}
+.field input{font-family:'Tajawal',sans-serif;font-size:15px;padding:10px 12px;border:1.5px solid var(--line);
+  border-radius:10px;color:var(--slate);background:var(--frost);}
+.field input:focus{outline:2px solid var(--sky);outline-offset:1px;border-color:var(--sky);}
+.add{background:var(--deep);color:#fff;border:none;font-family:'Tajawal',sans-serif;font-weight:800;
+  font-size:15px;padding:11px 26px;border-radius:10px;cursor:pointer;}
+.add:hover{background:var(--steel);}
+.quick{width:100%;margin-top:12px;background:var(--frost);border:1.5px dashed var(--sky);color:var(--deep);
+  font-family:'Tajawal',sans-serif;font-weight:800;font-size:15px;padding:13px;border-radius:11px;cursor:pointer;}
+.quick:hover{background:var(--ice);}
+.hint{font-size:12px;color:var(--mist);margin-top:9px;}
+
+.days{display:flex;align-items:flex-end;gap:3px;height:120px;margin-top:6px;overflow-x:auto;padding-bottom:4px;}
+.day{flex:1;min-width:9px;display:flex;flex-direction:column;justify-content:flex-end;height:100%;}
+.bar{background:var(--sky);border-radius:3px 3px 0 0;min-height:2px;}
+.bar.zero{background:var(--line);}
+.bar.top{background:var(--deep);}
+.daynum{font-size:9px;color:var(--mist);text-align:center;margin-top:3px;}
+
+table{width:100%;border-collapse:collapse;margin-top:4px;}
+th{text-align:start;font-size:12px;color:var(--mist);font-weight:700;padding:8px 10px;border-bottom:1.5px solid var(--line);}
+td{padding:11px 10px;border-bottom:1px solid #F1F5F9;font-size:14px;}
+td.amt{font-weight:800;color:var(--deep);}
+tr:last-child td{border-bottom:none;}
+.del{background:none;border:none;color:var(--danger);font-size:16px;cursor:pointer;padding:2px 6px;border-radius:6px;}
+.del:hover{background:#FEE2E2;}
+.empty{text-align:center;padding:34px 16px;color:var(--mist);font-size:14px;}
+
+.cmp-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #F1F5F9;}
+.cmp-row:last-child{border-bottom:none;}
+.cmp-date{font-size:12px;color:var(--mist);min-width:74px;}
+.cmp-track{flex:1;background:#F1F5F9;border-radius:6px;height:22px;position:relative;overflow:hidden;}
+.cmp-fill{height:100%;border-radius:6px;background:var(--sky);}
+.cmp-fill.best{background:var(--success);}
+.cmp-fill.worst{background:var(--warning);}
+.cmp-km{position:absolute;inset-inline-start:8px;top:0;line-height:22px;font-size:12px;font-weight:800;color:#fff;}
+.cmp-diff{font-size:12px;font-weight:700;min-width:62px;text-align:end;}
+.cmp-up{color:var(--success);} .cmp-down{color:var(--warning);}
+.cmp-avg{font-size:12px;color:var(--mist);margin-bottom:10px;}
+
+.warnbox{background:#FEF3C7;border:1.5px solid #FCD34D;color:#92400E;border-radius:11px;
+  padding:11px 14px;font-size:13px;font-weight:700;margin-top:12px;}
+@media(max-width:640px){
+  .stats{grid-template-columns:repeat(2,1fr);}
+  .total-card .big{font-size:38px;}
+  .total-card .delta{margin-inline-start:0;}
+}
+@media print{ body{background:#fff;} .month-bar,.card.entry,.del,.ghost,.lang{display:none;} }
+  .connpill{font-size:12px;font-weight:700;padding:5px 12px;border-radius:99px;
+    background:rgba(255,255,255,.18);color:#fff;white-space:nowrap;}
+  .connpill.bad{background:#FEE2E2;color:#991B1B;}
+  .connpill.warn{background:#FEF3C7;color:#78350F;}
+</style>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="atwad-firebase.js"></script>
+<script src="atwad-auth.js"></script>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1 data-i18n="title">مصروف البنزين</h1>
+    <p data-i18n="subtitle">مؤسسة أطواد — تسجيل يومي وحساب شهري</p>
+  </div>
+  <div style="display:flex;gap:9px;align-items:center;">
+    <span class="connpill" id="connPill">…</span>
+    <button class="lang" id="langBtn" onclick="toggleLang()">English</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="month-bar">
+    <label for="monthPick" data-i18n="month">الشهر</label>
+    <input type="month" id="monthPick" onchange="render()">
+    <label for="vehFilter" data-i18n="vehicle">المركبة</label>
+    <select id="vehFilter" onchange="render()"
+      style="font-family:'Tajawal',sans-serif;font-size:14px;padding:8px 10px;
+             border:1.5px solid var(--line);border-radius:9px;color:var(--slate);background:#fff;">
+      <option value="">كل المركبات</option>
+    </select>
+    <span class="spacer"></span>
+    <button class="ghost" onclick="exportCsv()" data-i18n="export">تنزيل ملف إكسل</button>
+    <button class="ghost" onclick="window.print()" data-i18n="print">طباعة</button>
+  </div>
+
+  <div class="total-card">
+    <div>
+      <div class="lbl" id="monthLabel"></div>
+      <div><span class="big" id="monthTotal">0</span><span class="cur" id="curLabel">ريال</span></div>
+    </div>
+    <div class="delta" id="deltaBox"></div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><b id="sAvgDay">0</b><span data-i18n="avgDay">متوسط اليوم</span></div>
+    <div class="stat"><b id="sCount">0</b><span data-i18n="fills">عدد التعبئات</span></div>
+    <div class="stat"><b id="sAvgFill">0</b><span data-i18n="avgFill">متوسط التعبئة</span></div>
+    <div class="stat"><b id="sForecast">0</b><span data-i18n="forecast">توقع نهاية الشهر</span></div>
+    <div class="stat"><b id="sKm">0</b><span data-i18n="kmMonth">كيلومترات الشهر</span></div>
+    <div class="stat"><b id="sCostKm">—</b><span data-i18n="costKm">تكلفة الكيلومتر</span></div>
+    <div class="stat"><b id="sKmFill">—</b><span data-i18n="kmPerFill">كم لكل تعبئة</span></div>
+    <div class="stat"><b id="sVisits">—</b><span data-i18n="visits">زيارات الشهر</span></div>
+    <div class="stat"><b id="sKmVisit">—</b><span data-i18n="kmPerVisit">كم لكل زيارة</span></div>
+    <div class="stat"><b id="sCostVisit">—</b><span data-i18n="costPerVisit">وقود الزيارة</span></div>
+  </div>
+
+  <div class="card entry">
+    <h2 data-i18n="logFill">تسجيل تعبئة</h2>
+    <div class="row">
+      <div class="field">
+        <label for="fVeh" data-i18n="vehicle">المركبة</label>
+        <select id="fVeh" style="font-family:'Tajawal',sans-serif;font-size:15px;padding:10px 12px;
+          border:1.5px solid var(--line);border-radius:10px;color:var(--slate);background:var(--frost);">
+        </select>
+      </div>
+      <div class="field">
+        <label for="fDate" data-i18n="date">التاريخ</label>
+        <input type="date" id="fDate">
+      </div>
+      <div class="field">
+        <label for="fAmount" data-i18n="amount">المبلغ بالريال</label>
+        <input type="number" id="fAmount" min="1" step="1" inputmode="decimal" value="100">
+      </div>
+      <div class="field">
+        <label for="fOdo" data-i18n="odometer">عداد الكيلومترات</label>
+        <input type="number" id="fOdo" min="0" step="1" inputmode="numeric" placeholder="370980">
+      </div>
+      <div class="field">
+        <label for="fNote" data-i18n="note">ملاحظة (اختياري)</label>
+        <input type="text" id="fNote" maxlength="60">
+      </div>
+      <button class="add" onclick="addEntry()" data-i18n="addBtn">إضافة</button>
+    </div>
+    <button class="quick" onclick="quickFill()" data-i18n="quickBtn">تسجيل تعبئة 100 ريال اليوم</button>
+    <p class="hint" data-i18n="hint">التعبئة المعتادة 100 ريال. سجّل قراءة العداد عند كل تعبئة لتُحسب المسافة وتكلفة الكيلومتر.</p>
+  </div>
+
+  <div class="card">
+    <h2 data-i18n="dailySpend">الصرف اليومي</h2>
+    <div class="days" id="daysStrip"></div>
+  </div>
+
+  <div class="card">
+    <h2 data-i18n="compare">مقارنة التعبئات</h2>
+    <div id="compareBox"></div>
+  </div>
+
+  <div class="card">
+    <h2 data-i18n="log">السجل</h2>
+    <div id="tableBox"></div>
+  </div>
+
+  <div id="storageWarn"></div>
+
+</div>
+
+<script>
+var STORE_KEY = 'atwad_fuel_v1';
+var LANG_KEY  = 'atwad_fuel_lang';
+var DEFAULT_FILL = 100;
+var entries = [];
+var storageOk = true;
+var lang = 'ar';
+
+/* ============ النصوص ============ */
+var TXT = {
+  ar: {
+    title:'مصروف البنزين', subtitle:'مؤسسة أطواد — تسجيل يومي وحساب شهري',
+    month:'الشهر', export:'تنزيل ملف إكسل', print:'طباعة',
+    avgDay:'متوسط اليوم', fills:'عدد التعبئات', avgFill:'متوسط التعبئة',
+    forecast:'توقع نهاية الشهر', kmMonth:'كيلومترات الشهر', costKm:'تكلفة الكيلومتر',
+    kmPerFill:'كم لكل تعبئة', logFill:'تسجيل تعبئة', date:'التاريخ', amount:'المبلغ بالريال',
+    odometer:'عداد الكيلومترات', note:'ملاحظة (اختياري)', addBtn:'إضافة',
+    quickBtn:'تسجيل تعبئة 100 ريال اليوم',
+    hint:'التعبئة المعتادة 100 ريال. سجّل قراءة العداد عند كل تعبئة لتُحسب المسافة وتكلفة الكيلومتر.',
+    dailySpend:'الصرف اليومي', compare:'مقارنة التعبئات', log:'السجل',
+    currency:'ريال', sar:'ر', km:'كم',
+    totalOf:'إجمالي ', noPrev:'لا توجد بيانات للشهر السابق',
+    higher:'أعلى من ', lower:'أقل من ', by:' بـ ', same:'مطابق للشهر السابق',
+    thDate:'التاريخ', thAmount:'المبلغ', thOdo:'العداد', thDist:'المسافة', thNote:'ملاحظة',
+    emptyLog:'لا توجد تعبئات في هذا الشهر. سجّل أول تعبئة من الأعلى.',
+    emptyCmp:'تحتاج تعبئتين على الأقل بقراءة عداد حتى تبدأ المقارنة.',
+    avgIs:'المتوسط ', perFill:' كم لكل تعبئة — الأخضر أفضل من المتوسط.',
+    noFill:'لا تعبئة',
+    errDate:'اختر التاريخ.', errAmount:'اكتب مبلغاً أكبر من صفر.',
+    errOdo:'قراءة العداد غير صحيحة.',
+    askBig:'المبلغ {a} ريال. هل هو صحيح؟',
+    askOdo:'العداد {a} أقل من آخر قراءة ({b}). هل تريد الحفظ رغم ذلك؟',
+    askDel:'حذف تعبئة {a} ريال بتاريخ {b}؟',
+    noExport:'لا توجد بيانات للتصدير.',
+    visits:'زيارات الشهر', kmPerVisit:'كم لكل زيارة', costPerVisit:'وقود الزيارة',
+    vehicle:'المركبة', allVeh:'كل المركبات', noVeh:'لا مركبات مسجّلة',
+    pickVeh:'اختر المركبة', thVeh:'المركبة', vehUnset:'غير محدّدة',
+    errVeh:'اختر المركبة قبل الحفظ.',
+    connOn:'متصل', connOff:'غير متصل — حفظ محلي', connErr:'خطأ اتصال', connWait:'جاري الاتصال…',
+    movedUp:'رُفعت {a} تعبئة من هذا الجهاز إلى السحابة.',
+    offlineSave:'لا يوجد اتصال — حُفظت محلياً فقط ولن تظهر عند الإدارة حتى تعود الشبكة.',
+    noStore:'المتصفح يمنع الحفظ على هذا الجهاز. البيانات ستبقى حتى إغلاق الصفحة فقط — نزّل ملف إكسل قبل الإغلاق.',
+    saveFail:'تعذر الحفظ: ',
+    months:['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'],
+    other:'English'
+  },
+  en: {
+    title:'Fuel Spending', subtitle:'Atwad — daily log and monthly total',
+    month:'Month', export:'Download Excel', print:'Print',
+    avgDay:'Daily average', fills:'Fill-ups', avgFill:'Average fill-up',
+    forecast:'Month-end forecast', kmMonth:'Kilometres this month', costKm:'Cost per km',
+    kmPerFill:'Km per fill-up', logFill:'Log a fill-up', date:'Date', amount:'Amount in SAR',
+    odometer:'Odometer reading', note:'Note (optional)', addBtn:'Add',
+    quickBtn:'Log a 100 SAR fill-up today',
+    hint:'A usual fill-up is 100 SAR. Enter the odometer each time to get distance and cost per km.',
+    dailySpend:'Daily spending', compare:'Fill-up comparison', log:'History',
+    currency:'SAR', sar:'SAR', km:'km',
+    totalOf:'Total for ', noPrev:'No data for the previous month',
+    higher:'Higher than ', lower:'Lower than ', by:' by ', same:'Same as last month',
+    thDate:'Date', thAmount:'Amount', thOdo:'Odometer', thDist:'Distance', thNote:'Note',
+    emptyLog:'No fill-ups this month. Log the first one above.',
+    emptyCmp:'Two fill-ups with odometer readings are needed before comparison starts.',
+    avgIs:'Average ', perFill:' km per fill-up — green beats the average.',
+    noFill:'no fill-up',
+    errDate:'Choose a date.', errAmount:'Enter an amount greater than zero.',
+    errOdo:'Odometer reading is not valid.',
+    askBig:'Amount is {a} SAR. Is that correct?',
+    askOdo:'Odometer {a} is lower than the last reading ({b}). Save anyway?',
+    askDel:'Delete the {a} SAR fill-up dated {b}?',
+    noExport:'Nothing to export yet.',
+    visits:'Visits this month', kmPerVisit:'Km per visit', costPerVisit:'Fuel per visit',
+    vehicle:'Vehicle', allVeh:'All vehicles', noVeh:'No vehicles registered',
+    pickVeh:'Choose vehicle', thVeh:'Vehicle', vehUnset:'Unassigned',
+    errVeh:'Choose the vehicle before saving.',
+    connOn:'Online', connOff:'Offline — saved on device', connErr:'Connection error', connWait:'Connecting…',
+    movedUp:'{a} fill-ups from this device were uploaded to the cloud.',
+    offlineSave:'No connection — saved on this device only. The office will not see it until you are back online.',
+    noStore:'This browser blocks saving on this device. Data lasts until you close the page — download the Excel file first.',
+    saveFail:'Could not save: ',
+    months:['January','February','March','April','May','June','July','August','September','October','November','December'],
+    other:'عربي'
+  }
+};
+function t(key){ return TXT[lang][key]; }
+function fill(tpl, a, b){ return String(tpl).replace('{a}', a).replace('{b}', b); }
+
+/* ============ اللغة ============ */
+function applyLang(){
+  var html = document.documentElement;
+  html.lang = lang;
+  html.dir = (lang === 'ar') ? 'rtl' : 'ltr';
+  document.title = (lang === 'ar' ? 'أطواد — ' : 'Atwad — ') + t('title');
+  var nodes = document.querySelectorAll('[data-i18n]');
+  for(var i = 0; i < nodes.length; i++){
+    nodes[i].textContent = t(nodes[i].getAttribute('data-i18n'));
+  }
+  document.getElementById('curLabel').textContent = t('currency');
+  document.getElementById('langBtn').textContent = t('other');
+  if(typeof paintVehPickers === 'function') paintVehPickers();
+  render();
+}
+function toggleLang(){
+  lang = (lang === 'ar') ? 'en' : 'ar';
+  try { window.localStorage.setItem(LANG_KEY, lang); } catch(err) { /* التخزين معطّل، واللغة تبقى لهذه الجلسة */ }
+  applyLang();
+}
+
+/* ============ التخزين ============ */
+/*
+ * كانت الصفحة تحفظ في ذاكرة المتصفح وحدها، فكانت تسجيلات الفني تبقى في
+ * جواله ولا تصل إلى الإدارة، وتضيع بتغيير الجهاز أو مسح البيانات.
+ * الآن المرجع هو قاعدة البيانات، والذاكرة المحلية نسخة احتياطية تعمل
+ * عند انقطاع الشبكة وتُرفع تلقائياً عند عودتها.
+ */
+/* ============================================================
+   المركبات: كل تعبئة تُنسب إلى مركبة.
+   السبب: distanceMap كانت تطرح قراءة مركبة من قراءة أخرى،
+   فتُنتج مسافة خيالية وتفسد تكلفة الكيلومتر. التجميع الآن
+   لكل مركبة على حدة.
+   التسجيلات القديمة بلا مركبة تُنسب إلى المركبة الافتراضية
+   المحددة في إعدادات المركبات، فلا تنقطع سلسلة المسافة.
+   ============================================================ */
+var VEHICLES   = {};     // id -> { name, plate, odometer, ... }
+var DEFAULT_VEH = '';    // vehicleSettings.defaultVehicleId
+
+function vehName(id){
+  if(!id) return t('vehUnset');
+  var v = VEHICLES[id];
+  if(!v) return t('vehUnset');
+  return String(v.name || '') + (v.plate ? ' · ' + v.plate : '');
+}
+
+/* المركبة التي تُنسب إليها التعبئة فعلياً عند الحساب */
+function vehOf(e){
+  return (e && e.vehicleId) ? e.vehicleId : (DEFAULT_VEH || '__none');
+}
+
+function paintVehPickers(){
+  var sel = document.getElementById('fVeh');
+  var flt = document.getElementById('vehFilter');
+  var ids = Object.keys(VEHICLES).filter(function(id){ return VEHICLES[id].active !== false; });
+  ids.sort(function(x,y){ return String(VEHICLES[x].name||'').localeCompare(String(VEHICLES[y].name||'')); });
+
+  /* مركبة واحدة = لا خيار. تُخفى القائمة ويُنسب التسجيل إليها تلقائياً،
+     فلا يُشغَل الفني بحقل جوابه واحد. وتظهر فور إضافة مركبة ثانية. */
+  var single = (ids.length <= 1);
+  var selField = sel ? sel.closest('.field') : null;
+  if(selField) selField.style.display = single ? 'none' : '';
+  var fltLabel = flt ? flt.previousElementSibling : null;
+  if(flt) flt.style.display = single ? 'none' : '';
+  if(fltLabel && fltLabel.tagName === 'LABEL') fltLabel.style.display = single ? 'none' : '';
+
+  if(sel){
+    var keep = sel.value;
+    var h = '';
+    if(!ids.length) h = '<option value="">' + escapeHtml(t('noVeh')) + '</option>';
+    else {
+      h = '<option value="">' + escapeHtml(t('pickVeh')) + '</option>';
+      ids.forEach(function(id){
+        h += '<option value="' + escapeHtml(id) + '">' + escapeHtml(vehName(id)) + '</option>';
+      });
+    }
+    sel.innerHTML = h;
+    if(keep && VEHICLES[keep]) sel.value = keep;
+    else if(DEFAULT_VEH && VEHICLES[DEFAULT_VEH]) sel.value = DEFAULT_VEH;
+    else if(ids.length === 1) sel.value = ids[0];
+  }
+
+  if(flt){
+    var keepF = flt.value;
+    var hf = '<option value="">' + escapeHtml(t('allVeh')) + '</option>';
+    ids.forEach(function(id){
+      hf += '<option value="' + escapeHtml(id) + '">' + escapeHtml(vehName(id)) + '</option>';
+    });
+    flt.innerHTML = hf;
+    if(keepF) flt.value = keepF;
+  }
+}
+
+function loadVehicles(){
+  if(!fuelDb) return Promise.resolve();
+  return fuelDb.ref('vehicleSettings').once('value').then(function(snap){
+    var x = snap.val() || {};
+    DEFAULT_VEH = String(x.defaultVehicleId || '');
+    return fuelDb.ref('vehicles').once('value');
+  }).then(function(snap){
+    VEHICLES = snap.val() || {};
+    if(!DEFAULT_VEH){
+      var ids = Object.keys(VEHICLES);
+      if(ids.length === 1) DEFAULT_VEH = ids[0];
+    }
+    paintVehPickers();
+    render();
+  }).catch(function(err){
+    // لا نُعطّل تسجيل الوقود إن تعذّر تحميل المركبات
+    console.warn('تعذّر تحميل المركبات:', err && err.message);
+  });
+}
+
+var FUEL_NODE    = 'fuelLogs';
+var fuelDb           = null;
+var cloudReady   = false;
+var localPending = [];   // ما كان محفوظاً على الجهاز قبل الاتصال
+
+function warnBox(msg){
+  document.getElementById('storageWarn').innerHTML =
+    '<div class="warnbox">' + escapeHtml(msg) + '</div>';
+}
+
+function setConn(state, extra){
+  var pill = document.getElementById('connPill');
+  if(!pill) return;
+  if(state === 'on'){
+    pill.className = 'connpill';
+    pill.textContent = t('connOn') + ' • ' + (extra || 0);
+  } else if(state === 'off'){
+    pill.className = 'connpill warn';
+    pill.textContent = t('connOff');
+  } else if(state === 'err'){
+    pill.className = 'connpill bad';
+    pill.textContent = t('connErr');
+  } else {
+    pill.className = 'connpill';
+    pill.textContent = t('connWait');
+  }
+}
+
+function loadLocal(){
+  try {
+    var raw = window.localStorage.getItem(STORE_KEY);
+    var rows = raw ? JSON.parse(raw) : [];
+    if(!Array.isArray(rows)) rows = [];
+    entries = rows;
+    localPending = rows.slice();
+    var savedLang = window.localStorage.getItem(LANG_KEY);
+    if(savedLang === 'en' || savedLang === 'ar') lang = savedLang;
+  } catch(err) {
+    storageOk = false;
+    entries = [];
+    localPending = [];
+    console.warn('تعذّر قراءة النسخة المحلية:', err);
+    warnBox(t('noStore'));
+  }
+}
+
+function saveLocal(){
+  if(!storageOk) return;
+  try {
+    window.localStorage.setItem(STORE_KEY, JSON.stringify(entries));
+  } catch(err) {
+    storageOk = false;
+    warnBox(t('saveFail') + err.message);
+  }
+}
+
+/** يحوّل سجل القاعدة إلى شكل الصفحة */
+function rowFrom(key, v){
+  var o = v || {};
+  return {
+    id: key,
+    date: String(o.date || ''),
+    amount: Number(o.amount) || 0,
+    odo: (o.odo === null || o.odo === undefined || o.odo === '') ? null : Number(o.odo),
+    note: String(o.note || ''),
+    vehicleId: String(o.vehicleId || '')
+  };
+}
+
+function startCloud(){
+  fuelDb = window.db || null;
+  if(!fuelDb){
+    setConn('off');
+    warnBox(t('offlineSave'));
+    return;
+  }
+  setConn('wait');
+  fuelDb.ref(FUEL_NODE).on('value', function(snap){
+    var rows = [];
+    snap.forEach(function(ch){ rows.push(rowFrom(ch.key, ch.val())); });
+    entries = rows;
+    cloudReady = true;
+    saveLocal();
+    setConn('on', rows.length);
+    uploadLeftovers();
+    render();
+    if(!Object.keys(VEHICLES).length) loadVehicles();
+  }, function(err){
+    console.error('fuelLogs:', err);
+    cloudReady = false;
+    setConn('err');
+    warnBox(t('connErr') + ': ' + (err.message || ''));
+  });
+}
+
+/** يرفع ما كان محفوظاً على هذا الجهاز ولم يصل إلى السحابة — مرة واحدة لكل سجل */
+function uploadLeftovers(){
+  if(!cloudReady || !localPending.length) return;
+  var have = {};
+  entries.forEach(function(e){ have[e.id] = true; });
+
+  var missing = localPending.filter(function(e){
+    return e && e.id && !have[e.id] && e.date;
+  });
+  localPending = [];
+  if(!missing.length) return;
+
+  var updates = {};
+  missing.forEach(function(e){
+    updates[FUEL_NODE + '/' + e.id] = {
+      date: e.date,
+      amount: Number(e.amount) || 0,
+      odo: (e.odo == null ? null : Number(e.odo)),
+      note: String(e.note || ''),
+      vehicleId: String(e.vehicleId || '')
+    };
+  });
+
+  fuelDb.ref().update(updates).then(function(){
+    warnBox(fill(t('movedUp'), missing.length));
+  }).catch(function(err){
+    console.error('رفع التسجيلات المحلية:', err);
+    warnBox(t('saveFail') + (err.message || ''));
+  });
+}
+
+/** يكتب سجلاً واحداً: السحابة إن أمكن، وإلا الجهاز وحده */
+function persistEntry(row){
+  saveLocal();
+  if(!cloudReady || !fuelDb){
+    warnBox(t('offlineSave'));
+    return;
+  }
+  var payload = {};
+  payload[FUEL_NODE + '/' + row.id] = {
+    date: row.date,
+    amount: Number(row.amount) || 0,
+    odo: (row.odo == null ? null : Number(row.odo)),
+    note: String(row.note || ''),
+    vehicleId: String(row.vehicleId || '')
+  };
+  /* العداد يُسجَّل هنا مرة واحدة ويصل إلى بطاقة المركبة تلقائياً،
+     فلا يُطلب من الفني إدخاله في صفحتين. */
+  if(row.vehicleId && row.odo != null){
+    var cur = Number((VEHICLES[row.vehicleId] || {}).odometer) || 0;
+    if(Number(row.odo) > cur){
+      payload['vehicles/' + row.vehicleId + '/odometer'] = Number(row.odo);
+      if(VEHICLES[row.vehicleId]) VEHICLES[row.vehicleId].odometer = Number(row.odo);
+    }
+  }
+  fuelDb.ref().update(payload).catch(function(err){
+    console.error('حفظ التعبئة:', err);
+    warnBox(t('saveFail') + (err.message || ''));
+  });
+}
+
+function saveEntries(){ saveLocal(); }
+
+/* ============ أدوات ============ */
+function escapeHtml(v){
+  return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function pad2(n){ return (n < 10 ? '0' : '') + n; }
+function todayIso(){
+  var d = new Date();
+  return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate());
+}
+function monthOf(iso){ return String(iso || '').slice(0,7); }
+function daysInMonth(ym){
+  var y = Number(ym.slice(0,4)), m = Number(ym.slice(5,7));
+  return new Date(y, m, 0).getDate();
+}
+function prevMonth(ym){
+  var y = Number(ym.slice(0,4)), m = Number(ym.slice(5,7)) - 1;
+  if(m === 0){ m = 12; y--; }
+  return y + '-' + pad2(m);
+}
+function money(n){
+  var v = Math.round(Number(n) || 0);
+  return v.toLocaleString('en-US');
+}
+function monthTitle(ym){
+  return t('months')[Number(ym.slice(5,7)) - 1] + ' ' + ym.slice(0,4);
+}
+function sumOf(list){
+  var total = 0;
+  list.forEach(function(e){ total += Number(e.amount) || 0; });
+  return total;
+}
+function entriesOfMonth(ym){
+  var f = vehFilterValue();
+  return entries.filter(function(e){
+    if(monthOf(e.date) !== ym) return false;
+    if(f && vehOf(e) !== f) return false;
+    return true;
+  });
+}
+function sortedAsc(){
+  return entries.slice().sort(function(a,b){
+    if(a.date === b.date) return Number(a.id) - Number(b.id);
+    return a.date < b.date ? -1 : 1;
+  });
+}
+/* آخر قراءة لنفس المركبة فقط — مقارنة قراءتَي مركبتين بلا معنى */
+function lastOdometerBefore(date, vehId){
+  var prevOdo = null;
+  var want = vehId || (document.getElementById('fVeh') ? document.getElementById('fVeh').value : '') || DEFAULT_VEH;
+  sortedAsc().forEach(function(e){
+    if(e.odo == null) return;
+    if(vehOf(e) !== (want || '__none')) return;
+    if(e.date <= date) prevOdo = e.odo;
+  });
+  return prevOdo;
+}
+
+/* المسافة تُحسب داخل كل مركبة على حدة */
+function distanceMap(){
+  var map = {}, prev = {};
+  sortedAsc().forEach(function(e){
+    if(e.odo == null) return;
+    var v = vehOf(e);
+    if(prev[v] !== undefined && e.odo >= prev[v]) map[e.id] = e.odo - prev[v];
+    prev[v] = e.odo;
+  });
+  return map;
+}
+
+/* الفلتر المختار في شريط الشهر */
+function vehFilterValue(){
+  var el = document.getElementById('vehFilter');
+  return el ? String(el.value || '') : '';
+}
+
+/* ============ الإدخال ============ */
+function addEntry(){
+  var date = document.getElementById('fDate').value;
+  var amount = Number(document.getElementById('fAmount').value);
+  var note = document.getElementById('fNote').value.trim();
+  var vehSel = document.getElementById('fVeh');
+  var vehId = vehSel ? String(vehSel.value || '') : '';
+
+  if(!date){ alert(t('errDate')); return; }
+  // المركبة إلزامية ما دامت هناك مركبات مسجّلة
+  if(!vehId && Object.keys(VEHICLES).length){ alert(t('errVeh')); return; }
+  if(!isFinite(amount) || amount <= 0){ alert(t('errAmount')); return; }
+  if(amount > 5000 && !confirm(fill(t('askBig'), money(amount)))) return;
+
+  var odoRaw = document.getElementById('fOdo').value;
+  var odo = odoRaw === '' ? null : Number(odoRaw);
+  if(odo !== null){
+    if(!isFinite(odo) || odo < 0){ alert(t('errOdo')); return; }
+    var last = lastOdometerBefore(date, vehId);
+    if(last !== null && odo < last && !confirm(fill(t('askOdo'), money(odo), money(last)))) return;
+  }
+
+  var row = { id: String(Date.now()), date: date, amount: amount, odo: odo, note: note, vehicleId: vehId };
+  entries.push(row);
+  persistEntry(row);
+
+  document.getElementById('fAmount').value = DEFAULT_FILL;
+  document.getElementById('fOdo').value = '';
+  document.getElementById('fNote').value = '';
+  document.getElementById('monthPick').value = monthOf(date);
+  render();
+}
+
+function quickFill(){
+  document.getElementById('fDate').value = todayIso();
+  document.getElementById('fAmount').value = DEFAULT_FILL;
+  addEntry();
+}
+
+function removeEntry(id){
+  var row = entries.filter(function(e){ return e.id === id; })[0];
+  if(!row) return;
+  if(!confirm(fill(t('askDel'), money(row.amount), row.date))) return;
+  entries = entries.filter(function(e){ return e.id !== id; });
+  saveLocal();
+  if(cloudReady && fuelDb){
+    fuelDb.ref(FUEL_NODE + '/' + id).remove().catch(function(err){
+      console.error('حذف التعبئة:', err);
+      warnBox(t('saveFail') + (err.message || ''));
+    });
+  }
+  render();
+}
+
+/* ============ العرض ============ */
+function render(){
+  var ym = document.getElementById('monthPick').value || monthOf(todayIso());
+  var list = entriesOfMonth(ym);
+  var total = sumOf(list);
+  var nDays = daysInMonth(ym);
+
+  document.getElementById('monthLabel').textContent = t('totalOf') + monthTitle(ym);
+  document.getElementById('monthTotal').textContent = money(total);
+
+  var nowYm = monthOf(todayIso());
+  var elapsed = nDays;
+  if(ym === nowYm) elapsed = Number(todayIso().slice(8,10));
+  if(ym > nowYm) elapsed = 0;
+
+  var avgDay = elapsed > 0 ? total / elapsed : 0;
+  document.getElementById('sAvgDay').textContent = money(avgDay);
+  document.getElementById('sCount').textContent = list.length;
+  document.getElementById('sAvgFill').textContent = list.length ? money(total / list.length) : 0;
+  document.getElementById('sForecast').textContent = elapsed > 0 ? money(avgDay * nDays) : money(total);
+
+  var dist = distanceMap();
+  var km = 0;
+  list.forEach(function(e){ if(dist[e.id]) km += dist[e.id]; });
+  document.getElementById('sKm').textContent = km ? money(km) : 0;
+  document.getElementById('sCostKm').textContent = km > 0 ? (total / km).toFixed(2) + ' ' + t('sar') : '—';
+
+  var measured = list.filter(function(e){ return dist[e.id] > 0; });
+  var kmPerFill = measured.length ? km / measured.length : 0;
+  document.getElementById('sKmFill').textContent = measured.length ? money(kmPerFill) : '—';
+  renderCompare(list, dist, kmPerFill);
+
+  var prev = sumOf(entriesOfMonth(prevMonth(ym)));
+  var box = document.getElementById('deltaBox');
+  if(prev > 0){
+    var diff = total - prev;
+    var pct = Math.round(Math.abs(diff) / prev * 100);
+    if(diff > 0)      box.textContent = t('higher') + monthTitle(prevMonth(ym)) + t('by') + money(diff) + ' ' + t('currency') + ' (' + pct + '%)';
+    else if(diff < 0) box.textContent = t('lower')  + monthTitle(prevMonth(ym)) + t('by') + money(-diff) + ' ' + t('currency') + ' (' + pct + '%)';
+    else              box.textContent = t('same');
+  } else {
+    box.textContent = t('noPrev');
+  }
+
+  renderStrip(ym, list, nDays);
+  renderTable(list);
+  updateVisitStats(ym, km, total);
+}
+
+/* ===== ربط المسافة بعدد زيارات الشهر ===== */
+/*
+ * الزيارة الواحدة = موعد إداري، أو حجز إلكتروني لم يُحوَّل إلى موعد.
+ * نستبعد الملغى، ونعتمد فهرس التاريخ الموجود في القاعدة فلا نقرأ الجدول كاملاً.
+ */
+var visitCache = {};
+
+function isCancelled(status){
+  var v = String(status == null ? '' : status).toLowerCase();
+  return v.indexOf('cancel') !== -1 || v.indexOf('ملغ') !== -1;
+}
+
+function paintVisits(ym, n, km, total){
+  // المستخدم قد يكون غيّر الشهر أثناء القراءة
+  if((document.getElementById('monthPick').value || '') !== ym) return;
+  document.getElementById('sVisits').textContent = n;
+  document.getElementById('sKmVisit').textContent = (n > 0 && km > 0) ? money(km / n) : '—';
+  document.getElementById('sCostVisit').textContent =
+    (n > 0 && total > 0) ? (total / n).toFixed(1) + ' ' + t('sar') : '—';
+}
+
+function updateVisitStats(ym, km, total){
+  if(!fuelDb || !cloudReady){
+    document.getElementById('sVisits').textContent = '—';
+    document.getElementById('sKmVisit').textContent = '—';
+    document.getElementById('sCostVisit').textContent = '—';
+    return;
+  }
+  if(visitCache[ym] !== undefined){
+    paintVisits(ym, visitCache[ym], km, total);
+    return;
+  }
+  document.getElementById('sVisits').textContent = '…';
+
+  var from = ym + '-01';
+  var to   = ym + '-31';
+  Promise.all([
+    fuelDb.ref('appointments').orderByChild('date').startAt(from).endAt(to).once('value'),
+    fuelDb.ref('bookings').orderByChild('date').startAt(from).endAt(to).once('value')
+  ]).then(function(res){
+    var linked = {};
+    var n = 0;
+    res[0].forEach(function(ch){
+      var a = ch.val() || {};
+      if(a.sourceBookingKey) linked[a.sourceBookingKey] = true;
+      if(!isCancelled(a.status)) n += 1;
+    });
+    res[1].forEach(function(ch){
+      var b = ch.val() || {};
+      if(linked[ch.key]) return;
+      if(isCancelled(b.status)) return;
+      n += 1;
+    });
+    visitCache[ym] = n;
+    paintVisits(ym, n, km, total);
+  }).catch(function(err){
+    console.warn('تعذّر حساب الزيارات:', err);
+    document.getElementById('sVisits').textContent = '—';
+  });
+}
+
+function renderStrip(ym, list, nDays){
+  var byDay = {};
+  list.forEach(function(e){
+    var d = Number(e.date.slice(8,10));
+    byDay[d] = (byDay[d] || 0) + (Number(e.amount) || 0);
+  });
+  var max = 0;
+  Object.keys(byDay).forEach(function(k){ if(byDay[k] > max) max = byDay[k]; });
+
+  var html = '';
+  for(var d = 1; d <= nDays; d++){
+    var v = byDay[d] || 0;
+    var h = max > 0 ? Math.round(v / max * 100) : 0;
+    var cls = v === 0 ? 'bar zero' : (v === max ? 'bar top' : 'bar');
+    var title = v > 0 ? (d + ' — ' + money(v) + ' ' + t('currency')) : (d + ' — ' + t('noFill'));
+    html += '<div class="day" title="' + escapeHtml(title) + '">' +
+              '<div class="' + cls + '" style="height:' + (v === 0 ? 2 : Math.max(h,4)) + '%;"></div>' +
+              '<div class="daynum">' + (d % 5 === 0 || d === 1 ? d : '') + '</div>' +
+            '</div>';
+  }
+  document.getElementById('daysStrip').innerHTML = html;
+}
+
+function renderCompare(list, dist, avg){
+  var rows = list.filter(function(e){ return dist[e.id] > 0; })
+                 .sort(function(a,b){ return a.date < b.date ? 1 : -1; });
+  if(rows.length < 2){
+    document.getElementById('compareBox').innerHTML = '<div class="empty">' + escapeHtml(t('emptyCmp')) + '</div>';
+    return;
+  }
+  var max = 0, min = Infinity;
+  rows.forEach(function(e){
+    var v = dist[e.id];
+    if(v > max) max = v;
+    if(v < min) min = v;
+  });
+
+  var html = '<p class="cmp-avg">' + escapeHtml(t('avgIs') + money(avg) + t('perFill')) + '</p>';
+  rows.forEach(function(e){
+    var v = dist[e.id];
+    var w = max > 0 ? Math.max(Math.round(v / max * 100), 12) : 12;
+    var cls = v === max ? 'cmp-fill best' : (v === min ? 'cmp-fill worst' : 'cmp-fill');
+    var diff = avg > 0 ? Math.round((v - avg) / avg * 100) : 0;
+    var diffTxt = diff === 0 ? '—' : (diff > 0 ? '+' + diff + '%' : diff + '%');
+    var diffCls = diff > 0 ? 'cmp-diff cmp-up' : (diff < 0 ? 'cmp-diff cmp-down' : 'cmp-diff');
+    html += '<div class="cmp-row">' +
+              '<span class="cmp-date">' + escapeHtml(e.date.slice(5)) + '</span>' +
+              '<span class="cmp-track"><span class="' + cls + '" style="width:' + w + '%;"></span>' +
+                '<span class="cmp-km">' + money(v) + ' ' + t('km') + '</span></span>' +
+              '<span class="' + diffCls + '">' + diffTxt + '</span>' +
+            '</div>';
+  });
+  document.getElementById('compareBox').innerHTML = html;
+}
+
+function renderTable(list){
+  if(!list.length){
+    document.getElementById('tableBox').innerHTML = '<div class="empty">' + escapeHtml(t('emptyLog')) + '</div>';
+    return;
+  }
+  var dist = distanceMap();
+  var sorted = list.slice().sort(function(a,b){
+    if(a.date === b.date) return Number(b.id) - Number(a.id);
+    return a.date < b.date ? 1 : -1;
+  });
+  var manyVeh = Object.keys(VEHICLES).length > 1;
+  var html = '<table><thead><tr>' +
+             '<th>' + t('thDate') + '</th>' + (manyVeh ? '<th>' + t('thVeh') + '</th>' : '') +
+             '<th>' + t('thAmount') + '</th><th>' + t('thOdo') + '</th>' +
+             '<th>' + t('thDist') + '</th><th>' + t('thNote') + '</th><th></th>' +
+             '</tr></thead><tbody>';
+  sorted.forEach(function(e){
+    html += '<tr>' +
+      '<td>' + escapeHtml(e.date) + '</td>' +
+      (manyVeh ? '<td style="font-size:12.5px;color:var(--mist);">' + escapeHtml(e.vehicleId ? vehName(e.vehicleId) : t('vehUnset')) + '</td>' : '') +
+      '<td class="amt">' + money(e.amount) + ' ' + t('currency') + '</td>' +
+      '<td>' + (e.odo != null ? money(e.odo) : '—') + '</td>' +
+      '<td style="color:var(--sky);font-weight:700;">' + (dist[e.id] ? money(dist[e.id]) + ' ' + t('km') : '—') + '</td>' +
+      '<td style="color:var(--mist);">' + escapeHtml(e.note || '—') + '</td>' +
+      '<td style="text-align:end;"><button class="del" onclick="removeEntry(\'' + escapeHtml(e.id) + '\')">✕</button></td>' +
+      '</tr>';
+  });
+  html += '</tbody></table>';
+  document.getElementById('tableBox').innerHTML = html;
+}
+
+/* ============ التصدير ============ */
+function exportCsv(){
+  if(!entries.length){ alert(t('noExport')); return; }
+  var sorted = sortedAsc();
+  var dist = distanceMap();
+  var lines = [[t('thDate'), t('thVeh'), t('thAmount'), t('thOdo'), t('thDist'), t('thNote')].join(',')];
+  sorted.forEach(function(e){
+    var note = String(e.note || '').replace(/"/g,'""');
+    var vn = String(e.vehicleId ? vehName(e.vehicleId) : t('vehUnset')).replace(/"/g,'""');
+    lines.push(e.date + ',"' + vn + '",' + (Number(e.amount) || 0) + ',' +
+               (e.odo != null ? e.odo : '') + ',' + (dist[e.id] || '') + ',"' + note + '"');
+  });
+  var blob = new Blob(['\ufeff' + lines.join('\n')], {type:'text/csv;charset=utf-8;'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'atwad-fuel-' + todayIso() + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+}
+
+/* ============ البدء ============ */
+loadLocal();
+document.getElementById('fDate').value = todayIso();
+document.getElementById('monthPick').value = monthOf(todayIso());
+document.getElementById('fAmount').addEventListener('keydown', function(ev){
+  if(ev.key === 'Enter') addEntry();
+});
+applyLang();
+setConn('wait');
+
+// atwad-auth.js يستدعيها بعد نجاح تسجيل الدخول
+window.__atwadInitPage = function(){ startCloud(); };
+
+// وإن كان التحقق قد اكتمل قبل تعريف الدالة أعلاه
+if(window.__atwadPageInitialized && window.auth && window.auth.currentUser){
+  startCloud();
+}
+
+window.__atwadCleanup = function(){
+  if(fuelDb) fuelDb.ref(FUEL_NODE).off();
+};
+</script>
+</body>
+</html>

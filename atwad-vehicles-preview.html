@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>أطواد - مركبات العمل</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
+:root{
+  --deep:#0C3B5E; --sky:#0EA5E9; --ice:#E8F4FD; --frost:#F0F9FF;
+  --success:#10B981; --warning:#F59E0B; --danger:#EF4444;
+  --slate:#334155; --mist:#94A3B8;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Cairo',sans-serif;background:#F1F5F9;color:var(--slate);min-height:100vh;padding-bottom:60px;}
+
+.header{background:linear-gradient(135deg,var(--deep),#0e5fa8,var(--sky));padding:20px 16px;position:relative;overflow:hidden;}
+.header::before{content:'🚗';position:absolute;inset-inline-end:16px;top:-6px;font-size:72px;opacity:.09;}
+.header h1{color:#fff;font-size:19px;font-weight:900;}
+.header p{color:rgba(255,255,255,.65);font-size:12px;margin-top:3px;}
+
+.wrap{max-width:860px;margin:0 auto;padding:16px;}
+
+/* تنبيهات */
+.alerts{margin-bottom:16px;}
+.alert{border-radius:13px;padding:13px 15px;margin-bottom:9px;font-size:13.5px;line-height:1.85;font-weight:700;}
+.alert.bad{background:#FEF2F2;border:1.5px solid #FCA5A5;color:#991B1B;}
+.alert.warn{background:#FFFBEB;border:1.5px solid #FDE68A;color:#92400E;}
+.alert.ok{background:#F0FDF4;border:1.5px solid #86EFAC;color:#065F46;}
+
+/* بطاقة مركبة */
+.veh{background:#fff;border-radius:16px;margin-bottom:14px;box-shadow:0 3px 12px rgba(0,0,0,.07);
+  overflow:hidden;border-inline-start:5px solid var(--mist);}
+.veh.ok{border-color:var(--success);}
+.veh.due{border-color:var(--warning);}
+.veh.over{border-color:var(--danger);}
+.veh-top{padding:14px 16px 10px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+.veh-name{font-size:16px;font-weight:900;color:var(--deep);line-height:1.6;}
+.veh-sub{font-size:12.5px;color:var(--mist);margin-top:3px;line-height:1.8;}
+.veh-badge{padding:5px 11px;border-radius:20px;font-size:11.5px;font-weight:800;white-space:nowrap;}
+.b-ok{background:#D1FAE5;color:#065F46;}
+.b-due{background:#FEF3C7;color:#92400E;}
+.b-over{background:#FEE2E2;color:#991B1B;}
+.b-none{background:#F1F5F9;color:#64748B;}
+
+.veh-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:9px;padding:0 16px 12px;}
+.cell{background:var(--frost);border-radius:11px;padding:10px 12px;}
+.cell .k{font-size:11px;color:var(--mist);font-weight:700;}
+.cell .v{font-size:15px;color:var(--deep);font-weight:900;margin-top:3px;direction:ltr;text-align:start;unicode-bidi:plaintext;}
+
+.bar{height:7px;background:var(--ice);border-radius:99px;overflow:hidden;margin:0 16px 12px;}
+.bar > div{height:100%;width:0;background:var(--success);transition:width .3s;}
+.bar.due > div{background:var(--warning);}
+.bar.over > div{background:var(--danger);}
+
+.veh-acts{display:flex;gap:8px;padding:0 16px 14px;flex-wrap:wrap;}
+.btn{font-family:inherit;font-size:13px;font-weight:800;border:none;border-radius:10px;
+  padding:10px 14px;cursor:pointer;}
+.btn-main{background:var(--deep);color:#fff;}
+.btn-soft{background:var(--ice);color:var(--sky);}
+.btn-warn{background:var(--warning);color:#fff;}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+
+/* سجل الصيانة */
+.log{padding:0 16px 14px;display:none;}
+.log.show{display:block;}
+.log-row{border-top:1px solid var(--ice);padding:10px 0;font-size:13px;line-height:1.85;}
+.log-row:first-child{border-top:none;}
+.log-t{font-weight:800;color:var(--deep);}
+.log-m{color:var(--mist);font-size:12px;direction:ltr;text-align:start;unicode-bidi:plaintext;}
+.log-empty{font-size:12.5px;color:var(--mist);padding:10px 0;}
+
+/* نماذج */
+.card{background:#fff;border-radius:16px;padding:16px;box-shadow:0 3px 12px rgba(0,0,0,.07);margin-bottom:14px;}
+.card h2{font-size:15.5px;font-weight:900;color:var(--deep);margin-bottom:4px;}
+.card .hint{font-size:12.5px;color:var(--mist);line-height:1.85;margin-bottom:12px;}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:9px;margin-bottom:10px;}
+label{display:block;font-size:12px;font-weight:700;color:var(--mist);margin-bottom:4px;}
+input,select,textarea{width:100%;font-family:inherit;font-size:14.5px;padding:10px 12px;
+  border:1.5px solid #E2E8F0;border-radius:11px;background:#fff;color:var(--deep);}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--sky);}
+input[type=number]{direction:ltr;text-align:start;}
+textarea{min-height:52px;resize:vertical;}
+
+.msg{font-size:12.5px;font-weight:800;line-height:1.85;margin-top:9px;display:none;}
+.msg.ok{display:block;color:#065F46;}
+.msg.bad{display:block;color:#991B1B;}
+
+/* نافذة */
+.ov{position:fixed;inset:0;background:rgba(12,59,94,.55);display:none;z-index:1200;
+  align-items:flex-end;justify-content:center;}
+.ov.show{display:flex;}
+.sheet{background:#fff;width:100%;max-width:460px;border-radius:20px 20px 0 0;
+  padding:18px 16px 24px;max-height:92vh;overflow-y:auto;}
+.sheet h3{font-size:17px;color:var(--deep);margin-bottom:3px;}
+.sheet .who{font-size:13px;color:var(--mist);margin-bottom:13px;line-height:1.7;}
+
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(90px);
+  background:var(--deep);color:#fff;padding:12px 22px;border-radius:12px;font-size:13.5px;
+  font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.2);transition:transform .3s;z-index:1400;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+.loading{text-align:center;padding:36px;color:var(--mist);font-size:13.5px;}
+</style>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="atwad-firebase.js"></script>
+<script src="atwad-auth.js"></script>
+</head>
+<body>
+
+<div class="header">
+  <h1>🚗 مركبات العمل</h1>
+  <p>متابعة الصيانة الدورية — المسؤولية على مَن يقود</p>
+</div>
+
+<div class="wrap">
+
+  <div class="alerts" id="alerts"></div>
+
+  <div id="vehList"><div class="loading">جاري التحميل…</div></div>
+
+  <!-- إضافة مركبة -->
+  <div class="card">
+    <h2>➕ إضافة مركبة</h2>
+    <div class="hint">البنية تقبل أي عدد من المركبات. كل مركبة لها مسؤول واحد بالاسم.</div>
+    <div class="row">
+      <div><label>الاسم</label><input id="nvName" placeholder="ميتسوبيشي L200"></div>
+      <div><label>الموديل</label><input id="nvYear" type="number" placeholder="2013"></div>
+    </div>
+    <div class="row">
+      <div><label>اللوحة</label><input id="nvPlate" placeholder="أ ب ج 1234"></div>
+      <div><label>المسؤول</label><input id="nvDriver" placeholder="أحمد وشعيب"></div>
+    </div>
+    <div class="row">
+      <div><label>الممشى الحالي (كم)</label><input id="nvOdo" type="number" placeholder="185000"></div>
+      <div><label>ممشى آخر تغيير زيت</label><input id="nvOil" type="number" placeholder="182000"></div>
+    </div>
+    <button class="btn btn-main" id="nvSave">حفظ المركبة</button>
+    <div class="msg" id="nvMsg"></div>
+  </div>
+
+  <!-- الإعدادات -->
+  <div class="card">
+    <h2>⚙️ حدود الصيانة</h2>
+    <div class="hint">تُطبَّق على كل المركبات. عدّلها متى شئت بلا تعديل برمجي.</div>
+    <div class="row">
+      <div><label>تغيير الزيت كل (كم)</label><input id="stOil" type="number" value="5000"></div>
+      <div><label>فحص الورشة كل (كم)</label><input id="stShop" type="number" value="10000"></div>
+    </div>
+    <div class="row">
+      <div><label>تنبيه مبكر قبل (كم)</label><input id="stWarn" type="number" value="500"></div>
+      <div>
+        <label>إلزام الفني</label>
+        <select id="stEnforce">
+          <option value="notify">تنبيه فقط مع تسجيل المتأخر</option>
+          <option value="block">منع إغلاق أوامر العمل عند التأخر</option>
+        </select>
+      </div>
+    </div>
+    <div class="row">
+      <div style="grid-column:1/-1;">
+        <label>المركبة الافتراضية لتسجيلات الوقود القديمة</label>
+        <select id="stDefVeh"></select>
+      </div>
+    </div>
+    <div class="hint" style="margin:-4px 0 12px;">
+      تعبئات الوقود المسجّلة قبل إضافة المركبات لا تحمل اسم مركبة.
+      تُنسب إلى المركبة المختارة هنا حتى لا تنقطع سلسلة حساب المسافة.
+    </div>
+    <button class="btn btn-main" id="stSave">حفظ الإعدادات</button>
+    <div class="msg" id="stMsg"></div>
+  </div>
+
+</div>
+
+<!-- نافذة تسجيل صيانة -->
+<div class="ov" id="mOv">
+  <div class="sheet">
+    <h3>🔧 تسجيل صيانة</h3>
+    <div class="who" id="mWho"></div>
+    <div class="row">
+      <div><label>التاريخ</label><input id="mDate" type="date"></div>
+      <div><label>الممشى (كم)</label><input id="mOdo" type="number" placeholder="185000"></div>
+    </div>
+    <div class="row">
+      <div>
+        <label>نوع العمل</label>
+        <select id="mType">
+          <option value="oil">تغيير زيت وفلتر</option>
+          <option value="shop">فحص شامل بالورشة</option>
+          <option value="tires">إطارات</option>
+          <option value="repair">إصلاح عطل</option>
+          <option value="other">أخرى</option>
+        </select>
+      </div>
+      <div><label>التكلفة (ريال)</label><input id="mCost" type="number" placeholder="0"></div>
+    </div>
+    <div class="row">
+      <div><label>الورشة</label><input id="mShop" placeholder="اسم الورشة"></div>
+    </div>
+    <div class="row">
+      <div style="grid-column:1/-1;"><label>ملاحظات</label><textarea id="mNote" placeholder="ما الذي عُمل ولماذا"></textarea></div>
+    </div>
+    <div class="row">
+      <div><button class="btn btn-main" id="mSave" style="width:100%;">حفظ</button></div>
+      <div><button class="btn btn-soft" id="mCancel" style="width:100%;">إلغاء</button></div>
+    </div>
+    <div class="msg" id="mMsg"></div>
+  </div>
+</div>
+
+<!-- نافذة تحديث الممشى -->
+<div class="ov" id="oOv">
+  <div class="sheet">
+    <h3>📏 تحديث الممشى</h3>
+    <div class="who" id="oWho"></div>
+    <label>القراءة الحالية للعداد (كم)</label>
+    <input id="oVal" type="number" placeholder="185000">
+    <div class="row" style="margin-top:12px;">
+      <div><button class="btn btn-main" id="oSave" style="width:100%;">حفظ</button></div>
+      <div><button class="btn btn-soft" id="oCancel" style="width:100%;">إلغاء</button></div>
+    </div>
+    <div class="msg" id="oMsg"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   مركبات العمل — سجل + صيانة + تنبيهات
+   المسارات: vehicles / vehicleMaintenance / vehicleSettings
+   كلها للمدير وحده في قواعد Firebase.
+   ملاحظة: الممشى يُحدَّث هنا يدوياً حالياً. عند ربط صفحة الوقود
+   سيُقرأ من حيث يُسجَّل فعلاً، فلا يُدخَل مرتين.
+   ============================================================ */
+var db = window.db;   // من atwad-firebase.js — لا تهيئة محلية
+
+var VEHICLES = {};    // id -> بيانات
+var MAINT    = {};    // id -> [سجلات]
+var SETTINGS = { oilKm:5000, shopKm:10000, warnKm:500, enforce:'notify' };
+var _ctxId   = '';    // المركبة المفتوحة في النافذة
+
+function toast(m){
+  var el = document.getElementById('toast');
+  el.textContent = m;
+  el.classList.add('show');
+  setTimeout(function(){ el.classList.remove('show'); }, 3000);
+}
+function msg(id, text, good){
+  var el = document.getElementById(id);
+  el.className = 'msg ' + (good ? 'ok' : 'bad');
+  el.textContent = text;
+}
+function num(v){ var n = Number(v); return isFinite(n) ? n : 0; }
+function km(v){ return num(v).toLocaleString('en-US'); }
+function todayStr(){
+  try{
+    var p = new Intl.DateTimeFormat('en-CA',{ timeZone:'Asia/Riyadh',
+      year:'numeric', month:'2-digit', day:'2-digit' }).format(new Date());
+    return p;
+  } catch(e){
+    return new Date(Date.now() + 3*3600*1000).toISOString().split('T')[0];
+  }
+}
+function esc(s){
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* حالة المركبة بحسب ما تبقّى حتى تغيير الزيت */
+function vehState(v){
+  var odo = num(v.odometer), oil = num(v.lastOilKm);
+  if(!odo || !oil) return { key:'none', left:null, pct:0, label:'لا بيانات' };
+  var used = odo - oil;
+  var left = SETTINGS.oilKm - used;
+  var pct  = Math.max(0, Math.min(100, Math.round(used / SETTINGS.oilKm * 100)));
+  if(left <= 0)                 return { key:'over', left:left, pct:100, label:'متأخر ' + km(-left) + ' كم' };
+  if(left <= SETTINGS.warnKm)   return { key:'due',  left:left, pct:pct, label:'اقترب — ' + km(left) + ' كم' };
+  return { key:'ok', left:left, pct:pct, label:'سليم — ' + km(left) + ' كم' };
+}
+
+function renderAlerts(){
+  var box = document.getElementById('alerts');
+  var over = [], due = [], noData = [];
+  for(var id in VEHICLES){
+    if(!Object.prototype.hasOwnProperty.call(VEHICLES, id)) continue;
+    var v = VEHICLES[id], s = vehState(v);
+    if(s.key === 'over')      over.push(v.name + ' (' + (v.driver || 'بلا مسؤول') + ')');
+    else if(s.key === 'due')  due.push(v.name);
+    else if(s.key === 'none') noData.push(v.name);
+  }
+  var html = '';
+  if(over.length){
+    html += '<div class="alert bad">⛔ تجاوزت موعد تغيير الزيت: ' + esc(over.join(' · ')) +
+            '<br>هذا هو الإهمال الذي كلّف توضيب ماكينة — عالجه اليوم.</div>';
+  }
+  if(due.length){
+    html += '<div class="alert warn">⚠️ اقترب موعد الزيت: ' + esc(due.join(' · ')) + '</div>';
+  }
+  if(noData.length){
+    html += '<div class="alert warn">📏 ينقصها الممشى أو آخر تغيير زيت: ' + esc(noData.join(' · ')) + '</div>';
+  }
+  if(!html && Object.keys(VEHICLES).length){
+    html = '<div class="alert ok">✅ كل المركبات ضمن المواعيد.</div>';
+  }
+  box.innerHTML = html;
+}
+
+function renderVehicles(){
+  var list = document.getElementById('vehList');
+  var ids = Object.keys(VEHICLES);
+  if(!ids.length){
+    list.innerHTML = '<div class="card"><div class="hint" style="margin:0;">لا توجد مركبات بعد — أضف أول مركبة من النموذج أدناه.</div></div>';
+    return;
+  }
+  ids.sort(function(a,b){ return String(VEHICLES[a].name||'').localeCompare(String(VEHICLES[b].name||'')); });
+
+  var html = '';
+  for(var i = 0; i < ids.length; i++){
+    var id = ids[i], v = VEHICLES[id], s = vehState(v);
+    var badge = s.key === 'ok' ? 'b-ok' : s.key === 'due' ? 'b-due' : s.key === 'over' ? 'b-over' : 'b-none';
+    var rows = MAINT[id] || [];
+    var logHtml = '';
+    if(rows.length){
+      for(var r = 0; r < rows.length && r < 8; r++){
+        var m = rows[r];
+        logHtml += '<div class="log-row"><div class="log-t">' + esc(typeLabel(m.type)) +
+          (m.cost ? ' — ' + km(m.cost) + ' ريال' : '') + '</div>' +
+          '<div class="log-m">' + esc(m.date || '') + ' · ' + km(m.odometer) + ' كم' +
+          (m.shop ? ' · ' + esc(m.shop) : '') + '</div>' +
+          (m.note ? '<div class="log-m">' + esc(m.note) + '</div>' : '') + '</div>';
+      }
+    } else {
+      logHtml = '<div class="log-empty">لا سجل صيانة بعد لهذه المركبة.</div>';
+    }
+
+    html += '<div class="veh ' + s.key + '">' +
+      '<div class="veh-top">' +
+        '<div><div class="veh-name">' + esc(v.name || '—') +
+          (v.year ? ' <span style="font-weight:700;color:#94A3B8;">' + esc(v.year) + '</span>' : '') + '</div>' +
+          '<div class="veh-sub">👤 ' + esc(v.driver || 'لا مسؤول محدد') +
+          (v.plate ? ' · 🔖 ' + esc(v.plate) : '') + '</div></div>' +
+        '<span class="veh-badge ' + badge + '">' + esc(s.label) + '</span>' +
+      '</div>' +
+      '<div class="veh-grid">' +
+        '<div class="cell"><div class="k">الممشى الحالي</div><div class="v">' + km(v.odometer) + ' كم</div></div>' +
+        '<div class="cell"><div class="k">آخر تغيير زيت</div><div class="v">' + km(v.lastOilKm) + ' كم</div></div>' +
+        '<div class="cell"><div class="k">تاريخ آخر زيت</div><div class="v">' + esc(v.lastOilDate || '—') + '</div></div>' +
+        '<div class="cell"><div class="k">تكلفة ١٢ شهراً</div><div class="v">' + km(yearCost(id)) + ' ريال</div></div>' +
+      '</div>' +
+      '<div class="bar ' + s.key + '"><div style="width:' + s.pct + '%"></div></div>' +
+      '<div class="veh-acts">' +
+        '<button class="btn btn-main" data-act="maint" data-id="' + esc(id) + '">🔧 تسجيل صيانة</button>' +
+        '<button class="btn btn-soft" data-act="odo" data-id="' + esc(id) + '">📏 تحديث الممشى</button>' +
+        '<button class="btn btn-soft" data-act="log" data-id="' + esc(id) + '">📋 السجل (' + rows.length + ')</button>' +
+      '</div>' +
+      '<div class="log" id="log-' + esc(id) + '">' + logHtml + '</div>' +
+    '</div>';
+  }
+  list.innerHTML = html;
+
+  var btns = list.querySelectorAll('button[data-act]');
+  for(var b = 0; b < btns.length; b++){
+    btns[b].addEventListener('click', function(ev){
+      var act = ev.currentTarget.getAttribute('data-act');
+      var id  = ev.currentTarget.getAttribute('data-id');
+      if(act === 'maint') openMaint(id);
+      else if(act === 'odo') openOdo(id);
+      else {
+        var el = document.getElementById('log-' + id);
+        if(el) el.classList.toggle('show');
+      }
+    });
+  }
+}
+
+function typeLabel(t){
+  var map = { oil:'تغيير زيت وفلتر', shop:'فحص شامل بالورشة',
+              tires:'إطارات', repair:'إصلاح عطل', other:'أخرى' };
+  return map[t] || t || 'صيانة';
+}
+
+/* تكلفة آخر اثني عشر شهراً — المؤشر الذي يُظهر المركبة المكلّفة */
+function yearCost(id){
+  var rows = MAINT[id] || [];
+  var cut = new Date(Date.now() - 365*24*3600*1000).toISOString().split('T')[0];
+  var sum = 0;
+  for(var i = 0; i < rows.length; i++){
+    if(String(rows[i].date || '') >= cut) sum += num(rows[i].cost);
+  }
+  return sum;
+}
+
+/* ===== التحميل ===== */
+function loadAll(){
+  if(!db){ document.getElementById('vehList').innerHTML =
+    '<div class="card"><div class="hint" style="margin:0;">قاعدة البيانات غير متاحة.</div></div>'; return; }
+
+  db.ref('vehicleSettings').once('value').then(function(snap){
+    var v = snap.val();
+    if(v){
+      SETTINGS.oilKm   = num(v.oilKm)   || SETTINGS.oilKm;
+      SETTINGS.shopKm  = num(v.shopKm)  || SETTINGS.shopKm;
+      SETTINGS.warnKm  = num(v.warnKm)  || SETTINGS.warnKm;
+      SETTINGS.enforce = v.enforce || SETTINGS.enforce;
+    }
+    document.getElementById('stOil').value  = SETTINGS.oilKm;
+    document.getElementById('stShop').value = SETTINGS.shopKm;
+    document.getElementById('stWarn').value = SETTINGS.warnKm;
+    document.getElementById('stEnforce').value = SETTINGS.enforce;
+    SETTINGS.defaultVehicleId = (v && v.defaultVehicleId) || '';
+    return db.ref('vehicles').once('value');
+  }).then(function(snap){
+    VEHICLES = snap.val() || {};
+    return db.ref('vehicleMaintenance').once('value');
+  }).then(function(snap){
+    MAINT = {};
+    snap.forEach(function(c){
+      var m = c.val() || {};
+      var id = m.vehicleId || '';
+      if(!id) return;
+      if(!MAINT[id]) MAINT[id] = [];
+      m._key = c.key;
+      MAINT[id].push(m);
+    });
+    for(var k in MAINT){
+      if(!Object.prototype.hasOwnProperty.call(MAINT, k)) continue;
+      MAINT[k].sort(function(a,b){ return String(b.date||'').localeCompare(String(a.date||'')); });
+    }
+    renderAlerts();
+    renderVehicles();
+    paintDefaultVeh();
+  }).catch(function(err){
+    console.error('[vehicles] تعذّر التحميل:', err);
+    document.getElementById('vehList').innerHTML =
+      '<div class="card"><div class="hint" style="margin:0;">تعذّر التحميل: ' + esc(err.message) + '</div></div>';
+  });
+}
+
+/* ===== إضافة مركبة ===== */
+document.getElementById('nvSave').addEventListener('click', function(){
+  var name = String(document.getElementById('nvName').value || '').trim();
+  if(!name){ msg('nvMsg', 'اكتب اسم المركبة.', false); return; }
+  if(!db){ msg('nvMsg', 'قاعدة البيانات غير متاحة.', false); return; }
+
+  var id = db.ref('vehicles').push().key;
+  var rec = {
+    name: name,
+    year: String(document.getElementById('nvYear').value || '').trim(),
+    plate: String(document.getElementById('nvPlate').value || '').trim(),
+    driver: String(document.getElementById('nvDriver').value || '').trim(),
+    odometer: num(document.getElementById('nvOdo').value),
+    lastOilKm: num(document.getElementById('nvOil').value),
+    lastOilDate: '',
+    active: true,
+    createdAt: new Date().toISOString()
+  };
+  var btn = this;
+  btn.disabled = true;
+  db.ref('vehicles/' + id).set(rec).then(function(){
+    btn.disabled = false;
+    VEHICLES[id] = rec;
+    document.getElementById('nvName').value = '';
+    document.getElementById('nvYear').value = '';
+    document.getElementById('nvPlate').value = '';
+    document.getElementById('nvDriver').value = '';
+    document.getElementById('nvOdo').value = '';
+    document.getElementById('nvOil').value = '';
+    msg('nvMsg', '✅ أُضيفت المركبة.', true);
+    renderAlerts(); renderVehicles(); paintDefaultVeh();
+  }).catch(function(err){
+    btn.disabled = false;
+    msg('nvMsg', 'تعذّر الحفظ: ' + err.message, false);
+  });
+});
+
+function paintDefaultVeh(){
+  var sel = document.getElementById('stDefVeh');
+  if(!sel) return;
+  var ids = Object.keys(VEHICLES);
+  ids.sort(function(a,b){ return String(VEHICLES[a].name||'').localeCompare(String(VEHICLES[b].name||'')); });
+  var h = '<option value="">— لا شيء —</option>';
+  ids.forEach(function(id){
+    h += '<option value="' + esc(id) + '">' + esc(VEHICLES[id].name || id) +
+         (VEHICLES[id].plate ? ' · ' + esc(VEHICLES[id].plate) : '') + '</option>';
+  });
+  sel.innerHTML = h;
+  // مركبة واحدة فقط: تُختار تلقائياً، فلا معنى لترك الحقل فارغاً
+  if(SETTINGS.defaultVehicleId && VEHICLES[SETTINGS.defaultVehicleId]) sel.value = SETTINGS.defaultVehicleId;
+  else if(ids.length === 1) sel.value = ids[0];
+}
+
+/* ===== الإعدادات ===== */
+document.getElementById('stSave').addEventListener('click', function(){
+  if(!db){ msg('stMsg', 'قاعدة البيانات غير متاحة.', false); return; }
+  var rec = {
+    oilKm:  num(document.getElementById('stOil').value)  || 5000,
+    shopKm: num(document.getElementById('stShop').value) || 10000,
+    warnKm: num(document.getElementById('stWarn').value) || 500,
+    enforce: document.getElementById('stEnforce').value,
+    defaultVehicleId: String(document.getElementById('stDefVeh').value || ''),
+    updatedAt: new Date().toISOString()
+  };
+  var btn = this;
+  btn.disabled = true;
+  db.ref('vehicleSettings').set(rec).then(function(){
+    btn.disabled = false;
+    SETTINGS.oilKm = rec.oilKm; SETTINGS.shopKm = rec.shopKm;
+    SETTINGS.warnKm = rec.warnKm; SETTINGS.enforce = rec.enforce;
+    SETTINGS.defaultVehicleId = rec.defaultVehicleId;
+    msg('stMsg', '✅ حُفظت الإعدادات.', true);
+    renderAlerts(); renderVehicles();
+  }).catch(function(err){
+    btn.disabled = false;
+    msg('stMsg', 'تعذّر الحفظ: ' + err.message, false);
+  });
+});
+
+/* ===== نافذة الصيانة ===== */
+function openMaint(id){
+  _ctxId = id;
+  var v = VEHICLES[id] || {};
+  document.getElementById('mWho').textContent =
+    (v.name || '—') + (v.driver ? ' · ' + v.driver : '');
+  document.getElementById('mDate').value = todayStr();
+  document.getElementById('mOdo').value  = v.odometer || '';
+  document.getElementById('mCost').value = '';
+  document.getElementById('mShop').value = '';
+  document.getElementById('mNote').value = '';
+  document.getElementById('mMsg').className = 'msg';
+  document.getElementById('mOv').classList.add('show');
+}
+function closeMaint(){ document.getElementById('mOv').classList.remove('show'); _ctxId = ''; }
+document.getElementById('mCancel').addEventListener('click', closeMaint);
+document.getElementById('mOv').addEventListener('click', function(ev){
+  if(ev.target === this) closeMaint();
+});
+
+document.getElementById('mSave').addEventListener('click', function(){
+  if(!_ctxId || !db){ msg('mMsg', 'قاعدة البيانات غير متاحة.', false); return; }
+  var odo = num(document.getElementById('mOdo').value);
+  if(odo <= 0){ msg('mMsg', 'اكتب قراءة العداد.', false); return; }
+
+  var v = VEHICLES[_ctxId] || {};
+  if(num(v.odometer) && odo < num(v.odometer) - 50){
+    if(!confirm('القراءة أقل من الممشى المسجّل (' + km(v.odometer) + '). هل الرقم صحيح؟')) return;
+  }
+
+  var type = document.getElementById('mType').value;
+  var date = document.getElementById('mDate').value || todayStr();
+  var rec = {
+    vehicleId: _ctxId,
+    type: type,
+    date: date,
+    odometer: odo,
+    cost: num(document.getElementById('mCost').value),
+    shop: String(document.getElementById('mShop').value || '').trim(),
+    note: String(document.getElementById('mNote').value || '').trim(),
+    createdAt: new Date().toISOString()
+  };
+
+  var key = db.ref('vehicleMaintenance').push().key;
+  var updates = {};
+  for(var k in rec){
+    if(Object.prototype.hasOwnProperty.call(rec, k)){
+      updates['vehicleMaintenance/' + key + '/' + k] = rec[k];
+    }
+  }
+  // الممشى يتقدّم مع كل صيانة، وتغيير الزيت يُصفّر العدّاد الداخلي
+  if(odo > num(v.odometer)) updates['vehicles/' + _ctxId + '/odometer'] = odo;
+  if(type === 'oil'){
+    updates['vehicles/' + _ctxId + '/lastOilKm']   = odo;
+    updates['vehicles/' + _ctxId + '/lastOilDate'] = date;
+  }
+  if(type === 'shop'){
+    updates['vehicles/' + _ctxId + '/lastShopKm']   = odo;
+    updates['vehicles/' + _ctxId + '/lastShopDate'] = date;
+  }
+
+  var btn = this;
+  btn.disabled = true;
+  db.ref().update(updates).then(function(){
+    btn.disabled = false;
+    rec._key = key;
+    if(!MAINT[_ctxId]) MAINT[_ctxId] = [];
+    MAINT[_ctxId].unshift(rec);
+    if(odo > num(v.odometer)) v.odometer = odo;
+    if(type === 'oil'){ v.lastOilKm = odo; v.lastOilDate = date; }
+    if(type === 'shop'){ v.lastShopKm = odo; v.lastShopDate = date; }
+    VEHICLES[_ctxId] = v;
+    closeMaint();
+    renderAlerts(); renderVehicles();
+    toast('✅ سُجّلت الصيانة');
+  }).catch(function(err){
+    btn.disabled = false;
+    msg('mMsg', 'تعذّر الحفظ: ' + err.message, false);
+  });
+});
+
+/* ===== نافذة الممشى ===== */
+function openOdo(id){
+  _ctxId = id;
+  var v = VEHICLES[id] || {};
+  document.getElementById('oWho').textContent =
+    (v.name || '—') + ' · المسجّل حالياً: ' + km(v.odometer) + ' كم';
+  document.getElementById('oVal').value = v.odometer || '';
+  document.getElementById('oMsg').className = 'msg';
+  document.getElementById('oOv').classList.add('show');
+}
+function closeOdo(){ document.getElementById('oOv').classList.remove('show'); _ctxId = ''; }
+document.getElementById('oCancel').addEventListener('click', closeOdo);
+document.getElementById('oOv').addEventListener('click', function(ev){
+  if(ev.target === this) closeOdo();
+});
+
+document.getElementById('oSave').addEventListener('click', function(){
+  if(!_ctxId || !db){ msg('oMsg', 'قاعدة البيانات غير متاحة.', false); return; }
+  var val = num(document.getElementById('oVal').value);
+  if(val <= 0){ msg('oMsg', 'اكتب قراءة العداد.', false); return; }
+  var v = VEHICLES[_ctxId] || {};
+  if(num(v.odometer) && val < num(v.odometer)){
+    msg('oMsg', 'القراءة أقل من المسجّل (' + km(v.odometer) + '). تأكد من الرقم.', false);
+    return;
+  }
+  var btn = this;
+  btn.disabled = true;
+  db.ref('vehicles/' + _ctxId + '/odometer').set(val).then(function(){
+    btn.disabled = false;
+    v.odometer = val;
+    VEHICLES[_ctxId] = v;
+    closeOdo();
+    renderAlerts(); renderVehicles();
+    toast('✅ حُدّث الممشى');
+  }).catch(function(err){
+    btn.disabled = false;
+    msg('oMsg', 'تعذّر الحفظ: ' + err.message, false);
+  });
+});
+
+/* يُستدعى من atwad-auth.js بعد تأكّد الدخول */
+window.__atwadInitPage = function(user){
+  console.log('[vehicles] مسجّل:', user && user.email);
+  loadAll();
+};
+</script>
+</body>
+</html>
