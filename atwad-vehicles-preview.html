@@ -210,6 +210,37 @@ textarea{min-height:52px;resize:vertical;}
   </div>
 </div>
 
+<!-- نافذة تعديل المركبة -->
+<div class="ov" id="eOv">
+  <div class="sheet">
+    <h3>✏️ تعديل المركبة</h3>
+    <div class="who" id="eWho"></div>
+    <div class="row">
+      <div><label>الاسم</label><input id="eName"></div>
+      <div><label>الموديل</label><input id="eYear" type="number"></div>
+    </div>
+    <div class="row">
+      <div><label>اللوحة</label><input id="ePlate"></div>
+      <div><label>المسؤول</label><input id="eDriver" placeholder="أحمد وشعيب"></div>
+    </div>
+    <div class="row">
+      <div><label>الممشى الحالي (كم)</label><input id="eOdo" type="number"></div>
+      <div><label>ممشى آخر تغيير زيت</label><input id="eOil" type="number"></div>
+    </div>
+    <div class="row">
+      <div><button class="btn btn-main" id="eSave" style="width:100%;">حفظ التعديل</button></div>
+      <div><button class="btn btn-soft" id="eCancel" style="width:100%;">إلغاء</button></div>
+    </div>
+    <div class="msg" id="eMsg"></div>
+    <div style="border-top:1px solid #E2E8F0;margin-top:14px;padding-top:12px;">
+      <button class="btn" id="eDel" style="width:100%;background:#FEE2E2;color:#991B1B;">🗑 حذف المركبة</button>
+      <div style="font-size:11.5px;color:#94A3B8;line-height:1.8;margin-top:7px;">
+        الحذف لا يمس سجل الصيانة ولا تسجيلات الوقود — تبقى محفوظة.
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- نافذة تحديث الممشى -->
 <div class="ov" id="oOv">
   <div class="sheet">
@@ -355,6 +386,7 @@ function renderVehicles(){
         '<button class="btn btn-main" data-act="maint" data-id="' + esc(id) + '">🔧 تسجيل صيانة</button>' +
         '<button class="btn btn-soft" data-act="odo" data-id="' + esc(id) + '">📏 تحديث الممشى</button>' +
         '<button class="btn btn-soft" data-act="log" data-id="' + esc(id) + '">📋 السجل (' + rows.length + ')</button>' +
+        '<button class="btn btn-soft" data-act="edit" data-id="' + esc(id) + '">✏️ تعديل</button>' +
       '</div>' +
       '<div class="log" id="log-' + esc(id) + '">' + logHtml + '</div>' +
     '</div>';
@@ -367,6 +399,7 @@ function renderVehicles(){
       var act = ev.currentTarget.getAttribute('data-act');
       var id  = ev.currentTarget.getAttribute('data-id');
       if(act === 'maint') openMaint(id);
+      else if(act === 'edit') openEdit(id);
       else if(act === 'odo') openOdo(id);
       else {
         var el = document.getElementById('log-' + id);
@@ -593,9 +626,104 @@ document.getElementById('mSave').addEventListener('click', function(){
     closeMaint();
     renderAlerts(); renderVehicles();
     toast('✅ سُجّلت الصيانة');
+    // فترة التوضيب تنتهي بأول تغيير زيت. التذكير هنا لأنها اللحظة
+    // الوحيدة التي لا تُنسى فيها، فلا يبقى الحد المنخفض سارياً للأبد.
+    if(type === 'oil' && SETTINGS.oilKm > 0 && SETTINGS.oilKm < 2000){
+      setTimeout(function(){
+        if(confirm('حد تغيير الزيت الحالي ' + km(SETTINGS.oilKm) +
+                   ' كم — وهو حد فترة التوضيب.\n\nهل تريد إعادته إلى 5000 كم الآن؟')){
+          db.ref('vehicleSettings/oilKm').set(5000).then(function(){
+            SETTINGS.oilKm = 5000;
+            document.getElementById('stOil').value = 5000;
+            renderAlerts(); renderVehicles();
+            toast('✅ أُعيد الحد إلى 5000 كم');
+          }).catch(function(e2){
+            toast('تعذّر التعديل: ' + e2.message);
+          });
+        }
+      }, 700);
+    }
   }).catch(function(err){
     btn.disabled = false;
     msg('mMsg', 'تعذّر الحفظ: ' + err.message, false);
+  });
+});
+
+/* ===== نافذة تعديل المركبة ===== */
+function openEdit(id){
+  _ctxId = id;
+  var v = VEHICLES[id] || {};
+  document.getElementById('eWho').textContent = v.name || '—';
+  document.getElementById('eName').value   = v.name || '';
+  document.getElementById('eYear').value   = v.year || '';
+  document.getElementById('ePlate').value  = v.plate || '';
+  document.getElementById('eDriver').value = v.driver || '';
+  document.getElementById('eOdo').value    = v.odometer || '';
+  document.getElementById('eOil').value    = v.lastOilKm || '';
+  document.getElementById('eMsg').className = 'msg';
+  document.getElementById('eOv').classList.add('show');
+}
+function closeEdit(){ document.getElementById('eOv').classList.remove('show'); _ctxId = ''; }
+document.getElementById('eCancel').addEventListener('click', closeEdit);
+document.getElementById('eOv').addEventListener('click', function(ev){
+  if(ev.target === this) closeEdit();
+});
+
+document.getElementById('eSave').addEventListener('click', function(){
+  if(!_ctxId || !db){ msg('eMsg', 'قاعدة البيانات غير متاحة.', false); return; }
+  var name = String(document.getElementById('eName').value || '').trim();
+  if(!name){ msg('eMsg', 'اسم المركبة مطلوب.', false); return; }
+
+  var patch = {
+    name: name,
+    year: String(document.getElementById('eYear').value || '').trim(),
+    plate: String(document.getElementById('ePlate').value || '').trim(),
+    driver: String(document.getElementById('eDriver').value || '').trim(),
+    odometer: num(document.getElementById('eOdo').value),
+    lastOilKm: num(document.getElementById('eOil').value)
+  };
+
+  var updates = {};
+  for(var k in patch){
+    if(Object.prototype.hasOwnProperty.call(patch, k)){
+      updates['vehicles/' + _ctxId + '/' + k] = patch[k];
+    }
+  }
+
+  var btn = this, id = _ctxId;
+  btn.disabled = true;
+  db.ref().update(updates).then(function(){
+    btn.disabled = false;
+    var v = VEHICLES[id] || {};
+    for(var k2 in patch){
+      if(Object.prototype.hasOwnProperty.call(patch, k2)) v[k2] = patch[k2];
+    }
+    VEHICLES[id] = v;
+    closeEdit();
+    renderAlerts(); renderVehicles(); paintDefaultVeh();
+    toast('✅ حُفظ التعديل');
+  }).catch(function(err){
+    btn.disabled = false;
+    msg('eMsg', 'تعذّر الحفظ: ' + err.message, false);
+  });
+});
+
+document.getElementById('eDel').addEventListener('click', function(){
+  if(!_ctxId || !db) return;
+  var id = _ctxId;
+  var v = VEHICLES[id] || {};
+  if(!confirm('حذف «' + (v.name || '') + '» من قائمة المركبات؟')) return;
+  var btn = this;
+  btn.disabled = true;
+  db.ref('vehicles/' + id).remove().then(function(){
+    btn.disabled = false;
+    delete VEHICLES[id];
+    closeEdit();
+    renderAlerts(); renderVehicles(); paintDefaultVeh();
+    toast('حُذفت المركبة');
+  }).catch(function(err){
+    btn.disabled = false;
+    msg('eMsg', 'تعذّر الحذف: ' + err.message, false);
   });
 });
 
