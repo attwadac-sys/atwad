@@ -1948,6 +1948,23 @@ function selGas(){
 /* كشف تسرّب الفريون: يحجز العميل المبدئي فقط (100 ريال، نصف ساعة).
    الكشف العميق وزيارتاه تُرتَّب من لوحة المواعيد بعد نتيجة المبدئي. */
 var LEAK_SERVICE = 'كشف تسرّب مبدئي';
+
+/* خدمات لا يمكن تقدير زمنها بدقة قبل الوصول — حالة المكيف هي التي تحكم.
+   تُذكر للعميل بوصفها تقديرية صراحةً، فلا يُفاجأ بزيارة أطول. */
+var VARIABLE_TIME_SERVICES = {};
+VARIABLE_TIME_SERVICES[MAINT_SERVICE] = true;
+VARIABLE_TIME_SERVICES[GAS_SERVICE]   = true;
+VARIABLE_TIME_SERVICES[LEAK_SERVICE]  = true;
+
+/* سطر المدة في رسالة الواتساب. العميل كان يرى «الوقت: 14:00 - 16:00»
+   وهي نافذة الوصول لا مدة العمل، فيظن أن الفريق ينصرف الرابعة. */
+function workDurationLine(){
+  var mins = calcDur();
+  if(!mins || mins <= 0) return '';
+  var txt = 'مدة العمل المتوقعة: ' + fmtDur(mins) + ' تقريباً';
+  if(VARIABLE_TIME_SERVICES[S.serviceAr]) txt += ' (قد تزيد حسب حالة المكيف)';
+  return txt;
+}
 var LEAK_PRICE   = 100;
 function selLeak(){
   selSvc(LEAK_SERVICE, 'Leak Detection', LEAK_PRICE, 'sv11');
@@ -2449,7 +2466,20 @@ function calcDur(){
   if(S.serviceAr === MIXED_SERVICE) return mixedDuration();
   return Math.min((DUR_MAP[S.serviceAr]||30)*S.units,240);
 }
-function fmtDur(m){return m<60?m+' دقيقة':Math.floor(m/60)+' ساعة'+(m%60>0?' و'+m%60+' دقيقة':'');}
+/* صيغة المدة بعربية سليمة — صارت تُرسل للعميل لا للوحة الإدارة وحدها،
+   فـ«3 ساعة و30 دقيقة» لم تعد مقبولة. */
+function fmtDur(m){
+  m = parseInt(m,10) || 0;
+  if(m < 60) return m + ' دقيقة';
+  var h = Math.floor(m/60), r = m % 60, base;
+  if(h === 1)      base = 'ساعة';
+  else if(h === 2) base = 'ساعتان';
+  else if(h <= 10) base = h + ' ساعات';
+  else             base = h + ' ساعة';
+  if(r === 0)  return base;
+  if(r === 30) return base + ' ونصف';
+  return base + ' و' + r + ' دقيقة';
+}
 
 function checkDateAndSlots(date){
   if(!date) return;
@@ -2778,11 +2808,13 @@ function submitBooking(){
       'الجوال: '+S.phone,
       'التاريخ: '+fmtDate(S.date),
       'الوقت: '+S.time,
+      workDurationLine(),
       'المدينة: '+S.city,
       'الحي: '+(S.district||'—'),
       'الموقع: '+S.addr
     ];
     if(S.source && LEAD_SOURCE_LABELS[S.source]) messageLines.push('المصدر: '+LEAD_SOURCE_LABELS[S.source]);
+    messageLines = messageLines.filter(function(l){ return l !== ''; });
     var msg=encodeURIComponent(messageLines.join('\n'));
     var waUrl='https://wa.me/966509720382?text='+msg;
     // لا نضع رقمًا مرجعيًا في رسالة الفشل؛ الرقم يصبح حجزًا معتمدًا فقط
@@ -2796,13 +2828,14 @@ function submitBooking(){
       'الجوال: '+S.phone,
       'التاريخ: '+fmtDate(S.date),
       'الوقت المطلوب: '+S.time,
+      workDurationLine(),
       'المدينة: '+S.city,
       'الحي: '+(S.district||'—'),
       'الموقع: '+S.addr
     ];
     // يُبنى الرابط وقت الفشل لا قبله، حتى نُضمّنه رمز الخطأ الحقيقي.
     function buildUnconfirmedWaUrl(diagLine){
-      var lines=unconfirmedMessageLines.slice();
+      var lines=unconfirmedMessageLines.filter(function(l){ return l !== ''; });
       if(diagLine) lines.push(diagLine);
       return 'https://wa.me/966509720382?text='+encodeURIComponent(lines.join('\n'));
     }
