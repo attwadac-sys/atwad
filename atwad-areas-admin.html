@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>إدارة الأحياء — أطواد</title>
+<link rel="icon" href="favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--deep:#0A2540;--sky:#38BDF8;--ice:#E2E8F0;--mist:#64748B;--frost:#F8FAFC;
+  --ok:#059669;--warn:#D97706;--bad:#B91C1C;}
+*{box-sizing:border-box;}
+body{margin:0;background:#F1F5F9;font-family:'Tajawal',sans-serif;color:var(--deep);padding:18px 16px 70px;}
+.wrap{max-width:760px;margin:0 auto;}
+.head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px;}
+h1{font-size:23px;margin:0;}
+.sub{font-size:13.5px;color:var(--mist);line-height:1.85;margin-bottom:18px;}
+.pill{font-size:12px;font-weight:700;padding:5px 12px;border-radius:99px;background:#E0F2FE;color:#075985;}
+.pill.off{background:#FEE2E2;color:#991B1B;}
+.card{background:#fff;border:1.5px solid var(--ice);border-radius:16px;padding:16px;margin-bottom:13px;}
+.zone-hd{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;
+  padding-bottom:11px;border-bottom:1px solid var(--ice);margin-bottom:11px;}
+.zone-name{font-size:16px;font-weight:800;}
+.zone-min{font-size:12px;color:var(--mist);display:flex;align-items:center;gap:7px;}
+.zone-min input{font-family:'Tajawal',sans-serif;font-size:14px;font-weight:700;width:62px;
+  padding:6px 9px;border:1.5px solid var(--ice);border-radius:9px;color:var(--deep);
+  direction:ltr;text-align:center;}
+.zone-min input:focus{outline:0;border-color:var(--sky);}
+.chips{display:flex;flex-wrap:wrap;gap:8px;}
+.chip{display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:700;
+  background:var(--frost);border:1.5px solid var(--ice);border-radius:99px;padding:7px 8px 7px 13px;}
+.chip button{font-family:'Tajawal',sans-serif;border:0;background:#FEE2E2;color:#991B1B;
+  width:22px;height:22px;border-radius:50%;cursor:pointer;font-size:14px;font-weight:800;line-height:1;}
+.chip button:hover{background:#FECACA;}
+.addrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+.addrow input{font-family:'Tajawal',sans-serif;font-size:14.5px;padding:10px 12px;
+  border:1.5px solid var(--ice);border-radius:11px;flex:1 1 170px;min-width:0;color:var(--deep);}
+.addrow input:focus{outline:0;border-color:var(--sky);}
+.mini{font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;border:1px solid var(--ice);
+  border-radius:10px;padding:9px 15px;cursor:pointer;background:var(--frost);color:var(--deep);}
+.mini:hover{background:#EEF2F7;}
+.mini.g{background:#D1FAE5;color:#065F46;border-color:#A7F3D0;}
+button.big{font-family:'Tajawal',sans-serif;font-size:15.5px;font-weight:800;border:0;border-radius:12px;
+  background:var(--sky);color:#fff;padding:13px 26px;cursor:pointer;}
+button.big:disabled{opacity:.42;cursor:default;}
+button.ghost{font-family:'Tajawal',sans-serif;font-size:14px;font-weight:700;border:1.5px solid var(--ice);
+  border-radius:12px;background:#fff;color:var(--deep);padding:12px 20px;cursor:pointer;}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:4px;}
+.msg{font-size:13.5px;font-weight:700;line-height:1.85;margin-top:12px;min-height:22px;}
+.msg.ok{color:#065F46;} .msg.bad{color:var(--bad);} .msg.warn{color:#92400E;}
+.note{font-size:12.5px;color:var(--mist);line-height:1.85;background:var(--frost);
+  border:1px solid var(--ice);border-radius:12px;padding:12px 14px;margin-top:6px;}
+.srcline{font-size:12px;color:var(--mist);margin-bottom:12px;}
+.empty{font-size:13px;color:var(--mist);padding:6px 0;}
+.boundary{background:#EFF6FF;border:1.5px solid #BFDBFE;color:#1E40AF;border-radius:12px;
+  padding:12px 14px;font-size:13px;font-weight:700;line-height:1.85;margin-bottom:13px;}
+</style>
+</head>
+<body>
+<!-- ترتيب التحميل مقصود: الـSDK ثم atwad-firebase.js ثم atwad-auth.js -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="atwad-firebase.js"></script>
+<script src="atwad-auth.js"></script>
+<script src="atwad-districts.js"></script>
+
+<div class="wrap">
+  <div class="head">
+    <h1>📍 إدارة الأحياء</h1>
+    <span class="pill" id="pill">يتحقق…</span>
+  </div>
+  <p class="sub">
+    أحياء نطاق الخدمة كما تظهر للعميل في صفحة الحجز. أضف حيّاً أو احذفه،
+    وحدّد لكل شريحةٍ أقلَّ عددٍ من المكيفات يُقبل به الحجز الإلكتروني.
+  </p>
+
+  <div class="boundary">
+    حدّ النطاق الحالي: شمال شارع فلسطين.
+  </div>
+
+  <div class="srcline" id="srcline"></div>
+
+  <div id="zones"></div>
+
+  <div class="card">
+    <div class="bar">
+      <button class="big" id="saveBtn" disabled>💾 حفظ ونشر للعملاء</button>
+      <button class="ghost" id="reloadBtn">↺ إلغاء التعديلات</button>
+      <button class="ghost" id="defBtn">استعادة القائمة الأصلية</button>
+    </div>
+    <div class="msg" id="msg"></div>
+    <div class="note">
+      الحفظ ينشر القائمة فوراً لكل من يفتح صفحة الحجز — لا يحتاج رفع ملف.
+      وإن تعذّر الحفظ فالقائمة المكتوبة في <strong>atwad-districts.js</strong>
+      تبقى عاملةً عند العميل، فلا تظهر له صفحةٌ بلا أحياء.
+    </div>
+  </div>
+</div>
+
+<script src="atwad-nav.js"></script>
+<script>
+'use strict';
+var ADMIN_UID = 'NU8g25megKefUOBQGvfkVtBOw802';
+var adb = null;
+var zones = [];
+var dirty = false;
+
+function el(id){ return document.getElementById(id); }
+
+function say(text, kind){
+  var m = el('msg');
+  m.textContent = text || '';
+  m.className = 'msg' + (kind ? ' ' + kind : '');
+}
+
+function markDirty(){
+  dirty = true;
+  el('saveBtn').disabled = false;
+  say('');
+}
+
+function esc(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                  .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/** رسم الشرائح وأحيائها */
+function render(){
+  var html = '', i, j, z, items;
+  for(i = 0; i < zones.length; i++){
+    z = zones[i];
+    items = z.items || [];
+    html += '<div class="card">' +
+      '<div class="zone-hd">' +
+        '<span class="zone-name">' + esc(z.label) + '</span>' +
+        '<span class="zone-min">أقل عدد مكيفات' +
+          '<input type="number" min="1" max="50" value="' + (z.minUnits || 1) + '"' +
+          ' data-zone="' + i + '" class="minInput"></span>' +
+      '</div>';
+    if(items.length === 0){
+      html += '<div class="empty">لا أحياء في هذه الشريحة بعد — أضف أدناه.</div>';
+    } else {
+      html += '<div class="chips">';
+      for(j = 0; j < items.length; j++){
+        html += '<span class="chip">' + esc(items[j]) +
+          '<button data-zone="' + i + '" data-item="' + j + '" class="delBtn"' +
+          ' title="حذف">×</button></span>';
+      }
+      html += '</div>';
+    }
+    html += '<div class="addrow">' +
+      '<input type="text" placeholder="اسم الحي" maxlength="40" data-zone="' + i + '" class="newInput">' +
+      '<button class="mini g addBtn" data-zone="' + i + '">➕ أضف</button>' +
+      '</div></div>';
+  }
+  el('zones').innerHTML = html;
+  bindRows();
+}
+
+/* الأزرار تُربط بعد كل رسم — الرسم يتلف ما قبله */
+function bindRows(){
+  var dels = document.querySelectorAll('.delBtn');
+  var i;
+  for(i = 0; i < dels.length; i++){
+    dels[i].addEventListener('click', function(){
+      var zi = parseInt(this.getAttribute('data-zone'), 10);
+      var ii = parseInt(this.getAttribute('data-item'), 10);
+      var name = zones[zi].items[ii];
+      if(!window.confirm('حذف حي «' + name + '» من القائمة؟')) return;
+      zones[zi].items.splice(ii, 1);
+      markDirty();
+      render();
+    });
+  }
+  var mins = document.querySelectorAll('.minInput');
+  for(i = 0; i < mins.length; i++){
+    mins[i].addEventListener('change', function(){
+      var zi = parseInt(this.getAttribute('data-zone'), 10);
+      var v = Math.max(1, Math.min(50, parseInt(this.value, 10) || 1));
+      this.value = v;
+      zones[zi].minUnits = v;
+      markDirty();
+    });
+  }
+  var adds = document.querySelectorAll('.addBtn');
+  for(i = 0; i < adds.length; i++){
+    adds[i].addEventListener('click', function(){
+      addFrom(parseInt(this.getAttribute('data-zone'), 10));
+    });
+  }
+  var news = document.querySelectorAll('.newInput');
+  for(i = 0; i < news.length; i++){
+    news[i].addEventListener('keydown', function(e){
+      if(e.key === 'Enter'){
+        e.preventDefault();
+        addFrom(parseInt(this.getAttribute('data-zone'), 10));
+      }
+    });
+  }
+}
+
+/** إضافة حيّ إلى شريحة، مع منع التكرار عبر الشرائح كلها */
+function addFrom(zoneIndex){
+  var inputs = document.querySelectorAll('.newInput');
+  var box = null, i;
+  for(i = 0; i < inputs.length; i++){
+    if(parseInt(inputs[i].getAttribute('data-zone'), 10) === zoneIndex) box = inputs[i];
+  }
+  if(!box) return;
+  var name = String(box.value || '').trim().replace(/^حي\s+/, '');
+  if(name.length < 2){ say('اكتب اسم الحي أولاً', 'bad'); box.focus(); return; }
+
+  /* التكرار يُنشئ حيّاً في شريحتين بحدّين مختلفين، فيختلف الحكم على العميل
+     بحسب أيّهما وُجد أولاً. فيُمنع من أصله. */
+  var n = window.AtwadDistricts.norm(name);
+  var j, k, items;
+  for(j = 0; j < zones.length; j++){
+    items = zones[j].items || [];
+    for(k = 0; k < items.length; k++){
+      if(window.AtwadDistricts.norm(items[k]) === n){
+        say('«' + items[k] + '» موجودٌ في شريحة «' + zones[j].label + '»', 'warn');
+        return;
+      }
+    }
+  }
+  zones[zoneIndex].items.push(name);
+  box.value = '';
+  markDirty();
+  render();
+  say('أُضيف «' + name + '» — اضغط حفظ لينشر للعملاء', 'warn');
+}
+
+function countAll(){
+  var t = 0, i;
+  for(i = 0; i < zones.length; i++) t += (zones[i].items || []).length;
+  return t;
+}
+
+function loadList(){
+  window.AtwadDistricts.load(adb, function(z, source){
+    zones = JSON.parse(JSON.stringify(z));
+    dirty = false;
+    el('saveBtn').disabled = true;
+    el('srcline').textContent = (source === 'firebase')
+      ? 'القائمة المعروضة: المنشورة في فَيَربيس · ' + countAll() + ' حيّاً'
+      : 'القائمة المعروضة: الأصلية من الملف (لم يُنشر شيء بعد) · ' + countAll() + ' حيّاً';
+    render();
+    say('');
+  });
+}
+
+function save(){
+  if(countAll() === 0){
+    say('لا يمكن نشر قائمةٍ فارغة — صفحة الحجز تحتاج حيّاً واحداً على الأقل', 'bad');
+    return;
+  }
+  el('saveBtn').disabled = true;
+  say('يحفظ…');
+  window.AtwadDistricts.save(adb, zones).then(function(){
+    dirty = false;
+    say('✅ نُشرت القائمة — ' + countAll() + ' حيّاً. افتح صفحة الحجز وتأكّد.', 'ok');
+    el('srcline').textContent = 'القائمة المعروضة: المنشورة في فَيَربيس · ' + countAll() + ' حيّاً';
+  }).catch(function(err){
+    el('saveBtn').disabled = false;
+    console.error('[areas] تعذّر الحفظ:', err);
+    var m = String((err && err.message) || err);
+    if(m.indexOf('permission') > -1 || m.indexOf('PERMISSION') > -1){
+      say('⛔ القواعد ترفض الكتابة على publicSettings — انشر قواعد فَيَربيس من لوحة التحكم ثم أعد المحاولة', 'bad');
+    } else {
+      say('⛔ تعذّر الحفظ: ' + m, 'bad');
+    }
+  });
+}
+
+window.addEventListener('beforeunload', function(e){
+  if(dirty){ e.preventDefault(); e.returnValue = ''; }
+});
+
+window.__atwadInitPage = function(user){
+  if(!user || user.uid !== ADMIN_UID){
+    document.body.innerHTML = '<div style="padding:40px;text-align:center;font-family:Tajawal,sans-serif;">' +
+      'هذا الحساب غير مصرّح له.</div>';
+    return;
+  }
+  adb = window.db || null;
+  if(!adb){
+    el('pill').textContent = 'غير متصل';
+    el('pill').className = 'pill off';
+    say('لا اتصال بفَيَربيس — تُعرض القائمة الأصلية للاطلاع فقط، والحفظ معطَّل', 'warn');
+  } else {
+    el('pill').textContent = 'متصل';
+  }
+  el('saveBtn').addEventListener('click', save);
+  el('reloadBtn').addEventListener('click', function(){
+    if(dirty && !window.confirm('إلغاء التعديلات غير المحفوظة؟')) return;
+    loadList();
+  });
+  el('defBtn').addEventListener('click', function(){
+    if(!window.confirm('استعادة القائمة الأصلية المكتوبة في الملف؟ لن تُنشر حتى تضغط حفظ.')) return;
+    zones = window.AtwadDistricts.defaults();
+    markDirty();
+    render();
+    say('استُعيدت القائمة الأصلية — لم تُنشر بعد', 'warn');
+  });
+  loadList();
+};
+</script>
+</body>
+</html>

@@ -509,7 +509,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
     </div>
     <div class="modal-body">
       <div class="area-check-note">
-        يجب تحديد موقع العميل قبل إدخال بيانات الحجز، حتى لا يُنشأ موعد في جنوب جدة أو خارج نطاق الخدمة الحالي.
+        يجب تحديد موقع العميل قبل إدخال بيانات الحجز، حتى لا يُنشأ موعد خارج نطاق الخدمة. والحدّ الحالي: شمال شارع فلسطين.
       </div>
       <div class="form-group">
         <label>اسم الحي <span class="req">*</span></label>
@@ -519,9 +519,9 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
         <label>نطاق الموقع <span class="req">*</span></label>
         <select id="area_check_zone" onchange="updateAreaCheckMessage()">
           <option value="">-- اختر نطاق الموقع --</option>
-          <option value="approved">✅ داخل نطاق الخدمة الحالي</option>
-          <option value="south">⛔ جنوب جدة</option>
-          <option value="outside">⛔ خارج نطاق الخدمة الحالي</option>
+          <option value="approved">✅ شمال شارع فلسطين — داخل النطاق</option>
+          <option value="south">⛔ جنوب شارع فلسطين</option>
+          <option value="outside">⛔ خارج جدة</option>
         </select>
       </div>
       <div class="area-check-alert" id="area_check_alert"></div>
@@ -2173,7 +2173,9 @@ function updateAreaCheckMessage() {
   var alertBox = document.getElementById('area_check_alert');
   var continueBtn = document.getElementById('area_check_continue');
   if(zone === 'south' || zone === 'outside') {
-    alertBox.textContent = 'هذا الموقع خارج نطاق الخدمة الحالي لمؤسسة أطواد، ولا يمكن إنشاء حجز له.';
+    alertBox.textContent = (zone === 'south')
+      ? 'هذا الموقع جنوب شارع فلسطين — خارج نطاق الخدمة الحالي، ولا يمكن إنشاء حجز له.'
+      : 'هذا الموقع خارج نطاق الخدمة الحالي لمؤسسة أطواد، ولا يمكن إنشاء حجز له.';
     alertBox.style.display = 'block';
     continueBtn.disabled = true;
     continueBtn.style.opacity = '.45';

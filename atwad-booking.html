@@ -606,8 +606,8 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
             <option>الأصالة</option><option>المروة</option>
           </optgroup>
           <optgroup label="خيارات أخرى">
-            <option value="__other_north__">حي آخر داخل شمال جدة — يحتاج تأكيد</option>
-            <option value="__outside__">حي خارج شمال جدة (جنوب جدة أو غيره)</option>
+            <option value="__other_north__">حي آخر شمال شارع فلسطين — يحتاج تأكيد</option>
+            <option value="__outside__">حي جنوب شارع فلسطين أو خارج جدة</option>
           </optgroup>
         </select>
         <div class="err-msg" id="e_district">اختر الحي</div>
@@ -620,13 +620,13 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
 
         <div class="recheck-note" id="districtOtherNote" style="background:#EFF6FF;border-color:#BFDBFE;color:#1E40AF;">
           <strong>ℹ️ حي خارج القائمة</strong><br>
-          نخدم الأحياء الواقعة شمال شارع الأمير محمد بن عبدالعزيز (التحلية سابقاً).
+          نخدم الأحياء الواقعة شمال شارع فلسطين.
           الحجز الإلكتروني من هذه الأحياء متاح للطلبات من <strong>5 مكيفات فأكثر</strong>،
           ولما دونها راسلنا على واتساب ونرتّب لك.
         </div>
         <div class="friday-closed" id="otherNorthMinBox" style="display:none;">
           <div class="icon">📦</div>
-          <p>حجز هذا الحي إلكترونياً يبدأ من <strong>5 مكيفات</strong><br>طلبك الحالي أقل من ذلك</p>
+          <p>حجز هذا الحي إلكترونياً يبدأ من <strong id="otherNorthMinNum">5 مكيفات</strong><br>طلبك الحالي أقل من ذلك</p>
           <button type="button" class="friday-wa" onclick="requestOtherNorthApproval()">📲 راسلنا لترتيب الزيارة</button>
           <span class="friday-hint">نردّ عليك بالقبول أو نقترح موعداً يجمع طلبك مع زيارة قريبة</span>
         </div>
@@ -634,7 +634,7 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
 
       <div class="friday-closed" id="outsideAreaBox">
         <div class="icon">⛔</div>
-        <p>نخدم حالياً شمال جدة فقط<br>من شارع الأمير محمد بن عبدالعزيز (التحلية) شمالاً</p>
+        <p>نخدم حالياً شمال جدة<br>من شارع فلسطين شمالاً</p>
         <button type="button" class="friday-wa" onclick="requestAreaApproval()">📲 تواصل معنا للاستفسار</button>
         <span class="friday-hint">إن كان موقعك قريباً من الحد، راسلنا وسنفيدك</span>
       </div>
@@ -821,6 +821,7 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
 
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+<script src="atwad-districts.js"></script>
 <script>
 var db = null;
 // يمنع إرسال الحجز أكثر من مرة أثناء انتظار رد Firebase.
@@ -1957,6 +1958,29 @@ function selLeak(){
 /* أحياء شمال جدة غير المدرجة في القائمة: الحجز الإلكتروني من 5 مكيفات فأكثر */
 var OTHER_NORTH_MIN_UNITS = 5;
 
+/** الحدّ الأدنى لحيٍّ مدرج — من شريحته في قائمة الأحياء */
+function districtMinUnits(name){
+  if(!window.AtwadDistricts) return 1;
+  return window.AtwadDistricts.minUnitsFor(name);
+}
+
+/**
+ * يفحص عدد المكيفات أمام حدّ الحي.
+ * يرجع true إن جاز الحجز، و false إن أُظهر صندوقُ الحدّ الأدنى.
+ */
+function enforceDistrictMinUnits(minUnits){
+  var box = document.getElementById('otherNorthMinBox');
+  var min = Math.max(1, parseInt(minUnits, 10) || 1);
+  if(min > 1 && unitsForAreaCheck() < min){
+    var numEl = document.getElementById('otherNorthMinNum');
+    if(numEl) numEl.textContent = min + ' مكيفات';
+    if(box) box.style.display = 'block';
+    return false;
+  }
+  if(box) box.style.display = 'none';
+  return true;
+}
+
 /** عدد المكيفات المعتمد في فحص نطاق الخدمة — يشمل الزيارة المختلطة */
 function unitsForAreaCheck(){
   if(S.serviceAr === MIXED_SERVICE) return (mixedUnits.wash||0) + (mixedUnits.maint||0);
@@ -1966,10 +1990,14 @@ function unitsForAreaCheck(){
 /** يفتح واتساب بطلب جاهز لحي خارج القائمة بعدد أقل من الحد الأدنى */
 function requestOtherNorthApproval(){
   var typed = (document.getElementById('f_district_other')||{}).value || '';
+  /* الحيُّ قد يكون مكتوباً في الخانة، وقد يكون مختاراً من القائمة بحدٍّ
+     أدنى لم يبلغه الطلب — ففي الحالين يُذكر اسمه لا شرطةٌ فارغة. */
+  var picked = (document.getElementById('f_district')||{}).value || '';
+  if(picked.indexOf('__') === 0) picked = '';
   var lines = [
     'السلام عليكم',
-    'أرغب في حجز خدمة، وحيّي خارج قائمة الأحياء في صفحة الحجز.',
-    'الحي: ' + (typed.trim() || '—'),
+    'أرغب في حجز خدمة، وعدد مكيفاتي أقل من الحد الأدنى لحيّي.',
+    'الحي: ' + (typed.trim() || picked || '—'),
     'الخدمة: ' + (S.service || '—'),
     'عدد المكيفات: ' + unitsForAreaCheck()
   ];
@@ -2340,15 +2368,14 @@ function next2(){
       } else {
         document.getElementById('e_district_other').className='err-msg';
         document.getElementById('f_district_other').className='';
-        /* حي داخل شمال جدة لكنه خارج القائمة: الرحلة إليه تستحقّ من 5 مكيفات
+        /* حي داخل النطاق لكنه خارج القائمة: الرحلة إليه تستحقّ من 5 مكيفات
            فأكثر. ما دون ذلك لا يُرفض، بل يُحوّل إلى واتساب لترتيبه يدوياً. */
-        if(unitsForAreaCheck() < OTHER_NORTH_MIN_UNITS){
-          document.getElementById('otherNorthMinBox').style.display='block';
-          ok=false;
-        } else {
-          document.getElementById('otherNorthMinBox').style.display='none';
-        }
+        if(!enforceDistrictMinUnits(OTHER_NORTH_MIN_UNITS)) ok=false;
       }
+    } else {
+      /* حيٌّ مدرج: حدُّه الأدنى من شريحته، لا رقمٌ ثابت — فشريحةُ ما بعد
+         التحلية حدُّها خمسة، وشرائح الشمال بلا شرط. */
+      if(!enforceDistrictMinUnits(districtMinUnits(district))) ok=false;
     }
   }
   if(!exactLocation){
@@ -3274,6 +3301,45 @@ function goStep(n){
     document.addEventListener('DOMContentLoaded', renderDayChips);
   } else {
     renderDayChips();
+  }
+})();
+
+/* ===== أحياء النطاق =====
+   الخيارات المكتوبة في الصفحة هي آخرُ احتياط: إن لم يُحمَّل ملف الأحياء
+   بقيت كما هي ولم تظهر القائمة فارغة. وإن حُمِّل، أُعيد بناؤها منه،
+   ثم من فَيَربيس إن كانت قائمتها صالحة. */
+(function () {
+  var OTHER_GROUP =
+    '<optgroup label="خيارات أخرى">' +
+    '<option value="__other_north__">حي آخر شمال شارع فلسطين — يحتاج تأكيد</option>' +
+    '<option value="__outside__">حي جنوب شارع فلسطين أو خارج جدة</option>' +
+    '</optgroup>';
+
+  function build() {
+    var sel = document.getElementById('f_district');
+    if (!sel || !window.AtwadDistricts) return;
+    var chosen = sel.value;
+    window.AtwadDistricts.fillSelect(sel, '-- اختر الحي --');
+    sel.insertAdjacentHTML('beforeend', OTHER_GROUP);
+    if (chosen) sel.value = chosen;   // لا يُفقد اختيارُ العميل عند وصول القائمة
+  }
+
+  function start() {
+    if (!window.AtwadDistricts) {
+      console.warn('[booking] لم يُحمَّل atwad-districts.js — بقيت قائمة الأحياء المكتوبة');
+      return;
+    }
+    build();
+    window.AtwadDistricts.load(db, function (zones, source) {
+      build();
+      console.log('[booking] قائمة الأحياء من: ' + source);
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', start);
+  } else {
+    start();
   }
 })();
 </script>
