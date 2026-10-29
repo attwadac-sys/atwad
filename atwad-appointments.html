@@ -375,6 +375,8 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+<!-- قوائم الإغلاق الثلاث — مشتركة مع صفحة الفني -->
+<script src="atwad-closing.js"></script>
 </head>
 <body>
 
@@ -770,7 +772,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
         <select id="clTech"></select>
       </div>
       <div class="wr-field">
-        <label for="clNote">ملاحظة (اختياري)</label>
+        <label for="clNote" id="clNoteLbl">ملاحظة (اختياري)</label>
         <textarea id="clNote" placeholder="مثال: الخرطوم كان مسدودًا وتم تنظيفه، رُكّبت صينية جديدة…" style="min-height:56px;"></textarea>
       </div>
       <details class="cl-skip" id="clSkipBox">
@@ -4144,14 +4146,24 @@ function renderClosingSummary(a){
   if(c.skipped){
     return '<div style="background:#FFF1F2;border:1.5px solid #FCA5A5;border-radius:10px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:#B91C1C;">⚠️ قائمة الإغلاق لم تُطبّق — 👷 ' + _wrEsc(who) + '<br>السبب: ' + _wrEsc(c.skipReason || '—') + '</div>';
   }
+  /* يُرسم من المفاتيح المحفوظة لا من قائمةٍ ثابتة: القوائم ثلاث الآن،
+     فزيارةُ صيانةٍ كانت تُعرض بستّة ❌ من بنود الغسيل فيبدو الفنيّ
+     مقصّراً وهو لم يُسأل عنها أصلاً. */
   var rows = '';
-  for(var i = 0; i < CLOSING_ITEMS.length; i++){
-    var it = CLOSING_ITEMS[i];
-    var ok = c.checks && c.checks[it.k];
-    rows += '<span style="display:inline-block;margin:2px 0 2px 6px;font-size:11px;">' + (ok ? '✅' : '❌') + ' ' + _wrEsc(it.t) + '</span>';
+  var ks = (c.checks && typeof c.checks === 'object') ? Object.keys(c.checks) : [];
+  for(var i = 0; i < ks.length; i++){
+    var k = ks[i];
+    var txt = window.AtwadClosing ? window.AtwadClosing.label(k, 'ar') : k;
+    rows += '<span style="display:inline-block;margin:2px 0 2px 6px;font-size:11px;">' +
+      (c.checks[k] ? '✅' : '❌') + ' ' + _wrEsc(txt) + '</span>';
   }
+  if(!ks.length){
+    rows = '<span style="font-size:11px;">لا بنود محفوظة</span>';
+  }
+  var kindTxt = (c.kind && window.AtwadClosing)
+    ? (' · ' + window.AtwadClosing.kindLabel(c.kind, 'ar')) : '';
   return '<div style="background:#ECFDF5;border:1.5px solid #6EE7B7;border-radius:10px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:#065F46;">' +
-    '<div style="font-weight:800;margin-bottom:4px;">✅ قائمة الإغلاق موثقة — 👷 ' + _wrEsc(who) + ' · ' + _wrEsc(String(c.at || '').slice(0, 16).replace('T', ' ')) + '</div>' +
+    '<div style="font-weight:800;margin-bottom:4px;">✅ قائمة الإغلاق موثقة — 👷 ' + _wrEsc(who) + kindTxt + ' · ' + _wrEsc(String(c.at || '').slice(0, 16).replace('T', ' ')) + '</div>' +
     rows + (c.note ? '<div style="margin-top:4px;color:#047857;">📝 ' + _wrEsc(c.note) + '</div>' : '') + '</div>';
 }
 
@@ -4268,6 +4280,9 @@ function loadTxCache(){
 // قائمة الإغلاق — لا تُفتح ورقة القبض قبل تأكيد فحص التصريف
 // ============================================================
 var _closingData = null;
+/* بنود الزيارة المفتوحة ونوعها — تُملأ في openClosingModal */
+var _clItems = [];
+var _clKind  = '';
 const CLOSING_ITEMS = [
   { k:'drainTest', t:'اختبار صرف الماء', s:'صُبّ ماء في صينية التصريف وخرج من طرف الخرطوم — وأُرسل فيديو الاختبار' },
   { k:'tilt',      t:'ميلان الوحدة الداخلية والصينية باتجاه الصرف', s:'لا ميلان عكسي يحبس الماء في الصينية' },
@@ -4286,11 +4301,27 @@ function markDone(id){
 }
 
 function openClosingModal(a){
+  /* القائمة بحسب نوع الخدمة — كما في صفحة الفني تماماً، من الملف المشترك.
+     وبنودُه تحمل ar/arS، وهذه الصفحة تعرض t/s، فتُحوَّل عند التحميل. */
+  if(window.AtwadClosing){
+    _clKind = window.AtwadClosing.kindOf(a.service || '');
+    var src = window.AtwadClosing.itemsFor(_clKind);
+    _clItems = [];
+    for(var z = 0; z < src.length; z++){
+      _clItems.push({ k: src[z].k, t: src[z].ar, s: src[z].arS });
+    }
+  } else {
+    console.warn('[appointments] لم يُحمَّل atwad-closing.js — قائمة الغسيل احتياطاً');
+    _clKind = 'wash';
+    _clItems = CLOSING_ITEMS;
+  }
+
   document.getElementById('clWho').textContent =
-    (a.client || '—') + (a.service ? ' · ' + a.service : '') + ' · ' + (a.units || 1) + ' وحدة';
+    (a.client || '—') + (a.service ? ' · ' + a.service : '') + ' · ' + (a.units || 1) + ' وحدة' +
+    (window.AtwadClosing ? ' · ' + window.AtwadClosing.kindLabel(_clKind, 'ar') : '');
   var html = '';
-  for(var i = 0; i < CLOSING_ITEMS.length; i++){
-    var it = CLOSING_ITEMS[i];
+  for(var i = 0; i < _clItems.length; i++){
+    var it = _clItems[i];
     html += '<label class="cl-item"><input type="checkbox" data-k="' + it.k + '" onchange="updateClosingBar()">' +
       '<div><div class="cl-t">' + _wrEsc(it.t) + '</div><div class="cl-s">' + _wrEsc(it.s) + '</div></div></label>';
   }
@@ -4303,6 +4334,13 @@ function openClosingModal(a){
   th += '<option value="team">الفريق كاملاً (غير محدد)</option>';
   techSel.innerHTML = th;
   if(a.tech && TECH_KEYS.indexOf(a.tech) >= 0) techSel.value = a.tech;
+  /* عنوان الملاحظة يصدق على حالها: إلزاميةٌ في زيارة الإصلاح */
+  var noteLbl = document.getElementById('clNoteLbl');
+  if(noteLbl){
+    noteLbl.textContent = (window.AtwadClosing && window.AtwadClosing.needsNote(_clKind))
+      ? 'ملاحظة — ما الخلل وما أُصلح (إلزامي)' : 'ملاحظة (اختياري)';
+  }
+
   document.getElementById('clNote').value = '';
   document.getElementById('clSkipReason').value = '';
   document.getElementById('clSkipBox').open = false;
@@ -4342,7 +4380,7 @@ function confirmClosing(){
     var k = boxes[i].getAttribute('data-k');
     checks[k] = !!boxes[i].checked;
     if(!boxes[i].checked){
-      for(var j = 0; j < CLOSING_ITEMS.length; j++){ if(CLOSING_ITEMS[j].k === k) missing.push(CLOSING_ITEMS[j].t); }
+      for(var j = 0; j < _clItems.length; j++){ if(_clItems[j].k === k) missing.push(_clItems[j].t); }
     }
   }
 
@@ -4356,14 +4394,23 @@ function confirmClosing(){
     }
   }
 
+  /* زيارة الإصلاح بلا وصفٍ للخلل لا تُغلق — كما في صفحة الفني */
+  var noteTxt = String(document.getElementById('clNote').value || '').trim();
+  if(window.AtwadClosing && window.AtwadClosing.needsNote(_clKind) && noteTxt.length < 3){
+    showToast('⚠️ اكتب في الملاحظة ما كان الخلل وما أُصلح — زيارة الصيانة لا تُغلق بدونها');
+    document.getElementById('clNote').focus();
+    return;
+  }
+
   _closingData = {
     checks: checks,
+    kind: _clKind,
     complete: !missing.length,
     skipped: skipped,
     skipReason: skipped ? skipReason : '',
     tech: tech,
     units: parseInt(a.units, 10) || 1,
-    note: String(document.getElementById('clNote').value || '').trim(),
+    note: noteTxt,
     at: new Date().toISOString()
   };
 

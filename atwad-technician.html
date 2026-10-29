@@ -199,6 +199,8 @@ body{font-family:'Cairo',sans-serif;background:#F1F5F9;color:var(--slate);min-he
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 <script src="atwad-firebase.js"></script>
 <script src="atwad-auth.js"></script>
+<!-- قوائم الإغلاق الثلاث — مشتركة مع صفحة الإدارة -->
+<script src="atwad-closing.js"></script>
 <!-- محرّك مطابقة الديون: الفني لا يرى منه إلا المطابق بالهاتف -->
 <script src="atwad-debt.js"></script>
 </head>
@@ -357,12 +359,13 @@ var I18N = {
     odoBig1:'المسافة منذ آخر قراءة ', odoBig2:' كم. هل الرقم صحيح؟',
     odoNoDb:'قاعدة البيانات غير متاحة.', odoSaved:'✅ حُفظت القراءة', odoKm:' — مسافة اليوم: ', km:' كم',
     clTitle:'✅ قائمة الإغلاق — فحص ما قبل المغادرة',
-    clNoteLbl:'ملاحظة (اختياري)',
+    clNoteLbl:'ملاحظة (اختياري)', clNoteReq:'ملاحظة — ما الخلل وما أُصلح (إلزامي)',
     clNotePh:'مثال: الخرطوم كان مسدودًا وتم تنظيفه، رُكّبت صينية جديدة…',
     clSkipSum:'⚠️ القائمة لا تنطبق على هذه الزيارة (معاينة فقط / لم يُفتح المكيف)',
     clSkipPh:'اكتب السبب — إلزامي',
     clCancel:'إلغاء', clGoAll:'✅ تأكيد الفحص والمتابعة للقبض', clGoPart:'✅ تأكيد الفحص',
     clMiss:'⚠️ لم يُؤكَّد: ', clMissTail:' — أكمل القائمة أو اكتب سبب عدم انطباقها',
+    clNeedNote:'⚠️ اكتب في الملاحظة ما كان الخلل وما أُصلح — زيارة الصيانة لا تُغلق بدونها',
     clUnit:'وحدة',
     debtT:'⚠️ دَيْن سابق على هذا العميل:',
     debtS:'حصّله مع مبلغ اليوم. وإن رفض فسجّل مبلغ اليوم فقط وأبلغ الإدارة — لا تجادله.',
@@ -398,12 +401,13 @@ var I18N = {
     odoBig1:'Distance since last reading is ', odoBig2:' km. Is that correct?',
     odoNoDb:'Database unavailable.', odoSaved:'✅ Reading saved', odoKm:' — today\'s distance: ', km:' km',
     clTitle:'✅ Closing checklist — before you leave',
-    clNoteLbl:'Note (optional)',
+    clNoteLbl:'Note (optional)', clNoteReq:'Note — what was the fault and what you fixed (required)',
     clNotePh:'e.g. the drain hose was blocked and was cleaned, a new tray was fitted…',
     clSkipSum:'⚠️ This checklist does not apply to this visit (inspection only / unit not opened)',
     clSkipPh:'Write the reason — required',
     clCancel:'Cancel', clGoAll:'✅ Confirm and continue to payment', clGoPart:'✅ Confirm',
     clMiss:'⚠️ Not confirmed: ', clMissTail:' — complete the list or write why it does not apply',
+    clNeedNote:'⚠️ Write in the note what the fault was and what you fixed — a repair visit cannot close without it',
     clUnit:'unit(s)',
     debtT:'⚠️ This customer has an old unpaid amount:',
     debtS:'Collect it together with today\u2019s amount. If they refuse, record today\u2019s amount only and tell the office — do not argue.',
@@ -1074,6 +1078,10 @@ function loadTxCache(){
 // المفاتيح ونوع البيانات مطابقة لما تكتبه صفحة الإدارة.
 // ============================================================
 var _closingData = null;
+/* بنود الزيارة المفتوحة الآن — تُملأ في openClosingModal بحسب نوع الخدمة.
+   وتبدأ بقائمة الغسيل احتياطاً إن لم يُحمَّل atwad-closing.js. */
+var _clItems = [];
+var _clKind  = '';
 var CLOSING_ITEMS = [
   { k:'drainTest',
     ar:'اختبار صرف الماء',
@@ -1135,12 +1143,28 @@ function openClosingModal(id, source, fbKey){
   clSetTexts();
   var svc = (a && a.service) || '';
   var un  = (a && parseInt(a.units, 10)) || 1;
+
+  /* القائمة تُختار بنوع الخدمة: الغسيل غير الصيانة غير التركيب.
+     وإن غاب الملف المشترك بقيت قائمة الغسيل كما كانت. */
+  if(window.AtwadClosing){
+    _clKind  = window.AtwadClosing.kindOf(svc);
+    _clItems = window.AtwadClosing.itemsFor(_clKind);
+  } else {
+    console.warn('[technician] لم يُحمَّل atwad-closing.js — قائمة الغسيل احتياطاً');
+    _clKind  = 'wash';
+    _clItems = CLOSING_ITEMS;
+  }
+
+  var kindTxt = window.AtwadClosing
+    ? window.AtwadClosing.kindLabel(_clKind, LANG)
+    : payText('غسيل', 'Washing');
   document.getElementById('clWho').textContent =
-    ((a && a.client) || '—') + (svc ? ' · ' + svc : '') + ' · ' + clUnitWord(un);
+    ((a && a.client) || '—') + (svc ? ' · ' + svc : '') + ' · ' + clUnitWord(un) +
+    ' · ' + kindTxt;
 
   var html = '';
-  for(var i = 0; i < CLOSING_ITEMS.length; i++){
-    var it = CLOSING_ITEMS[i];
+  for(var i = 0; i < _clItems.length; i++){
+    var it = _clItems[i];
     html += '<label class="cl-item"><input type="checkbox" data-k="' + it.k + '">' +
       '<div><div class="cl-t">' + payText(it.ar, it.en) + '</div>' +
       '<div class="cl-s">' + payText(it.arS, it.enS) + '</div></div></label>';
@@ -1154,6 +1178,13 @@ function openClosingModal(id, source, fbKey){
       if(lab){ lab.className = ev.target.checked ? 'cl-item on' : 'cl-item'; }
       updateClosingBar();
     });
+  }
+
+  /* عنوان الملاحظة يصدق على حالها: إلزاميةٌ في زيارة الإصلاح لا اختيارية */
+  var noteLbl = document.getElementById('clNoteLbl');
+  if(noteLbl){
+    noteLbl.textContent = (window.AtwadClosing && window.AtwadClosing.needsNote(_clKind))
+      ? t('clNoteReq') : t('clNoteLbl');
   }
 
   document.getElementById('clNote').value = '';
@@ -1193,8 +1224,8 @@ function confirmClosing(){
     var k = boxes[i].getAttribute('data-k');
     checks[k] = !!boxes[i].checked;
     if(!boxes[i].checked){
-      for(var j = 0; j < CLOSING_ITEMS.length; j++){
-        if(CLOSING_ITEMS[j].k === k){ missing.push(payText(CLOSING_ITEMS[j].ar, CLOSING_ITEMS[j].en)); }
+      for(var j = 0; j < _clItems.length; j++){
+        if(_clItems[j].k === k){ missing.push(payText(_clItems[j].ar, _clItems[j].en)); }
       }
     }
   }
@@ -1211,14 +1242,24 @@ function confirmClosing(){
     }
   }
 
+  /* زيارة الإصلاح بلا وصفٍ للخلل لا تُغلق: بعد شهرٍ لا يُعرف ما أُصلح،
+     ولا يُحتجّ بها في ضمانٍ ولا يُراجَع بها عطلٌ عاد. */
+  var noteTxt = String(document.getElementById('clNote').value || '').trim();
+  if(window.AtwadClosing && window.AtwadClosing.needsNote(_clKind) && noteTxt.length < 3){
+    showToast(t('clNeedNote'));
+    document.getElementById('clNote').focus();
+    return;
+  }
+
   _closingData = {
     checks: checks,
+    kind: _clKind,
     complete: !missing.length,
     skipped: skipped,
     skipReason: skipped ? skipReason : '',
     tech: currentTech || (a && a.tech) || '',
     units: parseInt(a && a.units, 10) || 1,
-    note: String(document.getElementById('clNote').value || '').trim(),
+    note: noteTxt,
     at: new Date().toISOString()
   };
 
