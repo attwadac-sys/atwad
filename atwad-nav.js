@@ -27,7 +27,9 @@
     { file:'atwad-appointments.html', label:'المواعيد',  icon:'📅' },
     { file:'atwad-workorders.html',   label:'الأوامر',   icon:'🔧' },
     { file:'atwad-finance.html',      label:'المالية',   icon:'💰' },
-    { file:'atwad-reports.html',      label:'التقارير',  icon:'📊' }
+    /* حلّت الأحياء محلّ التقارير في شريط الجوال بطلبٍ منك. والتقارير تبقى
+       في القائمة الجانبية على الحاسب، وفي صفحة الروابط على الجوال. */
+    { file:'atwad-areas-admin.html',  label:'الأحياء',   icon:'📍' }
   ];
 
   var INTERNAL = /^(index|atwad-[\w-]+)\.html$/;
@@ -159,6 +161,37 @@
       if(!INTERNAL.test(m[1])) continue;
       nodes[i].removeAttribute('onclick');
       nodes[i].addEventListener('click', handlerFor(m[1]));
+    }
+  }
+
+  /**
+   * يُدخل بند «الأحياء» في القائمة الجانبية.
+   *
+   * القائمة مكتوبةٌ يدوياً في ستّ صفحات، فإضافةُ بندٍ فيها تعني تعديل
+   * ستّة ملفات ورفعها. وهذا الملف يُحمَّل في كلٍّ منها، فالإضافة هنا
+   * تكفي عنها جميعاً. ويُترك له onclick بصيغة بقية البنود ليلتقطه
+   * rebindSidebar بعده فيفتحه في تبويبه الخاص كسائرها.
+   */
+  function addAreasNavItem(){
+    if(document.getElementById('nav-areas')) return;
+    var any = document.querySelector('.nav-item');
+    if(!any || !any.parentNode) return;          // صفحةٌ بلا قائمة جانبية
+    var box = any.parentNode;
+
+    var item = document.createElement('div');
+    item.className = 'nav-item';
+    item.id = 'nav-areas';
+    item.title = 'Service areas';
+    item.setAttribute('onclick', "location.href='atwad-areas-admin.html'");
+    item.innerHTML = '<span class="nav-icon">📍</span> الأحياء';
+    if(currentPage() === 'atwad-areas-admin.html') item.className = 'nav-item active';
+
+    /* قبل «الإعدادات» إن وُجد — فهو آخر القائمة دائماً */
+    var settings = document.getElementById('nav-settings');
+    if(settings && settings.parentNode === box){
+      box.insertBefore(item, settings);
+    } else {
+      box.appendChild(item);
     }
   }
 
@@ -310,6 +343,7 @@
       claimTab();
       injectStyles();
       buildMobileBar();
+      addAreasNavItem();
       rebindSidebar();
       rebindLinks();
       watchOverlays();
