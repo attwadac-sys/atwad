@@ -1082,6 +1082,7 @@ var _closingData = null;
    وتبدأ بقائمة الغسيل احتياطاً إن لم يُحمَّل atwad-closing.js. */
 var _clItems = [];
 var _clKind  = '';
+var _clSkipAllowed = true;
 var CLOSING_ITEMS = [
   { k:'drainTest',
     ar:'اختبار صرف الماء',
@@ -1189,7 +1190,16 @@ function openClosingModal(id, source, fbKey){
 
   document.getElementById('clNote').value = '';
   document.getElementById('clSkipReason').value = '';
-  document.getElementById('clSkipBox').open = false;
+
+  /* بابُ التخطّي: مفتوحٌ لغسل الوحدة الخارجية وحدها وللكشف والمعاينة،
+     مسدودٌ في كل غسيلٍ كامل وإصلاحٍ وتركيب — بقرارٍ منك. */
+  _clSkipAllowed = !window.AtwadClosing || window.AtwadClosing.allowSkip(svc, _clKind);
+  var skipBox = document.getElementById('clSkipBox');
+  if(skipBox){
+    skipBox.open = false;
+    skipBox.style.display = _clSkipAllowed ? '' : 'none';
+  }
+
   updateClosingBar();
   document.getElementById('clOv').classList.add('show');
 }
@@ -1233,7 +1243,7 @@ function confirmClosing(){
   // النقص مسموحٌ بسببٍ مكتوب فقط — وإلا فالقائمة إلزامية
   var skipped = false;
   if(missing.length){
-    if(skipBox.open && skipReason){
+    if(_clSkipAllowed && skipBox.open && skipReason){
       skipped = true;
     } else {
       showToast(t('clMiss') + missing[0] +

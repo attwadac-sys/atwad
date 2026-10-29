@@ -4283,6 +4283,7 @@ var _closingData = null;
 /* بنود الزيارة المفتوحة ونوعها — تُملأ في openClosingModal */
 var _clItems = [];
 var _clKind  = '';
+var _clSkipAllowed = true;
 const CLOSING_ITEMS = [
   { k:'drainTest', t:'اختبار صرف الماء', s:'صُبّ ماء في صينية التصريف وخرج من طرف الخرطوم — وأُرسل فيديو الاختبار' },
   { k:'tilt',      t:'ميلان الوحدة الداخلية والصينية باتجاه الصرف', s:'لا ميلان عكسي يحبس الماء في الصينية' },
@@ -4343,7 +4344,16 @@ function openClosingModal(a){
 
   document.getElementById('clNote').value = '';
   document.getElementById('clSkipReason').value = '';
-  document.getElementById('clSkipBox').open = false;
+
+  /* بابُ التخطّي: مفتوحٌ لغسل الوحدة الخارجية وحدها وللكشف والمعاينة،
+     مسدودٌ في كل غسيلٍ تُغسل فيه الوحدة الداخلية وفي الإصلاح والتركيب. */
+  _clSkipAllowed = !window.AtwadClosing || window.AtwadClosing.allowSkip(a.service || '', _clKind);
+  var skipBoxEl = document.getElementById('clSkipBox');
+  if(skipBoxEl){
+    skipBoxEl.open = false;
+    skipBoxEl.style.display = _clSkipAllowed ? '' : 'none';
+  }
+
   updateClosingBar();
   document.getElementById('closingModal').classList.add('open');
 }
@@ -4386,7 +4396,7 @@ function confirmClosing(){
 
   var skipped = false;
   if(missing.length){
-    if(skipBox.open && skipReason){
+    if(_clSkipAllowed && skipBox.open && skipReason){
       skipped = true;
     } else {
       showToast('⚠️ لم يُؤكَّد: ' + missing[0] + (missing.length > 1 ? ' (+' + (missing.length - 1) + ')' : '') + ' — أكمل القائمة أو اكتب سبب عدم انطباقها');
