@@ -476,7 +476,8 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
           </div>
           <div style="display:flex;gap:10px;justify-content:center;">
             <button onclick="shareWhatsapp()" style="padding:10px 14px;background:#25D366;color:#fff;border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">📲 إرسال الفاتورة</button>
-            <button onclick="printInvoicePDF()" style="padding:10px 14px;background:var(--deep);color:#fff;border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">📄 PDF</button>
+            <button id="pdfDlBtn" onclick="downloadInvoicePDF()" style="padding:10px 14px;background:var(--deep);color:#fff;border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">📄 تحميل PDF</button>
+            <button onclick="printInvoicePDF()" style="padding:10px 14px;background:var(--frost);color:var(--deep);border:1px solid var(--ice);border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">🖨️ طباعة</button>
             <button onclick="sendReviewRequest()" style="padding:10px 14px;background:#F59E0B;color:#fff;border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">⭐ تقييم</button>
             <button onclick="closeWOModal()" style="padding:10px 18px;background:var(--ice);color:var(--sky);border:none;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">إغلاق</button>
           </div>
@@ -1743,6 +1744,90 @@ document.addEventListener('DOMContentLoaded', applySharedLang);
 
 
 // ===== ?? طباعة الفاتورة PDF =====
+/* ===== تحميل الفاتورة ملفَّ PDF بلا نافذة طباعة =====
+ *
+ * نافذة الطباعة تضع في رأس الورقة تاريخاً وفي ذيلها «about:blank»، ولا
+ * تُزال إلا بإطفاء «الرؤوس والتذييلات» يدوياً في كل مرة — وهي من إعدادات
+ * المتصفّح لا من الصفحة. فالفاتورة الرسمية كانت تخرج وعليها عنوانُ صفحةٍ
+ * فارغة.
+ *
+ * فتُبنى هنا داخل الصفحة: تُصوَّر الفاتورة ثم تُوضع في ورقة A4 وتُحمَّل.
+ * والعربية تخرج صورةً فلا يعنينا تشكيلُ الخطوط في مولّدات الـPDF.
+ *
+ * والمكتبتان تُحمَّلان عند الضغط لا مع الصفحة — فلا تُثقَّل على من لا
+ * يُصدر فاتورة.
+ */
+var PDF_LIBS = [
+  'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'
+];
+
+function loadScriptOnce(src) {
+  return new Promise(function (resolve, reject) {
+    var found = document.querySelector('script[data-pdflib="' + src + '"]');
+    if (found) {
+      if (found.getAttribute('data-done') === '1') { resolve(); return; }
+      found.addEventListener('load', function () { resolve(); });
+      found.addEventListener('error', function () { reject(new Error(src)); });
+      return;
+    }
+    var s = document.createElement('script');
+    s.src = src;
+    s.setAttribute('data-pdflib', src);
+    s.onload = function () { s.setAttribute('data-done', '1'); resolve(); };
+    s.onerror = function () { reject(new Error(src)); };
+    document.head.appendChild(s);
+  });
+}
+
+function invoiceFileName() {
+  var num = document.getElementById('invNum');
+  var id = num ? String(num.textContent || '').trim() : '';
+  return 'Atwad-Invoice-' + (id || 'WO') + '.pdf';
+}
+
+function downloadInvoicePDF() {
+  var invEl = document.querySelector('.invoice-preview');
+  if (!invEl) { showToast('❌ لا توجد فاتورة'); return; }
+  var btn = document.getElementById('pdfDlBtn');
+  var label = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ يُجهّز…'; }
+
+  function restore() {
+    if (btn) { btn.disabled = false; btn.textContent = label; }
+  }
+
+  Promise.all([loadScriptOnce(PDF_LIBS[0]), loadScriptOnce(PDF_LIBS[1])]).then(function () {
+    if (typeof html2canvas !== 'function' || !window.jspdf) {
+      throw new Error('المكتبات لم تُعرَّف');
+    }
+    return html2canvas(invEl, {
+      scale: 2,
+      backgroundColor: '#FFFFFF',
+      useCORS: true,
+      logging: false
+    });
+  }).then(function (canvas) {
+    var img = canvas.toDataURL('image/jpeg', 0.94);
+    var pdf = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+    var pageW = 210, margin = 12;
+    var w = pageW - margin * 2;
+    var h = canvas.height * w / canvas.width;
+    /* فاتورةٌ أطول من الورقة تُصغَّر لتدخل في صفحةٍ واحدة — تقسيمُها
+       صفحتين يفصل الختم عن الإجمالي. */
+    var maxH = 297 - margin * 2;
+    if (h > maxH) { w = w * (maxH / h); h = maxH; }
+    pdf.addImage(img, 'JPEG', (pageW - w) / 2, margin, w, h);
+    pdf.save(invoiceFileName());
+    restore();
+    showToast('✅ نُزّلت الفاتورة');
+  }).catch(function (err) {
+    restore();
+    console.error('[atwad] تعذّر توليد الـPDF:', err);
+    showToast('⚠️ تعذّر التحميل — استخدم زر «طباعة» وأزل «الرؤوس والتذييلات»');
+  });
+}
+
 function printInvoicePDF() {
   var invEl = document.querySelector('.invoice-preview');
   if(!invEl) { showToast('❌ لا توجد فاتورة'); return; }
