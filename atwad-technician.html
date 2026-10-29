@@ -26,6 +26,15 @@ body{font-family:'Cairo',sans-serif;background:#F1F5F9;color:var(--slate);min-he
 .date-badge .date{color:rgba(255,255,255,.7);font-size:11px;}
 
 /* TECH SELECTOR */
+.acct-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;
+  background:rgba(255,255,255,.12);border-radius:12px;padding:9px 12px;margin-bottom:10px;flex-wrap:wrap;}
+.acct-who{display:flex;flex-direction:column;gap:2px;min-width:0;}
+.acct-lbl{font-size:11px;color:rgba(255,255,255,.65);font-weight:700;}
+.acct-mail{font-size:13px;color:#fff;font-weight:800;direction:ltr;word-break:break-all;}
+.acct-out{font-family:inherit;font-size:12.5px;font-weight:800;border:0;border-radius:10px;
+  background:#EF4444;color:#fff;padding:9px 16px;cursor:pointer;white-space:nowrap;}
+.acct-warn{background:#FEF3C7;color:#92400E;border:1.5px solid #FDE68A;border-radius:12px;
+  padding:10px 13px;font-size:12.5px;font-weight:800;line-height:1.8;margin-bottom:10px;}
 .tech-selector{background:rgba(255,255,255,.1);border-radius:12px;padding:12px;}
 .tech-selector p{color:rgba(255,255,255,.7);font-size:12px;margin-bottom:8px;}
 .tech-btns{display:flex;gap:8px;}
@@ -208,6 +217,17 @@ body{font-family:'Cairo',sans-serif;background:#F1F5F9;color:var(--slate);min-he
     </div>
   </div>
 
+  <!-- بيانُ الحساب: كان الفنيّ يعمل أحياناً بحساب المؤسسة ولا شيء يُنبّهه،
+       فصار الحساب ظاهراً في رأس الصفحة، ومعه زرُّ خروجٍ لا يُخطئه بصر. -->
+  <div class="acct-bar" id="acctBar" style="display:none;">
+    <div class="acct-who">
+      <span class="acct-lbl" id="acctLbl">الحساب</span>
+      <span class="acct-mail" id="acctMail">—</span>
+    </div>
+    <button class="acct-out" id="acctOut" onclick="techSignOut()">خروج</button>
+  </div>
+  <div class="acct-warn" id="acctWarn" style="display:none;"></div>
+
   <!-- اختيار الفني -->
   <div class="tech-selector">
     <p data-i18n="pickTech">👷 اختر الفني:</p>
@@ -305,6 +325,9 @@ var currentFilter = 'today';
    رسالة واتساب المرسلة للعميل تبقى عربية دائماً — العميل عربي. */
 var I18N = {
   ar: {
+    acctLbl:'الحساب المسجَّل', acctOut:'خروج',
+    acctConfirm:'تسجيل الخروج من هذا الحساب؟',
+    acctWrong:'⚠️ أنت داخل بحساب المؤسسة لا بحسابك. اخرج وادخل ببريدك أنت.',
     brand:'أطواد', subtitle:'لوحة الفني الميداني', pickTech:'👷 اختر الفني:',
     techAbrar:'أحمد', techShoib:'شعيب', techSuhail:'سهيل',
     statToday:'مواعيد اليوم', statPending:'في الانتظار', statDone:'مكتملة',
@@ -343,6 +366,9 @@ var I18N = {
     odoFail:'تعذّر الحفظ: ', other:'English'
   },
   en: {
+    acctLbl:'Signed in as', acctOut:'Sign out',
+    acctConfirm:'Sign out of this account?',
+    acctWrong:'⚠️ You are signed in with the owner account, not your own. Sign out and sign in with your own email.',
     brand:'Atwad', subtitle:'Field technician board', pickTech:'👷 Select technician:',
     techAbrar:'Ahmed', techShoib:'Shoaib', techSuhail:'Suhail',
     statToday:'Today', statPending:'Pending', statDone:'Completed',
@@ -410,6 +436,7 @@ function toggleLang(){
   catch(err) { /* تبقى اللغة لهذه الجلسة فقط */ }
   applyStaticLang();
   updateDate();
+  if(typeof renderAcctBar === 'function') renderAcctBar();
   if(currentTech) renderAppts();
   if(typeof loadLastOdometer === 'function') loadLastOdometer();
 }
@@ -1443,13 +1470,64 @@ applyStaticLang();
    وأيُّهما بدّل اللغة بالزر حُفظ اختياره لجهازه فلا يُنقَض بعدها. */
 var TECH_UID = '0zGIJyaLAjSrLOzSRt2YaDUe4xv2';
 
+/* الحساب المسجَّل — يُحفظ ليُعاد رسم البيان عند تبديل اللغة */
+var _acctUser = null;
+
+/** يرسم بيان الحساب في رأس الصفحة، ويُحذّر إن لم يكن حساب الفني */
+function renderAcctBar(){
+  var bar = document.getElementById('acctBar');
+  var warn = document.getElementById('acctWarn');
+  if(!bar) return;
+  if(!_acctUser){
+    bar.style.display = 'none';
+    if(warn) warn.style.display = 'none';
+    return;
+  }
+  bar.style.display = 'flex';
+  document.getElementById('acctLbl').textContent  = t('acctLbl');
+  document.getElementById('acctMail').textContent = _acctUser.email || '—';
+  document.getElementById('acctOut').textContent  = t('acctOut');
+  /* الحساب الخطأ يُقال صراحةً: العمل بحساب المؤسسة يمرّ بلا خطأ، فلا
+     ينتبه له أحد إلا حين تُراجَع الإحصاءات بعد شهر. */
+  if(warn){
+    if(_acctUser.uid === TECH_UID){
+      warn.style.display = 'none';
+    } else {
+      /* باللغتين معاً: حين يحمل أحمد الجوال وفيه حسابُ المؤسسة تبقى
+         الصفحة عربيةً، فتحذيرٌ بالعربية وحدها لا يبلغه — وهي الحالة
+         التي أُنشئ هذا التحذير من أجلها. */
+      warn.innerHTML = '<div>' + I18N.ar.acctWrong + '</div>' +
+                       '<div style="direction:ltr;text-align:left;margin-top:6px;">' +
+                       I18N.en.acctWrong + '</div>';
+      warn.style.display = 'block';
+    }
+  }
+}
+
+/** خروجٌ من داخل الصفحة — أوضح من زرّ atwad-auth.js أسفل الشاشة */
+function techSignOut(){
+  if(!window.confirm(t('acctConfirm'))) return;
+  if(!window.auth || typeof window.auth.signOut !== 'function'){
+    console.error('[technician] لا نظام دخول — تعذّر الخروج');
+    return;
+  }
+  if(typeof window.__atwadCleanup === 'function') window.__atwadCleanup();
+  window.auth.signOut().then(function(){
+    window.location.reload();
+  }).catch(function(err){
+    console.error('[technician] تعذّر الخروج:', err);
+  });
+}
+
 window.__atwadInitPage = function(user) {
   console.log("[technician] مسجّل:", user && user.email);
+  _acctUser = user || null;
   if(user && user.uid === TECH_UID && !LANG_CHOSEN){
     LANG = 'en';
     applyStaticLang();
     updateDate();
   }
+  renderAcctBar();
   if(typeof syncFromFirebase === "function") syncFromFirebase();
   else if(typeof loadData === "function") loadData();
   loadLastOdometer();
