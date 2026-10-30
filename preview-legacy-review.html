@@ -51,6 +51,9 @@ h1{font-size:23px;margin:0 0 6px;}
 .acts .wa{background:#E7F8EF;border-color:#BBF7D0;color:#065F46;text-decoration:none;
   display:inline-flex;align-items:center;padding:7px 11px;border-radius:9px;font-size:12px;font-weight:700;}
 .acts .undo{background:#F1F5F9;color:var(--mist);}
+.acts .edit{background:#EFF6FF;border-color:#BFDBFE;color:#1E40AF;}
+.amt.fixed{color:#1E40AF;}
+.amt small{display:block;font-size:10px;font-weight:700;color:var(--mist);direction:rtl;}
 .tag{font-size:11px;font-weight:800;padding:3px 9px;border-radius:99px;white-space:nowrap;}
 .tag.p{background:#D1FAE5;color:#065F46;} .tag.d{background:#FEF3C7;color:#92400E;}
 
@@ -196,6 +199,7 @@ function render(){
     if(st === 'open'){
       acts += '<button class="paid" data-act="paid" data-k="' + esc(r.key) + '">✅ قُبِض</button>';
       acts += '<button class="owed" data-act="due" data-k="' + esc(r.key) + '">⏳ مستحقٌّ فعلاً</button>';
+      acts += '<button class="edit" data-act="amt" data-k="' + esc(r.key) + '">✎ المبلغ</button>';
     } else {
       acts += '<span class="tag ' + (st === 'paid' ? 'p">قُبِض' : 'd">مستحقّ') + '</span>';
       acts += '<button class="undo" data-act="undo" data-k="' + esc(r.key) + '">↩︎ تراجع</button>';
@@ -209,7 +213,8 @@ function render(){
       (st === 'open' ? '<input type="checkbox" data-sel="' + esc(r.key) + '">' : '<span style="width:19px;"></span>') +
       '<div class="who"><b>' + esc(e.party || e.client || '—') + '</b>' +
         '<div class="meta">' + meta.join(' · ') + '</div></div>' +
-      '<div class="amt">' + fmt(num(e.amount)) + ' ﷼</div>' +
+      '<div class="amt' + (e.amountWas != null ? ' fixed' : '') + '">' + fmt(num(e.amount)) + ' ﷼' +
+        (e.amountWas != null ? '<small>كان ' + fmt(num(e.amountWas)) + '</small>' : '') + '</div>' +
       '<div class="acts">' + acts + '</div>' +
     '</div>';
   }
@@ -293,16 +298,29 @@ function onAct(ev){
   if(!r || busy[key]) return;
   if(!rdb){ toast('⛔ لا اتصال بفَيَربيس'); return; }
 
+  var patch;
+  if(act === 'amt'){
+    var cur = num(r.e.amount);
+    var ans = window.prompt('المبلغ الصحيح لـ «' + (r.e.party || '—') + '» (الحالي ' + fmt(cur) + ' ﷼):', String(cur));
+    if(ans === null) return;
+    var v = parseFloat(String(ans).replace(/[^0-9.]/g, ''));
+    if(isNaN(v) || v <= 0){ toast('⛔ أدخل مبلغاً صحيحاً'); return; }
+    if(Math.abs(v - cur) < 0.01){ toast('لم يتغيّر المبلغ'); return; }
+    patch = { amount: v, amountWas: cur, reviewedAt: (new Date()).toISOString() };
+  } else {
+    patch = patchFor(act, r.e);
+  }
+
   busy[key] = true;
   btn.disabled = true;
-  var patch = patchFor(act, r.e);
 
   rdb.ref('transactions/' + key).update(patch).then(function(){
     busy[key] = false;
     applyLocal(r.e, patch);
     render();
     toast(act === 'paid' ? '✅ صُحّح إلى «مدفوع»'
-        : (act === 'due' ? '⏳ أُدخل في الذمم الحيّة' : '↩︎ عاد كما كان'));
+        : (act === 'due' ? '⏳ أُدخل في الذمم الحيّة'
+        : (act === 'amt' ? '✎ صُحّح المبلغ' : '↩︎ عاد كما كان')));
   }).catch(function(err){
     busy[key] = false;
     btn.disabled = false;
