@@ -100,6 +100,19 @@ textarea{min-height:52px;resize:vertical;}
   font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.2);transition:transform .3s;z-index:1400;}
 .toast.show{transform:translateX(-50%) translateY(0);}
 .loading{text-align:center;padding:36px;color:var(--mist);font-size:13.5px;}
+.chk-row{border-top:1px solid var(--ice);padding:11px 0;display:flex;gap:11px;align-items:flex-start;}
+.chk-row:first-child{border-top:none;}
+.chk-img{width:76px;height:76px;object-fit:cover;border-radius:10px;flex:none;cursor:zoom-in;background:var(--ice);}
+.chk-no{width:76px;height:76px;border-radius:10px;flex:none;background:#FEF2F2;color:#991B1B;
+  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;text-align:center;padding:6px;}
+.chk-b{flex:1;min-width:0;}
+.chk-t{font-size:13.5px;font-weight:800;color:var(--deep);line-height:1.7;}
+.chk-m{font-size:12px;color:var(--mist);line-height:1.8;}
+.chk-bad{color:#B91C1C;font-weight:800;}
+.zoom{position:fixed;inset:0;background:rgba(12,59,94,.88);display:none;z-index:1500;
+  align-items:center;justify-content:center;padding:18px;cursor:zoom-out;}
+.zoom.show{display:flex;}
+.zoom img{max-width:100%;max-height:92vh;border-radius:12px;}
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
@@ -256,6 +269,8 @@ textarea{min-height:52px;resize:vertical;}
   </div>
 </div>
 
+<div class="zoom" id="zoom"><img id="zoomImg" alt=""></div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -386,12 +401,30 @@ function renderVehicles(){
         '<button class="btn btn-main" data-act="maint" data-id="' + esc(id) + '">🔧 تسجيل صيانة</button>' +
         '<button class="btn btn-soft" data-act="odo" data-id="' + esc(id) + '">📏 تحديث الممشى</button>' +
         '<button class="btn btn-soft" data-act="log" data-id="' + esc(id) + '">📋 السجل (' + rows.length + ')</button>' +
+        '<button class="btn btn-soft" data-act="chk" data-id="' + esc(id) + '">📷 الفحوصات (' + chkCount(id) + ')</button>' +
         '<button class="btn btn-soft" data-act="edit" data-id="' + esc(id) + '">✏️ تعديل</button>' +
       '</div>' +
       '<div class="log" id="log-' + esc(id) + '">' + logHtml + '</div>' +
+      '<div class="log" id="chk-' + esc(id) + '">' + checksHtml(id) + '</div>' +
     '</div>';
   }
   list.innerHTML = html;
+
+  var loaders = list.querySelectorAll('div[data-load]');
+  for(var p2 = 0; p2 < loaders.length; p2++){
+    loaders[p2].addEventListener('click', function(ev){
+      var parts = String(ev.currentTarget.getAttribute('data-load') || '').split('|');
+      if(parts.length === 2) loadPhoto(parts[0], parts[1], ev.currentTarget);
+    });
+  }
+
+  var imgs = list.querySelectorAll('img[data-zoom]');
+  for(var z = 0; z < imgs.length; z++){
+    imgs[z].addEventListener('click', function(ev){
+      document.getElementById('zoomImg').src = ev.currentTarget.src;
+      document.getElementById('zoom').classList.add('show');
+    });
+  }
 
   var btns = list.querySelectorAll('button[data-act]');
   for(var b = 0; b < btns.length; b++){
@@ -401,12 +434,98 @@ function renderVehicles(){
       if(act === 'maint') openMaint(id);
       else if(act === 'edit') openEdit(id);
       else if(act === 'odo') openOdo(id);
-      else {
+      else if(act === 'chk'){
+        var ec = document.getElementById('chk-' + id);
+        if(ec) ec.classList.toggle('show');
+      } else {
         var el = document.getElementById('log-' + id);
         if(el) el.classList.toggle('show');
       }
     });
   }
+}
+
+/* ===== سجل الفحوصات الأسبوعية =====
+   الصورة هي الإثبات: تُظهر أن الفني وقف عند السيارة فعلاً،
+   وتتيح مطابقة رقم العداد المكتوب بما يظهر في الشاشة. */
+var CHECKS = {};   // vehicleId -> { أسبوع: سجل }  (نصّ خفيف بلا صور)
+var PHOTOS = {};   // vehicleId -> { أسبوع: dataURL }  تُجلب عند الطلب وحده
+
+/* الصورة تُنزَّل بضغطة لا تلقائياً: سجل سنة كامل يساوي نحو
+   خمسة ميغابايت، ولا معنى لتنزيلها كلها لرؤية فحص واحد. */
+function loadPhoto(id, wk, cell){
+  if(!db || !cell) return;
+  cell.textContent = '…';
+  db.ref('vehicleCheckPhotos/' + id + '/' + wk).once('value').then(function(snap){
+    var data = snap.val();
+    if(!data){ cell.textContent = 'بلا صورة'; return; }
+    if(!PHOTOS[id]) PHOTOS[id] = {};
+    PHOTOS[id][wk] = data;
+    var img = document.createElement('img');
+    img.className = 'chk-img';
+    img.src = data;
+    img.setAttribute('data-zoom', '1');
+    img.addEventListener('click', function(){
+      document.getElementById('zoomImg').src = data;
+      document.getElementById('zoom').classList.add('show');
+    });
+    cell.parentNode.replaceChild(img, cell);
+  }).catch(function(err){
+    cell.textContent = 'تعذّر';
+    console.warn('[checks] تعذّر جلب الصورة:', err && err.message);
+  });
+}
+
+function chkCount(id){
+  var c = CHECKS[id];
+  return c ? Object.keys(c).length : 0;
+}
+
+function chkItems(it){
+  var o = it || {};
+  var map = { oil:'الزيت', water:'الماء', tires:'الإطارات', sound:'الأصوات' };
+  var bad = [];
+  for(var k in map){
+    if(!Object.prototype.hasOwnProperty.call(map, k)) continue;
+    if(o[k] === false) bad.push(map[k]);
+  }
+  return bad;
+}
+
+function checksHtml(id){
+  var c = CHECKS[id];
+  if(!c || !Object.keys(c).length){
+    return '<div class="log-empty">لا فحوصات مسجّلة بعد. تظهر هنا فور تسجيل الفني أول فحص أسبوعي.</div>';
+  }
+  var weeks = Object.keys(c).sort().reverse();
+  var html = '';
+  for(var i = 0; i < weeks.length && i < 12; i++){
+    var r = c[weeks[i]] || {};
+    var bad = chkItems(r.items);
+    var hasP = (r.hasPhoto === true) || !!r.photo;
+    var cached = PHOTOS[id] && PHOTOS[id][weeks[i]];
+    var img;
+    if(r.photo){
+      // سجلات قديمة كانت تحفظ الصورة داخل السجل نفسه
+      img = '<img class="chk-img" src="' + esc(r.photo) + '" alt="" data-zoom="1">';
+    } else if(cached){
+      img = '<img class="chk-img" src="' + esc(cached) + '" alt="" data-zoom="1">';
+    } else if(hasP){
+      img = '<div class="chk-no" style="background:var(--frost);color:var(--sky);cursor:pointer;" ' +
+            'data-load="' + esc(id) + '|' + esc(weeks[i]) + '">📷<br>اعرض</div>';
+    } else {
+      img = '<div class="chk-no">بلا صورة</div>';
+    }
+    html += '<div class="chk-row">' + img + '<div class="chk-b">' +
+      '<div class="chk-t">' + esc(r.date || weeks[i]) + ' · ' + esc(r.by || '—') + '</div>' +
+      '<div class="chk-m">العداد ' + km(r.odometer) + ' كم · أسبوع ' + esc(weeks[i]) + '</div>' +
+      (bad.length
+        ? '<div class="chk-m chk-bad">⚠️ غير سليم: ' + esc(bad.join('، ')) + '</div>'
+        : '<div class="chk-m" style="color:#065F46;">✅ كل البنود سليمة</div>') +
+      (r.note ? '<div class="chk-m">' + esc(r.note) + '</div>' : '') +
+    '</div></div>';
+  }
+  return html;
 }
 
 function typeLabel(t){
@@ -447,6 +566,9 @@ function loadAll(){
     return db.ref('vehicles').once('value');
   }).then(function(snap){
     VEHICLES = snap.val() || {};
+    return db.ref('vehicleChecks').once('value');
+  }).then(function(snap){
+    CHECKS = snap.val() || {};
     return db.ref('vehicleMaintenance').once('value');
   }).then(function(snap){
     MAINT = {};
@@ -765,6 +887,11 @@ document.getElementById('oSave').addEventListener('click', function(){
     btn.disabled = false;
     msg('oMsg', 'تعذّر الحفظ: ' + err.message, false);
   });
+});
+
+document.getElementById('zoom').addEventListener('click', function(){
+  this.classList.remove('show');
+  document.getElementById('zoomImg').src = '';
 });
 
 /* يُستدعى من atwad-auth.js بعد تأكّد الدخول */
