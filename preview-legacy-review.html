@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>مراجعة البيانات القديمة — أطواد</title>
+<link rel="icon" href="favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--deep:#0A2540;--sky:#38BDF8;--ice:#E2E8F0;--mist:#64748B;--frost:#F8FAFC;
+  --ok:#059669;--warn:#D97706;--bad:#B91C1C;}
+*{box-sizing:border-box;}
+body{margin:0;background:#F1F5F9;font-family:'Tajawal',sans-serif;color:var(--deep);padding:18px 14px 90px;}
+.wrap{max-width:900px;margin:0 auto;}
+h1{font-size:23px;margin:0 0 6px;}
+.sub{font-size:13.5px;color:var(--mist);line-height:1.9;margin-bottom:16px;}
+.pill{font-size:12px;font-weight:700;padding:5px 12px;border-radius:99px;background:#E0F2FE;color:#075985;}
+.pill.off{background:#FEE2E2;color:#991B1B;}
+.head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px;}
+.kpi{background:#fff;border:1.5px solid var(--ice);border-radius:14px;padding:13px 15px;}
+.kpi .n{font-size:21px;font-weight:800;direction:ltr;text-align:right;}
+.kpi .l{font-size:12px;color:var(--mist);margin-top:3px;}
+.kpi.w .n{color:var(--warn);} .kpi.g .n{color:var(--ok);} .kpi.r .n{color:var(--bad);}
+
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center;}
+.tab{font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;border:1.5px solid var(--ice);
+  background:#fff;color:var(--mist);border-radius:10px;padding:8px 14px;cursor:pointer;}
+.tab.on{background:var(--deep);color:#fff;border-color:var(--deep);}
+.spacer{flex:1 1 auto;}
+.mini{font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;border:1.5px solid var(--ice);
+  border-radius:10px;padding:9px 14px;cursor:pointer;background:#fff;color:var(--deep);}
+.mini:disabled{opacity:.45;cursor:default;}
+.mini.go{background:#ECFDF5;border-color:#A7F3D0;color:#065F46;}
+
+.row{background:#fff;border:1.5px solid var(--ice);border-radius:14px;padding:12px 14px;margin-bottom:9px;
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.row.done{background:#F6FDF9;border-color:#BBF7D0;}
+.row.due{background:#FFFBEB;border-color:#FDE68A;}
+.row input[type=checkbox]{width:19px;height:19px;accent-color:#0A2540;flex:0 0 auto;cursor:pointer;}
+.who{flex:1 1 210px;min-width:0;}
+.who b{font-size:15px;font-weight:800;display:block;}
+.who .meta{font-size:11.5px;color:var(--mist);margin-top:3px;line-height:1.7;}
+.amt{font-size:16px;font-weight:800;white-space:nowrap;direction:ltr;}
+.acts{display:flex;gap:6px;flex-wrap:wrap;flex:0 0 auto;}
+.acts button{font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;border-radius:9px;
+  padding:7px 11px;cursor:pointer;border:1.5px solid var(--ice);background:var(--frost);color:var(--deep);}
+.acts .paid{background:#ECFDF5;border-color:#A7F3D0;color:#065F46;}
+.acts .owed{background:#FEF9C3;border-color:#FDE68A;color:#92400E;}
+.acts .wa{background:#E7F8EF;border-color:#BBF7D0;color:#065F46;text-decoration:none;
+  display:inline-flex;align-items:center;padding:7px 11px;border-radius:9px;font-size:12px;font-weight:700;}
+.acts .undo{background:#F1F5F9;color:var(--mist);}
+.tag{font-size:11px;font-weight:800;padding:3px 9px;border-radius:99px;white-space:nowrap;}
+.tag.p{background:#D1FAE5;color:#065F46;} .tag.d{background:#FEF3C7;color:#92400E;}
+
+.note{background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:13px;padding:13px 15px;
+  font-size:13px;line-height:1.95;color:#78350F;margin-bottom:14px;}
+.empty{text-align:center;padding:36px 16px;color:var(--mist);font-size:14px;
+  background:#fff;border:1.5px dashed var(--ice);border-radius:14px;}
+.toast{position:fixed;bottom:18px;right:50%;transform:translateX(50%);background:var(--deep);color:#fff;
+  padding:11px 20px;border-radius:12px;font-size:13.5px;font-weight:700;z-index:90;display:none;max-width:90vw;}
+</style>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="atwad-firebase.js"></script>
+<script src="atwad-auth.js"></script>
+<script src="atwad-debt.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <h1>📂 مراجعة البيانات القديمة</h1>
+    <span class="pill" id="pill">…</span>
+  </div>
+  <div class="sub">
+    قيودٌ دخلٍ عُلِّمت «غير مدفوع» ولم يُراجعها أحد — فهي خارج الذمم الحيّة، لا يُطالَب بها ولا تُحسب محصَّلة.<br>
+    لكلّ صفٍّ قراران: <b>قُبِض</b> إن كان المال قد وصلك ولم يُعلَّم، أو <b>مستحقٌّ فعلاً</b> فيدخل الذمم ليُطالَب به.
+  </div>
+
+  <div class="note">
+    <b>كلُّ قرارٍ قابلٌ للتراجع</b> — زرُّ «↩︎ تراجع» يُعيد القيد كما كان تماماً.
+    ولا يُكتب شيءٌ في فَيَربيس إلا بضغطةٍ منك على زرٍّ بعينه.
+  </div>
+
+  <div class="kpis">
+    <div class="kpi w"><div class="n" id="kCount">—</div><div class="l">قيدٌ ينتظر قرارك</div></div>
+    <div class="kpi w"><div class="n" id="kTotal">—</div><div class="l">مجموعُها بالريال</div></div>
+    <div class="kpi g"><div class="n" id="kPaid">٠</div><div class="l">صُحّح إلى «مدفوع»</div></div>
+    <div class="kpi r"><div class="n" id="kDue">٠</div><div class="l">أُكِّد مستحقّاً</div></div>
+  </div>
+
+  <div class="bar">
+    <button class="tab on" data-f="open">بانتظار قرارك</button>
+    <button class="tab" data-f="paid">قُبِض</button>
+    <button class="tab" data-f="due">مستحقّ</button>
+    <button class="tab" data-f="all">الكل</button>
+    <span class="spacer"></span>
+    <button class="mini" id="selAll">تحديد الكل</button>
+    <button class="mini go" id="bulkPaid" disabled>✅ «قُبِض» على المحدَّد</button>
+  </div>
+
+  <div id="list"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="atwad-nav.js"></script>
+<script>
+var ADMIN_UID = 'NU8g25megKefUOBQGvfkVtBOw802';
+var REVIEW_TAG = 'مراجعة الدفتر ' + (new Date()).toISOString().slice(0, 10);
+
+var rdb = null;
+var rows = [];          /* كلُّ القيود القديمة */
+var phoneByKey = {};    /* مفتاح الحجز/الموعد → هاتف */
+var woByRef = {};       /* مفتاح الحجز → رقم أمر العمل */
+var filter = 'open';
+var busy = {};
+
+function el(id){ return document.getElementById(id); }
+function num(v){ var n = parseFloat(v); return isNaN(n) ? 0 : n; }
+function fmt(n){ return Number(n).toLocaleString('en-US', {maximumFractionDigits:2}); }
+function esc(s){
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function toast(m){
+  var t = el('toast'); t.textContent = m; t.style.display = 'block';
+  window.setTimeout(function(){ t.style.display = 'none'; }, 3200);
+}
+function normStatus(s){ return s === 'معلق' ? 'غير مدفوع' : (s || 'مدفوع'); }
+
+/* المعيار نفسه الذي تستعمله صفحة الإدارة المالية — لا يُخالفه بحرف */
+function isLegacy(e){
+  if(!e || e.type !== 'income') return false;
+  var s = normStatus(e.status);
+  if(s !== 'غير مدفوع' && s !== 'مؤجل') return false;
+  if(e.dueType || e.dueDate || e.paymentNote) return false;
+  return true;
+}
+
+/* حالة الصفّ بعد قرارك: open | paid | due */
+function stateOf(e){
+  var s = normStatus(e.status);
+  if(s === 'مدفوع' || s === 'مدفوع جزئياً') return 'paid';
+  if(e.dueType || e.dueDate) return 'due';
+  return 'open';
+}
+
+function phoneOf(e){
+  var p = window.AtwadDebt ? window.AtwadDebt.normPhone(e.phone) : '';
+  if(p) return p;
+  if(e.firebaseRef && phoneByKey[e.firebaseRef]) return phoneByKey[e.firebaseRef];
+  return '';
+}
+
+function render(){
+  var host = el('list');
+  var shown = rows.filter(function(r){
+    if(filter === 'all') return true;
+    return stateOf(r.e) === filter;
+  });
+
+  var openRows = rows.filter(function(r){ return stateOf(r.e) === 'open'; });
+  var paidRows = rows.filter(function(r){ return stateOf(r.e) === 'paid'; });
+  var dueRows  = rows.filter(function(r){ return stateOf(r.e) === 'due'; });
+  var openSum  = 0;
+  for(var s = 0; s < openRows.length; s++){ openSum += num(openRows[s].e.amount); }
+
+  el('kCount').textContent = openRows.length;
+  el('kTotal').textContent = fmt(openSum);
+  el('kPaid').textContent  = paidRows.length;
+  el('kDue').textContent   = dueRows.length;
+
+  if(!shown.length){
+    host.innerHTML = '<div class="empty">' +
+      (filter === 'open' ? '✅ لم يبقَ قيدٌ ينتظر قرارك.' : 'لا شيء في هذا التبويب بعد.') +
+      '</div>';
+    syncBulk();
+    return;
+  }
+
+  var html = '';
+  for(var i = 0; i < shown.length; i++){
+    var r = shown[i], e = r.e, st = stateOf(e);
+    var ph = phoneOf(e);
+    var wo = (e.woId || (e.firebaseRef && woByRef[e.firebaseRef]) || '');
+    var meta = [];
+    if(e.desc) meta.push(esc(e.desc));
+    if(e.date) meta.push(esc(e.date));
+    if(wo) meta.push('أمر العمل ' + esc(wo));
+    if(ph) meta.push('<span style="direction:ltr;display:inline-block;">0' + esc(ph) + '</span>');
+
+    var acts = '';
+    if(st === 'open'){
+      acts += '<button class="paid" data-act="paid" data-k="' + esc(r.key) + '">✅ قُبِض</button>';
+      acts += '<button class="owed" data-act="due" data-k="' + esc(r.key) + '">⏳ مستحقٌّ فعلاً</button>';
+    } else {
+      acts += '<span class="tag ' + (st === 'paid' ? 'p">قُبِض' : 'd">مستحقّ') + '</span>';
+      acts += '<button class="undo" data-act="undo" data-k="' + esc(r.key) + '">↩︎ تراجع</button>';
+    }
+    if(ph && window.AtwadDebt){
+      var u = window.AtwadDebt.waUrl(ph, '');
+      if(u) acts += '<a class="wa" target="_blank" rel="noopener" href="' + esc(u) + '">💬 المحادثة</a>';
+    }
+
+    html += '<div class="row ' + (st === 'open' ? '' : st) + '">' +
+      (st === 'open' ? '<input type="checkbox" data-sel="' + esc(r.key) + '">' : '<span style="width:19px;"></span>') +
+      '<div class="who"><b>' + esc(e.party || e.client || '—') + '</b>' +
+        '<div class="meta">' + meta.join(' · ') + '</div></div>' +
+      '<div class="amt">' + fmt(num(e.amount)) + ' ﷼</div>' +
+      '<div class="acts">' + acts + '</div>' +
+    '</div>';
+  }
+  host.innerHTML = html;
+
+  var btns = host.querySelectorAll('button[data-act]');
+  for(var b = 0; b < btns.length; b++){
+    btns[b].addEventListener('click', onAct);
+  }
+  var boxes = host.querySelectorAll('input[data-sel]');
+  for(var c = 0; c < boxes.length; c++){
+    boxes[c].addEventListener('change', syncBulk);
+  }
+  syncBulk();
+}
+
+function selectedKeys(){
+  var out = [], boxes = el('list').querySelectorAll('input[data-sel]');
+  for(var i = 0; i < boxes.length; i++){
+    if(boxes[i].checked) out.push(boxes[i].getAttribute('data-sel'));
+  }
+  return out;
+}
+
+function syncBulk(){
+  var n = selectedKeys().length;
+  var btn = el('bulkPaid');
+  btn.disabled = (n === 0);
+  btn.textContent = n ? ('✅ «قُبِض» على ' + n + ' قيداً') : '✅ «قُبِض» على المحدَّد';
+}
+
+function findRow(key){
+  for(var i = 0; i < rows.length; i++){ if(rows[i].key === key) return rows[i]; }
+  return null;
+}
+
+/* ما يُكتب في فَيَربيس — ولا شيء سواه */
+function patchFor(act, e){
+  if(act === 'paid'){
+    return {
+      status: 'مدفوع',
+      paidAmount: num(e.amount),
+      paidAt: e.date || null,
+      paymentNote: 'قُبِض — ' + REVIEW_TAG,
+      reviewedAt: (new Date()).toISOString()
+    };
+  }
+  if(act === 'due'){
+    return {
+      status: 'مؤجل',
+      dueType: 'open',
+      paymentNote: 'مستحقٌّ مؤكَّد — ' + REVIEW_TAG,
+      reviewedAt: (new Date()).toISOString()
+    };
+  }
+  /* تراجع: إزالةُ كلِّ ما أضفناه، وعودةُ الحالة كما كانت */
+  return {
+    status: 'غير مدفوع',
+    paidAmount: 0,
+    paidAt: null,
+    dueType: null,
+    dueDate: null,
+    paymentNote: null,
+    reviewedAt: null
+  };
+}
+
+function applyLocal(e, patch){
+  var k;
+  for(k in patch){
+    if(!Object.prototype.hasOwnProperty.call(patch, k)) continue;
+    if(patch[k] === null){ delete e[k]; } else { e[k] = patch[k]; }
+  }
+}
+
+function onAct(ev){
+  var btn = ev.currentTarget;
+  var key = btn.getAttribute('data-k');
+  var act = btn.getAttribute('data-act');
+  var r = findRow(key);
+  if(!r || busy[key]) return;
+  if(!rdb){ toast('⛔ لا اتصال بفَيَربيس'); return; }
+
+  busy[key] = true;
+  btn.disabled = true;
+  var patch = patchFor(act, r.e);
+
+  rdb.ref('transactions/' + key).update(patch).then(function(){
+    busy[key] = false;
+    applyLocal(r.e, patch);
+    render();
+    toast(act === 'paid' ? '✅ صُحّح إلى «مدفوع»'
+        : (act === 'due' ? '⏳ أُدخل في الذمم الحيّة' : '↩︎ عاد كما كان'));
+  }).catch(function(err){
+    busy[key] = false;
+    btn.disabled = false;
+    console.error('[legacy] تعذّرت الكتابة:', err);
+    toast('⛔ تعذّرت الكتابة: ' + String((err && err.message) || err));
+  });
+}
+
+function bulkPaid(){
+  var keys = selectedKeys();
+  if(!keys.length) return;
+  if(!rdb){ toast('⛔ لا اتصال بفَيَربيس'); return; }
+
+  var sum = 0, i;
+  for(i = 0; i < keys.length; i++){
+    var rr = findRow(keys[i]);
+    if(rr) sum += num(rr.e.amount);
+  }
+  var msg = 'تصحيحُ ' + keys.length + ' قيداً إلى «مدفوع»، بمجموع ' + fmt(sum) + ' ريالاً.\n\n' +
+            'أي أنك تُقرّ بأن هذا المال قد وصلك فعلاً.\n' +
+            'وكلُّ صفٍّ يبقى له زرُّ تراجعٍ بعدها.\n\nأتمضي؟';
+  if(!window.confirm(msg)) return;
+
+  var updates = {};
+  for(i = 0; i < keys.length; i++){
+    var r = findRow(keys[i]);
+    if(!r) continue;
+    var p = patchFor('paid', r.e), k;
+    for(k in p){
+      if(!Object.prototype.hasOwnProperty.call(p, k)) continue;
+      updates['transactions/' + keys[i] + '/' + k] = p[k];
+    }
+  }
+
+  el('bulkPaid').disabled = true;
+  rdb.ref().update(updates).then(function(){
+    for(var j = 0; j < keys.length; j++){
+      var rw = findRow(keys[j]);
+      if(rw) applyLocal(rw.e, patchFor('paid', rw.e));
+    }
+    render();
+    toast('✅ صُحّح ' + keys.length + ' قيداً — ' + fmt(sum) + ' ريالاً');
+  }).catch(function(err){
+    el('bulkPaid').disabled = false;
+    console.error('[legacy] تعذّر التحديث الجماعي:', err);
+    toast('⛔ تعذّر التحديث: ' + String((err && err.message) || err));
+  });
+}
+
+function loadAll(){
+  el('list').innerHTML = '<div class="empty">يقرأ القيود…</div>';
+
+  rdb.ref('bookings').once('value').then(function(bs){
+    var b = bs.val() || {}, k;
+    for(k in b){
+      if(!Object.prototype.hasOwnProperty.call(b, k)) continue;
+      var v = b[k] || {};
+      var p = window.AtwadDebt ? window.AtwadDebt.normPhone(v.phone) : '';
+      if(p) phoneByKey[k] = p;
+      if(v.woId) woByRef[k] = v.woId;
+    }
+    return rdb.ref('appointments').once('value');
+  }).then(function(as){
+    var a = as.val() || {}, k;
+    for(k in a){
+      if(!Object.prototype.hasOwnProperty.call(a, k)) continue;
+      var v = a[k] || {};
+      var p = window.AtwadDebt ? window.AtwadDebt.normPhone(v.phone) : '';
+      if(p && !phoneByKey[k]) phoneByKey[k] = p;
+      if(v.woId && !woByRef[k]) woByRef[k] = v.woId;
+    }
+    return rdb.ref('transactions').once('value');
+  }).then(function(ts){
+    var t = ts.val() || {}, k;
+    rows = [];
+    for(k in t){
+      if(!Object.prototype.hasOwnProperty.call(t, k)) continue;
+      if(!isLegacy(t[k])) continue;
+      rows.push({ key: k, e: t[k] });
+    }
+    rows.sort(function(x, y){
+      var a = String(x.e.date || ''), b = String(y.e.date || '');
+      return a < b ? -1 : (a > b ? 1 : 0);
+    });
+    render();
+  }).catch(function(err){
+    console.error('[legacy] تعذّرت القراءة:', err);
+    el('list').innerHTML = '<div class="empty">⛔ تعذّرت القراءة: ' +
+      esc(String((err && err.message) || err)) + '</div>';
+  });
+}
+
+window.__atwadInitPage = function(user){
+  if(!user || user.uid !== ADMIN_UID){
+    document.body.innerHTML = '<div style="padding:40px;text-align:center;font-family:Tajawal,sans-serif;">' +
+      'هذا الحساب غير مصرّح له.</div>';
+    return;
+  }
+  rdb = window.db || null;
+  if(!rdb){
+    el('pill').textContent = 'غير متصل';
+    el('pill').className = 'pill off';
+    el('list').innerHTML = '<div class="empty">⛔ لا اتصال بفَيَربيس.</div>';
+    return;
+  }
+  el('pill').textContent = 'متصل';
+
+  var tabs = document.querySelectorAll('.tab');
+  for(var i = 0; i < tabs.length; i++){
+    tabs[i].addEventListener('click', function(ev){
+      var all = document.querySelectorAll('.tab');
+      for(var j = 0; j < all.length; j++){ all[j].classList.remove('on'); }
+      ev.currentTarget.classList.add('on');
+      filter = ev.currentTarget.getAttribute('data-f');
+      render();
+    });
+  }
+  el('selAll').addEventListener('click', function(){
+    var boxes = el('list').querySelectorAll('input[data-sel]');
+    var anyOff = false, i;
+    for(i = 0; i < boxes.length; i++){ if(!boxes[i].checked) anyOff = true; }
+    for(i = 0; i < boxes.length; i++){ boxes[i].checked = anyOff; }
+    syncBulk();
+  });
+  el('bulkPaid').addEventListener('click', bulkPaid);
+
+  loadAll();
+};
+</script>
+</body>
+</html>
