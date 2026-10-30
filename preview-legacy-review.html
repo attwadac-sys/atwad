@@ -97,6 +97,7 @@ h1{font-size:23px;margin:0 0 6px;}
     <button class="tab" data-f="due">مستحقّ</button>
     <button class="tab" data-f="all">الكل</button>
     <span class="spacer"></span>
+    <button class="mini" id="export">⬇️ تصدير للمطابقة</button>
     <button class="mini" id="selAll">تحديد الكل</button>
     <button class="mini go" id="bulkPaid" disabled>✅ «قُبِض» على المحدَّد</button>
   </div>
@@ -351,6 +352,37 @@ function bulkPaid(){
   });
 }
 
+/* تصديرٌ للمطابقة — نصٌّ بفاصلةٍ مع BOM ليفتحه إكسل بعربيّةٍ سليمة */
+function exportCsv(){
+  var cols = ['key','date','party','amount','desc','phone','woId','status','source'];
+  var lines = [cols.join(',')];
+  function cell(v){
+    var s = String(v == null ? '' : v);
+    if(s.indexOf(',') > -1 || s.indexOf('"') > -1 || s.indexOf('\n') > -1){
+      s = '"' + s.replace(/"/g, '""') + '"';
+    }
+    return s;
+  }
+  for(var i = 0; i < rows.length; i++){
+    var e = rows[i].e;
+    var ph = phoneOf(e);
+    lines.push([
+      cell(rows[i].key), cell(e.date || ''), cell(e.party || e.client || ''),
+      cell(num(e.amount)), cell(e.desc || ''), cell(ph ? '0' + ph : ''),
+      cell(e.woId || (e.firebaseRef && woByRef[e.firebaseRef]) || ''),
+      cell(e.status || ''), cell(e.source || '')
+    ].join(','));
+  }
+  var blob = new Blob(['﻿' + lines.join('\r\n')], {type:'text/csv;charset=utf-8;'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'atwad-legacy-' + (new Date()).toISOString().slice(0, 10) + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  toast('⬇️ صُدِّر ' + rows.length + ' قيداً');
+}
+
 function loadAll(){
   el('list').innerHTML = '<div class="empty">يقرأ القيود…</div>';
 
@@ -427,6 +459,7 @@ window.__atwadInitPage = function(user){
     syncBulk();
   });
   el('bulkPaid').addEventListener('click', bulkPaid);
+  el('export').addEventListener('click', exportCsv);
 
   loadAll();
 };
