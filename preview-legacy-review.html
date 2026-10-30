@@ -42,6 +42,8 @@ h1{font-size:23px;margin:0 0 6px;}
 .who{flex:1 1 210px;min-width:0;}
 .who b{font-size:15px;font-weight:800;display:block;}
 .who .meta{font-size:11.5px;color:var(--mist);margin-top:3px;line-height:1.7;}
+.sib{font-size:11.5px;font-weight:700;color:#065F46;background:#ECFDF5;border:1px solid #A7F3D0;
+  border-radius:8px;padding:4px 8px;margin-top:5px;line-height:1.65;}
 .amt{font-size:16px;font-weight:800;white-space:nowrap;direction:ltr;}
 .acts{display:flex;gap:6px;flex-wrap:wrap;flex:0 0 auto;}
 .acts button{font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;border-radius:9px;
@@ -52,6 +54,9 @@ h1{font-size:23px;margin:0 0 6px;}
   display:inline-flex;align-items:center;padding:7px 11px;border-radius:9px;font-size:12px;font-weight:700;}
 .acts .undo{background:#F1F5F9;color:var(--mist);}
 .acts .edit{background:#EFF6FF;border-color:#BFDBFE;color:#1E40AF;}
+.acts .warr{background:#F5F3FF;border-color:#DDD6FE;color:#5B21B6;}
+.tag.w{background:#EDE9FE;color:#5B21B6;}
+.row.warr{background:#FBFAFF;border-color:#DDD6FE;}
 .amt.fixed{color:#1E40AF;}
 .amt small{display:block;font-size:10px;font-weight:700;color:var(--mist);direction:rtl;}
 .tag{font-size:11px;font-weight:800;padding:3px 9px;border-radius:99px;white-space:nowrap;}
@@ -92,17 +97,20 @@ h1{font-size:23px;margin:0 0 6px;}
     <div class="kpi w"><div class="n" id="kTotal">—</div><div class="l">مجموعُها بالريال</div></div>
     <div class="kpi g"><div class="n" id="kPaid">٠</div><div class="l">صُحّح إلى «مدفوع»</div></div>
     <div class="kpi r"><div class="n" id="kDue">٠</div><div class="l">أُكِّد مستحقّاً</div></div>
+    <div class="kpi"><div class="n" id="kWarr" style="color:#5B21B6;">٠</div><div class="l">ضمانٌ مجانيّ</div></div>
   </div>
 
   <div class="bar">
     <button class="tab on" data-f="open">بانتظار قرارك</button>
     <button class="tab" data-f="paid">قُبِض</button>
+    <button class="tab" data-f="warr">🛡 ضمان</button>
     <button class="tab" data-f="due">مستحقّ</button>
     <button class="tab" data-f="all">الكل</button>
     <span class="spacer"></span>
     <button class="mini" id="export">⬇️ تصدير للمطابقة</button>
     <button class="mini" id="selAll">تحديد الكل</button>
     <button class="mini go" id="bulkPaid" disabled>✅ «قُبِض» على المحدَّد</button>
+    <button class="mini" id="bulkWarr" disabled>🛡 «ضمان» على المحدَّد</button>
   </div>
 
   <div id="list"></div>
@@ -116,6 +124,7 @@ var REVIEW_TAG = 'مراجعة الدفتر ' + (new Date()).toISOString().slice
 
 var rdb = null;
 var rows = [];          /* كلُّ القيود القديمة */
+var allTx = {};         /* كلُّ القيود — لإظهار القيد الشقيق في اليوم نفسه */
 var phoneByKey = {};    /* مفتاح الحجز/الموعد → هاتف */
 var woByRef = {};       /* مفتاح الحجز → رقم أمر العمل */
 var filter = 'open';
@@ -145,8 +154,9 @@ function isLegacy(e){
   return true;
 }
 
-/* حالة الصفّ بعد قرارك: open | paid | due */
+/* حالة الصفّ بعد قرارك: open | paid | due | warr */
 function stateOf(e){
+  if(e.warrantyRework) return 'warr';
   var s = normStatus(e.status);
   if(s === 'مدفوع' || s === 'مدفوع جزئياً') return 'paid';
   if(e.dueType || e.dueDate) return 'due';
@@ -158,6 +168,26 @@ function phoneOf(e){
   if(p) return p;
   if(e.firebaseRef && phoneByKey[e.firebaseRef]) return phoneByKey[e.firebaseRef];
   return '';
+}
+
+/* قيودٌ أخرى لنفس العميل في اليوم نفسه — الهاتفُ أوّلاً ثم الاسم */
+function siblingsOf(key, e){
+  var out = [], k, x;
+  var ph = phoneOf(e);
+  var nm = String(e.party || e.client || '').replace(/\s+/g, '');
+  for(k in allTx){
+    if(!Object.prototype.hasOwnProperty.call(allTx, k)) continue;
+    if(k === key) continue;
+    x = allTx[k] || {};
+    if(x.type !== 'income') continue;
+    if(String(x.date || '') !== String(e.date || '')) continue;
+    var xph = window.AtwadDebt ? window.AtwadDebt.normPhone(x.phone) : '';
+    var xnm = String(x.party || x.client || '').replace(/\s+/g, '');
+    var same = (ph && xph && ph === xph) || (nm && xnm && nm === xnm);
+    if(!same) continue;
+    out.push(x);
+  }
+  return out;
 }
 
 function render(){
@@ -177,6 +207,7 @@ function render(){
   el('kTotal').textContent = fmt(openSum);
   el('kPaid').textContent  = paidRows.length;
   el('kDue').textContent   = dueRows.length;
+  el('kWarr').textContent  = rows.filter(function(x){ return stateOf(x.e) === 'warr'; }).length;
 
   if(!shown.length){
     host.innerHTML = '<div class="empty">' +
@@ -197,13 +228,25 @@ function render(){
     if(wo) meta.push('أمر العمل ' + esc(wo));
     if(ph) meta.push('<span style="direction:ltr;display:inline-block;">0' + esc(ph) + '</span>');
 
+    var sibs = siblingsOf(r.key, e), sibHtml = '';
+    if(sibs.length){
+      var parts = [];
+      for(var s2 = 0; s2 < sibs.length; s2++){
+        parts.push(esc(String(sibs[s2].desc || 'قيد')) + ' — ' +
+                   fmt(num(sibs[s2].amount)) + ' ﷼ · ' + esc(String(sibs[s2].status || '')));
+      }
+      sibHtml = '<div class="sib">🔗 ومعه في اليوم نفسه: ' + parts.join(' · ') + '</div>';
+    }
+
     var acts = '';
     if(st === 'open'){
       acts += '<button class="paid" data-act="paid" data-k="' + esc(r.key) + '">✅ قُبِض</button>';
       acts += '<button class="owed" data-act="due" data-k="' + esc(r.key) + '">⏳ مستحقٌّ فعلاً</button>';
+      acts += '<button class="warr" data-act="warr" data-k="' + esc(r.key) + '">🛡 ضمان مجانيّ</button>';
       acts += '<button class="edit" data-act="amt" data-k="' + esc(r.key) + '">✎ المبلغ</button>';
     } else {
-      acts += '<span class="tag ' + (st === 'paid' ? 'p">قُبِض' : 'd">مستحقّ') + '</span>';
+      acts += '<span class="tag ' + (st === 'paid' ? 'p">قُبِض'
+            : (st === 'warr' ? 'w">🛡 ضمان' : 'd">مستحقّ')) + '</span>';
       acts += '<button class="undo" data-act="undo" data-k="' + esc(r.key) + '">↩︎ تراجع</button>';
     }
     if(ph && window.AtwadDebt){
@@ -214,7 +257,7 @@ function render(){
     html += '<div class="row ' + (st === 'open' ? '' : st) + '">' +
       (st === 'open' ? '<input type="checkbox" data-sel="' + esc(r.key) + '">' : '<span style="width:19px;"></span>') +
       '<div class="who"><b>' + esc(e.party || e.client || '—') + '</b>' +
-        '<div class="meta">' + meta.join(' · ') + '</div></div>' +
+        '<div class="meta">' + meta.join(' · ') + '</div>' + sibHtml + '</div>' +
       '<div class="amt' + (e.amountWas != null ? ' fixed' : '') + '">' + fmt(num(e.amount)) + ' ﷼' +
         (e.amountWas != null ? '<small>كان ' + fmt(num(e.amountWas)) + '</small>' : '') + '</div>' +
       '<div class="acts">' + acts + '</div>' +
@@ -246,6 +289,9 @@ function syncBulk(){
   var btn = el('bulkPaid');
   btn.disabled = (n === 0);
   btn.textContent = n ? ('✅ «قُبِض» على ' + n + ' قيداً') : '✅ «قُبِض» على المحدَّد';
+  var wb = el('bulkWarr');
+  wb.disabled = (n === 0);
+  wb.textContent = n ? ('🛡 «ضمان» على ' + n + ' قيداً') : '🛡 «ضمان» على المحدَّد';
 }
 
 function findRow(key){
@@ -272,8 +318,25 @@ function patchFor(act, e){
       reviewedAt: (new Date()).toISOString()
     };
   }
-  /* تراجع: إزالةُ كلِّ ما أضفناه، وعودةُ الحالة كما كانت */
-  return {
+  /* ضمانٌ مجانيّ — بالشكل الذي تكتبه صفحة المواعيد نفسُها: صفرٌ وفئةُ «ضمان» */
+  if(act === 'warr'){
+    var w = {
+      amount: 0,
+      status: 'مدفوع',
+      paidAmount: 0,
+      category: 'ضمان',
+      warrantyRework: true,
+      paymentNote: 'إعادة عمل تحت الضمان — ' + REVIEW_TAG,
+      reviewedAt: (new Date()).toISOString()
+    };
+    if(e && e.amountWas == null) w.amountWas = num(e.amount);
+    if(e && String(e.desc || '').indexOf('ضمان') !== 0){
+      w.desc = 'ضمان — إعادة عمل: ' + String(e.desc || 'زيارة صيانة');
+    }
+    return w;
+  }
+  /* تراجع: إزالةُ كلِّ ما أضفناه، وعودةُ الحالة والمبلغ كما كانا */
+  var back = {
     status: 'غير مدفوع',
     paidAmount: 0,
     paidAt: null,
@@ -282,6 +345,17 @@ function patchFor(act, e){
     paymentNote: null,
     reviewedAt: null
   };
+  if(e && e.amountWas != null){
+    back.amount    = num(e.amountWas);
+    back.amountWas = null;
+  }
+  if(e && e.warrantyRework){
+    back.warrantyRework = null;
+    back.category = 'خدمة';
+    var d = String(e.desc || '');
+    if(d.indexOf('ضمان — إعادة عمل: ') === 0){ back.desc = d.slice('ضمان — إعادة عمل: '.length); }
+  }
+  return back;
 }
 
 function applyLocal(e, patch){
@@ -307,8 +381,15 @@ function onAct(ev){
     if(ans === null) return;
     var v = parseFloat(String(ans).replace(/[^0-9.]/g, ''));
     if(isNaN(v) || v <= 0){ toast('⛔ أدخل مبلغاً صحيحاً'); return; }
-    if(Math.abs(v - cur) < 0.01){ toast('لم يتغيّر المبلغ'); return; }
-    patch = { amount: v, amountWas: cur, reviewedAt: (new Date()).toISOString() };
+    var same = Math.abs(v - cur) < 0.01;
+    if(same && r.e.amountWas == null){ toast('لم يتغيّر المبلغ'); return; }
+    if(same){
+      /* المبلغُ هو الحاليّ نفسُه ومعه أثرٌ قديم — يُمسح الأثر ويُثبَّت الرقم أصلاً */
+      patch = { amountWas: null, reviewedAt: null };
+    } else {
+      patch = { amount: v, reviewedAt: (new Date()).toISOString() };
+      patch.amountWas = (r.e.amountWas != null) ? num(r.e.amountWas) : cur;
+    }
   } else {
     patch = patchFor(act, r.e);
   }
@@ -322,7 +403,8 @@ function onAct(ev){
     render();
     toast(act === 'paid' ? '✅ صُحّح إلى «مدفوع»'
         : (act === 'due' ? '⏳ أُدخل في الذمم الحيّة'
-        : (act === 'amt' ? '✎ صُحّح المبلغ' : '↩︎ عاد كما كان')));
+        : (act === 'amt' ? '✎ صُحّح المبلغ'
+        : (act === 'warr' ? '🛡 قُيّد ضماناً مجانيّاً — صفر' : '↩︎ عاد كما كان'))));
   }).catch(function(err){
     busy[key] = false;
     btn.disabled = false;
@@ -331,7 +413,7 @@ function onAct(ev){
   });
 }
 
-function bulkPaid(){
+function bulkApply(act){
   var keys = selectedKeys();
   if(!keys.length) return;
   if(!rdb){ toast('⛔ لا اتصال بفَيَربيس'); return; }
@@ -341,16 +423,20 @@ function bulkPaid(){
     var rr = findRow(keys[i]);
     if(rr) sum += num(rr.e.amount);
   }
-  var msg = 'تصحيحُ ' + keys.length + ' قيداً إلى «مدفوع»، بمجموع ' + fmt(sum) + ' ريالاً.\n\n' +
-            'أي أنك تُقرّ بأن هذا المال قد وصلك فعلاً.\n' +
-            'وكلُّ صفٍّ يبقى له زرُّ تراجعٍ بعدها.\n\nأتمضي؟';
+  var msg = (act === 'warr')
+    ? ('تحويلُ ' + keys.length + ' قيداً إلى «ضمان — إعادة عمل».\n\n' +
+       'مبلغُ كلٍّ منها يصير صفراً (مجموعُها الآن ' + fmt(sum) + ' ريالاً)،\n' +
+       'فلا تُحسب إيراداً ولا ذمّةً — لأنها زياراتٌ بلا أجر.\n\nأتمضي؟')
+    : ('تصحيحُ ' + keys.length + ' قيداً إلى «مدفوع»، بمجموع ' + fmt(sum) + ' ريالاً.\n\n' +
+       'أي أنك تُقرّ بأن هذا المال قد وصلك فعلاً.\n' +
+       'وكلُّ صفٍّ يبقى له زرُّ تراجعٍ بعدها.\n\nأتمضي؟');
   if(!window.confirm(msg)) return;
 
   var updates = {};
   for(i = 0; i < keys.length; i++){
     var r = findRow(keys[i]);
     if(!r) continue;
-    var p = patchFor('paid', r.e), k;
+    var p = patchFor(act, r.e), k;
     for(k in p){
       if(!Object.prototype.hasOwnProperty.call(p, k)) continue;
       updates['transactions/' + keys[i] + '/' + k] = p[k];
@@ -358,15 +444,16 @@ function bulkPaid(){
   }
 
   el('bulkPaid').disabled = true;
+  el('bulkWarr').disabled = true;
   rdb.ref().update(updates).then(function(){
     for(var j = 0; j < keys.length; j++){
       var rw = findRow(keys[j]);
-      if(rw) applyLocal(rw.e, patchFor('paid', rw.e));
+      if(rw) applyLocal(rw.e, patchFor(act, rw.e));
     }
     render();
-    toast('✅ صُحّح ' + keys.length + ' قيداً — ' + fmt(sum) + ' ريالاً');
+    toast((act === 'warr' ? '🛡 حُوّل ' : '✅ صُحّح ') + keys.length + ' قيداً');
   }).catch(function(err){
-    el('bulkPaid').disabled = false;
+    syncBulk();
     console.error('[legacy] تعذّر التحديث الجماعي:', err);
     toast('⛔ تعذّر التحديث: ' + String((err && err.message) || err));
   });
@@ -428,6 +515,7 @@ function loadAll(){
     return rdb.ref('transactions').once('value');
   }).then(function(ts){
     var t = ts.val() || {}, k;
+    allTx = t;
     rows = [];
     for(k in t){
       if(!Object.prototype.hasOwnProperty.call(t, k)) continue;
@@ -478,7 +566,8 @@ window.__atwadInitPage = function(user){
     for(i = 0; i < boxes.length; i++){ boxes[i].checked = anyOff; }
     syncBulk();
   });
-  el('bulkPaid').addEventListener('click', bulkPaid);
+  el('bulkPaid').addEventListener('click', function(){ bulkApply('paid'); });
+  el('bulkWarr').addEventListener('click', function(){ bulkApply('warr'); });
   el('export').addEventListener('click', exportCsv);
 
   loadAll();
