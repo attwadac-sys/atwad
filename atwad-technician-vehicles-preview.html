@@ -232,6 +232,10 @@ body{font-family:'Cairo',sans-serif;background:#F1F5F9;color:var(--slate);min-he
 .veh-thumb{margin-top:8px;width:100%;max-height:170px;object-fit:cover;border-radius:11px;display:none;}
 .veh-thumb.show{display:block;}
 .veh-camhint{font-size:11.5px;color:#94A3B8;line-height:1.8;margin-top:5px;}
+.veh-item{margin-top:9px;padding:10px;border:1.5px solid #E2E8F0;border-radius:12px;background:#fff;}
+.veh-item .ck{width:100%;background:transparent;border:none;padding:0;}
+.veh-item .veh-cam{margin-top:8px;padding:9px;font-size:13px;}
+.veh-item .veh-thumb{max-height:130px;}
 </style><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
@@ -385,8 +389,8 @@ var I18N = {
     vehOdoPh:'قراءة العداد الكلي (كم)', vehNotePh:'ملاحظة إن وُجد خلل (اختياري)',
     vehSave:'حفظ الفحص', vehSaved:'✅ سُجِّل الفحص — شكراً',
     vehNeedOdo:'اكتب قراءة العداد الكلي.', vehNeedAll:'علّم كل البنود، وإن كان أحدها غير سليم فاكتب ملاحظة.',
-    vehPhoto:'📷 صوّر العداد', vehPhotoOk:'✅ الصورة جاهزة — اضغط لتغييرها',
-    vehNeedPhoto:'صوّر العداد — الصورة إثبات الفحص.', vehPhotoBad:'تعذّر قراءة الصورة. أعد المحاولة.',
+    vehPhoto:'📷 صوّر', vehPhotoOk:'✅ تم — اضغط للتغيير',
+    vehNeedPhoto:'ينقص التصوير', vehPhotoBad:'تعذّر قراءة الصورة. أعد المحاولة.',
     vehPhotoHint:'صورة واضحة لشاشة العداد والسيارة شغّالة.',
     vehOdoLess:'القراءة أقل من المسجَّل سابقاً. تأكد من الرقم.',
     vehBlock:'⛔ فحص المركبة لهذا الأسبوع لم يُسجَّل. سجّله أولاً قبل إغلاق المواعيد.',
@@ -439,8 +443,8 @@ var I18N = {
     vehOdoPh:'Total odometer (km)', vehNotePh:'Note any fault (optional)',
     vehSave:'Save check', vehSaved:'✅ Check saved — thank you',
     vehNeedOdo:'Enter the total odometer.', vehNeedAll:'Tick every item; if one is not fine, write a note.',
-    vehPhoto:'📷 Photograph the odometer', vehPhotoOk:'✅ Photo ready — tap to replace',
-    vehNeedPhoto:'Photograph the odometer — the photo is the proof.', vehPhotoBad:'Could not read the image. Try again.',
+    vehPhoto:'📷 Photo', vehPhotoOk:'✅ Done — tap to replace',
+    vehNeedPhoto:'Photo missing for', vehPhotoBad:'Could not read the image. Try again.',
     vehPhotoHint:'A clear shot of the odometer with the engine on.',
     vehOdoLess:'Reading is lower than the last one. Check the number.',
     vehBlock:'⛔ This week\u2019s vehicle check is missing. Record it before closing jobs.',
@@ -1539,6 +1543,36 @@ updateDate();
              vehicleSettings (حدود الصيانة ودرجة الإلزام)
    الأسبوع يبدأ السبت — بداية أسبوع العمل في السعودية.
    ============================================================ */
+/* بنود الفحص تُعرَّف من لوحة الإدارة لا من الكود، فتُضاف بنود
+   جديدة (فرامل، بطارية…) بلا تعديل برمجي. وهذه القيم الافتراضية
+   تعمل قبل أن تُحفظ أي إعدادات. */
+var VEH_ITEMS_DEFAULT = {
+  odo:   { label:'قراءة العداد',    labelEn:'Odometer',        photo:true,  order:1, active:true },
+  oil:   { label:'مستوى الزيت',     labelEn:'Oil level',       photo:true,  order:2, active:true },
+  water: { label:'ماء الرديتر',     labelEn:'Radiator water',  photo:true,  order:3, active:true },
+  tires: { label:'الإطارات',        labelEn:'Tyres',           photo:true,  order:4, active:true },
+  sound: { label:'لا أصوات غريبة',  labelEn:'No odd noises',   photo:false, order:5, active:true }
+};
+var VEH_ITEMS = null;              // المحمّلة من القاعدة، وإلا الافتراضية
+
+function vehItems(){
+  var src = (VEH_ITEMS && Object.keys(VEH_ITEMS).length) ? VEH_ITEMS : VEH_ITEMS_DEFAULT;
+  var out = [];
+  for(var k in src){
+    if(!Object.prototype.hasOwnProperty.call(src, k)) continue;
+    var it = src[k] || {};
+    if(it.active === false) continue;
+    out.push({
+      key: k,
+      label: (LANG === 'en' && it.labelEn) ? it.labelEn : (it.label || k),
+      photo: it.photo !== false,
+      order: vehNum(it.order) || 99
+    });
+  }
+  out.sort(function(x, y){ return x.order - y.order || (x.key < y.key ? -1 : 1); });
+  return out;
+}
+
 var VEH_LIST = {};                 // id -> بيانات المركبة
 var VEH_SET  = { oilKm:5000, warnKm:500, enforce:'notify' };
 var VEH_CHECKS = {};               // id -> { أسبوع: سجل }
@@ -1629,18 +1663,12 @@ function vehRender(){
       '<span class="veh-pill ' + pill + '">' + pillTxt + '</span></div>';
 
     if(!done){
-      html += '<div class="veh-ck">' +
-        vehBox(id,'oil',   t('vehOil')) +
-        vehBox(id,'water', t('vehWater')) +
-        vehBox(id,'tires', t('vehTires')) +
-        vehBox(id,'sound', t('vehSound')) +
-      '</div>' +
-      '<div class="veh-odo"><input type="number" inputmode="numeric" id="vehOdo-' + vehEsc(id) + '" placeholder="' + t('vehOdoPh') + '" value="' + (odo || '') + '"></div>' +
-      '<label class="veh-cam" id="vehCam-' + vehEsc(id) + '"><span id="vehCamTxt-' + vehEsc(id) + '">' + t('vehPhoto') + '</span>' +
-        '<input type="file" accept="image/*" capture="environment" data-cam="' + vehEsc(id) + '"></label>' +
-      '<div class="veh-camhint">' + t('vehPhotoHint') + '</div>' +
-      '<img class="veh-thumb" id="vehImg-' + vehEsc(id) + '" alt="">' +
-      '<textarea class="veh-note" id="vehNote-' + vehEsc(id) + '" placeholder="' + t('vehNotePh') + '"></textarea>' +
+      html += '<div class="veh-odo"><input type="number" inputmode="numeric" id="vehOdo-' + vehEsc(id) + '" placeholder="' + t('vehOdoPh') + '" value="' + (odo || '') + '"></div>';
+      var items = vehItems();
+      for(var q = 0; q < items.length; q++){
+        html += vehItemHtml(id, items[q]);
+      }
+      html += '<textarea class="veh-note" id="vehNote-' + vehEsc(id) + '" placeholder="' + t('vehNotePh') + '"></textarea>' +
       '<button class="veh-btn" id="vehBtn-' + vehEsc(id) + '" data-veh="' + vehEsc(id) + '">' + t('vehSave') + '</button>' +
       '<div class="veh-msg" id="vehMsg-' + vehEsc(id) + '"></div>';
     }
@@ -1675,9 +1703,10 @@ function vehRender(){
    وقاعدة البيانات ليست مخزن صور. العرض 760 بكسل كافٍ لقراءة العداد. */
 var VEH_PHOTO = {};   // id -> dataURL
 
-function vehShrinkPhoto(id, file){
+function vehShrinkPhoto(uid, file){
   if(!file) return;
-  var msgEl = document.getElementById('vehMsg-' + id);
+  var vehId = String(uid).split('--')[0];
+  var msgEl = document.getElementById('vehMsg-' + vehId);
   var reader = new FileReader();
   reader.onload = function(ev){
     var img = new Image();
@@ -1690,13 +1719,13 @@ function vehShrinkPhoto(id, file){
       cv.width = w; cv.height = h;
       cv.getContext('2d').drawImage(img, 0, 0, w, h);
       var data = cv.toDataURL('image/jpeg', 0.55);
-      VEH_PHOTO[id] = data;
+      VEH_PHOTO[uid] = data;
 
-      var thumb = document.getElementById('vehImg-' + id);
+      var thumb = document.getElementById('vehImg-' + uid);
       if(thumb){ thumb.src = data; thumb.className = 'veh-thumb show'; }
-      var lab = document.getElementById('vehCam-' + id);
+      var lab = document.getElementById('vehCam-' + uid);
       if(lab) lab.classList.add('has');
-      var txt = document.getElementById('vehCamTxt-' + id);
+      var txt = document.getElementById('vehCamTxt-' + uid);
       if(txt) txt.textContent = t('vehPhotoOk');
       if(msgEl) msgEl.className = 'veh-msg';
     };
@@ -1711,9 +1740,22 @@ function vehShrinkPhoto(id, file){
   reader.readAsDataURL(file);
 }
 
-function vehBox(id, key, label){
-  return '<label class="ck"><input type="checkbox" id="vehCk-' + vehEsc(id) + '-' + key + '"><span>' +
-         vehEsc(label) + '</span></label>';
+/* كل بند كتلة مستقلة: مربع تعليم، وزر كاميرا إن كان البند يتطلب صورة.
+   الفصل يجعل الصورة مربوطة بالبند الذي تخصه، فلا تُقبَل صورة واحدة
+   عن أربعة بنود. */
+function vehItemHtml(id, it){
+  var uid = vehEsc(id) + '--' + vehEsc(it.key);
+  var h = '<div class="veh-item">' +
+    '<label class="ck"><input type="checkbox" id="vehCk-' + uid + '"><span>' + vehEsc(it.label) + '</span></label>';
+  if(it.photo){
+    h += '<label class="veh-cam" id="vehCam-' + uid + '">' +
+           '<span id="vehCamTxt-' + uid + '">' + t('vehPhoto') + '</span>' +
+           '<input type="file" accept="image/*" capture="environment" data-cam="' + uid + '">' +
+         '</label>' +
+         '<img class="veh-thumb" id="vehImg-' + uid + '" alt="">';
+  }
+  h += '</div>';
+  return h;
 }
 
 function vehSaveCheck(id){
@@ -1731,21 +1773,26 @@ function vehSaveCheck(id){
   var v = VEH_LIST[id] || {};
   if(vehNum(v.odometer) && odo < vehNum(v.odometer)){ fail(t('vehOdoLess')); return; }
 
-  var keys = ['oil','water','tires','sound'];
-  var items = {}, allOk = true;
-  for(var i = 0; i < keys.length; i++){
-    var el = document.getElementById('vehCk-' + id + '-' + keys[i]);
+  var defs = vehItems();
+  var items = {}, photos = {}, allOk = true, missing = [];
+  for(var i = 0; i < defs.length; i++){
+    var k = defs[i].key;
+    var uid = id + '--' + k;
+    var el = document.getElementById('vehCk-' + uid);
     var on = !!(el && el.checked);
-    items[keys[i]] = on;
+    items[k] = on;
     if(!on) allOk = false;
+    if(defs[i].photo){
+      var ph = VEH_PHOTO[uid] || '';
+      // الصورة مربوطة ببندها: فحص بلا صورته ناقص مهما عُلّم
+      if(!ph) missing.push(defs[i].label);
+      else photos[k] = ph;
+    }
   }
   var note = String(noteEl ? noteEl.value : '').trim();
   // بندٌ غير سليم يلزمه سببٌ مكتوب — وإلا صار التعليم بلا معنى
   if(!allOk && !note){ fail(t('vehNeedAll')); return; }
-
-  // الصورة إثبات الحضور عند السيارة والتحقق من الرقم المكتوب
-  var photo = VEH_PHOTO[id] || '';
-  if(!photo){ fail(t('vehNeedPhoto')); return; }
+  if(missing.length){ fail(t('vehNeedPhoto') + ' (' + missing.join('، ') + ')'); return; }
 
   if(!db){ fail(t('vehFail') + 'no db'); return; }
 
@@ -1757,7 +1804,7 @@ function vehSaveCheck(id){
     items: items,
     allOk: allOk,
     note: note,
-    hasPhoto: true,
+    photoKeys: Object.keys(photos).join(','),
     by: currentTechAr || currentTech || 'فني',
     at: new Date().toISOString()
   };
@@ -1773,7 +1820,11 @@ function vehSaveCheck(id){
      ولو كانت الصورة داخله لنُزّلت كل الصور في كل فتحة — من باقة
      جوال الفني ومن حساب التنزيل. الآن السجل نصٌّ خفيف،
      والصورة لا تُنزَّل إلا حين تُطلب. */
-  updates['vehicleCheckPhotos/' + id + '/' + wk] = photo;
+  for(var pk in photos){
+    if(Object.prototype.hasOwnProperty.call(photos, pk)){
+      updates['vehicleCheckPhotos/' + id + '/' + wk + '/' + pk] = photos[pk];
+    }
+  }
   if(odo > vehNum(v.odometer)) updates['vehicles/' + id + '/odometer'] = odo;
 
   btn.disabled = true;
@@ -1781,7 +1832,11 @@ function vehSaveCheck(id){
     btn.disabled = false;
     if(!VEH_CHECKS[id]) VEH_CHECKS[id] = {};
     VEH_CHECKS[id][wk] = rec;
-    delete VEH_PHOTO[id];
+    for(var dk in VEH_PHOTO){
+      if(Object.prototype.hasOwnProperty.call(VEH_PHOTO, dk) && dk.indexOf(id + '--') === 0){
+        delete VEH_PHOTO[dk];
+      }
+    }
     if(odo > vehNum(v.odometer)){ v.odometer = odo; VEH_LIST[id] = v; }
     showToast(t('vehSaved'));
     vehRender();
@@ -1800,6 +1855,9 @@ function vehLoad(){
       VEH_SET.warnKm  = vehNum(x.warnKm) || VEH_SET.warnKm;
       VEH_SET.enforce = x.enforce || VEH_SET.enforce;
     }
+    return db.ref('vehicleCheckItems').once('value');
+  }).then(function(snap){
+    VEH_ITEMS = snap.val() || null;
     return db.ref('vehicles').once('value');
   }).then(function(snap){
     VEH_LIST = snap.val() || {};
