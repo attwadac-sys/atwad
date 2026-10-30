@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>فحص أوامر العمل غير المغلقة — أطواد</title>
+<link rel="icon" href="favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--deep:#0A2540;--sky:#38BDF8;--ice:#E2E8F0;--mist:#64748B;--frost:#F8FAFC;
+  --ok:#059669;--warn:#D97706;--bad:#B91C1C;}
+*{box-sizing:border-box;}
+body{margin:0;background:#F1F5F9;font-family:'Tajawal',sans-serif;color:var(--deep);padding:18px 16px 70px;}
+.wrap{max-width:1000px;margin:0 auto;}
+.head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px;}
+h1{font-size:22px;margin:0;}
+.sub{font-size:13.5px;color:var(--mist);line-height:1.85;margin-bottom:16px;}
+.pill{font-size:12px;font-weight:700;padding:5px 12px;border-radius:99px;background:#E0F2FE;color:#075985;}
+.pill.off{background:#FEE2E2;color:#991B1B;}
+.note{font-size:13px;color:#1E40AF;background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:12px;
+  padding:12px 14px;line-height:1.9;margin-bottom:14px;font-weight:700;}
+.card{background:#fff;border:1.5px solid var(--ice);border-radius:16px;padding:16px;margin-bottom:13px;}
+.card h3{margin:0 0 4px;font-size:16px;}
+.card .why{font-size:12.5px;color:var(--mist);line-height:1.85;margin-bottom:10px;}
+.big{font-size:30px;font-weight:800;}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:14px;}
+.kpi{background:#fff;border:1.5px solid var(--ice);border-radius:14px;padding:13px;text-align:center;}
+.kpi .n{font-size:26px;font-weight:800;}
+.kpi .l{font-size:12px;color:var(--mist);margin-top:2px;line-height:1.6;}
+.kpi.a{border-color:#A7F3D0;background:#ECFDF5;}
+.kpi.b{border-color:#FDE68A;background:#FFFBEB;}
+.kpi.c{border-color:#BFDBFE;background:#EFF6FF;}
+.kpi.d{border-color:#FECACA;background:#FFF1F2;}
+table{width:100%;border-collapse:collapse;font-size:12.5px;}
+th{background:var(--frost);text-align:right;padding:8px 9px;border-bottom:2px solid var(--ice);font-size:12px;white-space:nowrap;}
+td{padding:7px 9px;border-bottom:1px solid var(--ice);vertical-align:top;}
+tr:hover td{background:var(--frost);}
+.mono{direction:ltr;text-align:left;font-size:11.5px;color:var(--mist);}
+button.big-btn{font-family:'Tajawal',sans-serif;font-size:15.5px;font-weight:800;border:0;border-radius:12px;
+  background:var(--sky);color:#fff;padding:13px 26px;cursor:pointer;}
+button.big-btn:disabled{opacity:.45;cursor:default;}
+.ghost{font-family:'Tajawal',sans-serif;font-size:14px;font-weight:700;border:1.5px solid var(--ice);
+  border-radius:12px;background:#fff;color:var(--deep);padding:12px 20px;cursor:pointer;}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px;}
+.msg{font-size:13.5px;font-weight:700;line-height:1.85;min-height:22px;margin-bottom:10px;}
+.empty{font-size:13px;color:var(--mist);padding:10px 0;}
+details{margin-top:8px;}
+summary{cursor:pointer;font-size:13.5px;font-weight:700;color:var(--deep);}
+.scroll{overflow-x:auto;}
+</style>
+</head>
+<body>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="atwad-firebase.js"></script>
+<script src="atwad-auth.js"></script>
+
+<div class="wrap">
+  <div class="head">
+    <h1>🔍 فحص أوامر العمل غير المغلقة</h1>
+    <span class="pill" id="pill">يتحقق…</span>
+  </div>
+  <p class="sub">
+    يفرز الأوامر المفتوحة بحسب حال موعدها وقيدها المالي، ليُعرف ما انتهى عمله
+    ونُسي إغلاقه ممّا ينتظر عملاً فعلياً.
+  </p>
+
+  <div class="note">
+    🔒 هذه الصفحة تقرأ ولا تكتب. لا تُغلق أمراً، ولا تُعدّل قيداً، ولا تحذف شيئاً.
+  </div>
+
+  <div class="bar">
+    <button class="big-btn" id="runBtn" disabled>🔍 ابدأ الفحص</button>
+    <button class="ghost" id="csvBtn" disabled>⬇️ تنزيل الجدول</button>
+  </div>
+  <div class="msg" id="msg"></div>
+
+  <div id="out"></div>
+</div>
+
+<script>
+'use strict';
+var ADMIN_UID = 'NU8g25megKefUOBQGvfkVtBOw802';
+var adb = null;
+var LAST = null;
+
+function el(id){ return document.getElementById(id); }
+function say(t){ el('msg').textContent = t || ''; }
+function esc(s){
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/** توحيد الأسماء قبل المطابقة — الهمزة والتاء والمسافات تختلف بين السجلّات */
+function norm(t){
+  return String(t || '')
+    .replace(/[ً-ْـ]/g,'')
+    .replace(/[آأإٱ]/g,'ا')
+    .replace(/ة/g,'ه')
+    .replace(/ى/g,'ي')
+    .replace(/\s+/g,'')
+    .toLowerCase();
+}
+
+function snapToMap(snap){
+  var m = {};
+  if(snap && typeof snap.forEach === 'function'){
+    snap.forEach(function(c){ m[c.key] = c.val(); });
+  }
+  return m;
+}
+
+function today(){ return new Date().toISOString().slice(0,10); }
+
+function run(){
+  if(!adb) { say('لا اتصال بفَيَربيس'); return; }
+  el('runBtn').disabled = true;
+  say('يقرأ البيانات…');
+
+  Promise.all([
+    adb.ref('workOrders').once('value'),
+    adb.ref('appointments').once('value'),
+    adb.ref('bookings').once('value'),
+    adb.ref('transactions').once('value')
+  ]).then(function(s){
+    var wos   = snapToMap(s[0]);
+    var appts = snapToMap(s[1]);
+    var books = snapToMap(s[2]);
+    var txs   = snapToMap(s[3]);
+    analyse(wos, appts, books, txs);
+    el('runBtn').disabled = false;
+    el('csvBtn').disabled = false;
+  }).catch(function(err){
+    el('runBtn').disabled = false;
+    console.error('[wo-audit] تعذّرت القراءة:', err);
+    say('⛔ تعذّرت القراءة: ' + ((err && err.message) || err));
+  });
+}
+
+function analyse(wos, appts, books, txs){
+  /* فهرسُ القيود: بالـwoId، وبمفتاح الحجز، وبالاسم مع التاريخ */
+  var byWo = {}, byRef = {}, byNameDate = {};
+  var tk, t;
+  for(tk in txs){
+    if(!Object.prototype.hasOwnProperty.call(txs, tk)) continue;
+    t = txs[tk] || {};
+    if(t.type && t.type !== 'income') continue;
+    if(t.woId) byWo[t.woId] = t;
+    if(t.firebaseRef) byRef[t.firebaseRef] = t;
+    if(t.party && t.date) byNameDate[norm(t.party) + '|' + t.date] = t;
+  }
+
+  var rows = [];
+  var k, w, src, apptDone, apptFound, tx, bucket, why;
+  var TODAY = today();
+
+  for(k in wos){
+    if(!Object.prototype.hasOwnProperty.call(wos, k)) continue;
+    w = wos[k] || {};
+    var st = w.status || 'open';
+    if(st === 'done' || st === 'invoiced') continue;   // المغلقة ليست محلّ الفحص
+
+    /* حال الموعد المصدر */
+    apptFound = false; apptDone = false;
+    src = null;
+    if(w.sourceApptKey){
+      if(w.sourceApptSrc === 'bookings' && books[w.sourceApptKey]) src = books[w.sourceApptKey];
+      else if(appts[w.sourceApptKey]) src = appts[w.sourceApptKey];
+      else if(books[w.sourceApptKey]) src = books[w.sourceApptKey];
+    }
+    if(src){ apptFound = true; apptDone = (src.status === 'done'); }
+
+    /* قيدٌ مالي لهذه الزيارة */
+    tx = byWo[w.id] || (w.sourceApptKey ? byRef[w.sourceApptKey] : null) ||
+         (w.client && w.date ? byNameDate[norm(w.client) + '|' + w.date] : null) || null;
+
+    var past = (w.date && w.date < TODAY);
+
+    if(tx && (apptDone || past)){
+      bucket = 'A'; why = 'الزيارة تمّت وقيدُها في المالية — ينقصها الإغلاق فقط';
+    } else if(apptDone && !tx){
+      bucket = 'B'; why = 'الموعد مُعلَّمٌ «تمّ» ولا قيد له — أقُبض المبلغ خارج النظام؟';
+    } else if(!apptFound && past){
+      bucket = 'E'; why = 'لا موعد مصدر له، وتاريخه مضى';
+    } else if(past){
+      bucket = 'D'; why = 'تاريخه مضى والموعد لم يُعلَّم «تمّ»';
+    } else {
+      bucket = 'C'; why = 'تاريخه اليوم أو لم يأتِ بعد — مفتوحٌ بحقّ';
+    }
+
+    rows.push({
+      key: k,
+      id: w.id || k,
+      client: w.client || '',
+      phone: w.phone || '',
+      service: w.service || '',
+      date: w.date || '',
+      status: st,
+      total: Number(w.total) || 0,
+      price: Number(w.price) || 0,
+      tech: w.tech || '',
+      apptFound: apptFound,
+      apptStatus: src ? (src.status || '') : '',
+      txId: tx ? (tx.id || '✓') : '',
+      txAmount: tx ? (Number(tx.amount) || 0) : 0,
+      txStatus: tx ? (tx.status || '') : '',
+      incomplete: (!w.price || Number(w.price) === 0 || !w.service || !w.client || !w.phone),
+      bucket: bucket,
+      why: why
+    });
+  }
+
+  rows.sort(function(a,b){ return String(a.date).localeCompare(String(b.date)); });
+  LAST = rows;
+  render(rows);
+  say('تمّ الفحص · ' + rows.length + ' أمراً غير مغلق');
+}
+
+var BUCKETS = [
+  { k:'A', cls:'a', t:'انتهت وقيدُها موجود',  d:'الزيارة تمّت والمبلغ مُسجَّل في المالية. إغلاقُها لا يُغيّر مالاً — يُصحّح السجلّ فقط.' },
+  { k:'B', cls:'b', t:'الموعد تمّ ولا قيد له', d:'إمّا أن المبلغ قُبض ولم يُسجَّل، وإمّا أن الزيارة كانت مجانيةً أو ضماناً. تحتاج حكمك.' },
+  { k:'D', cls:'d', t:'تاريخه مضى ولم يتمّ',   d:'موعدٌ قديم لم يُعلَّم «تمّ». أوقعت الزيارة ولم تُسجَّل، أم أُلغيت ولم تُحذف؟' },
+  { k:'E', cls:'d', t:'لا موعد مصدر له',       d:'أمرٌ أُنشئ يدوياً أو حُذف موعدُه. يُراجَع فرداً فرداً.' },
+  { k:'C', cls:'c', t:'مفتوحٌ بحقّ',            d:'تاريخه اليوم أو لم يأتِ بعد — لا شيء فيه.' }
+];
+
+function render(rows){
+  var counts = {}, sums = {};
+  var i, r;
+  for(i = 0; i < rows.length; i++){
+    r = rows[i];
+    counts[r.bucket] = (counts[r.bucket] || 0) + 1;
+    sums[r.bucket] = (sums[r.bucket] || 0) + r.total;
+  }
+
+  var html = '<div class="grid">';
+  for(i = 0; i < BUCKETS.length; i++){
+    var b = BUCKETS[i];
+    html += '<div class="kpi ' + b.cls + '"><div class="n">' + (counts[b.k] || 0) + '</div>' +
+            '<div class="l">' + esc(b.t) + '</div></div>';
+  }
+  var inc = rows.filter(function(x){ return x.incomplete; }).length;
+  html += '<div class="kpi"><div class="n">' + inc + '</div><div class="l">بيانات ناقصة (لا سعر)</div></div>';
+  html += '</div>';
+
+  for(i = 0; i < BUCKETS.length; i++){
+    var bk = BUCKETS[i];
+    var list = rows.filter(function(x){ return x.bucket === bk.k; });
+    html += '<div class="card"><h3>' + esc(bk.t) + ' — ' + list.length + ' أمراً</h3>' +
+            '<div class="why">' + esc(bk.d) + '</div>';
+    if(!list.length){
+      html += '<div class="empty">لا يوجد</div>';
+    } else {
+      html += '<details><summary>اعرض الأوامر (' + list.length + ')</summary><div class="scroll"><table>' +
+        '<thead><tr><th>الأمر</th><th>العميل</th><th>الخدمة</th><th>التاريخ</th>' +
+        '<th>المبلغ</th><th>حال الموعد</th><th>القيد</th><th>الفني</th></tr></thead><tbody>';
+      for(var j = 0; j < list.length; j++){
+        var x = list[j];
+        html += '<tr><td class="mono">' + esc(x.id) + '</td><td>' + esc(x.client) + '</td>' +
+          '<td>' + esc(x.service) + '</td><td class="mono">' + esc(x.date) + '</td>' +
+          '<td class="mono">' + (x.total || '—') + '</td>' +
+          '<td>' + (x.apptFound ? esc(x.apptStatus || '—') : 'لا موعد') + '</td>' +
+          '<td class="mono">' + (x.txId ? esc(String(x.txAmount) + ' ' + (x.txStatus || '')) : '—') + '</td>' +
+          '<td>' + esc(x.tech) + '</td></tr>';
+      }
+      html += '</tbody></table></div></details>';
+    }
+    html += '</div>';
+  }
+
+  el('out').innerHTML = html;
+}
+
+function csv(){
+  if(!LAST) return;
+  var head = ['bucket','id','client','phone','service','date','status','total','apptFound','apptStatus','txAmount','txStatus','incomplete','why'];
+  var lines = [head.join(',')];
+  for(var i = 0; i < LAST.length; i++){
+    var r = LAST[i], row = [];
+    for(var j = 0; j < head.length; j++){
+      var v = String(r[head[j]] == null ? '' : r[head[j]]).replace(/"/g,'""');
+      row.push('"' + v + '"');
+    }
+    lines.push(row.join(','));
+  }
+  /* BOM ليفتح إكسل العربية سليمةً */
+  var blob = new Blob(['﻿' + lines.join('\n')], {type:'text/csv;charset=utf-8;'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'atwad-open-workorders.csv';
+  a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 2000);
+}
+
+window.__atwadInitPage = function(user){
+  if(!user || user.uid !== ADMIN_UID){
+    document.body.innerHTML = '<div style="padding:40px;text-align:center;font-family:Tajawal,sans-serif;">' +
+      'هذا الحساب غير مصرّح له.</div>';
+    return;
+  }
+  adb = window.db || null;
+  if(!adb){
+    el('pill').textContent = 'غير متصل';
+    el('pill').className = 'pill off';
+    say('لا اتصال بفَيَربيس');
+    return;
+  }
+  el('pill').textContent = 'متصل';
+  el('runBtn').disabled = false;
+  el('runBtn').addEventListener('click', run);
+  el('csvBtn').addEventListener('click', csv);
+};
+</script>
+</body>
+</html>
