@@ -137,6 +137,8 @@ function normStatus(s){ return s === 'معلق' ? 'غير مدفوع' : (s || '�
 /* المعيار نفسه الذي تستعمله صفحة الإدارة المالية — لا يُخالفه بحرف */
 function isLegacy(e){
   if(!e || e.type !== 'income') return false;
+  /* قيدٌ قرّرناه من هذه الشاشة — يبقى معروضاً بعد التحديث ليظلّ التراجع ممكناً */
+  if(e.reviewedAt) return true;
   var s = normStatus(e.status);
   if(s !== 'غير مدفوع' && s !== 'مؤجل') return false;
   if(e.dueType || e.dueDate || e.paymentNote) return false;
