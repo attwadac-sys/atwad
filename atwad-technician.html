@@ -173,6 +173,9 @@ body{font-family:'Cairo',sans-serif;background:#F1F5F9;color:var(--slate);min-he
 /* LOADING */
 .loading{text-align:center;padding:40px;color:var(--mist);}
 .spinner{width:36px;height:36px;border:3px solid var(--ice);border-top-color:var(--sky);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 10px;}
+.load-err{text-align:center;padding:34px 20px;background:#FEF2F2;border:1.5px solid #FCA5A5;border-radius:14px;margin:14px;color:#991B1B;font-size:14px;font-weight:700;line-height:1.9;}
+.load-err-ico{font-size:30px;margin-bottom:8px;}
+.load-err-btn{margin-top:14px;padding:11px 26px;border:none;border-radius:10px;background:#B91C1C;color:#fff;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* DAY SECTION */
@@ -322,6 +325,7 @@ body{font-family:'Cairo',sans-serif;background:#F1F5F9;color:var(--slate);min-he
 var db = window.db; // من atwad-firebase.js — لا تهيئة محلية
 
 var allAppts = [];
+var _loadSeq = 0;
 var currentTech = '';
 var currentTechAr = '';
 var currentFilter = 'today';
@@ -340,6 +344,9 @@ var I18N = {
     odoTitle:'🚗 قراءة العداد نهاية اليوم', odoHint:'سجّل قراءة عداد السيارة بعد آخر موعد', save:'حفظ',
     tabToday:'اليوم', tabWeek:'الأسبوع', tabAll:'الكل',
     pickFirst:'اختر الفني لعرض مواعيده...', loading:'جاري تحميل المواعيد...',
+    loadErrPerm:'تعذّر تحميل المواعيد — هذا الحساب لا يملك الصلاحية. اخرج وادخل ببريدك أنت.',
+    loadErrNet:'تعذّر تحميل المواعيد — تحقّق من اتصال الإنترنت ثم أعد المحاولة.',
+    retry:'🔄 إعادة المحاولة', outConfirm:'اضغط مرة أخرى للتأكيد', outFail:'تعذّر الخروج — أغلق المتصفح',
     emptyToday:'لا توجد مواعيد اليوم', emptyWeek:'لا توجد مواعيد هذا الأسبوع', emptyAll:'لا توجد مواعيد',
     todayTag:'اليوم', apptCount:'موعد', units:'وحدات', minutes:'دقيقة',
     noImg:'📷 لا توجد صورة للموقع', imgAlt:'صورة الموقع',
@@ -382,6 +389,9 @@ var I18N = {
     odoTitle:'🚗 End-of-day odometer', odoHint:'Record the car odometer after the last job', save:'Save',
     tabToday:'Today', tabWeek:'This week', tabAll:'All',
     pickFirst:'Select a technician to see the jobs...', loading:'Loading appointments...',
+    loadErrPerm:'Could not load jobs — this account has no permission. Sign out and sign in with your own email.',
+    loadErrNet:'Could not load jobs — check your internet connection and try again.',
+    retry:'🔄 Try again', outConfirm:'Tap again to confirm', outFail:'Sign out failed — close the browser',
     emptyToday:'No appointments today', emptyWeek:'No appointments this week', emptyAll:'No appointments',
     todayTag:'Today', apptCount:'jobs', units:'units', minutes:'min',
     noImg:'📷 No location photo', imgAlt:'Location photo',
@@ -565,7 +575,19 @@ function loadAppts() {
 
   var combined = [];
   var apptsVal = {}, bkVal = {};
+  // حارس التحميل: الصفحة كانت تدور بلا نهاية عند رفض الصلاحية أو انقطاع
+  // الشبكة، فيقف الفني أمام بيت العميل لا يعرف أعطلٌ هو أم بطء.
+  var loadSeq = ++_loadSeq;
+  var loadSettled = false;
+  function loadFailed(err){
+    if(loadSettled || loadSeq !== _loadSeq) return;
+    loadSettled = true; clearTimeout(loadGuard);
+    showLoadError(err);
+  }
+  function loadOk(){ loadSettled = true; clearTimeout(loadGuard); }
+  var loadGuard = setTimeout(function(){ loadFailed(null); }, 20000);
   db.ref('appointments').once('value', function(snap) {
+    if(loadSettled || loadSeq !== _loadSeq) return;
     apptsVal = snap.val() || {};
     var linkedBookingKeys = {};
     snap.forEach(function(c) {
@@ -583,6 +605,8 @@ function loadAppts() {
     });
 
     db.ref('bookings').once('value', function(snap2) {
+      if(loadSettled || loadSeq !== _loadSeq) return;
+      loadOk();
       bkVal = snap2.val() || {};
       snap2.forEach(function(c) {
         var b = c.val() || {};
@@ -628,8 +652,20 @@ function loadAppts() {
       updateStats();
       renderAppts();
       attachDebts(apptsVal, bkVal);
-    });
-  });
+    }, loadFailed);
+  }, loadFailed);
+}
+
+/** رسالة صريحة بدل الدوران الأبدي، مع زرّ إعادة محاولة. */
+function showLoadError(err){
+  var code = String((err && (err.code || err.message)) || 'timeout');
+  var perm = code.toLowerCase().indexOf('permission') >= 0;
+  var el = document.getElementById('apptList');
+  console.error('[technician] تعذّر تحميل المواعيد:', code);
+  if(!el) return;
+  el.innerHTML = '<div class="load-err"><div class="load-err-ico">⚠️</div><div>' +
+    (perm ? t('loadErrPerm') : t('loadErrNet')) +
+    '</div><button class="load-err-btn" onclick="loadAppts()">' + t('retry') + '</button></div>';
 }
 function autoAssign(date, existing) {
   // تعيين أحمد افتراضياً للحجوزات الجديدة
@@ -1560,10 +1596,25 @@ function renderAcctBar(){
 }
 
 /** خروجٌ من داخل الصفحة — أوضح من زرّ atwad-auth.js أسفل الشاشة */
+var _outArmed = 0;
+// التأكيد صار داخل الزرّ نفسه: نافذة confirm المنبثقة يمنعها المتصفح
+// أحياناً فتُفهم كرفض، فيبدو الزرّ معطّلاً بلا سبب ظاهر.
 function techSignOut(){
-  if(!window.confirm(t('acctConfirm'))) return;
+  var btn = document.getElementById('acctOut');
+  var now = Date.now();
+  if(now - _outArmed > 5000){
+    _outArmed = now;
+    if(btn) btn.textContent = t('outConfirm');
+    setTimeout(function(){
+      if(Date.now() - _outArmed >= 5000 && btn) btn.textContent = t('acctOut');
+    }, 5200);
+    return;
+  }
+  _outArmed = 0;
+  if(btn) btn.textContent = '…';
   if(!window.auth || typeof window.auth.signOut !== 'function'){
     console.error('[technician] لا نظام دخول — تعذّر الخروج');
+    if(btn) btn.textContent = t('outFail');
     return;
   }
   if(typeof window.__atwadCleanup === 'function') window.__atwadCleanup();
@@ -1571,6 +1622,7 @@ function techSignOut(){
     window.location.reload();
   }).catch(function(err){
     console.error('[technician] تعذّر الخروج:', err);
+    if(btn) btn.textContent = t('outFail');
   });
 }
 
