@@ -213,6 +213,25 @@ textarea{min-height:52px;resize:vertical;}
       </div>
     </div>
     <div class="row">
+      <div>
+        <label>يوم الفحص الأسبوعي</label>
+        <select id="stDueDay">
+          <option value="6">السبت</option>
+          <option value="0">الأحد</option>
+          <option value="1">الاثنين</option>
+          <option value="2">الثلاثاء</option>
+          <option value="3">الأربعاء</option>
+          <option value="4">الخميس</option>
+          <option value="5">الجمعة</option>
+        </select>
+      </div>
+      <div></div>
+    </div>
+    <div class="hint" style="margin:-4px 0 12px;">
+      الفحص يُطلب من الفني في هذا اليوم، ويبقى مطلوباً بقية الأسبوع إن تأخّر —
+      فلا يسقط الأسبوع بتأخّر يوم واحد.
+    </div>
+    <div class="row">
       <div style="grid-column:1/-1;">
         <label>المركبة الافتراضية لتسجيلات الوقود القديمة</label>
         <select id="stDefVeh"></select>
@@ -326,7 +345,7 @@ var db = window.db;   // من atwad-firebase.js — لا تهيئة محلية
 
 var VEHICLES = {};    // id -> بيانات
 var MAINT    = {};    // id -> [سجلات]
-var SETTINGS = { oilKm:5000, shopKm:10000, warnKm:500, enforce:'notify' };
+var SETTINGS = { oilKm:5000, shopKm:10000, warnKm:500, enforce:'notify', dueDay:6 };
 var _ctxId   = '';    // المركبة المفتوحة في النافذة
 
 function toast(m){
@@ -741,6 +760,8 @@ function loadAll(){
     document.getElementById('stWarn').value = SETTINGS.warnKm;
     document.getElementById('stEnforce').value = SETTINGS.enforce;
     SETTINGS.defaultVehicleId = (v && v.defaultVehicleId) || '';
+    SETTINGS.dueDay = (v && v.dueDay !== undefined && v.dueDay !== null) ? num(v.dueDay) : 6;
+    document.getElementById('stDueDay').value = String(SETTINGS.dueDay);
     return db.ref('vehicles').once('value');
   }).then(function(snap){
     VEHICLES = snap.val() || {};
@@ -839,6 +860,7 @@ document.getElementById('stSave').addEventListener('click', function(){
     warnKm: num(document.getElementById('stWarn').value) || 500,
     enforce: document.getElementById('stEnforce').value,
     defaultVehicleId: String(document.getElementById('stDefVeh').value || ''),
+    dueDay: num(document.getElementById('stDueDay').value),
     updatedAt: new Date().toISOString()
   };
   var btn = this;
@@ -848,6 +870,7 @@ document.getElementById('stSave').addEventListener('click', function(){
     SETTINGS.oilKm = rec.oilKm; SETTINGS.shopKm = rec.shopKm;
     SETTINGS.warnKm = rec.warnKm; SETTINGS.enforce = rec.enforce;
     SETTINGS.defaultVehicleId = rec.defaultVehicleId;
+    SETTINGS.dueDay = rec.dueDay;
     msg('stMsg', '✅ حُفظت الإعدادات.', true);
     renderAlerts(); renderVehicles();
   }).catch(function(err){

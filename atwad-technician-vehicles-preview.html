@@ -385,6 +385,7 @@ var I18N = {
     odoTitle:'🚗 قراءة العداد نهاية اليوم', odoHint:'سجّل قراءة عداد السيارة بعد آخر موعد', save:'حفظ',
     vehTitle:'🚗 فحص المركبة الأسبوعي', vehDue:'مطلوب هذا الأسبوع',
     vehOk:'تم هذا الأسبوع', vehLate:'متأخر', vehSoon:'ينتهي قريباً',
+    vehDueToday:'مطلوب اليوم', vehLateBy:'متأخر', vehDay:'يوم', vehDays:'أيام',
     vehOil:'مستوى الزيت', vehWater:'الماء والرديتر', vehTires:'الإطارات', vehSound:'لا أصوات غريبة',
     vehOdoPh:'قراءة العداد الكلي (كم)', vehNotePh:'ملاحظة إن وُجد خلل (اختياري)',
     vehSave:'حفظ الفحص', vehSaved:'✅ سُجِّل الفحص — شكراً',
@@ -439,6 +440,7 @@ var I18N = {
     odoTitle:'🚗 End-of-day odometer', odoHint:'Record the car odometer after the last job', save:'Save',
     vehTitle:'🚗 Weekly vehicle check', vehDue:'Due this week',
     vehOk:'Done this week', vehLate:'Overdue', vehSoon:'Ends soon',
+    vehDueToday:'Due today', vehLateBy:'Overdue by', vehDay:'day', vehDays:'days',
     vehOil:'Oil level', vehWater:'Water & radiator', vehTires:'Tyres', vehSound:'No odd noises',
     vehOdoPh:'Total odometer (km)', vehNotePh:'Note any fault (optional)',
     vehSave:'Save check', vehSaved:'✅ Check saved — thank you',
@@ -1574,25 +1576,41 @@ function vehItems(){
 }
 
 var VEH_LIST = {};                 // id -> بيانات المركبة
-var VEH_SET  = { oilKm:5000, warnKm:500, enforce:'notify' };
+var VEH_SET  = { oilKm:5000, warnKm:500, enforce:'notify', dueDay:6 };  // 6 = السبت
 var VEH_CHECKS = {};               // id -> { أسبوع: سجل }
 
-/* مفتاح الأسبوع: YYYY-Www محسوباً من سبتٍ إلى جمعة بتوقيت الرياض */
-function vehWeekKey(){
-  var d;
+/* الأسبوع يبدأ يوم الاستحقاق (الجمعة افتراضاً) لا بتقويم ثابت.
+   الأثر: الفحص يُطلب صباح الجمعة، وإن تأخر الفني بقي الطلب قائماً
+   عليه بقية الأسبوع — فلا يسقط الأسبوع بتأخّر يوم. */
+function vehToday(){
   try{
-    d = new Date(new Intl.DateTimeFormat('en-CA',{ timeZone:'Asia/Riyadh',
+    return new Date(new Intl.DateTimeFormat('en-CA',{ timeZone:'Asia/Riyadh',
       year:'numeric', month:'2-digit', day:'2-digit' }).format(new Date()));
   } catch(e){
-    d = new Date(Date.now() + 3*3600*1000);
+    return new Date(Date.now() + 3*3600*1000);
   }
-  var day = d.getDay();                       // 0 أحد .. 6 سبت
-  var back = (day + 1) % 7;                   // المسافة رجوعاً إلى السبت
-  var sat = new Date(d.getTime() - back*86400000);
-  var y = sat.getFullYear();
-  var start = new Date(y, 0, 1);
-  var wk = Math.ceil(((sat - start) / 86400000 + start.getDay() + 1) / 7);
-  return y + '-W' + (wk < 10 ? '0' + wk : wk);
+}
+
+function vehWeekStart(){
+  var d = vehToday();
+  var due = vehNum(VEH_SET.dueDay);
+  if(!(due >= 0 && due <= 6)) due = 6;
+  var back = (d.getDay() - due + 7) % 7;      // الرجوع إلى آخر يوم استحقاق
+  return new Date(d.getTime() - back * 86400000);
+}
+
+/* المفتاح هو تاريخ بداية الفترة — أوضح من رقم أسبوع، ولا يلتبس
+   عند تغيير يوم الاستحقاق. */
+function vehWeekKey(){
+  var st = vehWeekStart();
+  var m = st.getMonth() + 1, dd = st.getDate();
+  return st.getFullYear() + '-' + (m < 10 ? '0' + m : m) + '-' + (dd < 10 ? '0' + dd : dd);
+}
+
+/* كم يوماً مضى منذ وجوب الفحص */
+function vehDaysLate(){
+  var d = vehToday(), st = vehWeekStart();
+  return Math.round((d - st) / 86400000);
 }
 
 /* المركبة المسندة للفني: مطابقة الاسم في حقل driver، وإلا كل المركبات */
@@ -1642,10 +1660,18 @@ function vehRender(){
     // حالة الزيت تُعرض للفني ليعرف لماذا يُطلب منه الفحص
     var odo = vehNum(v.odometer), oil = vehNum(v.lastOilKm);
     var left = (odo && oil) ? (VEH_SET.oilKm - (odo - oil)) : null;
-    var cls = done ? '' : 'soon';
-    var pill = done ? 'vp-ok' : 'vp-soon';
-    var pillTxt = done ? t('vehOk') : t('vehDue');
-    if(left !== null && left <= 0){ cls = 'late'; pill = 'vp-late'; pillTxt = t('vehLate'); }
+    var late = vehDaysLate();
+    var cls, pill, pillTxt;
+    if(done){
+      cls = ''; pill = 'vp-ok'; pillTxt = t('vehOk');
+    } else if(late >= 1){
+      // تأخر عن يوم الاستحقاق: الطلب يبقى قائماً ويشتدّ
+      cls = 'late'; pill = 'vp-late';
+      pillTxt = t('vehLateBy') + ' ' + late + ' ' + (late === 1 ? t('vehDay') : t('vehDays'));
+    } else {
+      cls = 'soon'; pill = 'vp-soon'; pillTxt = t('vehDueToday');
+    }
+    if(!done && left !== null && left <= 0){ cls = 'late'; pill = 'vp-late'; }
 
     var sub = vehEsc(v.name || '');
     if(v.plate) sub += ' · ' + vehEsc(v.plate);
@@ -1854,6 +1880,7 @@ function vehLoad(){
       VEH_SET.oilKm   = vehNum(x.oilKm)  || VEH_SET.oilKm;
       VEH_SET.warnKm  = vehNum(x.warnKm) || VEH_SET.warnKm;
       VEH_SET.enforce = x.enforce || VEH_SET.enforce;
+      if(x.dueDay !== undefined && x.dueDay !== null) VEH_SET.dueDay = vehNum(x.dueDay);
     }
     return db.ref('vehicleCheckItems').once('value');
   }).then(function(snap){
