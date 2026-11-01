@@ -1170,6 +1170,9 @@ function importFinanceFromFirebase() {
         party:b.client||b.name||'',
         phone:b.phone||'',
         status:'غير مدفوع',
+        // بلا هذين الحقلين يسقط القيد في «بيانات قديمة» فلا يراه أحد ولا يُطالَب به
+        dueType:'open',
+        paymentNote:'مستورد من الحجوزات — لم يُؤكَّد القبض',
         payments:[], paidAmount:0,
         createdAt:b.createdAt||new Date().toISOString()
       });
@@ -1179,7 +1182,7 @@ function importFinanceFromFirebase() {
     });
     saveData(); renderAll();
     btn.textContent='📥 استيراد إيرادات الحجوزات'; btn.disabled=false;
-    if(added>0) showToast('✅ تم استيراد '+added+' إيراد');
+    if(added>0) showToast('✅ استُورد '+added+' إيراد — دخلت الذمم المدينة حتى تؤكّد قبضها');
     else showToast('ℹ️ لا إيرادات جديدة — تخطي '+skip);
   }, function(){ btn.textContent='📥 استيراد'; btn.disabled=false; showToast('❌ خطأ'); });
 }

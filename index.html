@@ -337,6 +337,10 @@ footer b{color:#fff;}
       <p>دخل اليوم بالريال</p>
     </div>
     <div class="cell">
+      <span class="kpi-val loading" id="kpiUnpaid">…</span>
+      <p>ريالاً لم يُحصَّل</p>
+    </div>
+    <div class="cell">
       <span class="kpi-val loading" id="kpiAvgRating">…</span>
       <p>متوسط تقييم العملاء</p>
     </div>
@@ -514,7 +518,7 @@ if(typeof firebase === 'undefined'){
 }
 
 function setAllDash(){
-  ['kpiTodayAppts','kpiNewBookings','kpiOpenWOs','kpiTodayIncome','kpiAvgRating'].forEach(function(id){
+  ['kpiTodayAppts','kpiNewBookings','kpiOpenWOs','kpiTodayIncome','kpiUnpaid','kpiAvgRating'].forEach(function(id){
     var el = document.getElementById(id);
     if(el){ el.textContent = '—'; el.classList.remove('loading'); }
   });
@@ -613,16 +617,27 @@ function loadAllKPIs(){
 
   // 4. دخل اليوم: transactions — يُفلتر بـ toYMD على date أو createdAt
   db.ref('transactions').once('value').then(function(snap){
-    var total = 0;
+    var total = 0, unpaid = 0;
     snap.forEach(function(c){
       var v = c.val();
       var tp = (v.type || '').trim().toLowerCase();
       var isIncome = tp === 'income' || tp === 'دخل' || tp === 'إيراد';
       var ymd = recordDate(v, ['date','createdAt','timestamp']);
       if(isIncome && ymd === TODAY) total += parseFloat(v.amount) || 0;
+      // ما لم يُحصَّل: كلُّ دخلٍ لم يُعلَّم مدفوعاً ولم يُلغَ ولم يُسوَّ — مهما كان تاريخه
+      if(isIncome && !v.warrantyRework){
+        var st = (v.status || 'مدفوع').trim();
+        if(st === 'معلق') st = 'غير مدفوع';
+        if(st === 'غير مدفوع' || st === 'مؤجل'){
+          unpaid += parseFloat(v.amount) || 0;
+        } else if(st === 'مدفوع جزئياً'){
+          unpaid += Math.max(0, (parseFloat(v.amount) || 0) - (parseFloat(v.paidAmount) || 0));
+        }
+      }
     });
     setKPI('kpiTodayIncome', total.toLocaleString('ar'));
-  }).catch(function(){ setKPI('kpiTodayIncome','—'); });
+    setKPI('kpiUnpaid', Math.round(unpaid).toLocaleString('ar'));
+  }).catch(function(){ setKPI('kpiTodayIncome','—'); setKPI('kpiUnpaid','—'); });
 
   // 5. متوسط التقييم: reviews.rating أو reviews.stars
   db.ref('reviews').once('value').then(function(snap){
