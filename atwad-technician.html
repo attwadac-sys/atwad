@@ -128,6 +128,22 @@ body{font-family:'Cairo',sans-serif;background:#F1F5F9;color:var(--slate);min-he
 .pay-no{background:var(--warning);grid-column:1 / -1;}
 .pay-x{background:#fff;color:var(--mist);border:1.5px solid var(--ice);grid-column:1 / -1;font-size:14px;padding:12px;}
 .pay-btn:disabled{opacity:.5;}
+/* ===== زيارة بلا موعد ===== */
+.walkin-btn{display:block;width:100%;margin:0 0 14px;font-family:'Cairo',sans-serif;font-size:15px;
+  font-weight:800;border:2px dashed var(--sky);background:#F0F9FF;color:#075985;
+  border-radius:14px;padding:13px 12px;cursor:pointer;}
+.walkin-btn:active{background:#E0F2FE;}
+.wi-sheet .wi-f{margin-bottom:11px;}
+.wi-sheet label{display:block;font-size:12.5px;font-weight:700;color:var(--mist);margin-bottom:5px;}
+.wi-sheet input,.wi-sheet select{width:100%;font-family:'Cairo',sans-serif;font-size:15px;
+  border:1.5px solid var(--ice);border-radius:12px;padding:11px 12px;color:var(--deep);
+  background:#fff;box-sizing:border-box;}
+.wi-sheet input:focus,.wi-sheet select:focus{outline:none;border-color:var(--sky);}
+.wi-sheet .wi-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.wi-sheet .wi-hint{font-size:12px;color:var(--mist);line-height:1.8;margin:0 0 13px;}
+/* الهواتف القصيرة: تبقى أزرار القبض في المتناول ولا تُدفع خارج الشاشة */
+.wi-sheet{max-height:92vh;overflow-y:auto;}
+
 /* شريط الدَّيْن السابق على بطاقة الزيارة */
 .debt-strip{background:#FEF2F2;border:1.5px solid #FCA5A5;border-radius:11px;
   padding:10px 12px;margin-bottom:10px;}
@@ -173,9 +189,6 @@ body{font-family:'Cairo',sans-serif;background:#F1F5F9;color:var(--slate);min-he
 /* LOADING */
 .loading{text-align:center;padding:40px;color:var(--mist);}
 .spinner{width:36px;height:36px;border:3px solid var(--ice);border-top-color:var(--sky);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 10px;}
-.load-err{text-align:center;padding:34px 20px;background:#FEF2F2;border:1.5px solid #FCA5A5;border-radius:14px;margin:14px;color:#991B1B;font-size:14px;font-weight:700;line-height:1.9;}
-.load-err-ico{font-size:30px;margin-bottom:8px;}
-.load-err-btn{margin-top:14px;padding:11px 26px;border:none;border-radius:10px;background:#B91C1C;color:#fff;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* DAY SECTION */
@@ -267,6 +280,9 @@ body{font-family:'Cairo',sans-serif;background:#F1F5F9;color:var(--slate);min-he
      فلا يُطلب من الفني إدخالها مرتين. الدوال أدناه تُركت فلا ضرر منها
      لأنها لا تجد عناصرها في الصفحة. -->
 
+<!-- زيارة بلا موعد — الباب الذي كانت تضيع منه الزيارات غير المجدولة -->
+<button class="walkin-btn" id="walkinOpen">➕ زيارة بلا موعد</button>
+
 <!-- FILTER TABS -->
 <div class="tabs">
   <button class="tab active" onclick="filterAppts('today',this)" data-i18n="tabToday">اليوم</button>
@@ -318,6 +334,48 @@ body{font-family:'Cairo',sans-serif;background:#F1F5F9;color:var(--slate);min-he
   </div>
 </div>
 
+<!-- ورقة الزيارة بلا موعد -->
+<div class="pay-ov" id="wiOv">
+  <div class="pay-sheet wi-sheet">
+    <h3 id="wiTitle">زيارة بلا موعد</h3>
+    <p class="wi-hint" id="wiHint">زيارةٌ لم تُحجز في النظام — سجّلها هنا فتُنشأ ومعها قيدُ القبض.</p>
+
+    <div class="wi-f">
+      <label id="wiLbClient">اسم العميل *</label>
+      <input type="text" id="wiClient" autocomplete="off">
+    </div>
+    <div class="wi-row">
+      <div class="wi-f">
+        <label id="wiLbPhone">الجوال</label>
+        <input type="tel" inputmode="numeric" id="wiPhone" placeholder="05xxxxxxxx" style="direction:ltr;">
+      </div>
+      <div class="wi-f">
+        <label id="wiLbUnits">عدد الوحدات</label>
+        <input type="number" inputmode="numeric" min="1" step="1" id="wiUnits" value="1" style="direction:ltr;text-align:center;">
+      </div>
+    </div>
+    <div class="wi-f">
+      <label id="wiLbService">الخدمة</label>
+      <select id="wiService"></select>
+    </div>
+    <div class="wi-f">
+      <label id="wiLbAddr">الحيّ أو العنوان</label>
+      <input type="text" id="wiAddr" autocomplete="off">
+    </div>
+    <div class="wi-f">
+      <label id="wiLbAmt">المبلغ المستلم *</label>
+      <input type="number" inputmode="decimal" min="0" step="1" id="wiAmt" placeholder="0" style="direction:ltr;text-align:center;font-size:22px;font-weight:800;">
+    </div>
+
+    <div class="pay-btns">
+      <button class="pay-btn pay-cash" id="wiCash">💵 نقداً</button>
+      <button class="pay-btn pay-tr"   id="wiTrans">🏦 تحويل</button>
+      <button class="pay-btn pay-no"   id="wiNone">⏳ لم يُدفع — دَيْن</button>
+      <button class="pay-btn pay-x"    id="wiCancel">إلغاء</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -325,7 +383,6 @@ body{font-family:'Cairo',sans-serif;background:#F1F5F9;color:var(--slate);min-he
 var db = window.db; // من atwad-firebase.js — لا تهيئة محلية
 
 var allAppts = [];
-var _loadSeq = 0;
 var currentTech = '';
 var currentTechAr = '';
 var currentFilter = 'today';
@@ -344,9 +401,6 @@ var I18N = {
     odoTitle:'🚗 قراءة العداد نهاية اليوم', odoHint:'سجّل قراءة عداد السيارة بعد آخر موعد', save:'حفظ',
     tabToday:'اليوم', tabWeek:'الأسبوع', tabAll:'الكل',
     pickFirst:'اختر الفني لعرض مواعيده...', loading:'جاري تحميل المواعيد...',
-    loadErrPerm:'تعذّر تحميل المواعيد — هذا الحساب لا يملك الصلاحية. اخرج وادخل ببريدك أنت.',
-    loadErrNet:'تعذّر تحميل المواعيد — تحقّق من اتصال الإنترنت ثم أعد المحاولة.',
-    retry:'🔄 إعادة المحاولة', outConfirm:'اضغط مرة أخرى للتأكيد', outFail:'تعذّر الخروج — أغلق المتصفح',
     emptyToday:'لا توجد مواعيد اليوم', emptyWeek:'لا توجد مواعيد هذا الأسبوع', emptyAll:'لا توجد مواعيد',
     todayTag:'اليوم', apptCount:'موعد', units:'وحدات', minutes:'دقيقة',
     noImg:'📷 لا توجد صورة للموقع', imgAlt:'صورة الموقع',
@@ -389,9 +443,6 @@ var I18N = {
     odoTitle:'🚗 End-of-day odometer', odoHint:'Record the car odometer after the last job', save:'Save',
     tabToday:'Today', tabWeek:'This week', tabAll:'All',
     pickFirst:'Select a technician to see the jobs...', loading:'Loading appointments...',
-    loadErrPerm:'Could not load jobs — this account has no permission. Sign out and sign in with your own email.',
-    loadErrNet:'Could not load jobs — check your internet connection and try again.',
-    retry:'🔄 Try again', outConfirm:'Tap again to confirm', outFail:'Sign out failed — close the browser',
     emptyToday:'No appointments today', emptyWeek:'No appointments this week', emptyAll:'No appointments',
     todayTag:'Today', apptCount:'jobs', units:'units', minutes:'min',
     noImg:'📷 No location photo', imgAlt:'Location photo',
@@ -447,6 +498,7 @@ function applyStaticLang(){
   }
   var lb = document.getElementById('langBtn');
   if(lb) lb.textContent = t('other');
+  if(typeof wiApplyLang === 'function') wiApplyLang();
 }
 function toggleLang(){
   LANG = (LANG === 'ar') ? 'en' : 'ar';
@@ -575,19 +627,7 @@ function loadAppts() {
 
   var combined = [];
   var apptsVal = {}, bkVal = {};
-  // حارس التحميل: الصفحة كانت تدور بلا نهاية عند رفض الصلاحية أو انقطاع
-  // الشبكة، فيقف الفني أمام بيت العميل لا يعرف أعطلٌ هو أم بطء.
-  var loadSeq = ++_loadSeq;
-  var loadSettled = false;
-  function loadFailed(err){
-    if(loadSettled || loadSeq !== _loadSeq) return;
-    loadSettled = true; clearTimeout(loadGuard);
-    showLoadError(err);
-  }
-  function loadOk(){ loadSettled = true; clearTimeout(loadGuard); }
-  var loadGuard = setTimeout(function(){ loadFailed(null); }, 20000);
   db.ref('appointments').once('value', function(snap) {
-    if(loadSettled || loadSeq !== _loadSeq) return;
     apptsVal = snap.val() || {};
     var linkedBookingKeys = {};
     snap.forEach(function(c) {
@@ -605,8 +645,6 @@ function loadAppts() {
     });
 
     db.ref('bookings').once('value', function(snap2) {
-      if(loadSettled || loadSeq !== _loadSeq) return;
-      loadOk();
       bkVal = snap2.val() || {};
       snap2.forEach(function(c) {
         var b = c.val() || {};
@@ -652,20 +690,8 @@ function loadAppts() {
       updateStats();
       renderAppts();
       attachDebts(apptsVal, bkVal);
-    }, loadFailed);
-  }, loadFailed);
-}
-
-/** رسالة صريحة بدل الدوران الأبدي، مع زرّ إعادة محاولة. */
-function showLoadError(err){
-  var code = String((err && (err.code || err.message)) || 'timeout');
-  var perm = code.toLowerCase().indexOf('permission') >= 0;
-  var el = document.getElementById('apptList');
-  console.error('[technician] تعذّر تحميل المواعيد:', code);
-  if(!el) return;
-  el.innerHTML = '<div class="load-err"><div class="load-err-ico">⚠️</div><div>' +
-    (perm ? t('loadErrPerm') : t('loadErrNet')) +
-    '</div><button class="load-err-btn" onclick="loadAppts()">' + t('retry') + '</button></div>';
+    });
+  });
 }
 function autoAssign(date, existing) {
   // تعيين أحمد افتراضياً للحجوزات الجديدة
@@ -1427,6 +1453,166 @@ function submitPay(method){
   });
 }
 
+/* ============================================================
+   زيارة بلا موعد
+   السبب: زياراتٌ يتّصل فيها العميل بالفنيّ مباشرةً فلا تدخل النظام،
+   فلا موعدَ يُغلق ولا ورقةَ قبضٍ تُفتح — وضاع منها 5,760 ريالاً في
+   ثلاثة أشهر. هذا البابُ يُنشئ الموعدَ وقيدَ القبض معاً.
+   ============================================================ */
+var WI_SERVICES = [
+  'غسيل مكيفات', 'تنظيف الوحدة الداخلية', 'تنظيف الوحدة الخارجية',
+  'صيانة مكيف', 'كشف وإصلاح أعطال', 'إعادة فحص',
+  'صيانة دورية', 'شحن فريون', 'تركيب مكيف', 'أخرى'
+];
+var WI_TXT = {
+  ar: { title:'زيارة بلا موعد', hint:'زيارةٌ لم تُحجز في النظام — سجّلها هنا فتُنشأ ومعها قيدُ القبض.',
+        client:'اسم العميل *', phone:'الجوال', units:'عدد الوحدات', service:'الخدمة',
+        addr:'الحيّ أو العنوان', amt:'المبلغ المستلم *', open:'➕ زيارة بلا موعد',
+        cash:'💵 نقداً', tr:'🏦 تحويل', no:'⏳ لم يُدفع — دَيْن', x:'إلغاء',
+        needClient:'⚠️ اكتب اسم العميل', needAmt:'⚠️ اكتب المبلغ',
+        okPaid:'✅ سُجّلت الزيارة و', okDebt:'📌 سُجّلت الزيارة كدَيْن على ' },
+  en: { title:'Unscheduled visit', hint:'A job that was never booked — record it here and the payment is recorded with it.',
+        client:'Customer name *', phone:'Mobile', units:'Units', service:'Service',
+        addr:'District or address', amt:'Amount received *', open:'➕ Unscheduled visit',
+        cash:'💵 Cash', tr:'🏦 Transfer', no:'⏳ Not paid — debt', x:'Cancel',
+        needClient:'⚠️ Enter the customer name', needAmt:'⚠️ Enter the amount',
+        okPaid:'✅ Visit recorded, ', okDebt:'📌 Recorded as debt for ' }
+};
+function wiT(){ return (typeof LANG !== 'undefined' && LANG === 'en') ? WI_TXT.en : WI_TXT.ar; }
+
+function wiFillServices(){
+  var sel = document.getElementById('wiService');
+  if(!sel || sel.options.length) return;
+  for(var i = 0; i < WI_SERVICES.length; i++){
+    var o = document.createElement('option');
+    o.value = WI_SERVICES[i]; o.textContent = WI_SERVICES[i];
+    sel.appendChild(o);
+  }
+}
+
+function wiApplyLang(){
+  var x = wiT(), m = {
+    wiTitle:x.title, wiHint:x.hint, wiLbClient:x.client, wiLbPhone:x.phone,
+    wiLbUnits:x.units, wiLbService:x.service, wiLbAddr:x.addr, wiLbAmt:x.amt,
+    wiCash:x.cash, wiTrans:x.tr, wiNone:x.no, wiCancel:x.x, walkinOpen:x.open
+  }, k;
+  for(k in m){
+    if(!Object.prototype.hasOwnProperty.call(m, k)) continue;
+    var el = document.getElementById(k);
+    if(el) el.textContent = m[k];
+  }
+}
+
+function openWalkin(){
+  if(!db){ showToast(t('tNoFb')); return; }
+  wiFillServices();
+  wiApplyLang();
+  var ids = ['wiClient','wiPhone','wiAddr','wiAmt'];
+  for(var i = 0; i < ids.length; i++){
+    var el = document.getElementById(ids[i]);
+    if(el) el.value = '';
+  }
+  var u = document.getElementById('wiUnits');
+  if(u) u.value = '1';
+  document.getElementById('wiOv').classList.add('show');
+  var c = document.getElementById('wiClient');
+  if(c) c.focus();
+}
+
+function closeWalkin(){ document.getElementById('wiOv').classList.remove('show'); }
+
+function submitWalkin(method){
+  if(!db){ showToast(t('tNoFb')); return; }
+  var x = wiT();
+  var client = (document.getElementById('wiClient').value || '').trim();
+  if(!client){ showToast(x.needClient); document.getElementById('wiClient').focus(); return; }
+
+  var paid = (method !== 'none');
+  var amt  = parseFloat(document.getElementById('wiAmt').value);
+  if(!(amt > 0)){ showToast(x.needAmt); document.getElementById('wiAmt').focus(); return; }
+
+  var phone   = (document.getElementById('wiPhone').value || '').replace(/[^0-9]/g, '');
+  var service = document.getElementById('wiService').value || 'صيانة مكيف';
+  var addr    = (document.getElementById('wiAddr').value || '').trim();
+  var units   = parseInt(document.getElementById('wiUnits').value, 10) || 1;
+
+  var now  = new Date();
+  var date = now.toISOString().split('T')[0];
+  var time = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+  var techKey = currentTech || 'Abrar';
+
+  var apptKey = db.ref('appointments').push().key;
+  var appt = {
+    client: client, phone: phone, service: service, units: units,
+    address: addr, date: date, time: time, duration: 60,
+    status: 'done', tech: techKey,
+    notes: 'زيارة بلا موعد — سجّلها الفني',
+    walkIn: true, createdBy: currentTechAr || 'أحمد',
+    createdAt: now.toISOString()
+  };
+
+  var txKey = db.ref('transactions').push().key;
+  var tx = {
+    type: 'income', amount: amt, date: date, party: client, phone: phone,
+    desc: service + ' - ' + client,
+    category: 'خدمة',
+    method: (method === 'transfer') ? 'تحويل' : 'كاش',
+    status: paid ? 'مدفوع' : 'مؤجل',
+    paidAmount: paid ? amt : 0,
+    payments: [],
+    source: 'technician',
+    createdBy: currentTechAr || 'أحمد',
+    firebaseRef: apptKey,
+    id: 'F' + Date.now().toString().slice(-7),
+    createdAt: now.toISOString()
+  };
+  if(!paid){
+    tx.dueType = 'open';
+    tx.paymentNote = 'زيارة بلا موعد — لم يُدفع عند الإتمام';
+  }
+
+  var updates = {}, k;
+  for(k in appt){
+    if(Object.prototype.hasOwnProperty.call(appt, k)) updates['appointments/' + apptKey + '/' + k] = appt[k];
+  }
+  for(k in tx){
+    if(Object.prototype.hasOwnProperty.call(tx, k)) updates['transactions/' + txKey + '/' + k] = tx[k];
+  }
+
+  var btns = document.querySelectorAll('#wiOv .pay-btn');
+  for(var i = 0; i < btns.length; i++){ btns[i].disabled = true; }
+
+  db.ref().update(updates).then(function(){
+    for(var j = 0; j < btns.length; j++){ btns[j].disabled = false; }
+    closeWalkin();
+    if(_txCache) _txCache.push({ key: txKey, v: tx });
+    appt._fbKey = apptKey; appt._source = 'appointments'; appt.id = apptKey;
+    allAppts.push(appt);
+    updateStats();
+    renderAppts();
+    showToast(paid ? (x.okPaid + amt + ' ﷼') : (x.okDebt + client));
+  }).catch(function(e){
+    for(var j2 = 0; j2 < btns.length; j2++){ btns[j2].disabled = false; }
+    showToast(t('tErr') + e.message);
+  });
+}
+
+function bindWalkin(){
+  var o = document.getElementById('walkinOpen');
+  if(o) o.addEventListener('click', openWalkin);
+  var c = document.getElementById('wiCancel');
+  if(c) c.addEventListener('click', closeWalkin);
+  var ov = document.getElementById('wiOv');
+  if(ov) ov.addEventListener('click', function(ev){ if(ev.target === ov) closeWalkin(); });
+  var b1 = document.getElementById('wiCash');
+  if(b1) b1.addEventListener('click', function(){ submitWalkin('cash'); });
+  var b2 = document.getElementById('wiTrans');
+  if(b2) b2.addEventListener('click', function(){ submitWalkin('transfer'); });
+  var b3 = document.getElementById('wiNone');
+  if(b3) b3.addEventListener('click', function(){ submitWalkin('none'); });
+  wiApplyLang();
+}
+
 function finishDoneUI(id){
   const card = document.getElementById('card-' + id);
   if(card) {
@@ -1486,6 +1672,7 @@ document.getElementById('payTrans').addEventListener('click', function(){ submit
 document.getElementById('payNone').addEventListener('click', function(){ submitPay('none'); });
 document.getElementById('payCancel').addEventListener('click', closePaySheet);
 bindClosingButtons();
+bindWalkin();
 document.getElementById('payOv').addEventListener('click', function(ev){
   if(ev.target === this) closePaySheet();
 });
@@ -1596,25 +1783,10 @@ function renderAcctBar(){
 }
 
 /** خروجٌ من داخل الصفحة — أوضح من زرّ atwad-auth.js أسفل الشاشة */
-var _outArmed = 0;
-// التأكيد صار داخل الزرّ نفسه: نافذة confirm المنبثقة يمنعها المتصفح
-// أحياناً فتُفهم كرفض، فيبدو الزرّ معطّلاً بلا سبب ظاهر.
 function techSignOut(){
-  var btn = document.getElementById('acctOut');
-  var now = Date.now();
-  if(now - _outArmed > 5000){
-    _outArmed = now;
-    if(btn) btn.textContent = t('outConfirm');
-    setTimeout(function(){
-      if(Date.now() - _outArmed >= 5000 && btn) btn.textContent = t('acctOut');
-    }, 5200);
-    return;
-  }
-  _outArmed = 0;
-  if(btn) btn.textContent = '…';
+  if(!window.confirm(t('acctConfirm'))) return;
   if(!window.auth || typeof window.auth.signOut !== 'function'){
     console.error('[technician] لا نظام دخول — تعذّر الخروج');
-    if(btn) btn.textContent = t('outFail');
     return;
   }
   if(typeof window.__atwadCleanup === 'function') window.__atwadCleanup();
@@ -1622,7 +1794,6 @@ function techSignOut(){
     window.location.reload();
   }).catch(function(err){
     console.error('[technician] تعذّر الخروج:', err);
-    if(btn) btn.textContent = t('outFail');
   });
 }
 
