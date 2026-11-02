@@ -47,6 +47,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);min-
 .form-group input[type="number"]{font-weight:700;font-size:18px;color:var(--deep);}
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 .hidden{display:none;}
+.hint{font-size:11.5px;color:#64748B;margin-top:5px;line-height:1.7;}
 
 /* زر الحفظ */
 .btn-save{
@@ -153,8 +154,16 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);min-
 
   <!-- اسم العميل — يظهر عند الدخل فقط -->
   <div class="form-group" id="partyGroup">
-    <label data-i18n="lblParty">👤 اسم العميل</label>
-    <input type="text" id="f_party" placeholder="اختياري" data-i18n-ph="phOptional">
+    <label data-i18n="lblParty">👤 اسم العميل *</label>
+    <input type="text" id="f_party" placeholder="الاسم كما يعرّف به نفسه" data-i18n-ph="phParty">
+  </div>
+
+  <!-- جوال العميل — إلزامي مع الدخل. بدونه يضيع العميل من قوائم المؤسسة -->
+  <div class="form-group" id="phoneGroup">
+    <label data-i18n="lblPhone">📱 جوال العميل *</label>
+    <input type="tel" id="f_phone" placeholder="05xxxxxxxx" inputmode="tel" maxlength="20"
+           autocomplete="tel" data-i18n-ph="phPhone">
+    <div class="hint" data-i18n="phoneHint">يُستخدم للتواصل مع العميل لاحقاً — لا يُرسل لأحد خارج المؤسسة.</div>
   </div>
 
   <!-- فئة المصروف — تظهر عند المصروف فقط -->
@@ -215,7 +224,9 @@ var I18N = {
     cardData:'📋 بيانات العملية', income:'💵 دخل', expense:'💸 مصروف',
     lblTech:'👷 الفني', techAbrar:'أحمد', techShoib:'شعيب', techSuhail:'سهيل',
     lblDate:'📅 التاريخ', lblAmount:'💵 المبلغ (ريال) *', lblDesc:'📝 البيان / الوصف *',
-    phDesc:'مثال: تنظيف مكيف — خالد الأحمدي', lblParty:'👤 اسم العميل', phOptional:'اختياري',
+    phDesc:'مثال: تنظيف مكيف — خالد الأحمدي', lblParty:'👤 اسم العميل *', phOptional:'اختياري',
+    phParty:'الاسم كما يعرّف به نفسه', lblPhone:'📱 جوال العميل *', phPhone:'05xxxxxxxx',
+    phoneHint:'يُستخدم للتواصل مع العميل لاحقاً — لا يُرسل لأحد خارج المؤسسة.',
     lblCat:'🗂 فئة المصروف *', c_parts:'🔩 قطع غيار', c_fuel:'⛽ وقود', c_food:'🍽 طعام', c_ads:'📢 إعلانات',
     c_car:'🚗 صيانة سيارة', c_salary:'👷 رواتب', c_rent:'🏠 إيجار', c_ins:'🛡 تأمين', c_other:'📦 أخرى',
     lblMethod:'💳 طريقة الدفع', m_cash:'💵 كاش', m_transfer:'🏦 تحويل بنكي', m_mada:'💳 مدى',
@@ -223,6 +234,7 @@ var I18N = {
     deferredNote:'سيُسجَّل المبلغ <b>مستحقاً على العميل</b> ولن يُحتسب مقبوضاً. أبلغ الإدارة بموعد السداد المتفق عليه.',
     saveBtn:'✅ حفظ العملية', todayOps:'🗓 عمليات اليوم', noOps:'لا توجد عمليات مسجلة اليوم بعد.',
     errAmount:'❌ أدخل مبلغاً صحيحاً', errDesc:'❌ أدخل البيان', errDate:'❌ اختر التاريخ',
+    errParty:'❌ أدخل اسم العميل', errPhone:'❌ أدخل جوال العميل بصيغة 05xxxxxxxx',
     errFb:'❌ Firebase غير متاح', saving:'⏳ جاري الحفظ...',
     savedIncome:'تم حفظ الدخل بنجاح ✅', savedExpense:'تم حفظ المصروف بنجاح ✅',
     errSave:'❌ خطأ في الحفظ: ', uncollected:'لم يُحصَّل', currency:'﷼',
@@ -234,7 +246,9 @@ var I18N = {
     cardData:'📋 Transaction details', income:'💵 Income', expense:'💸 Expense',
     lblTech:'👷 Technician', techAbrar:'Ahmed', techShoib:'Shoaib', techSuhail:'Suhail',
     lblDate:'📅 Date', lblAmount:'💵 Amount (SAR) *', lblDesc:'📝 Description *',
-    phDesc:'e.g. AC cleaning — Khalid Al-Ahmadi', lblParty:'👤 Customer name', phOptional:'Optional',
+    phDesc:'e.g. AC cleaning — Khalid Al-Ahmadi', lblParty:'👤 Customer name *', phOptional:'Optional',
+    phParty:'Name as the customer gives it', lblPhone:'📱 Customer mobile *', phPhone:'05xxxxxxxx',
+    phoneHint:'Used to contact the customer later. It is never shared outside Atwad.',
     lblCat:'🗂 Expense category *', c_parts:'🔩 Spare parts', c_fuel:'⛽ Fuel', c_food:'🍽 Food', c_ads:'📢 Advertising',
     c_car:'🚗 Vehicle maintenance', c_salary:'👷 Salaries', c_rent:'🏠 Rent', c_ins:'🛡 Insurance', c_other:'📦 Other',
     lblMethod:'💳 Payment method', m_cash:'💵 Cash', m_transfer:'🏦 Bank transfer', m_mada:'💳 Mada',
@@ -242,6 +256,7 @@ var I18N = {
     deferredNote:'The amount will be recorded as <b>owed by the customer</b>, not as received. Tell the office the agreed payment date.',
     saveBtn:'✅ Save transaction', todayOps:"🗓 Today's transactions", noOps:'No transactions recorded today yet.',
     errAmount:'❌ Enter a valid amount', errDesc:'❌ Enter a description', errDate:'❌ Choose the date',
+    errParty:'❌ Enter the customer name', errPhone:'❌ Enter the mobile as 05xxxxxxxx',
     errFb:'❌ Firebase unavailable', saving:'⏳ Saving...',
     savedIncome:'Income saved ✅', savedExpense:'Expense saved ✅',
     errSave:'❌ Save error: ', uncollected:'not collected', currency:'SAR',
@@ -307,6 +322,7 @@ function selType(type) {
   document.getElementById('btnIncome').classList.toggle('sel', type === 'income');
   document.getElementById('btnExpense').classList.toggle('sel', type === 'expense');
   document.getElementById('partyGroup').classList.toggle('hidden', type !== 'income');
+  document.getElementById('phoneGroup').classList.toggle('hidden', type !== 'income');
   document.getElementById('categoryGroup').classList.toggle('hidden', type !== 'expense');
 }
 
@@ -349,10 +365,15 @@ function saveEntry() {
     createdAt:   new Date().toISOString()
   };
 
-  // حقل العميل (للدخل)
+  // حقل العميل (للدخل) — الاسم والجوال إلزاميان.
+  // بلا جوال لا يدخل العميل قوائم المؤسسة ولا يمكن دعوته مرة أخرى.
   if(currentType === 'income') {
     var party = document.getElementById('f_party').value.trim();
-    if(party) entry.party = party;
+    if(!party) { showToast(t('errParty')); return; }
+    var phone = normalizeSaudiMobile(document.getElementById('f_phone').value);
+    if(!phone) { showToast(t('errPhone')); return; }
+    entry.party    = party;
+    entry.phone    = phone;
     entry.category = 'خدمة';
   }
 
@@ -386,11 +407,24 @@ function saveEntry() {
   });
 }
 
+/**
+ * توحيد صيغة الجوال السعودي: يقبل 05xxxxxxxx و +9665xxxxxxxx و 9665xxxxxxxx
+ * و5xxxxxxxx، ويعيدها كلها 05xxxxxxxx. يعيد '' إن لم يكن الرقم صالحاً.
+ */
+function normalizeSaudiMobile(raw) {
+  var d = String(raw || '').replace(/\D/g, '');
+  if(d.indexOf('00966') === 0) d = d.slice(5);
+  else if(d.indexOf('966') === 0) d = d.slice(3);
+  if(d.length === 9 && d.charAt(0) === '5') d = '0' + d;
+  return /^05[0-9]{8}$/.test(d) ? d : '';
+}
+
 // ===== إعادة تعيين النموذج =====
 function resetForm() {
   document.getElementById('f_amount').value = '';
   document.getElementById('f_desc').value   = '';
   document.getElementById('f_party').value  = '';
+  document.getElementById('f_phone').value  = '';
   document.getElementById('f_date').value   = todayDate();
   document.getElementById('f_method').value = 'كاش';
   onMethodChange();
