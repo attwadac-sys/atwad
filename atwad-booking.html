@@ -215,7 +215,7 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
 .geo-btn{width:100%;margin-top:8px;padding:10px 14px;background:var(--frost);border:1.5px solid #86EFAC;border-radius:10px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;color:#065F46;cursor:pointer;display:flex;align-items:center;gap:7px;transition:all .2s;}
 .geo-btn:hover{background:#F0FFF4;border-color:var(--success);}
 .geo-btn:disabled{opacity:.5;cursor:not-allowed;}
-.geo-msg{margin-top:7px;padding:9px 12px;border-radius:9px;font-size:12px;display:none;}
+.geo-msg{margin-top:7px;padding:9px 12px;border-radius:9px;font-size:12px;display:none;white-space:pre-line;line-height:1.85;}
 .geo-msg.ok{background:#F0FFF4;border:1.5px solid #86EFAC;color:#065F46;}
 .geo-msg.warn{background:#FFFBEB;border:1.5px solid #FDE68A;color:#92400E;}
 .geo-msg.err{background:#FEF2F2;border:1.5px solid #FECACA;color:#991B1B;}
@@ -632,10 +632,11 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
       <label>📍 موقع المنزل الدقيق <span class="req">*</span></label>
       <div class="maps-guide">
         <strong>الطريقة الأسهل والأدق:</strong> اضغط زر «استخدام موقعي الحالي» أدناه،
-        ثم راجع الدبوس واضغط «الموقع صحيح». ويمكنك بدلًا من ذلك لصق رابط Google Maps
-        يحتوي إحداثيات ويظهر له معاينة هنا.
+        ثم راجع الدبوس واضغط «الموقع صحيح».
+        <br><strong>أو</strong> الصق في الخانة رابط Google Maps، أو الإحداثيات وحدها
+        هكذا: <span style="direction:ltr;display:inline-block;">21.7506847,39.1755841</span>
       </div>
-      <input type="text" id="f_maps_link" placeholder="رابط Google Maps الدقيق (اختياري عند استخدام موقعك الحالي)" style="direction:ltr;" oninput="validateMapsLink(this.value)">
+      <input type="text" id="f_maps_link" placeholder="maps.app.goo.gl/...  |  21.7506847,39.1755841" style="direction:ltr;" oninput="validateMapsLink(this.value)">
       <div class="maps-ok" id="maps-ok">✅ تم تسجيل موقع دقيق</div>
       <!-- رسالة استخراج الإحداثيات من الرابط الكامل -->
       <div class="maps-ok-coords" id="maps-ok-coords">✅ تم استخراج الإحداثيات من الرابط</div>
@@ -1303,12 +1304,24 @@ function useCurrentLocation() {
       btn.innerHTML = '<span>📍</span> استخدام موقعي الحالي';
       document.getElementById('geoVerifyWrap').style.display = 'none';
       document.getElementById('locationPreviewSection').style.display = 'none';
+      // الرسالة القديمة كانت تقول «تعذر تحديد الموقع بدقة» عند رفض الإذن،
+      // فلا يعرف العميل أن المطلوب منه السماح، ولا يجد مخرجاً فينصرف.
+      var inApp = bookingIsInAppBrowser();
       if(err.code === err.PERMISSION_DENIED) {
-        showGeoMsg('err', 'تعذر تحديد الموقع بدقة. يرجى مشاركة رابط موقع المنزل من خرائط Google.');
+        showGeoMsg('err',
+          '🔒 إذن الموقع مرفوض في هذا المتصفح، فلم نستطع قراءة موقعك.\n' +
+          (inApp
+            ? 'أنت تتصفح من داخل تطبيق (واتساب أو إنستغرام)، وهو يمنع الموقع غالباً. افتح الصفحة في Chrome أو Safari من زر «⋮» ثم «فتح في المتصفح».\n'
+            : 'للسماح: اضغط رمز القفل 🔒 بجانب العنوان أعلى المتصفح ← الموقع ← السماح، ثم أعد الضغط على الزر.\n') +
+          'أو — وهو الأسرع — افتح خرائط Google، اضغط مطوّلاً على منزلك، انسخ الأرقام الظاهرة أعلى الشاشة، والصقها في الخانة أدناه.');
       } else if(err.code === err.TIMEOUT) {
-        showGeoMsg('warn', 'تعذر الحصول على الموقع، حاول مرة أخرى أو استخدم رابط Google Maps.');
+        showGeoMsg('warn',
+          '⏱️ طال انتظار إشارة الموقع.\n' +
+          'حاول مرة أخرى قرب نافذة أو في الخارج، أو الصق إحداثيات منزلك في الخانة أدناه.');
       } else {
-        showGeoMsg('warn', 'تعذر الحصول على الموقع، حاول مرة أخرى أو استخدم رابط Google Maps.');
+        showGeoMsg('warn',
+          '⚠️ تعذر الحصول على الموقع من الجهاز.\n' +
+          'تأكد أن خدمة الموقع مفعّلة في إعدادات الجوال، أو الصق إحداثيات منزلك في الخانة أدناه.');
       }
     },
     {enableHighAccuracy: true, timeout: 15000, maximumAge: 0}
@@ -1318,6 +1331,15 @@ function useCurrentLocation() {
 // ============================================================
 // showLocationPreview — عرض الخريطة داخل الصفحة (بدون API Key)
 // ============================================================
+/**
+ * متصفح داخل تطبيق (واتساب، إنستغرام، فيسبوك): يمنع خدمة الموقع في الغالب،
+ * ومعظم عملائنا يصلون من واتساب — فنوجّههم إلى فتح الصفحة في متصفح حقيقي.
+ */
+function bookingIsInAppBrowser() {
+  var ua = String(navigator.userAgent || '');
+  return /WhatsApp|Instagram|FBAN|FBAV|FB_IAB|Line\/|Snapchat|Twitter/i.test(ua);
+}
+
 function showLocationPreview(lat, lng) {
   var previewUrl = 'https://www.google.com/maps?q=' +
     encodeURIComponent(lat + ',' + lng) + '&z=17&output=embed';
@@ -2078,6 +2100,30 @@ function next1(){
 }
 
 // ===== رابط الموقع =====
+/**
+ * إحداثيات مكتوبة مباشرة: «21.75,39.17» أو «21.75، 39.17» أو مع مسافة.
+ * كثير من العملاء ينسخون الأرقام من خرائط Google بدل الرابط، وكانت تُرفض
+ * رغم أنها أدقّ ما يمكن إعطاؤه — فنحوّلها إلى رابط قياسي بدل ردّها.
+ */
+function bookingCoordsPairToUrl(value){
+  var raw=String(value||'')
+    .replace(/[\u200E\u200F\u202A-\u202E\u2066-\u2069]/g,'')
+    .replace(/[\u0660-\u0669]/g,function(d){ return String(d.charCodeAt(0)-0x0660); })
+    .replace(/[\u06F0-\u06F9]/g,function(d){ return String(d.charCodeAt(0)-0x06F0); })
+    .replace(/[٫]/g,'.')
+    .trim();
+  if(/https?:\/\//i.test(raw)) return '';
+  var m=raw.match(/^\(?\s*(-?\d{1,3}(?:\.\d+)?)\s*[,،;]\s*(-?\d{1,3}(?:\.\d+)?)\s*\)?$/);
+  if(!m) return '';
+  var lat=Number(m[1]), lng=Number(m[2]);
+  if(!isValidCoordinates(lat,lng)) return '';
+  // داخل السعودية تقريباً: خط العرض 16–33 والطول 34–56. لو جاءا مقلوبين نصحّحهما.
+  if(!(lat>=16&&lat<=33&&lng>=34&&lng<=56) && (lng>=16&&lng<=33&&lat>=34&&lat<=56)) {
+    var tmp=lat; lat=lng; lng=tmp;
+  }
+  return canonicalBookingMapsUrl(lat,lng);
+}
+
 function cleanMapsLocationValue(value){
   var raw=String(value||'').replace(/[\u200E\u200F\u202A-\u202E]/g,' ').trim();
   var urls=raw.match(/https?:\/\/[^\s<>"']+/gi)||[];
@@ -2087,6 +2133,12 @@ function cleanMapsLocationValue(value){
            url.includes('goo.gl/maps')||
            url.includes('maps.google');
   })||'';
+
+  // لا رابط في النص؟ قد يكون العميل لصق الإحداثيات وحدها.
+  if(!link) {
+    var fromCoords=bookingCoordsPairToUrl(raw);
+    if(fromCoords) return fromCoords;
+  }
 
   // إزالة علامات الترقيم التي قد تُنسخ بعد الرابط من تطبيقات الجوال.
   return link.replace(/[،,؛;.!?)\]\}]+$/g,'');
