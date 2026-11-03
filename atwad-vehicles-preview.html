@@ -127,6 +127,17 @@ textarea{min-height:52px;resize:vertical;}
 .it-x{background:none;border:none;color:var(--danger);font-size:17px;cursor:pointer;padding:2px 6px;border-radius:6px;}
 .it-x:hover{background:#FEE2E2;}
 .it-ord{background:none;border:none;color:var(--mist);font-size:15px;cursor:pointer;padding:2px 4px;}
+.lt-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:11px 12px;border-radius:11px;
+  margin-bottom:7px;font-size:13px;font-weight:700;line-height:1.7;}
+.lt-row.ok{background:#F0FDF4;border:1.5px solid #86EFAC;color:#065F46;}
+.lt-row.due{background:#FFFBEB;border:1.5px solid #FDE68A;color:#92400E;}
+.lt-row.late{background:#FEF2F2;border:1.5px solid #FCA5A5;color:#991B1B;}
+.lt-name{font-weight:900;}
+.lt-meta{font-weight:600;font-size:12px;opacity:.85;}
+.lt-sp{flex:1;}
+.rm-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.rm-row input{flex:1;min-width:150px;font-family:inherit;font-size:13px;padding:10px 12px;
+  border:1.5px solid #E2E8F0;border-radius:10px;}
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
@@ -144,6 +155,14 @@ textarea{min-height:52px;resize:vertical;}
 <div class="wrap">
 
   <div class="alerts" id="alerts"></div>
+
+  <!-- تقرير المتابعة الأسبوعية -->
+  <div class="card" id="lateCard" style="display:none;">
+    <h2>📅 متابعة الفحص الأسبوعي</h2>
+    <div class="hint" id="lateHint"></div>
+    <div id="lateList"></div>
+    <div id="remindBox" style="margin-top:12px;"></div>
+  </div>
 
   <div id="vehList"><div class="loading">جاري التحميل…</div></div>
 
@@ -731,6 +750,149 @@ function typeLabel(t){
   return map[t] || t || 'صيانة';
 }
 
+/* ===== تقرير المتابعة الأسبوعية =====
+   يجيب عن سؤال واحد: هل سُجّل فحص هذه الفترة، وكم فترة فاتت متتالية.
+   مفتاح الفترة هو تاريخ يوم الفحص (السبت افتراضاً) — نفس ما تكتبه بوابة الفني. */
+
+/* عنوان بوابة الفني — عدّله هنا إن غيّرت اسم الملف */
+var TECH_URL = 'https://attwadac-sys.github.io/atwad/atwad-technician-vehicles-preview.html';
+
+var TECHS = {};   // معرّف -> { displayName, phone, active }
+
+var DAY_AR = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+
+function dStr(d){
+  var m = d.getMonth() + 1, dd = d.getDate();
+  return d.getFullYear() + '-' + (m < 10 ? '0' + m : m) + '-' + (dd < 10 ? '0' + dd : dd);
+}
+function periodStart(ref){
+  var d = ref || new Date(todayStr() + 'T00:00:00');
+  var due = num(SETTINGS.dueDay);
+  if(!(due >= 0 && due <= 6)) due = 6;
+  var back = (d.getDay() - due + 7) % 7;
+  return new Date(d.getTime() - back * 86400000);
+}
+function periodKey(){ return dStr(periodStart()); }
+function daysLate(){
+  var d = new Date(todayStr() + 'T00:00:00');
+  return Math.round((d - periodStart()) / 86400000);
+}
+/* كم فترة متتالية بلا فحص، ابتداءً من الفترة الحالية */
+function missedRun(id){
+  var c = CHECKS[id] || {};
+  var st = periodStart(), n = 0;
+  for(var i = 0; i < 26; i++){
+    if(c[dStr(new Date(st.getTime() - i * 7 * 86400000))]) break;
+    n++;
+  }
+  return n;
+}
+
+function renderLate(){
+  var card = document.getElementById('lateCard');
+  var ids  = Object.keys(VEHICLES);
+  if(!ids.length){ card.style.display = 'none'; return; }
+  card.style.display = '';
+
+  var due  = num(SETTINGS.dueDay);
+  if(!(due >= 0 && due <= 6)) due = 6;
+  var late = daysLate();
+  var wk   = periodKey();
+
+  document.getElementById('lateHint').innerHTML =
+    'يوم الفحص <b>' + DAY_AR[due] + '</b>. فترة هذا الأسبوع بدأت ' + esc(wk) +
+    (late === 0 ? ' — اليوم.' : ' — أي قبل ' + late + ' يوم.');
+
+  var html = '', anyLate = false;
+  for(var i = 0; i < ids.length; i++){
+    var id = ids[i], v = VEHICLES[id] || {};
+    var rec = (CHECKS[id] || {})[wk];
+    var run = missedRun(id);
+    var cls, txt, meta = '';
+
+    if(rec){
+      cls = 'ok';
+      txt = '✅ تم';
+      meta = 'سجّله ' + esc(rec.by || '—') + ' يوم ' + esc(rec.date || wk) +
+             (rec.odometer ? ' — ' + km(rec.odometer) + ' كم' : '');
+    } else if(late === 0){
+      cls = 'due';
+      txt = '⏳ مطلوب اليوم';
+      meta = 'لم يُسجَّل بعد';
+    } else {
+      cls = 'late'; anyLate = true;
+      txt = '⛔ متأخر ' + late + ' يوم';
+      meta = run > 1 ? 'وفاتت ' + run + ' فترات متتالية بلا فحص' : 'فترة هذا الأسبوع فقط';
+    }
+
+    html += '<div class="lt-row ' + cls + '">' +
+              '<span class="lt-name">' + esc(v.name || id) + '</span>' +
+              '<span class="lt-meta">' + esc(v.driver || 'بلا مسؤول') + '</span>' +
+              '<span class="lt-sp"></span>' +
+              '<span>' + txt + '</span>' +
+              '<span class="lt-meta" style="width:100%;">' + meta + '</span>' +
+            '</div>';
+  }
+  document.getElementById('lateList').innerHTML = html;
+  renderRemind(anyLate || late === 0);
+}
+
+/* زر التذكير: يفتح واتساب برسالة جاهزة.
+   لا خادم لدينا يرسل تلقائياً، فالإرسال بضغطة منك — ثانية واحدة صباح السبت. */
+function remindText(){
+  var due = num(SETTINGS.dueDay); if(!(due >= 0 && due <= 6)) due = 6;
+  var late = daysLate();
+  var pending = [];
+  var wk = periodKey();
+  for(var id in VEHICLES){
+    if(!Object.prototype.hasOwnProperty.call(VEHICLES, id)) continue;
+    if(!(CHECKS[id] || {})[wk]) pending.push(VEHICLES[id].name || id);
+  }
+  var t = 'تذكير: الفحص الأسبوعي للمركبة\n';
+  t += 'اليوم ' + DAY_AR[new Date(todayStr() + 'T00:00:00').getDay()] + ' ' + todayStr() + '\n\n';
+  t += pending.length ? ('المطلوب فحصه: ' + pending.join(' · ') + '\n') : 'كل المركبات مفحوصة — شكراً.\n';
+  if(late > 0 && pending.length) t += 'الموعد كان يوم ' + DAY_AR[due] + ' — متأخر ' + late + ' يوم.\n';
+  t += '\nالبنود: العداد، الزيت، ماء الرديتر، الإطارات، الأصوات — مع صورة لكل بند مطلوب.\n';
+  t += '\nافتح البوابة وسجّل:\n' + TECH_URL;
+  return t;
+}
+function waLink(phone){
+  var p = String(phone || '').replace(/[^0-9]/g, '');
+  if(p.indexOf('0') === 0) p = '966' + p.slice(1);
+  else if(p.indexOf('966') !== 0 && p.length === 9) p = '966' + p;
+  return 'https://wa.me/' + p + '?text=' + encodeURIComponent(remindText());
+}
+function renderRemind(show){
+  var box = document.getElementById('remindBox');
+  if(!show){ box.innerHTML = ''; return; }
+  var btns = '', n = 0;
+  for(var tid in TECHS){
+    if(!Object.prototype.hasOwnProperty.call(TECHS, tid)) continue;
+    var t = TECHS[tid] || {};
+    if(t.active === false || !t.phone) continue;
+    n++;
+    btns += '<a class="btn btn-main" style="text-decoration:none;" target="_blank" rel="noopener" href="' +
+            esc(waLink(t.phone)) + '">📲 تذكير ' + esc(t.displayName || tid) + '</a> ';
+  }
+  var manual =
+    '<div class="rm-row" style="margin-top:8px;">' +
+      '<input id="rmPhone" placeholder="05xxxxxxxx — رقم آخر">' +
+      '<button class="btn btn-soft" id="rmGo">إرسال</button>' +
+    '</div>';
+  box.innerHTML =
+    '<div class="hint" style="margin-bottom:8px;">' +
+      (n ? 'اضغط لإرسال التذكير على واتساب — الرسالة جاهزة، تراجعها قبل الإرسال.'
+         : 'لا أرقام مسجّلة للفنيين. اكتب الرقم هنا، أو أضف الجوال في صفحة الفنيين لتظهر الأزرار تلقائياً.') +
+    '</div>' + btns + manual;
+
+  var go = document.getElementById('rmGo');
+  if(go) go.addEventListener('click', function(){
+    var p = (document.getElementById('rmPhone').value || '').trim();
+    if(!p){ toast('اكتب الرقم أولاً'); return; }
+    window.open(waLink(p), '_blank', 'noopener');
+  });
+}
+
 /* تكلفة آخر اثني عشر شهراً — المؤشر الذي يُظهر المركبة المكلّفة */
 function yearCost(id){
   var rows = MAINT[id] || [];
@@ -791,6 +953,12 @@ function loadAll(){
     renderAlerts();
     renderVehicles();
     paintDefaultVeh();
+    renderLate();
+    /* أرقام الفنيين لأزرار التذكير — فشلها لا يُسقط الصفحة */
+    db.ref('technicians').once('value').then(function(s){
+      TECHS = s.val() || {};
+      renderLate();
+    }).catch(function(e){ console.warn('[techs] تعذّر جلب الفنيين:', e && e.message); });
   }).catch(function(err){
     console.error('[vehicles] تعذّر التحميل:', err);
     document.getElementById('vehList').innerHTML =
@@ -872,7 +1040,7 @@ document.getElementById('stSave').addEventListener('click', function(){
     SETTINGS.defaultVehicleId = rec.defaultVehicleId;
     SETTINGS.dueDay = rec.dueDay;
     msg('stMsg', '✅ حُفظت الإعدادات.', true);
-    renderAlerts(); renderVehicles();
+    renderAlerts(); renderVehicles(); renderLate();
   }).catch(function(err){
     btn.disabled = false;
     msg('stMsg', 'تعذّر الحفظ: ' + err.message, false);
