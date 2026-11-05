@@ -182,6 +182,9 @@ body{font-family:'Cairo',sans-serif;background:#F1F5F9;color:var(--slate);min-he
   padding:15px 10px;cursor:pointer;color:#fff;background:var(--success);}
 .cl-x{font-family:'Cairo',sans-serif;background:#fff;color:var(--mist);border:1.5px solid var(--ice);
   font-size:14px;padding:12px;border-radius:14px;cursor:pointer;}
+.cl-nofix{font-family:'Cairo',sans-serif;font-size:15px;font-weight:700;border:1.5px solid #FDBA74;
+  background:#FFF7ED;color:#9A3412;padding:14px 10px;border-radius:14px;cursor:pointer;}
+.cl-nofix:active{background:#FFEDD5;}
 
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--deep);color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.2);transition:transform .3s;z-index:999;font-family:'Cairo',sans-serif;}
 .toast.show{transform:translateX(-50%) translateY(0);}
@@ -313,6 +316,8 @@ body{font-family:'Cairo',sans-serif;background:#F1F5F9;color:var(--slate);min-he
     </details>
     <div class="cl-btns">
       <button class="cl-go" id="clConfirmBtn">تأكيد الفحص</button>
+      <!-- مخرجٌ للزيارة التي لم يتمّ فيها إصلاح: يتخطّى البنود بسببٍ مكتوب -->
+      <button class="cl-nofix" id="clNoFixBtn">⛔ لم يتم الإصلاح</button>
       <button class="cl-x"  id="clCancel">إلغاء</button>
     </div>
   </div>
@@ -427,6 +432,9 @@ var I18N = {
     clCancel:'إلغاء', clGoAll:'✅ تأكيد الفحص والمتابعة للقبض', clGoPart:'✅ تأكيد الفحص',
     clMiss:'⚠️ لم يُؤكَّد: ', clMissTail:' — أكمل القائمة أو اكتب سبب عدم انطباقها',
     clNeedNote:'⚠️ اكتب في الملاحظة ما كان الخلل وما أُصلح — زيارة الصيانة لا تُغلق بدونها',
+    clNoFix:'⛔ لم يتم الإصلاح',
+    clNoFixNeed:'⚠️ اكتب في الملاحظة سبب عدم الإصلاح — هذا ما يُغني عن بنود القائمة',
+    clNoFixOk:'📝 سُجّلت الزيارة: لم يتم الإصلاح',
     clUnit:'وحدة',
     debtT:'⚠️ دَيْن سابق على هذا العميل:',
     debtS:'حصّله مع مبلغ اليوم. وإن رفض فسجّل مبلغ اليوم فقط وأبلغ الإدارة — لا تجادله.',
@@ -469,6 +477,9 @@ var I18N = {
     clCancel:'Cancel', clGoAll:'✅ Confirm and continue to payment', clGoPart:'✅ Confirm',
     clMiss:'⚠️ Not confirmed: ', clMissTail:' — complete the list or write why it does not apply',
     clNeedNote:'⚠️ Write in the note what the fault was and what you fixed — a repair visit cannot close without it',
+    clNoFix:'⛔ Repair not done',
+    clNoFixNeed:'⚠️ Write in the note why the repair was not done — this is what replaces the checklist',
+    clNoFixOk:'📝 Recorded: repair not done',
     clUnit:'unit(s)',
     debtT:'⚠️ This customer has an old unpaid amount:',
     debtS:'Collect it together with today\u2019s amount. If they refuse, record today\u2019s amount only and tell the office — do not argue.',
@@ -1084,6 +1095,8 @@ function bindClosingButtons(){
   var x  = document.getElementById('clCancel');
   if(go) go.addEventListener('click', confirmClosing);
   if(x)  x.addEventListener('click', closeClosingModal);
+  var nf = document.getElementById('clNoFixBtn');
+  if(nf) nf.addEventListener('click', closingNoFix);
   var ov = document.getElementById('clOv');
   if(ov) ov.addEventListener('click', function(ev){ if(ev.target === ov) closeClosingModal(); });
 }
@@ -1262,6 +1275,13 @@ function openClosingModal(id, source, fbKey){
     skipBox.style.display = _clSkipAllowed ? '' : 'none';
   }
 
+  /* «لم يتم الإصلاح» لا معنى له في زيارة غسيلٍ أو تركيب — يظهر حيث يُصلَح فقط */
+  var noFix = document.getElementById('clNoFixBtn');
+  if(noFix){
+    noFix.textContent = t('clNoFix');
+    noFix.style.display = (_clKind === 'maint' || _clKind === 'mixed') ? '' : 'none';
+  }
+
   updateClosingBar();
   document.getElementById('clOv').classList.add('show');
 }
@@ -1281,6 +1301,49 @@ function closeClosingModal(){
   document.getElementById('clOv').classList.remove('show');
   _payCtx = null;
   _closingData = null;
+}
+
+/* ============================================================
+   «لم يتم الإصلاح»
+   بنودُ قائمة الصيانة تفترض أن إصلاحاً جرى — فإن لم يجرِ (قطعة غير
+   متوفّرة، عطلٌ يحتاج ورشة، العميل اعتذر) فالبنودُ لا تنطبق أصلاً.
+   وهذا مخرجٌ مسجَّلٌ لا تخطٍّ: لا يمضي إلا بسببٍ مكتوب، ويُحفظ في
+   الموعد بوسم notRepaired ليراه صاحب المؤسسة.
+   ============================================================ */
+function closingNoFix(){
+  if(!_payCtx) return;
+  var a = _payCtx.appt || {};
+  var noteEl = document.getElementById('clNote');
+  var reason = String(noteEl.value || '').trim();
+
+  if(reason.length < 5){
+    showToast(t('clNoFixNeed'));
+    noteEl.focus();
+    return;
+  }
+
+  var checks = {};
+  var boxes = document.querySelectorAll('#clItems input[type=checkbox]');
+  for(var i = 0; i < boxes.length; i++){
+    checks[boxes[i].getAttribute('data-k')] = !!boxes[i].checked;
+  }
+
+  _closingData = {
+    checks: checks,
+    kind: _clKind,
+    complete: false,
+    skipped: true,
+    notRepaired: true,
+    skipReason: 'لم يتم الإصلاح — ' + reason,
+    tech: currentTech || (a && a.tech) || '',
+    units: parseInt(a && a.units, 10) || 1,
+    note: reason,
+    at: new Date().toISOString()
+  };
+
+  showToast(t('clNoFixOk'));
+  document.getElementById('clOv').classList.remove('show');
+  openPaySheet(_payCtx.id, _payCtx.source, _payCtx.fbKey);
 }
 
 function confirmClosing(){
@@ -1430,6 +1493,7 @@ function submitPay(method){
     updates[apptPath + '/closing'] = _closingData;
     updates[apptPath + '/closingTech'] = _closingData.tech || '';
     updates[apptPath + '/closingComplete'] = !!_closingData.complete;
+    updates[apptPath + '/notRepaired'] = !!_closingData.notRepaired;
   }
   for(var k in tx){
     if(Object.prototype.hasOwnProperty.call(tx, k)){ updates[txPath + '/' + k] = tx[k]; }
