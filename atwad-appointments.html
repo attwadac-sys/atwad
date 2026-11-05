@@ -44,6 +44,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 .stat-card{background:#fff;border-radius:14px;padding:16px 18px;box-shadow:0 2px 10px rgba(0,0,0,.04);border-right:3px solid transparent;}
 .stat-card.today{border-color:var(--sky);}
 .stat-card.pending{border-color:var(--warning);}
+.stat-card.blocked{border-color:#7C3AED;}
 .stat-card.done{border-color:var(--success);}
 .stat-card.tech{border-color:var(--purple);}
 .stat-icon{font-size:22px;margin-bottom:6px;}
@@ -85,6 +86,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 .appt-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.08);transform:translateY(-1px);}
 .appt-card.c-confirmed{border-color:var(--sky);}
 .appt-card.c-pending{border-color:var(--warning);}
+.appt-card.c-blocked{border-color:#7C3AED;}
 .appt-card.c-done{border-color:var(--success);}
 .appt-card.c-cancelled{border-color:var(--danger);}
 .appt-time-block{text-align:center;min-width:54px;}
@@ -102,6 +104,8 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 .status-pill{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;}
 .sp-confirmed{background:#DBEAFE;color:#1E40AF;}
 .sp-pending{background:#FEF3C7;color:#92400E;}
+.sp-blocked{background:#EDE9FE;color:#5B21B6;}
+.blocked-note{font-size:11px;color:#5B21B6;background:#EDE9FE;border-radius:7px;padding:3px 9px;margin-top:5px;display:inline-block;}
 .sp-done{background:#D1FAE5;color:#065F46;}
 .sp-cancelled{background:#FEE2E2;color:#991B1B;}
 .sp-unknown{background:#E2E8F0;color:#475569;}
@@ -439,6 +443,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
   <div class="stats-row">
     <div class="stat-card today"><div class="stat-icon">📅</div><div class="stat-num" id="statToday">0</div><div class="stat-lbl">مواعيد اليوم</div></div>
     <div class="stat-card pending"><div class="stat-icon">⏳</div><div class="stat-num" id="statPending">0</div><div class="stat-lbl">في الانتظار</div></div>
+    <div class="stat-card blocked"><div class="stat-icon">⏸</div><div class="stat-num" id="statBlocked">0</div><div class="stat-lbl">بانتظار العميل</div></div>
     <div class="stat-card done"><div class="stat-icon">✅</div><div class="stat-num" id="statDone">0</div><div class="stat-lbl">مكتملة الأسبوع</div></div>
     <div class="stat-card tech"><div class="stat-icon">🌐</div><div class="stat-num" id="statTotal">0</div><div class="stat-lbl">إجمالي المواعيد</div></div>
   </div>
@@ -493,6 +498,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
               style="font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;padding:10px 10px;
                      border:1.5px solid var(--line);border-radius:10px;background:#fff;color:var(--slate);cursor:pointer;">
         <option value="active">النشطة فقط</option>
+        <option value="blocked">⏸ بانتظار العميل فقط</option>
         <option value="all">الكل (مع الملغاة)</option>
         <option value="cancelled">الملغاة فقط</option>
       </select>
@@ -612,12 +618,22 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
           </select>
         </div>
         <div class="form-group"><label>الحالة</label>
-          <select id="f_status">
+          <select id="f_status" onchange="onApptStatusChange()">
             <option value="pending">⏳ في الانتظار</option>
             <option value="confirmed">✅ مؤكد</option>
+            <option value="blocked">⏸ بانتظار العميل</option>
             <option value="done">🎉 مكتمل</option>
             <option value="cancelled">❌ ملغي</option>
           </select>
+        </div>
+      </div>
+      <!-- يظهر مع حالة «بانتظار العميل» فقط: ما الذي ينتظره العمل من العميل -->
+      <div class="form-group" id="blockedReasonGroup" style="display:none;">
+        <label>⏸ بانتظار ماذا من العميل؟</label>
+        <input type="text" id="f_blocked_reason" maxlength="120"
+               placeholder="مثال: إحضار قطعة غيار · تفريغ الغرفة · حضور صاحب المنزل">
+        <div style="font-size:11.5px;color:var(--mist);margin-top:5px;line-height:1.7;">
+          العمل بدأ وتوقّف بسبب العميل، لا بسببنا. يظهر السبب على بطاقة الموعد مع عدد أيام الانتظار.
         </div>
       </div>
       <div class="form-group"><label>ملاحظات</label><textarea id="f_notes" rows="2" placeholder="أي تعليمات للفني..."></textarea></div>
@@ -1069,10 +1085,10 @@ const WARRANTY_FAULTS = {
   other:'أخرى'
 };
 function techDisplayName(k){ return TECHS[k] || k || '—'; }
-const STATUS_LABELS = { confirmed:'مؤكد', pending:'في الانتظار', done:'مكتمل', cancelled:'ملغي' };
-const STATUS_ICONS = { confirmed:'✅', pending:'⏳', done:'🎉', cancelled:'❌' };
-const STATUS_PILL_CLASS = { confirmed:'sp-confirmed', pending:'sp-pending', done:'sp-done', cancelled:'sp-cancelled' };
-const STATUS_CARD_CLASS = { confirmed:'c-confirmed', pending:'c-pending', done:'c-done', cancelled:'c-cancelled' };
+const STATUS_LABELS = { confirmed:'مؤكد', pending:'في الانتظار', blocked:'بانتظار العميل', done:'مكتمل', cancelled:'ملغي' };
+const STATUS_ICONS = { confirmed:'✅', pending:'⏳', blocked:'⏸', done:'🎉', cancelled:'❌' };
+const STATUS_PILL_CLASS = { confirmed:'sp-confirmed', pending:'sp-pending', blocked:'sp-blocked', done:'sp-done', cancelled:'sp-cancelled' };
+const STATUS_CARD_CLASS = { confirmed:'c-confirmed', pending:'c-pending', blocked:'c-blocked', done:'c-done', cancelled:'c-cancelled' };
 
 /* ============================================================
    ATWAD SLOT CORE — مرجع موحد للوقت والمدة والتداخل والأقفال
@@ -1243,6 +1259,8 @@ var STATUS_ALIASES={
   'مؤكد':'confirmed','مؤكدة':'confirmed','تم التأكيد':'confirmed',
   'pending':'pending','new':'pending','open':'pending','waiting':'pending','scheduled':'pending',
   'في الانتظار':'pending','قيد الانتظار':'pending','جديد':'pending','معلق':'pending','قيد التنفيذ':'pending',
+  'blocked':'blocked','onhold':'blocked','on_hold':'blocked',
+  'بانتظار العميل':'blocked','معلّق على العميل':'blocked','بانتظار قطعة':'blocked','موقوف':'blocked',
   'done':'done','completed':'done','complete':'done','finished':'done','closed':'done',
   'مكتمل':'done','منجز':'done','تم':'done','منتهي':'done',
   'cancelled':'cancelled','canceled':'cancelled','rejected':'cancelled','declined':'cancelled',
@@ -1832,6 +1850,8 @@ function updateStats(){
   const visibleAppointments = appointments.filter(atwadIsVisibleAppointment);
   document.getElementById('statToday').textContent = visibleAppointments.filter(a=>a.date===tod).length;
   document.getElementById('statPending').textContent = appointments.filter(a=>a.status==='pending').length;
+  var _blockedEl = document.getElementById('statBlocked');
+  if(_blockedEl) _blockedEl.textContent = appointments.filter(a=>atwadStatusLogic(a._statusRaw!==undefined?a._statusRaw:a.status)==='blocked').length;
   const weekDates = getWeekDates(0);
   document.getElementById('statDone').textContent = appointments.filter(a=>weekDates.includes(a.date)&&a.status==='done').length;
   document.getElementById('statTotal').textContent = visibleAppointments.length;
@@ -1897,6 +1917,9 @@ function renderList(){
   // الملغاة مخفية افتراضياً؛ القائمة المنسدلة تتحكم بإظهارها أو عرضها وحدها
   let appts = appointments.filter(function(a){
     var isCancelled = String(a.status||'') === 'cancelled';
+    if(cancelMode === 'blocked'){
+      return atwadStatusLogic(a._statusRaw!==undefined?a._statusRaw:a.status) === 'blocked';
+    }
     if(cancelMode === 'cancelled') return isCancelled;
     if(cancelMode === 'all') return isCancelled || atwadIsVisibleAppointment(a);
     return atwadIsVisibleAppointment(a);
@@ -1996,6 +2019,9 @@ function renderList(){
           ${renderTechnicianNotificationBadge(a)}
           ${String(a.status||'')==='cancelled' && a.cancelReason
             ? `<div style="font-size:11px;color:#991B1B;background:#FEE2E2;border-radius:7px;padding:3px 9px;margin-top:5px;display:inline-block;">✕ سبب الإلغاء: ${atwadEsc(a.cancelReason)}${a.cancelledAt?' · '+String(a.cancelledAt).slice(0,10):''}</div>`
+            : ''}
+          ${atwadStatusLogic(a._statusRaw!==undefined?a._statusRaw:a.status)==='blocked'
+            ? `<div class="blocked-note">⏸ بانتظار العميل: ${atwadEsc(a.blockedReason||'—')}${(function(d){return d===null?'':' · منذ '+d+' يوم';})(blockedDays(a))}</div>`
             : ''}
         </div>
         <div class="appt-meta">
@@ -2254,6 +2280,9 @@ function openNewApptForm(){
   // أحمد هو الفني التشغيلي الوحيد لجميع المواعيد الجديدة.
   document.getElementById('f_tech').value='Abrar';
   document.getElementById('f_status').value='pending';
+  var _brNew=document.getElementById('f_blocked_reason');
+  if(_brNew) _brNew.value='';
+  onApptStatusChange();
   clearLegacyServiceOptions();
   document.getElementById('f_units').value='1';
   document.getElementById('f_wash_units').value='0';
@@ -2307,6 +2336,9 @@ function editAppt(id){
   // عند تعديل أي موعد يُثبّت الفني أحمد بدل أي إسناد قديم.
   document.getElementById('f_tech').value='Abrar';
   document.getElementById('f_status').value=a.status||'pending';
+  var _brEl=document.getElementById('f_blocked_reason');
+  if(_brEl) _brEl.value = a.blockedReason || '';
+  onApptStatusChange();
   document.getElementById('f_units').value=a.units||1;
   document.getElementById('f_wash_units').value  = (a.washUnits  != null) ? a.washUnits  : 0;
   document.getElementById('f_maint_units').value = (a.maintUnits != null) ? a.maintUnits : 0;
@@ -2950,6 +2982,24 @@ function onServiceOrUnitsChanged(){
   updateApptEndPreview();
 }
 
+/** يظهر حقل سبب التعليق مع حالة «بانتظار العميل» وحدها */
+function onApptStatusChange(){
+  var sel=document.getElementById('f_status');
+  var grp=document.getElementById('blockedReasonGroup');
+  if(!sel||!grp) return;
+  grp.style.display = (sel.value === 'blocked') ? 'block' : 'none';
+}
+
+/** كم يوماً مضى على تعليق الموعد — للعرض على البطاقة */
+function blockedDays(appt){
+  var since = appt && (appt.blockedSince || appt.date);
+  if(!since) return null;
+  var d = new Date(String(since).slice(0,10) + 'T00:00:00');
+  if(isNaN(d.getTime())) return null;
+  var today = new Date(); today.setHours(0,0,0,0);
+  return Math.max(0, Math.round((today - d) / 86400000));
+}
+
 /** الموعد يشغل وقتًا إذا لم يكن ملغيًا ولم يكتمل بعد */
 function appointmentIsActive(appt){
   var key=atwadStatusLogic(appt&&(appt._statusRaw!==undefined?appt._statusRaw:appt.status));
@@ -3189,9 +3239,16 @@ function saveAppt(){
     }
   }
 
+  var _statusVal = document.getElementById('f_status').value;
+  var _blockedReason = (document.getElementById('f_blocked_reason')||{}).value || '';
+  _blockedReason = String(_blockedReason).trim();
+  if(_statusVal === 'blocked' && !_blockedReason){
+    return showToast('❌ اكتب ما الذي ينتظره العمل من العميل.');
+  }
+
   const data = {
     client, phone, address, service, tech,
-    status: document.getElementById('f_status').value,
+    status: _statusVal,
     units: readUnitsForSave(),
     date, time: document.getElementById('f_time').value,
     notes: document.getElementById('f_notes').value.trim(),
@@ -3203,6 +3260,18 @@ function saveAppt(){
     durationOverride: true,
     updatedAt: new Date().toISOString()
   };
+
+  // سبب التعليق وتاريخ بدئه — يُمسحان متى خرج الموعد من حالة الانتظار على العميل
+  if(_statusVal === 'blocked'){
+    data.blockedReason = _blockedReason;
+    var _prevB = findAppt(editingId) || findAppt(editingFirebaseKey) || null;
+    data.blockedSince = (_prevB && _prevB.status === 'blocked' && _prevB.blockedSince)
+      ? _prevB.blockedSince
+      : new Date().toISOString().slice(0,10);
+  } else {
+    data.blockedReason = null;
+    data.blockedSince  = null;
+  }
 
   if(data.service === MIXED_SERVICE){
     var _split = readSplitUnits();
