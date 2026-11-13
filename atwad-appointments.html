@@ -1124,13 +1124,27 @@ function atwadMinutesToBlock(m){
 }
 
 /** المدة الفعلية للموعد. الحجز الإلكتروني يحجز نافذته المعروضة كاملة. */
+/** عدد كتل القفل المسجلة داخل الحجز نفسه — المرجع الحقيقي لما حُجز فعلاً */
+function atwadLockedBlockCount(a){
+  var lb=a?a.lockBlocks:null;
+  if(!lb||typeof lb!=='object') return 0;
+  var n=0;
+  Object.keys(lb).forEach(function(k){ if(lb[k]===true) n++; });
+  return n;
+}
+
 function atwadDuration(a){
   if(!a) return ATWAD_DEFAULT_DURATION;
   var d=parseInt(atwadLatinDigits(a.duration),10);
   if(!isFinite(d)||d<=0) d=(a._source==='bookings')?60:ATWAD_DEFAULT_DURATION;
-  // الحجز الإلكتروني يحجز نافذته المعروضة كاملة (ساعتان)،
-  // إلا إذا ثبّتت الإدارة مدة صريحة من نموذج التعديل (durationOverride).
-  if(a._source==='bookings' && a.durationOverride!==true) d=Math.max(ATWAD_BOOKING_WINDOW_MIN,d);
+  if(a._source==='bookings' && a.durationOverride!==true){
+    // المدة المعتمدة للحجز الإلكتروني هي ما قُفل فعلاً في slotLocks لا تقدير ثابت.
+    // الحجوزات القديمة كانت تقفل النافذة كاملة (ساعتان فأكثر) فيعطي هذا الحساب
+    // النتيجة نفسها، والحجوزات الجديدة تقفل وقت العمل الحقيقي فقط.
+    var blocks=atwadLockedBlockCount(a);
+    if(blocks>0) return Math.max(ATWAD_LOCK_BLOCK_MIN, blocks*ATWAD_LOCK_BLOCK_MIN);
+    d=Math.max(ATWAD_BOOKING_WINDOW_MIN,d);
+  }
   return d;
 }
 
@@ -3110,6 +3124,39 @@ function renderConflictBadge(a){
    الحجز يتم بمعاملة ذرّية على عقدة اليوم، فلا يمكن لطلبين متزامنين
    الاستيلاء على الكتلة نفسها، ولا يستبدل الإداري قفل حجز إلكتروني.
    ============================================================ */
+/**
+ * يحدّث سجل البحث العام الذي تقرؤه صفحة الحجز لاسترجاع بيانات العميل العائد.
+ * السجل مفتاحه رقم الجوال، ولا يُكتب إلا من هنا — لا من صفحة الحجز — حتى لا
+ * يستطيع زائر زرع بيانات في سجل عميل. الفشل لا يوقف حفظ الموعد.
+ */
+function syncCustomerLookup(appt, mapsLink, lat, lng) {
+  try {
+    if(!db || !appt) return;
+    var phone = String(appt.phone || '').replace(/\D/g, '');
+    if(phone.indexOf('00966') === 0) phone = phone.slice(5);
+    else if(phone.indexOf('966') === 0) phone = phone.slice(3);
+    phone = phone.replace(/^0+/, '');
+    if(phone.length === 9 && phone.charAt(0) === '5') phone = '0' + phone;
+    if(!/^05[0-9]{8}$/.test(phone)) return;
+    var rec = {updatedAt: new Date().toISOString()};
+    var name = String(appt.client || '').trim();
+    var city = String(appt.address || '').trim();
+    var dist = String(appt.serviceAreaDistrict || '').trim();
+    if(name) rec.name = name.slice(0, 100);
+    if(city) rec.city = city.slice(0, 80);
+    if(dist) rec.district = dist.slice(0, 80);
+    if(mapsLink) rec.mapsLink = String(mapsLink).slice(0, 500);
+    if(typeof lat === 'number' && isFinite(lat)) rec.lat = lat;
+    if(typeof lng === 'number' && isFinite(lng)) rec.lng = lng;
+    if(Object.keys(rec).length <= 1) return;
+    db.ref('customerLookup/' + phone).update(rec).catch(function(err) {
+      console.warn('[customerLookup] تعذر التحديث:', err && (err.code || err.message));
+    });
+  } catch(e) {
+    console.warn('[customerLookup] خطأ:', e && e.message);
+  }
+}
+
 function slotLockValue(ownerKey){
   return { bookingKey: (ownerKey.split(':')[1]||''), ownerKey: ownerKey, createdAt: Date.now() };
 }
@@ -3437,6 +3484,7 @@ function saveAppt(){
           }
         }
 
+        syncCustomerLookup(data, _mapsLink, _lat, _lng);
         showToast('✅ تم تحديث الموعد بنجاح');
         var _notifyAfter = Object.assign({}, _oldNotifySnapshot, data);
         editingOriginalDate = '';
@@ -3514,6 +3562,7 @@ function saveAppt(){
             console.error('saveLocationToCustomer error:', locErr);
           }
         }
+        syncCustomerLookup(data, _mapsLinkNew, _latNew, _lngNew);
         showToast('✅ تم إضافة الموعد بنجاح');
         sendAdminNotification(data);
         closeModal();

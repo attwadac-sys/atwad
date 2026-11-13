@@ -117,6 +117,8 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
 .slot:hover{border-color:var(--sky);color:var(--sky);}
 .slot.sel{border-color:var(--sky);background:var(--sky);color:#fff;}
 .slot.booked{opacity:.4;cursor:not-allowed;background:#F1F5F9;}
+.slot.booked.near{opacity:1;cursor:pointer;background:#FFFBEB;border-color:#FCD34D;color:#92400E;}
+.slot.booked.near:hover{border-color:#F59E0B;}
 .sum-box{background:linear-gradient(135deg,var(--frost),var(--ice));border:1.5px solid rgba(14,165,233,.15);border-radius:14px;padding:16px;margin-bottom:14px;}
 .sum-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px dashed rgba(14,165,233,.15);font-size:13px;}
 .sum-row:last-child{border-bottom:none;}
@@ -1567,6 +1569,29 @@ function savedCityValue(value) {
   return 'أخرى / Other';
 }
 
+/**
+ * سجل البحث عن العملاء العائدين. يُقرأ بالمفتاح مباشرة (رقم الجوال) لا
+ * باستعلام، لأن القواعد تمنع الزائر من تعداد العقدة كلها: القراءة مسموحة
+ * على السجل الواحد فقط، فلا يستطيع أحد تنزيل قائمة العملاء.
+ * الكتابة في هذه العقدة من لوحة الإدارة وحدها، لا من صفحة الحجز.
+ */
+function readCustomerLookup(variants) {
+  if(!db) return Promise.resolve([]);
+  return Promise.all(variants.map(function(phone) {
+    if(!/^05[0-9]{8}$/.test(phone)) return Promise.resolve(null);
+    return db.ref('customerLookup/' + phone).once('value').then(function(snap) {
+      var v = snap.val();
+      if(!v) return null;
+      return Object.assign({_key: phone, _path: 'customerLookup'}, v);
+    }).catch(function(err) {
+      console.warn('[customerLookup] تعذرت القراءة:', err && (err.code || err.message));
+      return null;
+    });
+  })).then(function(rows) {
+    return rows.filter(Boolean);
+  });
+}
+
 function readPhoneMatches(path, variants) {
   if(!db) return Promise.resolve([]);
   return Promise.all(variants.map(function(phone) {
@@ -1590,7 +1615,7 @@ function readPhoneMatches(path, variants) {
 }
 
 function applySavedCustomerData(phone, records) {
-  var customers = records.filter(function(r){ return r._path === 'customers'; }).sort(function(a,b){ return savedRecordTime(b)-savedRecordTime(a); });
+  var customers = records.filter(function(r){ return r._path === 'customerLookup' || r._path === 'customers'; }).sort(function(a,b){ return savedRecordTime(b)-savedRecordTime(a); });
   var history = records.slice().sort(function(a,b){ return savedRecordTime(b)-savedRecordTime(a); });
   var primary = customers[0] || history[0];
   if(!primary) {
@@ -1600,16 +1625,37 @@ function applySavedCustomerData(phone, records) {
 
   var nameRecord = history.find(function(r){ return String(r.name || r.client || r.customerName || '').trim(); }) || primary;
   var cityRecord = history.find(function(r){ return String(r.city || '').trim(); }) || primary;
+  var districtRecord = history.find(function(r){ return String(r.district || '').trim(); });
   var mapRecord = history.find(function(r){ return savedMapLink(r); });
   var imageRecord = history.find(function(r){ return String(r.locationImage || r.homeImage || '').trim(); });
 
   var name = String(nameRecord.name || nameRecord.client || nameRecord.customerName || '').trim();
   var city = savedCityValue(cityRecord.city);
+  var district = districtRecord ? String(districtRecord.district || '').trim() : '';
   var mapsLink = mapRecord ? savedMapLink(mapRecord) : '';
   var locationImage = imageRecord ? String(imageRecord.locationImage || imageRecord.homeImage || '') : '';
 
   if(name) document.getElementById('f_name').value = name;
-  if(city) document.getElementById('f_city').value = city;
+  var districtRestored = '';
+  if(city) {
+    document.getElementById('f_city').value = city;
+    // قائمة الأحياء تُبنى حسب المدينة، فلا بد من تحديثها قبل اختيار الحي
+    if(typeof onCityChange === 'function') onCityChange();
+    if(district) {
+      var distSel = document.getElementById('f_district');
+      var hasOption = false;
+      if(distSel) {
+        for(var di = 0; di < distSel.options.length; di++) {
+          if(distSel.options[di].value === district) { hasOption = true; break; }
+        }
+      }
+      if(hasOption) {
+        distSel.value = district;
+        if(typeof onDistrictChange === 'function') onDistrictChange();
+        districtRestored = district;
+      }
+    }
+  }
   if(mapsLink) {
     document.getElementById('f_maps_link').value = mapsLink;
     validateMapsLink(mapsLink);
@@ -1623,8 +1669,8 @@ function applySavedCustomerData(phone, records) {
     document.getElementById('imgArea').style.borderColor = 'var(--sky)';
   }
 
-  lastCustomerAutofill = {phone:phone, name:name, city:city, mapsLink:mapsLink, locationImage:locationImage};
-  var restored = [name && 'الاسم', city && 'المدينة', mapsLink && 'الموقع', locationImage && 'صورة الموقع'].filter(Boolean);
+  lastCustomerAutofill = {phone:phone, name:name, city:city, district:districtRestored, mapsLink:mapsLink, locationImage:locationImage};
+  var restored = [name && 'الاسم', city && 'المدينة', districtRestored && 'الحي', mapsLink && 'الموقع', locationImage && 'صورة الموقع'].filter(Boolean);
   showCustomerLookup('found', '✅ مرحبًا بعودتك — تم استرجاع ' + (restored.length ? restored.join(' و') : 'بياناتك المحفوظة') + '. يمكنك تعديلها قبل المتابعة.');
 }
 
@@ -1650,12 +1696,13 @@ function lookupCustomerByPhone(value) {
   customerLookupTimer = setTimeout(function() {
     var variants = customerPhoneVariants(phone);
     Promise.all([
+      readCustomerLookup(variants).catch(function(){ return []; }),
       readPhoneMatches('customers', variants).catch(function(){ return []; }),
       readPhoneMatches('bookings', variants).catch(function(){ return []; }),
       readPhoneMatches('appointments', variants).catch(function(){ return []; })
     ]).then(function(groups) {
       if(token !== customerLookupToken || normalizeCustomerPhone(document.getElementById('f_phone').value) !== phone) return;
-      applySavedCustomerData(phone, groups[0].concat(groups[1], groups[2]));
+      applySavedCustomerData(phone, groups[0].concat(groups[1], groups[2], groups[3]));
     }).catch(function(err) {
       console.warn('[customer-lookup] تعذر استرجاع بيانات العميل:', err && (err.code || err.message));
       if(token === customerLookupToken) showCustomerLookup('', '');
@@ -2474,6 +2521,12 @@ var DUR_MAP={'غسيل مكيفات':30,'صيانة مكيف':30,'تعبئة غ�
   'تنظيف الوحدة الخارجية':15,'تنظيف الوحدة الداخلية':20};
 var SLOTS=[{t:'8:00 - 10:00',start:480,ar:'8-10 ص'},{t:'10:00 - 12:00',start:600,ar:'10-12 ص'},{t:'12:00 - 14:00',start:720,ar:'12-2 م'},{t:'14:00 - 16:00',start:840,ar:'2-4 م'},{t:'16:00 - 18:00',start:960,ar:'4-6 م'},{t:'18:00 - 20:00',start:1080,ar:'6-8 م'}];
 var SLOT_WINDOW_MINUTES=120;
+/* فاصل التنقّل والتجهيز المطلوب بين نهاية موعد وبداية الموعد الذي يليه.
+   يُفحص قبل البداية وبعد النهاية، ولا يُقفل في قاعدة البيانات، فالقفل
+   يمثّل وقت العمل الحقيقي فقط — تماماً كما تفعل لوحة الإدارة. */
+var BOOKING_GAP_MINUTES=30;
+/* آخر وقت يُسمح بانتهاء عمل محجوز إلكترونياً فيه (بالدقائق من منتصف الليل). */
+var BOOKING_DAY_END=1320;
 var slotCheckSeq=0;
 var slotsCheckReady=false;
 var lastCheckedDate='';
@@ -2554,6 +2607,40 @@ function requestFridayApproval(){
   if(ph)   lines.push('الجوال: ' + ph);
   lines.push('شكراً لكم.');
 
+  window.open('https://wa.me/966509720382?text=' + encodeURIComponent(lines.join('\n')), '_blank');
+}
+
+/** صيغة عربية سليمة لعدد الوحدات: وحدة / وحدتان / وحدات */
+function fmtUnits(n){
+  n=parseInt(n,10)||1;
+  if(n===1) return 'وحدة واحدة';
+  if(n===2) return 'وحدتان';
+  if(n<=10) return n+' وحدات';
+  return n+' وحدة';
+}
+
+/**
+ * فترة يتسع فيها وقت العمل لكن لا يتسع فاصل التنقّل. قد تكون صالحة تماماً إذا
+ * كان العميل قريباً من الموعد المجاور، وهذا ما لا تعرفه الصفحة: أقفال الوقت
+ * لا تحمل أي بيانات موقع. فتُعرض للتنسيق اليدوي بدل إسقاطها.
+ */
+function requestTightSlot(date,windowAr){
+  var name = (document.getElementById('f_name')     && document.getElementById('f_name').value)     || '';
+  var ph   = (document.getElementById('f_phone')    && document.getElementById('f_phone').value)    || '';
+  var city = (document.getElementById('f_city')     && document.getElementById('f_city').value)     || '';
+  var dist = (document.getElementById('f_district') && document.getElementById('f_district').value) || '';
+  var lines = [
+    'السلام عليكم، أرغب بموعد في فترة يذكر النظام أنها ضيقة.',
+    'التاريخ المطلوب: ' + (date ? fmtDate(date) : '—'),
+    'الفترة المطلوبة: ' + windowAr,
+    'الخدمة: ' + (S.serviceAr || S.service || '—') + ' (' + fmtUnits(S.units) + ')',
+    'المدة التقديرية: ' + fmtDur(calcDur())
+  ];
+  if(dist) lines.push('الحي: ' + dist);
+  if(city) lines.push('المدينة: ' + city);
+  if(name) lines.push('الاسم: ' + name);
+  if(ph)   lines.push('الجوال: ' + ph);
+  lines.push('أرجو التأكد إن كان موقعي قريباً من موعدكم المجاور.');
   window.open('https://wa.me/966509720382?text=' + encodeURIComponent(lines.join('\n')), '_blank');
 }
 
@@ -2643,10 +2730,53 @@ function timeBlocksBetween(start,end){
 function bookingLockBlocks(timeValue,duration){
   var start=selectedSlotStartMinutes(timeValue);
   if(start===null) return [];
-  // الوقت المعروض للعميل نافذة كاملة (مثلاً 2-4 م)، وليس مجرد وقت بدء.
-  // نحجز النافذة كاملة، ونمددها فقط إذا كانت مدة العمل التقديرية أطول منها.
-  var end=start+Math.max(SLOT_WINDOW_MINUTES,(parseInt(duration,10)||30));
+  // يُقفل وقت العمل الحقيقي فقط لا النافذة كاملة. القفل الكامل للنافذة كان
+  // يستهلك ساعتين من يوم الفني مقابل خدمة نصف ساعة، ويُظهر النوافذ المجاورة
+  // محجوزة بلا سبب. فاصل التنقّل يُفحص عند العرض ولا يُقفل.
+  var end=start+Math.max(30,(parseInt(duration,10)||30));
+  if(end>BOOKING_DAY_END) end=BOOKING_DAY_END;
   return timeBlocksBetween(start,end);
+}
+
+/** هل الفترة [from,to) خالية من أي قفل؟ */
+function bookingRangeFree(booked,from,to){
+  var blocks=timeBlocksBetween(from,to);
+  for(var i=0;i<blocks.length;i++){ if(booked[blocks[i]]) return false; }
+  return true;
+}
+
+/** تنسيق الدقائق كوقت مقروء بنفس أسلوب التسميات الحالية: «13:00» */
+function bookingMinutesToLabel(m){
+  return String(Math.floor(m/60))+':'+String(m%60).padStart(2,'0');
+}
+
+/** نافذة الوصول المعلنة للعميل: من البداية الفعلية حتى نهاية النافذة التي اختارها */
+function bookingWindowLabel(start,windowStart){
+  var end=Math.min(start+SLOT_WINDOW_MINUTES,windowStart+SLOT_WINDOW_MINUTES);
+  if(end<=start) end=start+30;
+  return bookingMinutesToLabel(start)+' - '+bookingMinutesToLabel(end);
+}
+
+/**
+ * أول وقت بدء حرّ داخل النافذة يكفي مدة الخدمة، مع فاصل تنقّل قبله وبعده.
+ * يعيد الدقائق، أو null إذا لم توجد بداية صالحة.
+ * minStart: أبكر بداية مسموحة (هامش الحجز المسبق لليوم نفسه)، أو null.
+ */
+function bookingFreeStart(booked,windowStart,duration,minStart,gapMinutes){
+  var dur=Math.max(30,parseInt(duration,10)||30);
+  var gap=(gapMinutes===0||gapMinutes>0)?gapMinutes:BOOKING_GAP_MINUTES;
+  var from=windowStart;
+  if(minStart!==null&&minStart!==undefined&&isFinite(minStart)){
+    var aligned=Math.ceil(minStart/30)*30;
+    if(aligned>from) from=aligned;
+  }
+  for(var s=from;s<windowStart+SLOT_WINDOW_MINUTES;s+=30){
+    if(s+dur>BOOKING_DAY_END) break;
+    if(gap>0&&!bookingRangeFree(booked,Math.max(0,s-gap),s)) continue;
+    if(!bookingRangeFree(booked,s,s+dur+gap)) continue;
+    return s;
+  }
+  return null;
 }
 
 /** booked: خريطة كتل مشغولة {"1600":true,...} من slotLocks */
@@ -2661,36 +2791,50 @@ function renderSlots(booked,dur,selectedDate,availabilityNotice){
   var currentMins = isToday ? nowSaudiMinutes() : 0;
 
   var hasAvailable = false;
+  // يشمل الفترات الضيقة المعروضة للتنسيق، حتى لا تُمحى أزرارها من الشبكة
+  var hasActionable = false;
 
   SLOTS.forEach(function(sl,idx){
     var div=document.createElement('div');
-    // تُفحص نافذة الحجز المعروضة كاملة (ساعتان) وليس مدة الخدمة القصيرة،
-    // ويُمدد الفحص إذا كانت الخدمة أطول من النافذة. أي كتلة مشغولة داخل
-    // النطاق تجعل النافذة محجوزة — فموعد 3:00–5:00 يغلق 2–4 و4–6 معًا.
-    var newEnd=sl.start+Math.max(SLOT_WINDOW_MINUTES,dur);
-    var windowBlocks=timeBlocksBetween(sl.start,newEnd);
-    var conflict=windowBlocks.some(function(b){ return !!booked[b]; });
+    // النافذة متاحة إذا وُجد داخلها وقت بدء حرّ يكفي مدة الخدمة مع فاصل
+    // التنقّل. الفحص القديم كان يشترط خلوّ النافذة كاملة، فكان موعد ينتهي
+    // 10:30 يُسقط نافذة 10–12 بأكملها رغم أن الفني فارغ من 10:30.
+    var tooLong  = (sl.start+dur) > BOOKING_DAY_END;
+    var minStart = isToday ? (currentMins+ADVANCE_MINUTES) : null;
+    var anyStart = tooLong ? null : bookingFreeStart(booked,sl.start,dur,null,BOOKING_GAP_MINUTES);
+    var start    = tooLong ? null : bookingFreeStart(booked,sl.start,dur,minStart,BOOKING_GAP_MINUTES);
+    // فترة ضيقة: وقت العمل يتسع لكن فاصل التنقّل لا يتسع. لا تُسقط، بل تُعرض
+    // للتنسيق لأن قُرب العميل من الموعد المجاور قد يُغني عن الفاصل.
+    var nearStart=(tooLong||anyStart!==null)?null:bookingFreeStart(booked,sl.start,dur,minStart,0);
 
-    // تحقق الوقت: إذا كان اليوم، يجب أن يبدأ الموعد بعد الآن + ساعتان
-    var isPast = isToday && (sl.start < currentMins + ADVANCE_MINUTES);
-
-    if(conflict || newEnd>1200) {
+    if(tooLong) {
       div.className='slot booked';
-      div.innerHTML=icons[idx]+'<br>'+sl.ar+'<br><span style="font-size:9px;color:#EF4444;font-weight:700">'+(conflict?'محجوز':'وقت غير كافٍ')+'</span>';
-    } else if(isPast) {
+      div.innerHTML=icons[idx]+'<br>'+sl.ar+'<br><span style="font-size:9px;color:#EF4444;font-weight:700">وقت غير كافٍ</span>';
+    } else if(start!==null) {
+      var label=bookingWindowLabel(start,sl.start);
+      var hint=(start===sl.start)?'متاح':('متاح — يبدأ '+bookingMinutesToLabel(start));
+      div.className='slot';
+      div.innerHTML=icons[idx]+'<br>'+sl.ar+'<br><span style="font-size:9px;color:var(--success);font-weight:600">'+hint+'</span>';
+      div.onclick=(function(t){return function(){selSlot(div,t);};})(label);
+      hasAvailable = true;
+      hasActionable = true;
+    } else if(anyStart!==null) {
       div.className='slot booked';
       div.innerHTML=icons[idx]+'<br>'+sl.ar+'<br><span style="font-size:9px;color:#94A3B8;font-weight:700">انتهى الوقت</span>';
+    } else if(nearStart!==null) {
+      div.className='slot booked near';
+      div.innerHTML=icons[idx]+'<br>'+sl.ar+'<br><span style="font-size:9px;color:#B45309;font-weight:800">ضيقة — للتنسيق 💬</span>';
+      div.onclick=(function(ar){return function(){requestTightSlot(selectedDate,ar);};})(sl.ar);
+      hasActionable = true;
     } else {
-      div.className='slot';
-      div.innerHTML=icons[idx]+'<br>'+sl.ar+'<br><span style="font-size:9px;color:var(--success);font-weight:600">متاح</span>';
-      div.onclick=(function(t){return function(){selSlot(div,t);};})(sl.t);
-      hasAvailable = true;
+      div.className='slot booked';
+      div.innerHTML=icons[idx]+'<br>'+sl.ar+'<br><span style="font-size:9px;color:#EF4444;font-weight:700">محجوز</span>';
     }
     grid.appendChild(div);
   });
 
   // إذا لم توجد مواعيد متاحة لبقية اليوم
-  if(isToday && !hasAvailable) {
+  if(isToday && !hasAvailable && !hasActionable) {
     grid.innerHTML = '<div style="text-align:center;padding:16px;color:#92400E;background:#FEF9C3;border-radius:10px;font-size:13px;font-weight:700;">⚠️ لا توجد مواعيد متاحة للحجز اليوم، يرجى اختيار يوم آخر.</div>';
     S.time = '';
     return;
@@ -2724,10 +2868,11 @@ function next3(){
 
   // تحقق ثانٍ: إذا اختار العميل موعد اليوم — تأكد أن الوقت لا يزال صالحاً
   if(ok && S.time && date === todaySaudiDate()) {
-    var sl = SLOTS.find(function(s){ return s.t === S.time; });
-    if(sl) {
+    // S.time صار يحمل البداية الفعلية لا تسمية النافذة الثابتة.
+    var selStart = selectedSlotStartMinutes(S.time);
+    if(selStart !== null) {
       var currentMins = nowSaudiMinutes();
-      if(sl.start < currentMins + 120) {
+      if(selStart < currentMins + 120) {
         showToast('⚠️ انتهى وقت هذه الفترة أو اقترب. يرجى اختيار موعد آخر.');
         S.time = '';
         // أعِد رسم المواعيد
