@@ -3492,6 +3492,24 @@ function saveAppt(){
       _oldDuration !== Number(data.duration) ||
       appointmentHoldsSlot(_oldAppt) !== _newHoldsSlot;
 
+    // سجلّ الحجز الإلكتروني يجب أن يصف أقفاله الحقيقية. كان يحتفظ بكتل
+    // النافذة القديمة بعد تقصير المدة، فتُحسب مدته من تلك الكتل فيبدو أطول
+    // مما هو، ويرفض النظام مواعيد صالحة بعده. تُكتب الكتل الجديدة معه الآن.
+    if(editingSource === 'bookings'){
+      if(_newHoldsSlot && _newBlocks.length){
+        var _lbMap = {};
+        _newBlocks.forEach(function(b){ _lbMap[b] = true; });
+        var _endMin = Math.min(1440, Math.ceil((_newStart + data.duration) / ATWAD_LOCK_BLOCK_MIN) * ATWAD_LOCK_BLOCK_MIN);
+        data.lockBlocks = _lbMap;
+        data.startBlock = _newBlocks[0];
+        data.endBlock   = atwadMinutesToBlock(_endMin);
+      } else {
+        data.lockBlocks = null;
+        data.startBlock = null;
+        data.endBlock   = null;
+      }
+    }
+
     var _savePromise;
     if(!_scheduleChanged) {
       _savePromise = db.ref(editingPath + editingFirebaseKey).update(data);
