@@ -119,6 +119,8 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
 .slot.booked{opacity:.4;cursor:not-allowed;background:#F1F5F9;}
 .slot.booked.near{opacity:1;cursor:pointer;background:#FFFBEB;border-color:#FCD34D;color:#92400E;}
 .slot.booked.near:hover{border-color:#F59E0B;}
+.time-promise{margin-top:10px;padding:11px 13px;border:1px solid #BFDBFE;background:#EFF6FF;border-radius:10px;
+  color:#1E3A5F;font-size:12px;font-weight:600;line-height:1.85;}
 .sum-box{background:linear-gradient(135deg,var(--frost),var(--ice));border:1.5px solid rgba(14,165,233,.15);border-radius:14px;padding:16px;margin-bottom:14px;}
 .sum-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px dashed rgba(14,165,233,.15);font-size:13px;}
 .sum-row:last-child{border-bottom:none;}
@@ -726,6 +728,7 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
     <div class="section-lbl">الوقت المفضل <span class="req">*</span></div>
     <div class="slots-grid" id="slotsGrid"></div>
     <div class="err-msg" id="e_time">اختر الوقت</div>
+    <div class="time-promise">⏱️ نحرص على الوصول في الوقت المحدد. وإن حدث تأخير بسبب الطريق أو موعد سبقك، نتواصل معك فوراً ونخبرك بوقت الوصول الجديد.</div>
     <div class="btn-row">
       <button class="btn-back" onclick="goStep(2)">← رجوع</button>
       <button class="btn-next" onclick="next3()">مراجعة</button>
@@ -738,6 +741,7 @@ body{font-family:'Tajawal',sans-serif;font-size:16px;background:linear-gradient(
   <div class="card-header"><div class="card-icon">📋</div><div><h2>مراجعة الحجز</h2><p>تأكد من صحة البيانات</p></div></div>
   <div class="card-body">
     <div class="sum-box" id="sumBox"></div>
+    <div class="time-promise">⏱️ نحرص على الوصول في الوقت المحدد. وإن حدث تأخير بسبب الطريق أو موعد سبقك، نتواصل معك فوراً ونخبرك بوقت الوصول الجديد.</div>
     <div class="total-box"><span class="t-lbl">السعر التقديري</span><span class="t-price" id="totalPr">--</span></div>
     <div style="background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:10px;padding:10px 14px;font-size:12px;color:#92400E;margin-bottom:12px;">ℹ️ السعر تقديري، يُحدد النهائي بعد معاينة الفني. لا تشمل قطع الغيار.</div>
     <div style="background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:10px;padding:10px 14px;font-size:12px;color:#1E40AF;margin-bottom:12px;line-height:1.8;">🕐 الفترة محجوزة لك بالكامل، ويصل الفني في أي وقت خلالها. مدة العمل نفسها أقصر، وهي المذكورة أعلاه.</div>
@@ -2994,6 +2998,7 @@ function submitBooking(){
       'التاريخ: '+fmtDate(S.date),
       'الوقت: '+S.time,
       workDurationLine(),
+      'ملاحظة: نحرص على الوصول في الوقت المحدد، وإن حدث تأخير نتواصل معك فوراً.',
       'المدينة: '+S.city,
       'الحي: '+(S.district||'—'),
       'الموقع: '+S.addr
