@@ -605,6 +605,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
         <div class="form-group">
           <label>مدة الموعد (دقيقة) <span class="req">*</span></label>
           <input type="number" id="f_duration" value="90" min="30" max="480" step="30" onchange="updateApptEndPreview()">
+          <div id="durFixNote" style="display:none;margin-top:6px;font-size:11px;font-weight:700;color:#B45309;line-height:1.6;"></div>
         </div>
         <div class="form-group">
           <label>الانتهاء المتوقع</label>
@@ -1131,6 +1132,31 @@ function atwadLockedBlockCount(a){
   var n=0;
   Object.keys(lb).forEach(function(k){ if(lb[k]===true) n++; });
   return n;
+}
+
+/**
+ * المدة التي تُعرض في نموذج التعديل.
+ *
+ * الحجوزات الإلكترونية التي تمت قبل 2026-11-13 كانت تقفل النافذة كاملة
+ * (ساعتان كحد أدنى) مهما كانت الخدمة، فسجل القفل يقول 120 دقيقة لخدمة
+ * مدتها 60. فلا تُعرض القيمة المقفولة، بل المدة الحقيقية: ما سجّلته صفحة
+ * الحجز في حقل duration، وإلا فالتقدير من نوع الخدمة وعدد الوحدات.
+ * ويبقى اختيار الإدارة الصريح (durationOverride) فوق كل ذلك.
+ *
+ * يعيد {value, locked} — locked هي القيمة المقفولة إن اختلفت، لعرض تنبيه.
+ */
+function apptEditDuration(a){
+  var locked = atwadDuration(a);
+  if(!a || a._source !== 'bookings' || a.durationOverride === true) return {value: locked, locked: null};
+
+  var real = parseInt(atwadLatinDigits(a.duration), 10);
+  if(!isFinite(real) || real < 30 || real > 480){
+    var w = parseInt(a.washUnits, 10), m = parseInt(a.maintUnits, 10);
+    if(isFinite(w) && isFinite(m) && (w + m) > 0) real = suggestMixedDuration(w, m);
+    else real = suggestDuration(a.service, a.units);
+  }
+  real = Math.max(30, Math.min(480, Math.round(real / 30) * 30));
+  return {value: real, locked: (real !== locked) ? locked : null};
 }
 
 function atwadDuration(a){
@@ -2305,6 +2331,8 @@ function openNewApptForm(){
   document.getElementById('f_date').value=today();
   document.getElementById('f_time').value='09:00';
   document.getElementById('f_duration').value=suggestDuration('',1);
+  var _dn=document.getElementById('durFixNote');
+  if(_dn){ _dn.textContent=''; _dn.style.display='none'; }
   updateApptEndPreview();
   resetImageField();
   resetLocFields();
@@ -2360,7 +2388,19 @@ function editAppt(id){
   document.getElementById('f_date').value=a.date||today();
   document.getElementById('f_time').value=(atwadParseTime(a.time)!==null)
       ? atwadMinutesToBlock(atwadParseTime(a.time)).replace(/^(\d{2})(\d{2})$/,'$1:$2') : '09:00';
-  document.getElementById('f_duration').value=atwadDuration(a);
+  var _durPick = apptEditDuration(a);
+  document.getElementById('f_duration').value = _durPick.value;
+  var _durNote = document.getElementById('durFixNote');
+  if(_durNote){
+    if(_durPick.locked){
+      _durNote.textContent = 'صُحّحت المدة إلى ' + _durPick.value + ' دقيقة حسب الخدمة والعدد. '
+        + 'النظام القديم كان يقفل ' + _durPick.locked + ' دقيقة لهذا الحجز. احفظ لتحرير الفارق.';
+      _durNote.style.display = 'block';
+    } else {
+      _durNote.textContent = '';
+      _durNote.style.display = 'none';
+    }
+  }
   updateApptEndPreview();
   document.getElementById('f_notes').value=a.notes||'';
   document.getElementById('f_source').value=a.leadSource||'';
