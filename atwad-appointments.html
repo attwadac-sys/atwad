@@ -1842,6 +1842,12 @@ function initFirebaseSync() {
           status: bookingStatus,
           notes: 'حجز من النموذج الإلكتروني',
           duration: b.duration || 60,
+          // بدون هذه الأربعة يُحسب الحجز الإلكتروني بنافذته القديمة دائماً:
+          // المدة تُقرأ من كتل القفل، وتثبيت الإدارة للمدة لا يُرى أصلاً.
+          durationOverride: b.durationOverride === true,
+          lockBlocks:  b.lockBlocks  || null,
+          startBlock:  b.startBlock  || '',
+          endBlock:    b.endBlock    || '',
           sourceBookingKey: child.key,
           createdAt: b.createdAt || '',
           // حقول الموقع — تُنسخ من الحجز الأصلي
@@ -3541,6 +3547,22 @@ function saveAppt(){
             console.error('saveLocationToCustomer error:', locErr);
           }
         }
+
+        // سجل الحجوزات يُقرأ مرة واحدة عند فتح الصفحة، فتبقى نسخته في الذاكرة
+        // قديمة بعد الحفظ: يُعاد حساب المدة من كتل قديمة، فيُرفض موعد صالح
+        // ويظل تنبيه تصحيح المدة ظاهراً. تُحدَّث النسخة هنا فور نجاح الكتابة.
+        (function(){
+          var _mem = findAppt(editingId) || findAppt(editingFirebaseKey);
+          if(!_mem) return;
+          Object.keys(data).forEach(function(k){
+            if(data[k] === null) delete _mem[k];
+            else _mem[k] = data[k];
+          });
+          if(data.status !== undefined){
+            _mem._statusRaw = data.status;
+            _mem.status = atwadStatusLogic(data.status);
+          }
+        })();
 
         syncCustomerLookup(data, _mapsLink, _lat, _lng);
         showToast('✅ تم تحديث الموعد بنجاح');
