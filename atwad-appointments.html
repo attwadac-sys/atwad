@@ -89,6 +89,12 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 .appt-card.c-blocked{border-color:#7C3AED;}
 .appt-card.c-done{border-color:var(--success);}
 .appt-card.c-cancelled{border-color:var(--danger);}
+.gap-row{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:0 0 10px;padding:9px 14px;
+  border-radius:10px;font-size:12px;font-weight:700;line-height:1.7;}
+.gap-row.free{background:#ECFDF5;border:1px dashed #6EE7B7;color:#065F46;}
+.gap-row.tight{background:#F8FAFC;border:1px dashed #CBD5E1;color:#64748B;}
+.gap-row .gap-span{font-variant-numeric:tabular-nums;}
+.gap-row .gap-fit{margin-inline-start:auto;font-weight:800;}
 .appt-time-block{text-align:center;min-width:54px;}
 .appt-time-block .t-start{font-size:15px;font-weight:800;color:var(--deep);}
 .appt-time-block .t-dur{font-size:10px;color:var(--mist);}
@@ -1956,6 +1962,78 @@ function renderWeek(){
 }
 
 // ===== LIST VIEW =====
+/* ============================================================
+   الفراغات بين المواعيد — تُعرض في اليوم الحالي فما بعده.
+   يوم العمل 8 صباحاً حتى 10 مساءً، ويُخصم فاصل التنقل من الطرف
+   الذي يجاوره موعد، فالرقم المعروض هو وقت العمل الصافي فعلاً.
+   ============================================================ */
+var GAP_DAY_START = 480;    // 8:00
+var GAP_DAY_END   = 1320;   // 22:00
+var GAP_TRAVEL    = 30;
+
+function gapClock(m){
+  var h = Math.floor(m / 60), mm = m % 60;
+  return h + ':' + String(mm).padStart(2, '0');
+}
+
+function gapDurText(m){
+  if(m < 60) return m + ' دقيقة';
+  var h = Math.floor(m / 60), r = m % 60, base;
+  if(h === 1) base = 'ساعة';
+  else if(h === 2) base = 'ساعتان';
+  else if(h <= 10) base = h + ' ساعات';
+  else base = h + ' ساعة';
+  if(r === 0) return base;
+  if(r === 30) return base + ' ونصف';
+  return base + ' و' + r + ' دقيقة';
+}
+
+/** سطر فراغ واحد. isFirst/isLast: لا يجاوره موعد من تلك الجهة فلا فاصل تنقل. */
+function gapRowHtml(from, to, isFirst, isLast){
+  var span = to - from;
+  if(span < 30) return '';
+  var buffers = (isFirst ? 0 : 1) + (isLast ? 0 : 1);
+  var usable  = span - (buffers * GAP_TRAVEL);
+  var free    = usable >= 30;
+  var fit     = free
+    ? 'يتسع لعمل ' + gapDurText(Math.floor(usable / 30) * 30)
+    : 'لا يتسع بعد فاصل التنقل';
+  return '<div class="gap-row ' + (free ? 'free' : 'tight') + '">' +
+    '<span>' + (free ? '🟢' : '⬜') + '</span>' +
+    '<span class="gap-span">فارغ ' + gapClock(from) + ' – ' + gapClock(to) + '</span>' +
+    '<span>·</span><span>' + gapDurText(span) + '</span>' +
+    '<span class="gap-fit">' + fit + '</span>' +
+  '</div>';
+}
+
+/** خريطة {معرّف الموعد: سطر الفراغ الذي يسبقه} + __tail__ لفراغ آخر اليوم */
+function buildDayGapRows(list){
+  var rows = {}, slots = [];
+  (list || []).forEach(function(a){
+    if(!appointmentHoldsSlot(a)) return;
+    var r = atwadRange(a);
+    if(!r) return;
+    slots.push({ id: a.id || a._fbKey, start: r.start, end: r.end });
+  });
+  if(!slots.length) return rows;
+  slots.sort(function(x, y){ return x.start - y.start; });
+  var cursor = Math.min(GAP_DAY_START, slots[0].start);
+  var first  = true;
+  slots.forEach(function(s){
+    if(s.start > cursor){
+      var html = gapRowHtml(cursor, s.start, first, false);
+      if(html) rows[s.id] = html;
+    }
+    if(s.end > cursor) cursor = s.end;
+    first = false;
+  });
+  if(cursor < GAP_DAY_END){
+    var tail = gapRowHtml(cursor, GAP_DAY_END, false, true);
+    if(tail) rows.__tail__ = tail;
+  }
+  return rows;
+}
+
 function renderList(){
   var cfEl = document.getElementById('cancelFilter');
   var cancelMode = cfEl ? cfEl.value : 'active';   // active | all | cancelled
@@ -2041,8 +2119,11 @@ function renderList(){
   orderedDates.forEach(date=>{
     const list = grouped[date];
     html += `<div class="day-section"><div class="day-section-header"><span class="day-section-date">${formatDate(date)}</span><span class="day-section-badge">${list.length} موعد</span>${date===today()?'<span style="background:var(--sky);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;">اليوم</span>':''}</div>`;
+    // الفراغات تُعرض لليوم الحالي فما بعده فقط؛ الأيام الماضية لا تُحجز
+    const gapRows = (date >= todayKey) ? buildDayGapRows(list) : {};
     list.forEach(a=>{
       const aId = a.id || a._fbKey;
+      if(gapRows[aId]) html += gapRows[aId];
       const tc = TECH_COLORS[a.tech]||'#0EA5E9';
       const isBooking = a._source === 'bookings';
       const sv = atwadStatusView(a);
@@ -2096,6 +2177,7 @@ function renderList(){
         </div>
       </div>`;
     });
+    if(gapRows.__tail__) html += gapRows.__tail__;
     html += '</div>';
   });
   document.getElementById('listView').innerHTML = html;
