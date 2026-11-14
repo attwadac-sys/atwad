@@ -1650,6 +1650,9 @@ function vehRender(){
   if(!wrap) return;
   var ids = vehForTech();
   if(!ids.length){ wrap.innerHTML = ''; return; }
+  /* باسم مَن يُسجَّل الفحص: الحساب مشترك بين الفنيين،
+     فالاسم المختار أعلى الصفحة هو ما يُحفظ في السجل. */
+  var whoNow = String(currentTechAr || currentTech || '').trim();
 
   var wk = vehWeekKey();
   var html = '';
@@ -1694,6 +1697,12 @@ function vehRender(){
       for(var q = 0; q < items.length; q++){
         html += vehItemHtml(id, items[q]);
       }
+      html += (whoNow
+        ? '<div class="veh-s" style="margin-top:8px;font-weight:800;color:#0C3B5E;">' +
+            (LANG === 'ar' ? 'يُسجَّل باسم: ' : 'Recording as: ') + vehEsc(whoNow) + '</div>'
+        : '<div class="veh-s" style="margin-top:8px;font-weight:800;color:#B91C1C;">' +
+            (LANG === 'ar' ? '⚠️ اضغط اسمك في أعلى الصفحة قبل الحفظ'
+                           : '⚠️ Tap your name at the top before saving') + '</div>');
       html += '<textarea class="veh-note" id="vehNote-' + vehEsc(id) + '" placeholder="' + t('vehNotePh') + '"></textarea>' +
       '<button class="veh-btn" id="vehBtn-' + vehEsc(id) + '" data-veh="' + vehEsc(id) + '">' + t('vehSave') + '</button>' +
       '<div class="veh-msg" id="vehMsg-' + vehEsc(id) + '"></div>';
@@ -1793,6 +1802,13 @@ function vehSaveCheck(id){
 
   function fail(txt){ msgEl.className = 'veh-msg bad'; msgEl.textContent = txt; }
 
+  /* الاسم شرط: السجل يحمل مَن فحص فعلاً، لا «فني» مجهولاً */
+  if(!String(currentTechAr || currentTech || '').trim()){
+    fail(LANG === 'ar' ? 'اضغط اسمك في أعلى الصفحة أولاً — الفحص يُسجَّل باسم من فحصه.'
+                       : 'Tap your name at the top first — the check is saved under your name.');
+    return;
+  }
+
   var odo = vehNum(odoEl.value);
   if(odo <= 0){ fail(t('vehNeedOdo')); return; }
 
@@ -1831,7 +1847,7 @@ function vehSaveCheck(id){
     allOk: allOk,
     note: note,
     photoKeys: Object.keys(photos).join(','),
-    by: currentTechAr || currentTech || 'فني',
+    by: String(currentTechAr || currentTech || '').trim(),
     at: new Date().toISOString()
   };
 
