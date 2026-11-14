@@ -361,6 +361,16 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
 .ts-rate-bad{color:#B91C1C;font-weight:800;}
 .ts-rate-ok{color:#047857;font-weight:800;}
 .ts-case{background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:10px 12px;margin-bottom:8px;font-size:12px;line-height:1.7;}
+.ts-case.ts-open{border-right:4px solid #F59E0B;}
+.ts-case.ts-closed{background:#F0FDF4;border-color:#BBF7D0;border-right:4px solid #22C55E;}
+.ts-disc{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:9px;}
+.ts-disc input{flex:1;min-width:150px;padding:7px 10px;border:1px solid #CBD5E1;border-radius:8px;
+  font-family:'Tajawal',sans-serif;font-size:12px;background:#fff;color:#0F172A;}
+.ts-disc button{padding:7px 14px;border:0;border-radius:8px;background:#16A34A;color:#fff;
+  font-family:'Tajawal',sans-serif;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;}
+.ts-disc button:hover{filter:brightness(1.08);}
+.ts-disc button:disabled{opacity:.55;cursor:default;}
+.ts-done-note{margin-top:7px;color:#15803D;font-weight:700;}
 .ts-sub{font-size:11px;color:var(--mist);margin:14px 0 6px;font-weight:700;}
 /* مكافأة الفريق — قائمة الإغلاق */
 .bn-card{border:1.5px solid #E2E8F0;border-radius:12px;padding:12px 14px;margin-bottom:10px;background:#fff;}
@@ -1864,7 +1874,24 @@ function initFirebaseSync() {
           locationImage:   b.locationImage   || '',
           leadSource:      b.leadSource      || '',
           locationVerified:b.locationVerified || false,
-          locationSource:  b.locationSource  || ''
+          locationSource:  b.locationSource  || '',
+          // الضمان وقائمة الإغلاق تُكتب على سجل الحجز نفسه عند الإتمام،
+          // فبدون نسخها هنا تختفي حالات إعادة العمل والإغلاق الموثق من
+          // تقرير أداء الفنيين ومن حساب المكافأة — وأكثر أعمالك حجوزات.
+          warrantyRework:  b.warrantyRework === true,
+          warrantyTech:    b.warrantyTech    || '',
+          warrantyFault:   b.warrantyFault   || '',
+          warrantyPrevKey: b.warrantyPrevKey || '',
+          warrantyPrevDate:b.warrantyPrevDate|| '',
+          warrantyNote:    b.warrantyNote    || '',
+          warrantyAt:      b.warrantyAt      || '',
+          warrantyDiscussed:     b.warrantyDiscussed === true,
+          warrantyDiscussedAt:   b.warrantyDiscussedAt   || '',
+          warrantyDiscussedNote: b.warrantyDiscussedNote || '',
+          causedRework:    b.causedRework === true,
+          closing:         b.closing         || null,
+          closingTech:     b.closingTech     || '',
+          closingComplete: b.closingComplete === true
         });
       });
       applyLoadedAppointments(atwadDedupeForDisplay(fbAppts), false);
@@ -5073,14 +5100,43 @@ function renderTechStats(){
     }
     html += '</div>';
     cases.sort(function(p, q){ return String(q.date || '').localeCompare(String(p.date || '')); });
-    html += '<div class="ts-sub">حالات إعادة العمل (' + cases.length + ')</div>';
+    // الحالة تبقى مفتوحة حتى تُناقَش مع الفني، فيُسجَّل تاريخ النقاش وخلاصته.
+    // الغرض متابعة ما عولج لا محاسبة أحد؛ ولهذا لا أثر مالي لهذا التسجيل.
+    var openCases = [], doneCases = [];
     for(var c = 0; c < cases.length; c++){
-      var ca = cases[c];
-      html += '<div class="ts-case"><strong>' + _wrEsc(ca.client || '—') + '</strong> · ' + _wrEsc(ca.date || '') +
+      (cases[c].warrantyDiscussed ? doneCases : openCases).push(cases[c]);
+    }
+
+    function _caseHead(ca){
+      return '<strong>' + _wrEsc(ca.client || '—') + '</strong> · ' + _wrEsc(ca.date || '') +
         '<br>👷 ' + _wrEsc(ca.warrantyTech === 'team' ? 'الفريق' : techDisplayName(ca.warrantyTech)) +
         ' · ⚠️ ' + _wrEsc(WARRANTY_FAULTS[ca.warrantyFault] || ca.warrantyFault || 'أخرى') +
         (ca.warrantyPrevDate ? ' · الزيارة الأصلية: ' + _wrEsc(ca.warrantyPrevDate) : '') +
-        (ca.warrantyNote ? '<br><span style="color:var(--mist)">' + _wrEsc(ca.warrantyNote) + '</span>' : '') + '</div>';
+        (ca.warrantyNote ? '<br><span style="color:var(--mist)">' + _wrEsc(ca.warrantyNote) + '</span>' : '');
+    }
+
+    html += '<div class="ts-sub">بانتظار المناقشة (' + openCases.length + ')</div>';
+    if(!openCases.length){
+      html += '<div style="padding:10px 12px;color:#15803D;font-size:12px;font-weight:700;">✅ كل الحالات نوقشت.</div>';
+    }
+    for(var c2 = 0; c2 < openCases.length; c2++){
+      var oc = openCases[c2];
+      var rid = 'wd_' + (oc._source === 'bookings' ? 'b' : 'a') + '_' + String(oc._fbKey || '').replace(/[^A-Za-z0-9_-]/g, '');
+      html += '<div class="ts-case ts-open">' + _caseHead(oc) +
+        '<div class="ts-disc">' +
+          '<input id="' + rid + '" type="text" maxlength="200" placeholder="خلاصة ما نوقش… (اختياري)">' +
+          '<button type="button" onclick="markWarrantyDiscussed(\'' + _wrEsc(oc._source || 'appointments') + '\',\'' + _wrEsc(oc._fbKey || '') + '\',\'' + rid + '\',this)">✔ نوقشت</button>' +
+        '</div></div>';
+    }
+
+    if(doneCases.length){
+      html += '<div class="ts-sub">نوقشت سابقاً (' + doneCases.length + ')</div>';
+      for(var c3 = 0; c3 < doneCases.length; c3++){
+        var dc = doneCases[c3];
+        html += '<div class="ts-case ts-closed">' + _caseHead(dc) +
+          '<div class="ts-done-note">✔ نوقشت ' + _wrEsc(String(dc.warrantyDiscussedAt || '').slice(0, 10)) +
+          (dc.warrantyDiscussedNote ? ' — ' + _wrEsc(dc.warrantyDiscussedNote) : '') + '</div></div>';
+      }
     }
   } else {
     html += '<div style="padding:14px;color:#64748B;font-size:12px;">لا توجد حالات إعادة عمل موثقة في هذه الفترة. تُسجَّل الحالات من زر «🛡️ ضمان — إعادة عمل» عند إتمام الموعد.</div>';
@@ -5088,6 +5144,36 @@ function renderTechStats(){
   html += '<div style="margin-top:12px;font-size:11px;color:var(--mist);line-height:1.7;">النسبة = حالات إعادة العمل المنسوبة للفني ÷ زياراته المكتملة في الفترة نفسها. زيارات الضمان لا تُحسب ضمن إنجاز الفني. «إغلاق موثق» = زيارات أُكملت فيها قائمة الإغلاق (اختبار التصريف) كاملة.</div>';
   body.innerHTML = html;
 }
+/**
+ * تسجيل أن حالة إعادة العمل نوقشت مع الفني.
+ * سجلّ متابعة لا أداة محاسبة: لا يغيّر المكافأة ولا الراتب ولا نسبة الأداء.
+ */
+function markWarrantyDiscussed(source, key, inputId, btn){
+  if(!db || !key){ showToast('⚠️ تعذّر تحديد الحالة'); return; }
+  var inp = document.getElementById(inputId);
+  var note = inp ? String(inp.value || '').trim().slice(0, 200) : '';
+  var path = (source === 'bookings' ? 'bookings/' : 'appointments/') + key;
+  var stamp = new Date().toISOString();
+  if(btn){ btn.disabled = true; btn.textContent = '… جارٍ الحفظ'; }
+  var payload = { warrantyDiscussed: true, warrantyDiscussedAt: stamp, warrantyDiscussedNote: note };
+  db.ref(path).update(payload).then(function(){
+    for(var i = 0; i < appointments.length; i++){
+      var a = appointments[i];
+      if(a && a._fbKey === key && (a._source || 'appointments') === (source || 'appointments')){
+        a.warrantyDiscussed = true;
+        a.warrantyDiscussedAt = stamp;
+        a.warrantyDiscussedNote = note;
+        break;
+      }
+    }
+    showToast('✔ سُجّلت المناقشة');
+    renderTechStats();
+  }).catch(function(err){
+    if(btn){ btn.disabled = false; btn.textContent = '✔ نوقشت'; }
+    showToast('⚠️ تعذّر الحفظ: ' + (err && (err.code || err.message) || 'خطأ'));
+  });
+}
+
 // ============================================================
 // مكافأة الفريق — 5 ريال لكل وحدة أُغلقت بقائمة موثقة ولم تعد خلال 30 يوماً
 // تُصرف بعد نهاية الشهر التالي، وتُسجَّل كمصروف في transactions
