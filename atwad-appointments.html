@@ -3599,6 +3599,17 @@ function saveAppt(){
       _oldDuration !== Number(data.duration) ||
       appointmentHoldsSlot(_oldAppt) !== _newHoldsSlot;
 
+    // حجز قديم قد يحمل كتل قفل أكثر مما يستحقه (قفل النافذة الكاملة سابقاً،
+    // أو كتل أنشأها إصلاح الأقفال وقت كان الحساب خاطئاً). اعتبار الفارق
+    // تغييراً في الجدولة يجعل الحفظ يحرّر الزائد بدل أن يتركه يحجب العملاء.
+    if(editingSource === 'bookings' && _newHoldsSlot){
+      var _oldLb = _oldAppt && _oldAppt.lockBlocks, _oldKeys = [];
+      if(_oldLb && typeof _oldLb === 'object'){
+        Object.keys(_oldLb).forEach(function(k){ if(_oldLb[k] === true) _oldKeys.push(k); });
+      }
+      if(_oldKeys.sort().join(',') !== _newBlocks.slice().sort().join(',')) _scheduleChanged = true;
+    }
+
     // سجلّ الحجز الإلكتروني يجب أن يصف أقفاله الحقيقية. كان يحتفظ بكتل
     // النافذة القديمة بعد تقصير المدة، فتُحسب مدته من تلك الكتل فيبدو أطول
     // مما هو، ويرفض النظام مواعيد صالحة بعده. تُكتب الكتل الجديدة معه الآن.
