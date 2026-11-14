@@ -412,7 +412,12 @@ function saveEntry() {
  * و5xxxxxxxx، ويعيدها كلها 05xxxxxxxx. يعيد '' إن لم يكن الرقم صالحاً.
  */
 function normalizeSaudiMobile(raw) {
-  var d = String(raw || '').replace(/\D/g, '');
+  // الأرقام العربية والفارسية تُحوَّل أولاً: لوحة المفاتيح العربية تُدخل ٠٥٠…
+  // وكانت تُرفض كلها لأن \D يعدّها حروفاً، فيبدو الحفظ وكأنه لا يعمل.
+  var s = String(raw || '')
+    .replace(/[\u0660-\u0669]/g, function(c){ return String(c.charCodeAt(0) - 0x0660); })
+    .replace(/[\u06F0-\u06F9]/g, function(c){ return String(c.charCodeAt(0) - 0x06F0); });
+  var d = s.replace(/\D/g, '');
   if(d.indexOf('00966') === 0) d = d.slice(5);
   else if(d.indexOf('966') === 0) d = d.slice(3);
   if(d.length === 9 && d.charAt(0) === '5') d = '0' + d;
