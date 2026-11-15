@@ -1810,7 +1810,18 @@ function saveOdometer(){
 applyStaticLang();
 /* حساب الفني الميداني — تُفتح له الصفحة إنجليزيةً، وتبقى عربيةً لحساب الإدارة.
    وأيُّهما بدّل اللغة بالزر حُفظ اختياره لجهازه فلا يُنقَض بعدها. */
-var TECH_UID = 'N1uELIME5jVKf2bsXbVCreTSyN53';
+/* حسابات الفنيين الميدانيين. صارت قائمةً لا معرّفاً واحداً، لأن أحمد
+   انتقل إلى حساب على بريده هو، وقد ينضم شعيب بحسابٍ ثالث. المعرّف
+   القديم يبقى حتى يُعطَّل حسابه، فلا ينقطع عمله في هذه الأثناء. */
+var TECH_UIDS = [
+  'N1uELIME5jVKf2bsXbVCreTSyN53',   /* أحمد — الحساب القديم */
+  'zfxcmSjKDOXRAAUFSfgiEBUEqAn1'    /* أحمد — ahmad1137sau@gmail.com */
+];
+
+/** هل هذا المعرّف لحساب فنيٍّ ميداني؟ */
+function isTechUid(uid){
+  return !!uid && TECH_UIDS.indexOf(uid) !== -1;
+}
 
 /* الحساب المسجَّل — يُحفظ ليُعاد رسم البيان عند تبديل اللغة */
 var _acctUser = null;
@@ -1832,7 +1843,7 @@ function renderAcctBar(){
   /* الحساب الخطأ يُقال صراحةً: العمل بحساب المؤسسة يمرّ بلا خطأ، فلا
      ينتبه له أحد إلا حين تُراجَع الإحصاءات بعد شهر. */
   if(warn){
-    if(_acctUser.uid === TECH_UID){
+    if(isTechUid(_acctUser.uid)){
       warn.style.display = 'none';
     } else {
       /* باللغتين معاً: حين يحمل أحمد الجوال وفيه حسابُ المؤسسة تبقى
@@ -1864,7 +1875,7 @@ function techSignOut(){
 window.__atwadInitPage = function(user) {
   console.log("[technician] مسجّل:", user && user.email);
   _acctUser = user || null;
-  if(user && user.uid === TECH_UID && !LANG_CHOSEN){
+  if(user && isTechUid(user.uid) && !LANG_CHOSEN){
     LANG = 'en';
     applyStaticLang();
     updateDate();
