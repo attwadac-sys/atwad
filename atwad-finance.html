@@ -189,6 +189,10 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);over
 .btn-settle{background:#FEF9C3;color:#92400E;}
 .btn-cancel-rec{background:#FEE2E2;color:#991B1B;}
 .btn-delete-final{background:#7F1D1D;color:#fff;}
+.btn-edit-amount{background:#EDE9FE;color:#5B21B6;}
+.badge-void{background:#E5E7EB;color:#4B5563;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;}
+.amt-hist-row{display:block;font-size:12px;padding:5px 0;border-bottom:1px dashed #E2E8F0;}
+.amt-hist-row:last-child{border-bottom:none;}
 
 /* فلتر إدخالات الفني */
 .tech-filter-bar{display:flex;align-items:center;gap:10px;margin:12px 22px 0;flex-wrap:wrap;}
@@ -572,6 +576,32 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);over
   </div>
 </div>
 
+<!-- Modal تعديل المبلغ -->
+<div class="modal-overlay" id="amountModal">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-hdr">
+      <h3>✏️ تعديل مبلغ المستحق</h3>
+      <button class="modal-close" onclick="closeAmountModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="amt_info" style="font-size:13px;margin-bottom:12px;line-height:1.9;"></div>
+      <div class="form-group">
+        <label>المبلغ الجديد لإجمالي الفاتورة (ريال) *</label>
+        <input type="number" id="amt_new" placeholder="0" min="0" step="any" oninput="previewAmountEdit()">
+        <small id="amt_hint" style="font-size:11px;color:var(--mist);margin-top:4px;display:block;"></small>
+      </div>
+      <div class="form-group">
+        <label>سبب التعديل *</label>
+        <input type="text" id="amt_reason" placeholder="مثال: خصم متفق عليه / خطأ في عدد الوحدات">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeAmountModal()">إلغاء</button>
+      <button class="btn-save" id="amt_save_btn" onclick="confirmAmountEdit()">💾 حفظ التعديل</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal تسجيل سداد -->
 <div class="modal-overlay pay-modal" id="payModal">
   <div class="modal" style="max-width:400px;">
@@ -945,9 +975,11 @@ function openRecDetail(fbKey) {
     (e.paymentNote ? '<div class="rec-detail-row"><span class="rec-detail-label">ملاحظة</span><span class="rec-detail-val">'+(e.paymentNote)+'</span></div>' : '') +
     (e.lastReminderAt ? '<div class="rec-detail-row"><span class="rec-detail-label">آخر فتح رسالة تذكير</span><span class="rec-detail-val">'+new Date(e.lastReminderAt).toLocaleString('ar-SA-u-ca-gregory')+'</span></div>' : '') +
     paymentsHtml +
+    buildAmountHistoryHtml(e) +
     '<div class="rec-modal-btns">' +
       '<button class="rec-modal-btns btn-register-pay" onclick="openPayModal()">💵 تسجيل سداد</button>' +
       '<button class="rec-modal-btns btn-change-due" onclick="openDueModal()">📅 موعد السداد</button>' +
+      '<button class="rec-modal-btns btn-edit-amount" onclick="openAmountModal()">✏️ تعديل المبلغ</button>' +
       (phone ? '<a class="rec-modal-btns btn-wa-collect" href="'+wa+'" target="_blank" onclick="recordReminderSent(\''+fbKey+'\')">📲 طلب سداد واتساب</a>' : '') +
       '<button class="rec-modal-btns btn-settle" onclick="settleReceivable(\''+fbKey+'\')">✅ تسوية المستحق</button>' +
       '<button class="rec-modal-btns btn-cancel-rec" onclick="cancelReceivable(\''+fbKey+'\')">🚫 إلغاء المستحق</button>' +
@@ -1027,6 +1059,102 @@ function saveDueDate() {
   renderAll();
   openRecDetail(_currentRecKey);   // تُعاد البطاقة لتُرى القيمة الجديدة فوراً
   showToast(date ? '✅ موعد السداد: ' + fmtDate(date) : '✅ حُفظ: موعد غير محدد');
+}
+
+// ===== Modal تعديل المبلغ =====
+// يعدّل إجمالي الفاتورة (amount) لمستحق مفتوح، ويحفظ كل تعديل في amountHistory
+// ولا يلمس الدفعات المسجلة — الرصيد المتبقي = المبلغ الجديد − المحصّل
+function buildAmountHistoryHtml(e) {
+  if(!Array.isArray(e.amountHistory) || !e.amountHistory.length) return '';
+  return '<div class="pay-history"><div class="pay-history-title">سجل تعديل المبلغ</div>' +
+    e.amountHistory.map(function(h){
+      var when = '';
+      try { when = new Date(h.at).toLocaleDateString('ar-SA-u-ca-gregory',{month:'short',day:'numeric',year:'numeric'}); } catch(err) { when = h.at || ''; }
+      return '<div class="amt-hist-row"><b>'+fmt(h.from)+' ← '+fmt(h.to)+' ﷼</b> — '+when+'<br><span style="color:var(--mist);">'+(h.reason||'')+'</span></div>';
+    }).join('') + '</div>';
+}
+
+function openAmountModal() {
+  var e = entries.find(function(x){ return x._fbKey === _currentRecKey; });
+  if(!e) return;
+  var total = parseFloat(e.amount) || 0;
+  var paid  = getCollectedAmount(e);
+  document.getElementById('amt_info').innerHTML =
+    'العميل: <b>'+(e.party||'—')+'</b><br>' +
+    'المبلغ الحالي: <b>'+fmt(total)+' ﷼</b><br>' +
+    'تم تحصيله: <b style="color:var(--success);">'+fmt(paid)+' ﷼</b>';
+  document.getElementById('amt_new').value = total;
+  document.getElementById('amt_reason').value = '';
+  previewAmountEdit();
+  document.getElementById('amountModal').classList.add('open');
+}
+
+function closeAmountModal() {
+  document.getElementById('amountModal').classList.remove('open');
+}
+
+function previewAmountEdit() {
+  var e = entries.find(function(x){ return x._fbKey === _currentRecKey; });
+  if(!e) return;
+  var paid = getCollectedAmount(e);
+  var v = parseFloat(document.getElementById('amt_new').value);
+  var hint = document.getElementById('amt_hint');
+  if(isNaN(v)) { hint.textContent = ''; return; }
+  if(v < paid - 0.01) {
+    hint.style.color = 'var(--danger)';
+    hint.textContent = 'لا يمكن أن يقل عن المحصّل ('+fmt(paid)+' ﷼)';
+  } else if(Math.abs(v - paid) < 0.01) {
+    hint.style.color = 'var(--success)';
+    hint.textContent = 'الرصيد المتبقي سيصبح صفراً وسيُقفل المستحق كمدفوع';
+  } else {
+    hint.style.color = 'var(--mist)';
+    hint.textContent = 'الرصيد المتبقي بعد التعديل: '+fmt(v - paid)+' ﷼';
+  }
+}
+
+function confirmAmountEdit() {
+  var e = entries.find(function(x){ return x._fbKey === _currentRecKey; });
+  if(!e || !db) { showToast('❌ تعذر الوصول للقيد'); return; }
+
+  var oldAmt = parseFloat(e.amount) || 0;
+  var newAmt = parseFloat(document.getElementById('amt_new').value);
+  var reason = document.getElementById('amt_reason').value.trim();
+  var paid   = getCollectedAmount(e);
+
+  if(isNaN(newAmt) || newAmt <= 0) { showToast('❌ أدخل مبلغاً صحيحاً أكبر من صفر'); return; }
+  if(Math.abs(newAmt - oldAmt) < 0.01) { showToast('⚠️ المبلغ لم يتغير'); return; }
+  if(newAmt < paid - 0.01) { showToast('❌ المبلغ الجديد أقل من المحصّل ('+fmt(paid)+' ﷼)'); return; }
+  if(!reason) { showToast('⚠️ سبب التعديل إلزامي'); return; }
+
+  var history = Array.isArray(e.amountHistory) ? e.amountHistory.slice() : [];
+  history.push({ from: oldAmt, to: newAmt, reason: reason, at: new Date().toISOString() });
+
+  var updates = { amount: newAmt, amountHistory: history, amountEditedAt: new Date().toISOString() };
+
+  // إن صار المحصّل يغطي المبلغ الجديد → يُقفل كمدفوع
+  if(paid > 0 && Math.abs(newAmt - paid) < 0.01) {
+    updates.status = 'مدفوع';
+    updates.paidAmount = paid;
+    updates.paidAt = today();
+  }
+
+  var btn = document.getElementById('amt_save_btn');
+  btn.disabled = true;
+  db.ref('transactions/' + e._fbKey).update(updates).then(function(){
+    e.amount = newAmt;
+    e.amountHistory = history;
+    e.amountEditedAt = updates.amountEditedAt;
+    if(updates.status) { e.status = updates.status; e.paidAmount = updates.paidAmount; e.paidAt = updates.paidAt; }
+    localStorage.setItem('atwad_finance', JSON.stringify(entries));
+    btn.disabled = false;
+    closeAmountModal();
+    closeRecModal();
+    renderAll();
+    showToast('✅ تم تعديل المبلغ من '+fmt(oldAmt)+' إلى '+fmt(newAmt)+' ﷼' + (updates.status ? ' — تم السداد الكامل' : ''));
+  }).catch(function(err){
+    btn.disabled = false;
+    showToast('❌ خطأ: ' + err.message);
+  });
 }
 
 // ===== Modal تسجيل سداد =====
@@ -1349,7 +1477,9 @@ function renderTables(){
     'مؤجل':          '<span class="badge-deferred">مؤجل</span>',
     'مدفوع جزئياً':  '<span class="badge-partial">جزئي</span>',
     'غير مدفوع':     '<span class="badge-unpaid">غير مدفوع</span>',
-    'معلق':          '<span class="badge-unpaid">غير مدفوع</span>'
+    'معلق':          '<span class="badge-unpaid">غير مدفوع</span>',
+    'ملغي':          '<span class="badge-void">ملغي</span>',
+    'مسوى':          '<span class="badge-void">مسوى</span>'
   };
   document.getElementById('incomeTable').innerHTML = income.length===0
     ? '<tr><td colspan="4" style="text-align:center;color:var(--mist);padding:20px">لا توجد إيرادات</td></tr>'
