@@ -1,0 +1,1882 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تجربة — تعديل مبلغ المستحق</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap');
+:root{
+  --deep:#0C3B5E;--steel:#1E5F8A;--sky:#0EA5E9;--ice:#E8F4FD;--frost:#F0F9FF;
+  --slate:#334155;--mist:#94A3B8;--success:#10B981;--warning:#F59E0B;--danger:#EF4444;--purple:#8B5CF6;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);overflow-x:hidden;}
+
+.sidebar{position:fixed;right:0;top:0;bottom:0;width:230px;background:linear-gradient(180deg,var(--deep),var(--steel));z-index:200;display:flex;flex-direction:column;}
+.sidebar-logo{padding:22px 18px 18px;border-bottom:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:12px;}
+.sidebar-logo .icon{width:42px;height:42px;background:linear-gradient(135deg,var(--sky),#38BDF8);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;}
+.sidebar-logo h1{color:#fff;font-size:16px;font-weight:800;}
+.sidebar-logo p{color:rgba(255,255,255,.5);font-size:11px;}
+.nav-section{padding:14px 10px 6px;}
+.nav-label{color:rgba(255,255,255,.3);font-size:10px;font-weight:700;padding:0 8px 5px;letter-spacing:1px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:rgba(255,255,255,.7);font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;margin-bottom:2px;}
+.nav-item:hover{background:rgba(255,255,255,.08);color:#fff;}
+.nav-item.active{background:rgba(14,165,233,.22);color:var(--sky);font-weight:700;}
+.nav-icon{font-size:16px;width:20px;text-align:center;}
+
+.main{margin-right:230px;}
+.topbar{background:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1.5px solid #E2E8F0;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.04);}
+.topbar-title{font-size:18px;font-weight:800;color:var(--deep);}
+.topbar-sub{font-size:12px;color:var(--mist);margin-top:1px;}
+.topbar-actions{display:flex;gap:8px;align-items:center;}
+
+/* PERIOD TABS */
+.period-tabs{display:flex;background:#F1F5F9;border-radius:10px;padding:3px;}
+.period-tab{padding:7px 16px;border-radius:8px;border:none;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:600;cursor:pointer;background:transparent;color:var(--mist);transition:all .2s;}
+.period-tab.active{background:#fff;color:var(--deep);box-shadow:0 2px 6px rgba(0,0,0,.08);}
+
+.btn-add{background:linear-gradient(90deg,var(--deep),var(--sky));color:#fff;border:none;border-radius:10px;padding:9px 18px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(14,165,233,.3);transition:all .2s;}
+.btn-add:hover{transform:translateY(-1px);}
+
+/* BIG KPI ROW */
+.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;padding:20px 22px 0;}
+.kpi-card{background:#fff;border-radius:18px;padding:20px 22px;box-shadow:0 2px 14px rgba(0,0,0,.06);position:relative;overflow:hidden;}
+.kpi-card::before{content:'';position:absolute;top:-20px;left:-20px;width:80px;height:80px;border-radius:50%;opacity:.08;}
+.kpi-card.revenue::before{background:var(--sky);}
+.kpi-card.expense::before{background:var(--danger);}
+.kpi-card.profit::before{background:var(--success);}
+.kpi-card.pending::before{background:var(--warning);}
+.kpi-card.billed::before{background:#7C3AED;}
+.kpi-icon{font-size:28px;margin-bottom:10px;}
+.kpi-num{font-size:28px;font-weight:800;color:var(--deep);line-height:1;}
+.kpi-label{font-size:12px;color:var(--mist);margin-top:4px;font-weight:500;}
+.kpi-change{font-size:11px;font-weight:700;margin-top:6px;display:flex;align-items:center;gap:4px;}
+.kpi-change.up{color:var(--success);}
+.kpi-change.down{color:var(--danger);}
+.kpi-bar{height:4px;border-radius:2px;margin-top:10px;background:var(--ice);}
+.kpi-bar-fill{height:100%;border-radius:2px;}
+.revenue .kpi-bar-fill{background:var(--sky);}
+.expense .kpi-bar-fill{background:var(--danger);}
+.profit .kpi-bar-fill{background:var(--success);}
+.pending .kpi-bar-fill{background:var(--warning);}
+
+/* CHART AREA */
+.charts-row{display:grid;grid-template-columns:2fr 1fr;gap:16px;padding:16px 22px 0;}
+.chart-card{background:#fff;border-radius:16px;padding:18px 20px;box-shadow:0 2px 12px rgba(0,0,0,.05);min-width:0;}
+/* عناصر الشبكة تأخذ افتراضيًا أدنى عرض لمحتواها، فرسمٌ بيانيّ عريض
+   يمدّ العمود ويمدّ الصفحة كلها. min-width:0 يسمح لها بالانكماش. */
+.charts-row > *,.tables-row > *,.kpi-row > *{min-width:0;}
+.chart-title{font-size:14px;font-weight:700;color:var(--deep);margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;}
+.chart-legend{display:flex;gap:14px;}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--mist);}
+.legend-dot{width:10px;height:10px;border-radius:50%;}
+
+/* BAR CHART */
+.bar-chart{display:flex;align-items:flex-end;gap:6px;height:140px;}
+.bar-group{display:flex;gap:3px;align-items:flex-end;flex:1;}
+.bar{border-radius:4px 4px 0 0;min-width:12px;transition:all .3s;cursor:pointer;position:relative;}
+.bar:hover::after{content:attr(data-val);position:absolute;top:-22px;right:50%;transform:translateX(50%);background:var(--deep);color:#fff;font-size:10px;padding:2px 6px;border-radius:4px;white-space:nowrap;font-family:'Tajawal',sans-serif;}
+.bar-label{font-size:10px;color:var(--mist);text-align:center;margin-top:4px;}
+.bar-chart-wrap{display:flex;flex-direction:column;min-width:0;overflow-x:auto;
+  -webkit-overflow-scrolling:touch;scrollbar-width:thin;}
+/* الأعمدة لها حدّ أدنى 12px، فإن ضاقت الشاشة انزلق الرسم داخل بطاقته
+   بدل أن يدفع الصفحة أفقيًا ويخفي المحتوى خلف حافة الجوال. */
+.bar-chart,.bar-x-labels{min-width:max-content;}
+.bar-x-labels{display:flex;gap:6px;padding-top:4px;}
+.bar-x-label{flex:1;text-align:center;font-size:10px;color:var(--mist);}
+
+/* DONUT */
+.donut-wrap{display:flex;flex-direction:column;align-items:center;}
+.donut-svg{width:130px;height:130px;margin-bottom:12px;}
+.donut-legend{width:100%;}
+.donut-item{display:flex;align-items:center;justify-content:space-between;padding:5px 0;font-size:12px;border-bottom:1px solid var(--ice);}
+.donut-item:last-child{border-bottom:none;}
+.donut-dot{width:10px;height:10px;border-radius:3px;margin-left:6px;}
+.donut-pct{font-weight:700;color:var(--deep);}
+
+/* TABLES ROW */
+.tables-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:16px 22px 30px;}
+.table-card{background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,.05);overflow:hidden;}
+.table-hdr{padding:14px 18px;background:var(--frost);border-bottom:1.5px solid var(--ice);display:flex;align-items:center;justify-content:space-between;}
+.table-hdr h3{font-size:14px;font-weight:700;color:var(--deep);}
+.see-all{font-size:11px;color:var(--sky);font-weight:600;cursor:pointer;border:none;background:none;}
+.tbl{width:100%;border-collapse:collapse;}
+.tbl th{padding:9px 14px;text-align:right;font-size:11px;font-weight:700;color:var(--mist);border-bottom:1px solid var(--ice);}
+.tbl td{padding:9px 14px;font-size:13px;border-bottom:1px solid #F8FAFC;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tr:hover td{background:var(--frost);}
+.amount-in{color:var(--success);font-weight:700;}
+.amount-out{color:var(--danger);font-weight:700;}
+.badge-paid{background:#D1FAE5;color:#065F46;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;}
+.badge-pend{background:#FEF3C7;color:#92400E;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(12,59,94,.45);z-index:500;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px);}
+.modal-overlay.open{display:flex;}
+.modal{background:#fff;border-radius:20px;width:100%;max-width:460px;box-shadow:0 20px 60px rgba(12,59,94,.25);animation:slideUp .3s cubic-bezier(.34,1.56,.64,1);}
+@keyframes slideUp{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-hdr{padding:18px 22px 14px;background:linear-gradient(90deg,var(--frost),var(--ice));border-bottom:1.5px solid rgba(14,165,233,.12);display:flex;align-items:center;justify-content:space-between;}
+.modal-hdr h3{font-size:16px;font-weight:800;color:var(--deep);}
+.modal-close{width:28px;height:28px;border-radius:50%;border:none;background:#E2E8F0;color:var(--slate);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.modal-close:hover{background:var(--danger);color:#fff;}
+.modal-body{padding:20px 22px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.form-group{margin-bottom:12px;}
+.form-group label{display:block;font-size:12px;font-weight:700;color:var(--slate);margin-bottom:5px;}
+.req{color:var(--danger);}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:9px 12px;border:1.5px solid #E2E8F0;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:14px;color:var(--slate);background:var(--frost);outline:none;transition:all .2s;direction:rtl;}
+.form-group input:focus,.form-group select:focus{border-color:var(--sky);background:#fff;box-shadow:0 0 0 3px rgba(14,165,233,.1);}
+.type-toggle{display:flex;gap:8px;margin-bottom:16px;}
+.type-btn{flex:1;padding:10px;border-radius:10px;border:2px solid #E2E8F0;background:#fff;font-family:'Tajawal',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;text-align:center;}
+.type-btn.income.sel{border-color:var(--success);background:#D1FAE5;color:var(--success);}
+.type-btn.expense.sel{border-color:var(--danger);background:#FEE2E2;color:var(--danger);}
+.modal-footer{padding:14px 22px;border-top:1px solid #F1F5F9;display:flex;gap:10px;justify-content:flex-end;}
+.btn-cancel{padding:9px 18px;border:1.5px solid #E2E8F0;border-radius:9px;background:#fff;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:600;color:var(--slate);cursor:pointer;}
+.btn-save{padding:9px 24px;border:none;border-radius:9px;background:linear-gradient(90deg,var(--deep),var(--sky));color:#fff;font-family:'Tajawal',sans-serif;font-size:14px;font-weight:700;cursor:pointer;}
+
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--deep);color:#fff;padding:10px 22px;border-radius:10px;font-size:13px;font-weight:600;transition:transform .3s;z-index:999;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+/* تنبيه المستحقات */
+.due-alert-bar{background:linear-gradient(90deg,#FEF3C7,#FFFBEB);border:1.5px solid #FDE68A;border-radius:14px;padding:14px 18px;margin:16px 22px 0;display:none;align-items:center;gap:12px;justify-content:space-between;}
+.due-alert-bar.show{display:flex;}
+.due-alert-text{font-size:13px;font-weight:700;color:#92400E;}
+.due-alert-btn{padding:7px 14px;background:#F59E0B;color:#fff;border:none;border-radius:8px;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer;}
+
+/* قسم الذمم المدينة */
+.receivables-section{background:#fff;border-radius:16px;margin:16px 22px 0;box-shadow:0 2px 12px rgba(0,0,0,.05);overflow:hidden;}
+.receivables-header{padding:14px 18px;background:linear-gradient(90deg,#FEF9C3,#FFFBEB);border-bottom:1.5px solid #FDE68A;display:flex;align-items:center;justify-content:space-between;}
+.receivables-header h3{font-size:14px;font-weight:800;color:#92400E;}
+.rec-kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:#F1F5F9;}
+.rec-kpi{background:#fff;padding:12px 14px;text-align:center;}
+.rec-kpi .rn{font-size:18px;font-weight:800;color:var(--deep);}
+.rec-kpi .rl{font-size:10px;color:var(--mist);margin-top:2px;}
+.rec-kpi.today-due .rn{color:var(--danger);}
+.rec-kpi.overdue .rn{color:#DC2626;}
+.rec-list{max-height:420px;overflow-y:auto;}
+.rec-row{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid #F8FAFC;cursor:pointer;transition:background .15s;gap:10px;}
+.rec-row:hover{background:#FFFBEB;}
+.rec-row.overdue-row{border-right:3px solid var(--danger);}
+.rec-row.today-row{border-right:3px solid #F59E0B;}
+.rec-row.upcoming-row{border-right:3px solid var(--sky);}
+.rec-row.open-row{border-right:3px solid var(--mist);}
+.rec-client{font-size:13px;font-weight:700;color:var(--deep);}
+.rec-desc{font-size:11px;color:var(--mist);margin-top:2px;}
+.rec-amount{font-size:14px;font-weight:800;color:var(--danger);text-align:left;white-space:nowrap;}
+.rec-remaining{font-size:10px;color:var(--mist);text-align:left;}
+.badge-deferred{background:#FEF3C7;color:#92400E;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;}
+.badge-partial{background:#DBEAFE;color:#1E40AF;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;}
+.badge-unpaid{background:#FEE2E2;color:#991B1B;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;}
+.badge-paid{background:#D1FAE5;color:#065F46;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;}
+.badge-pend{background:#FEF3C7;color:#92400E;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;}
+
+/* Modal الذمم */
+.rec-modal .modal{max-width:520px;}
+.rec-detail-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #F8FAFC;font-size:13px;}
+.rec-detail-row:last-child{border-bottom:none;}
+.rec-detail-label{color:var(--mist);font-size:12px;}
+.rec-detail-val{font-weight:700;color:var(--deep);}
+.pay-history{background:#F8FAFC;border-radius:10px;padding:10px 12px;margin-top:10px;}
+.pay-history-title{font-size:11px;font-weight:700;color:var(--mist);margin-bottom:6px;}
+.pay-hist-row{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px dashed #E2E8F0;}
+.pay-hist-row:last-child{border-bottom:none;}
+.rec-modal-btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
+.rec-modal-btns button,.rec-modal-btns a{flex:1;padding:9px;border:none;border-radius:9px;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer;text-align:center;text-decoration:none;min-width:100px;}
+.btn-register-pay{background:#D1FAE5;color:#065F46;}
+.btn-wa-collect{background:#25D366;color:#fff;}
+.btn-change-due{background:#EFF6FF;color:#1E40AF;}
+.btn-settle{background:#FEF9C3;color:#92400E;}
+.btn-cancel-rec{background:#FEE2E2;color:#991B1B;}
+.btn-delete-final{background:#7F1D1D;color:#fff;}
+.btn-edit-amount{background:#EDE9FE;color:#5B21B6;}
+.amt-hist-row{display:block;font-size:12px;padding:5px 0;border-bottom:1px dashed #E2E8F0;}
+.amt-hist-row:last-child{border-bottom:none;}
+
+/* فلتر إدخالات الفني */
+.tech-filter-bar{display:flex;align-items:center;gap:10px;margin:12px 22px 0;flex-wrap:wrap;}
+.tech-filter-btn{padding:8px 16px;border:1.5px solid #E2E8F0;border-radius:10px;background:#fff;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer;color:var(--mist);transition:all .2s;}
+.tech-filter-btn.active{background:var(--purple,#7C3AED);color:#fff;border-color:var(--purple,#7C3AED);}
+.badge-tech{background:#EDE9FE;color:#5B21B6;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;margin-right:4px;}
+
+/* ملخص إدخالات الفني */
+.tech-summary{display:none;background:linear-gradient(90deg,#EDE9FE,#F5F3FF);border:1.5px solid #C4B5FD;border-radius:14px;padding:14px 18px;margin:12px 22px 0;}
+.tech-summary.show{display:flex;gap:16px;flex-wrap:wrap;align-items:center;}
+.tech-sum-item{text-align:center;}
+.tech-sum-num{font-size:18px;font-weight:800;color:#5B21B6;}
+.tech-sum-lbl{font-size:11px;color:#6D28D9;}
+
+/* قسم البيانات القديمة */
+.legacy-section{background:#fff;border-radius:16px;margin:16px 22px 0;box-shadow:0 2px 8px rgba(0,0,0,.05);overflow:hidden;display:none;}
+.legacy-section.show{display:block;}
+.legacy-header{padding:12px 18px;background:linear-gradient(90deg,#FEF3C7,#FFFBEB);border-bottom:1.5px solid #FDE68A;display:flex;align-items:center;justify-content:space-between;}
+.legacy-header h3{font-size:13px;font-weight:800;color:#92400E;}
+.legacy-header small{font-size:11px;color:#B45309;}
+.legacy-row{display:flex;align-items:center;justify-content:space-between;padding:11px 18px;border-bottom:1px solid #FFFBEB;gap:10px;}
+.legacy-row:last-child{border-bottom:none;}
+.legacy-client{font-size:13px;font-weight:700;color:var(--deep);}
+.legacy-desc{font-size:11px;color:var(--mist);margin-top:2px;}
+.legacy-amount{font-size:13px;font-weight:800;color:var(--warning);white-space:nowrap;}
+.btn-confirm-legacy{padding:5px 11px;background:#FEF9C3;color:#92400E;border:1px solid #FDE68A;border-radius:8px;font-family:'Tajawal',sans-serif;font-size:11px;font-weight:700;cursor:pointer;}
+.badge-legacy{background:#FEF3C7;color:#92400E;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;}
+
+/* مصدر القيد في التفاصيل */
+.source-badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;margin-top:4px;}
+.source-tech{background:#EDE9FE;color:#5B21B6;}
+.source-import{background:#DBEAFE;color:#1E40AF;}
+.source-manual{background:#F1F5F9;color:#475569;}
+.source-unknown{background:#F8FAFC;color:#94A3B8;}
+
+/* Modal تأكيد السجل القديم */
+.confirm-legacy-modal .modal{max-width:420px;}
+
+/* Modal تأجيل */
+.due-fields{display:none;margin-top:10px;}
+.due-fields.show{display:block;}
+
+@media(max-width:900px){
+  .sidebar{display:none;}.main{margin-right:0;}
+  .kpi-row{grid-template-columns:1fr 1fr;}
+  .kpi-row .kpi-card.billed{grid-column:1 / -1;}
+  .charts-row,.tables-row{grid-template-columns:1fr;}
+  .period-tabs{display:none;}
+  .rec-kpi-row{grid-template-columns:repeat(3,1fr);}
+}
+
+.lang-btn{padding:7px 14px;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);border-radius:8px;color:#fff;font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;}
+.lang-btn:hover{background:rgba(255,255,255,.25);}
+</style>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+<script src="atwad-admin-auth.js"></script>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sidebar-logo"><div class="icon">❄️</div><div><h1 id="nav-brand">أطواد</h1><p id="nav-brandsub">لصيانة المكيفات</p></div></div>
+  <div class="nav-section">
+    <div class="nav-label">القائمة</div>
+    <div class="nav-item" id="nav-clients" onclick="location.href='atwad-customers.html'"><span class="nav-icon">👥</span> العملاء</div>
+    <div class="nav-item" id="nav-appts" onclick="location.href='atwad-appointments.html'"><span class="nav-icon">📅</span> المواعيد</div>
+    <div class="nav-item" id="nav-wo" onclick="location.href='atwad-workorders.html'"><span class="nav-icon">🔧</span> أوامر العمل</div>
+    <div class="nav-item active" id="nav-finance" onclick="location.href='atwad-finance.html'"><span class="nav-icon">💰</span> الإدارة المالية</div>
+    <div class="nav-item" id="nav-reports" onclick="location.href='atwad-reports.html'"><span class="nav-icon">📊</span> التقارير</div>
+    <div class="nav-item" id="nav-attention" onclick="location.href='atwad-attention.html'"><span class="nav-icon">🎯</span> ما يحتاج قرارك</div>
+    <div class="nav-item" id="nav-fix" onclick="location.href='atwad-fix-entry.html'"><span class="nav-icon">🩹</span> تصحيح قيد</div>
+    <div class="nav-item" id="nav-backlog" onclick="location.href='atwad-backlog.html'"><span class="nav-icon">📦</span> المتراكم</div>
+    <div class="nav-item" id="nav-techlog" onclick="location.href='atwad-techlog.html'"><span class="nav-icon">📋</span> سجلّ الفني</div>
+  </div>
+  <div class="nav-section" style="margin-top:auto;border-top:1px solid rgba(255,255,255,.08);padding-top:10px;">
+    <div class="nav-item" id="nav-settings" onclick="alert('Settings — Coming Soon / قريباً ✨')"><span class="nav-icon">⚙️</span> الإعدادات</div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <div><div class="topbar-title" data-lang="title">💰 الإدارة المالية</div><div class="topbar-sub" id="periodLabel">هذا الشهر</div></div>
+    <div class="topbar-actions"><button class="lang-btn" id="langBtn" onclick="toggleLang()">🌐 EN</button>
+      <div class="period-tabs">
+        <button class="period-tab" onclick="setPeriod('today',this)">اليوم</button>
+        <button class="period-tab active" onclick="setPeriod('month',this)">هذا الشهر</button>
+        <button class="period-tab" onclick="setPeriod('year',this)">هذه السنة</button>
+        <button class="period-tab" onclick="setPeriod('all',this)">الكل</button>
+      </div>
+      <button onclick="importFinanceFromFirebase()" id="importFinBtn" style="background:#fff;border:1.5px solid #10B981;color:#10B981;border-radius:10px;padding:9px 16px;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer;" data-lang="importBtn">📥 استيراد إيرادات الحجوزات</button>
+      <button class="btn-add" onclick="openModal()" data-lang="addBtn">＋ إضافة قيد</button>
+    </div>
+  </div>
+
+  <!-- فلتر إدخالات الفني -->
+  <div class="tech-filter-bar">
+    <span style="font-size:12px;font-weight:700;color:var(--mist);">🔍 عرض:</span>
+    <button class="tech-filter-btn active" id="filterAll" onclick="setTechFilter('all',this)">الكل</button>
+    <button class="tech-filter-btn" id="filterTech" onclick="setTechFilter('technician',this)">👷 إدخالات الفني</button>
+    <button class="tech-filter-btn" id="filterLegacy" onclick="setTechFilter('legacy',this)">📂 بيانات قديمة تحتاج مراجعة</button>
+  </div>
+
+  <!-- ملخص إدخالات الفني -->
+  <div class="tech-summary" id="techSummary">
+    <div class="tech-sum-item"><div class="tech-sum-num" id="tSumIncome">0 ﷼</div><div class="tech-sum-lbl">إيرادات الفني</div></div>
+    <div class="tech-sum-item"><div class="tech-sum-num" id="tSumExpense" style="color:var(--danger);">0 ﷼</div><div class="tech-sum-lbl">مصروفات الفني</div></div>
+    <div class="tech-sum-item"><div class="tech-sum-num" id="tSumNet">0 ﷼</div><div class="tech-sum-lbl">الصافي</div></div>
+    <div style="font-size:11px;color:#6D28D9;margin-right:auto;">⚠️ هذا عرض للتدقيق فقط — المبالغ محسوبة في الإيرادات والمصروفات الإجمالية.</div>
+  </div>
+
+  <!-- تنبيه المستحقات -->
+  <div class="due-alert-bar" id="dueAlertBar">
+    <div class="due-alert-text" id="dueAlertText">🔔 لديك مبالغ مستحقة للتحصيل</div>
+    <button class="due-alert-btn" onclick="scrollToReceivables()">عرض المستحقات</button>
+  </div>
+
+  <!-- KPI -->
+  <div class="kpi-row">
+    <div class="kpi-card revenue">
+      <div class="kpi-icon">💵</div>
+      <div class="kpi-num" id="kRevenue">0</div>
+      <div class="kpi-label">المحصّل نقداً (ريال)</div>
+      <div class="kpi-change up" id="kRevenueChange">—</div>
+      <div class="kpi-bar"><div class="kpi-bar-fill" id="kRevenueBar" style="width:0%"></div></div>
+    </div>
+    <div class="kpi-card expense">
+      <div class="kpi-icon">💸</div>
+      <div class="kpi-num" id="kExpense">0</div>
+      <div class="kpi-label">إجمالي المصاريف (ريال)</div>
+      <div class="kpi-change" id="kExpenseChange">—</div>
+      <div class="kpi-bar"><div class="kpi-bar-fill" id="kExpenseBar" style="width:0%;background:var(--danger)"></div></div>
+    </div>
+    <div class="kpi-card profit">
+      <div class="kpi-icon">📈</div>
+      <div class="kpi-num" id="kProfit">0</div>
+      <div class="kpi-label">صافي الربح (ريال)</div>
+      <div class="kpi-change up" id="kProfitChange">—</div>
+      <div class="kpi-bar"><div class="kpi-bar-fill" id="kProfitBar" style="width:0%;background:var(--success)"></div></div>
+    </div>
+    <div class="kpi-card billed">
+      <div class="kpi-icon">🧾</div>
+      <div class="kpi-num" id="kBilled">0</div>
+      <div class="kpi-label">إجمالي المبيعات (ريال)</div>
+      <div class="kpi-change" id="kBilledRate" style="color:#7C3AED;">—</div>
+      <div class="kpi-bar"><div class="kpi-bar-fill" id="kBilledBar" style="width:0%;background:#7C3AED"></div></div>
+    </div>
+    <div class="kpi-card pending">
+      <div class="kpi-icon">⚠️</div>
+      <div class="kpi-num" id="kPending">0</div>
+      <div class="kpi-label">الذمم المدينة (ريال)</div>
+      <div class="kpi-change" id="kPendingCount" style="color:var(--warning)">—</div>
+      <div class="kpi-bar"><div class="kpi-bar-fill" id="kPendingBar" style="width:0%;background:var(--warning)"></div></div>
+    </div>
+  </div>
+
+  <!-- قسم الذمم المدينة -->
+  <div class="receivables-section" id="receivablesSection">
+    <div class="receivables-header">
+      <h3>⚠️ المبالغ المستحقة / الذمم المدينة</h3>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button onclick="openLegacyReview()" style="padding:5px 12px;background:#FEF9C3;color:#92400E;border:1px solid #FDE68A;border-radius:8px;font-family:'Tajawal',sans-serif;font-size:11px;font-weight:700;cursor:pointer;">📂 مراجعة القديمة</button>
+        <span id="recTotalBadge" style="font-size:12px;font-weight:700;color:#92400E;"></span>
+      </div>
+    </div>
+    <div class="rec-kpi-row">
+      <div class="rec-kpi overdue-row"><div class="rn" id="recOverdue">0</div><div class="rl">🔴 متأخرة</div></div>
+      <div class="rec-kpi today-due"><div class="rn" id="recToday">0</div><div class="rl">🟡 اليوم</div></div>
+      <div class="rec-kpi"><div class="rn" id="recTomorrow">0</div><div class="rl">🔵 غداً</div></div>
+      <div class="rec-kpi"><div class="rn" id="recUpcoming">0</div><div class="rl">📅 قادمة</div></div>
+      <div class="rec-kpi"><div class="rn" id="recOpen">0</div><div class="rl">⬜ بدون تاريخ</div></div>
+    </div>
+    <div class="rec-list" id="recList">
+      <div style="text-align:center;padding:30px;color:var(--mist);">لا توجد ذمم مدينة ✅</div>
+    </div>
+  </div>
+
+  <!-- CHARTS -->
+  <div class="charts-row">
+    <div class="chart-card">
+      <div class="chart-title">
+        <span>📊 الإيرادات والمصاريف اليومية</span>
+        <div class="chart-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--sky)"></div>إيرادات</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--danger)"></div>مصاريف</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--success)"></div>أرباح</div>
+        </div>
+      </div>
+      <div class="bar-chart-wrap">
+        <div class="bar-chart" id="barChart"></div>
+        <div class="bar-x-labels" id="barLabels"></div>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">🥧 توزيع المصاريف</div>
+      <div class="donut-wrap">
+        <svg class="donut-svg" viewBox="0 0 36 36" id="donutSVG"></svg>
+        <div class="donut-legend" id="donutLegend"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLES -->
+  <div class="tables-row">
+    <div class="table-card">
+      <div class="table-hdr"><h3 data-lang="incTable">💵 آخر الإيرادات</h3><button class="see-all" onclick="showAll('income')">عرض الكل</button></div>
+      <table class="tbl">
+        <thead><tr><th>العميل</th><th>الخدمة</th><th>المبلغ</th><th>الحالة</th></tr></thead>
+        <tbody id="incomeTable"></tbody>
+      </table>
+    </div>
+    <div class="table-card">
+      <div class="table-hdr"><h3 data-lang="expTable">💸 آخر المصاريف</h3><button class="see-all" onclick="showAll('expense')">عرض الكل</button></div>
+      <table class="tbl">
+        <thead><tr><th>البيان</th><th>الفئة</th><th>المبلغ</th><th>التاريخ</th></tr></thead>
+        <tbody id="expenseTable"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ADD MODAL -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h3 id="modalTitle">➕ إضافة قيد مالي</h3>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="type-toggle">
+        <button class="type-btn income" id="typeIncome" onclick="selectType('income')">💵 إيراد</button>
+        <button class="type-btn expense" id="typeExpense" onclick="selectType('expense')">💸 مصروف</button>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>المبلغ (ريال) <span class="req">*</span></label>
+          <input type="number" id="f_amount" placeholder="0" min="0">
+        </div>
+        <div class="form-group">
+          <label>التاريخ <span class="req">*</span></label>
+          <input type="date" id="f_date">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>البيان / الوصف <span class="req">*</span></label>
+        <input type="text" id="f_desc" placeholder="مثال: تنظيف مكيف - أم سعود">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>الفئة</label>
+          <select id="f_category">
+            <option value="خدمة">خدمة صيانة</option>
+            <option value="قطع غيار">قطع غيار</option>
+            <option value="وقود">وقود</option>
+            <option value="رواتب">رواتب</option>
+            <option value="مكافآت">مكافآت الفنيين</option>
+            <option value="إيجار">إيجار</option>
+            <option value="تأمين">تأمين</option>
+            <option value="إعلانات">إعلانات</option>
+            <option value="صيانة سيارة">صيانة سيارة</option>
+            <option value="طعام">طعام</option>
+            <option value="أخرى">أخرى</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>طريقة الدفع</label>
+          <select id="f_method">
+            <option value="كاش">💵 كاش</option>
+            <option value="تحويل">🏦 تحويل</option>
+            <option value="مدى">💳 مدى</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>اسم العميل / الجهة</label>
+          <input type="text" id="f_party" placeholder="اختياري">
+        </div>
+        <div class="form-group" id="statusGroup">
+          <label>حالة الدفع</label>
+          <select id="f_status" onchange="onStatusChange(this.value)">
+            <option value="مدفوع">✅ مدفوع</option>
+            <option value="مؤجل">⏳ مؤجل</option>
+            <option value="مدفوع جزئياً">💛 مدفوع جزئياً</option>
+            <option value="غير مدفوع">❌ غير مدفوع</option>
+            <option value="معلق">⏸ معلق</option>
+          </select>
+        </div>
+      </div>
+      <!-- حقول التأجيل — تظهر عند اختيار مؤجل أو غير مدفوع -->
+      <div class="due-fields" id="dueFields">
+        <div class="form-row">
+          <div class="form-group">
+            <label>موعد السداد المتوقع</label>
+            <select id="f_due_type" onchange="onDueTypeChange(this.value)">
+              <option value="specific">📅 تاريخ محدد</option>
+              <option value="end_of_month">🗓 نهاية الشهر</option>
+              <option value="salary">💼 عند نزول الراتب</option>
+              <option value="open">❓ موعد غير محدد</option>
+            </select>
+          </div>
+          <div class="form-group" id="dueDateGroup">
+            <label>التاريخ</label>
+            <input type="date" id="f_due_date">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>ملاحظة التأجيل</label>
+          <input type="text" id="f_payment_note" placeholder="مثال: طلب العميل السداد عند نزول الراتب">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">إلغاء</button>
+      <button class="btn-save" onclick="saveEntry()">💾 حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- قسم البيانات القديمة تحتاج مراجعة -->
+<div class="legacy-section" id="legacySection">
+  <div class="legacy-header">
+    <h3>📂 بيانات قديمة تحتاج مراجعة</h3>
+    <small>هذه السجلات ليست ذمماً مؤكدة — يرجى مراجعتها وتأكيد ما هو مستحق فعلياً.</small>
+  </div>
+  <div id="legacyList"></div>
+</div>
+
+<!-- Modal تأكيد السجل القديم كمستحق -->
+<div class="modal-overlay confirm-legacy-modal" id="confirmLegacyModal">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-hdr">
+      <h3>✅ تأكيد كمستحق حقيقي</h3>
+      <button class="modal-close" onclick="closeConfirmLegacy()">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="confirmLegacyInfo" style="background:#F8FAFC;border-radius:10px;padding:10px 12px;margin-bottom:14px;font-size:13px;color:var(--deep);"></div>
+      <div class="form-group">
+        <label>حالة الدفع</label>
+        <select id="cl_status" onchange="onClStatusChange(this.value)">
+          <option value="مؤجل">⏳ مؤجل</option>
+          <option value="غير مدفوع">❌ غير مدفوع</option>
+          <option value="مدفوع جزئياً">💛 مدفوع جزئياً</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>موعد السداد المتوقع</label>
+        <select id="cl_due_type" onchange="onClDueTypeChange(this.value)">
+          <option value="specific">📅 تاريخ محدد</option>
+          <option value="end_of_month">🗓 نهاية الشهر</option>
+          <option value="salary">💼 عند نزول الراتب</option>
+          <option value="open">❓ موعد غير محدد</option>
+        </select>
+      </div>
+      <div class="form-group" id="cl_date_group">
+        <label>التاريخ</label>
+        <input type="date" id="cl_due_date">
+      </div>
+      <div class="form-group">
+        <label>ملاحظة</label>
+        <input type="text" id="cl_note" placeholder="سبب أو ملاحظة التأجيل">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeConfirmLegacy()">إلغاء</button>
+      <button class="btn-save" onclick="saveLegacyConfirm()">✅ تأكيد الحفظ</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Modal تفاصيل المستحق -->
+<div class="modal-overlay rec-modal" id="recDetailModal">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-hdr">
+      <h3>📋 تفاصيل المستحق</h3>
+      <button class="modal-close" onclick="closeRecModal()">×</button>
+    </div>
+    <div class="modal-body" id="recDetailBody"></div>
+  </div>
+</div>
+
+<!-- Modal تعديل المبلغ -->
+<div class="modal-overlay" id="amountModal">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-hdr">
+      <h3>✏️ تعديل مبلغ المستحق</h3>
+      <button class="modal-close" onclick="closeAmountModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="amt_info" style="font-size:13px;margin-bottom:12px;line-height:1.9;"></div>
+      <div class="form-group">
+        <label>المبلغ الجديد لإجمالي الفاتورة (ريال) *</label>
+        <input type="number" id="amt_new" placeholder="0" min="0" step="any" oninput="previewAmountEdit()">
+        <small id="amt_hint" style="font-size:11px;color:var(--mist);margin-top:4px;display:block;"></small>
+      </div>
+      <div class="form-group">
+        <label>سبب التعديل *</label>
+        <input type="text" id="amt_reason" placeholder="مثال: خصم متفق عليه / خطأ في عدد الوحدات">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeAmountModal()">إلغاء</button>
+      <button class="btn-save" id="amt_save_btn" onclick="confirmAmountEdit()">💾 حفظ التعديل</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal تسجيل سداد -->
+<div class="modal-overlay pay-modal" id="payModal">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-hdr">
+      <h3>💵 تسجيل سداد</h3>
+      <button class="modal-close" onclick="closePayModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>المبلغ المحصل (ريال) *</label>
+        <input type="number" id="pay_amount" placeholder="0" min="0">
+        <small id="pay_max_hint" style="font-size:11px;color:var(--mist);margin-top:4px;display:block;"></small>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>تاريخ السداد *</label>
+          <input type="date" id="pay_date">
+        </div>
+        <div class="form-group">
+          <label>طريقة الدفع</label>
+          <select id="pay_method">
+            <option value="كاش">💵 كاش</option>
+            <option value="تحويل">🏦 تحويل</option>
+            <option value="مدى">💳 مدى</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>ملاحظة</label>
+        <input type="text" id="pay_note" placeholder="اختياري">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closePayModal()">إلغاء</button>
+      <button class="btn-save" onclick="confirmPayment()">✅ تسجيل السداد</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal موعد السداد -->
+<div class="modal-overlay" id="dueModal">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-hdr">
+      <h3>📅 موعد السداد</h3>
+      <button class="modal-close" onclick="closeDueModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>نوع الموعد</label>
+        <select id="due_type_edit" onchange="onDueModalTypeChange(this.value)">
+          <option value="specific">📅 تاريخ محدد</option>
+          <option value="end_of_month">🗓 نهاية الشهر</option>
+          <option value="salary">💼 عند نزول الراتب</option>
+          <option value="open">❓ موعد غير محدد</option>
+        </select>
+      </div>
+      <div class="form-group" id="dueDateEditGroup">
+        <label>التاريخ</label>
+        <input type="date" id="due_date_edit">
+      </div>
+      <div class="form-group">
+        <label>ملاحظة</label>
+        <input type="text" id="due_note_edit" placeholder="مثال: وعد بالسداد بعد أسبوع">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeDueModal()">إلغاء</button>
+      <button class="btn-save" onclick="saveDueDate()">💾 حفظ الموعد</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== DATA =====
+let entries = JSON.parse(localStorage.getItem('atwad_finance') || '[]');
+let period = 'month';
+let entryType = 'income';
+
+// ============================================================
+// normalizeStatus — توافق البيانات القديمة
+// 'معلق' القديم = 'غير مدفوع' في المنطق الجديد
+// ============================================================
+function normalizePayStatus(s) {
+  if(s === 'معلق') return 'غير مدفوع';
+  return s || 'مدفوع';
+}
+
+// حساب المبلغ المحصل فعلياً من سجل واحد
+function getCollectedAmount(e) {
+  var s = normalizePayStatus(e.status);
+  if(s === 'مدفوع') return parseFloat(e.amount) || 0;
+  if(s === 'مدفوع جزئياً') {
+    // من مصفوفة الدفعات إن وجدت، وإلا من paidAmount
+    if(Array.isArray(e.payments) && e.payments.length)
+      return e.payments.reduce(function(sum,p){ return sum + (parseFloat(p.amount)||0); }, 0);
+    return parseFloat(e.paidAmount) || 0;
+  }
+  return 0; // مؤجل / غير مدفوع → لا يُحسب في الدخل
+}
+
+// تصنيف الاستحقاق
+function getDueCategory(e) {
+  var todayStr = today();
+  var tomorrowStr = new Date(Date.now()+86400000).toISOString().split('T')[0];
+  var due = e.dueDate || '';
+  if(!due) return 'open';
+  if(due < todayStr) return 'overdue';
+  if(due === todayStr) return 'today';
+  if(due === tomorrowStr) return 'tomorrow';
+  return 'upcoming';
+}
+
+// حساب dueDate من dueType
+function calcDueDate(dueType) {
+  var now = new Date();
+  if(dueType === 'end_of_month') {
+    var last = new Date(now.getFullYear(), now.getMonth()+1, 0);
+    return last.toISOString().split('T')[0];
+  }
+  return '';
+}
+
+// ===== FIREBASE =====
+var db = null;
+try {
+  if(!firebase.apps.length) firebase.initializeApp({databaseURL:"https://atwad-booking-default-rtdb.firebaseio.com"});
+  db = firebase.database();
+} catch(e){ console.log('Firebase:',e); }
+
+function syncFromFirebase() {
+  if(!db) return;
+  db.ref('transactions').on('value', function(snap) {
+    var fbData = [];
+    snap.forEach(function(child) {
+      fbData.push(Object.assign({}, child.val(), {_fbKey: child.key}));
+    });
+    if(fbData.length > 0) {
+      entries = fbData;
+      localStorage.setItem('atwad_finance', JSON.stringify(entries));
+    }
+    renderAll();
+  });
+}
+
+function saveData(){
+  localStorage.setItem('atwad_finance', JSON.stringify(entries));
+  if(db) {
+    entries.forEach(function(e) {
+      var copy = Object.assign({}, e); delete copy._fbKey;
+      if(e._fbKey) {
+        db.ref('transactions/' + e._fbKey).set(copy);
+      } else {
+        var ref = db.ref('transactions').push();
+        e._fbKey = ref.key;
+        ref.set(copy);
+      }
+    });
+  }
+}
+
+function saveSingleEntry(e) {
+  localStorage.setItem('atwad_finance', JSON.stringify(entries));
+  if(db && e._fbKey) {
+    var copy = Object.assign({}, e); delete copy._fbKey;
+    db.ref('transactions/' + e._fbKey).set(copy);
+  }
+}
+
+function today(){ return new Date().toISOString().split('T')[0]; }
+function genId(){ return 'F' + Date.now().toString().slice(-7); }
+function fmt(n){ return Number(n).toLocaleString('ar-SA-u-ca-gregory'); }
+function fmtDate(d){ try{ return new Date(d+'T00:00:00').toLocaleDateString('ar-SA-u-ca-gregory',{month:'short',day:'numeric'}); } catch(e){ return d||'—'; } }
+
+// ===== PERIOD FILTER =====
+function setPeriod(p, btn){
+  period = p;
+  document.querySelectorAll('.period-tab').forEach(function(b){ b.classList.remove('active'); });
+  if(btn) btn.classList.add('active');
+  var labels = {today:'اليوم',month:'هذا الشهر',year:'هذه السنة',all:'الكل'};
+  document.getElementById('periodLabel').textContent = labels[p]||'';
+  renderAll();
+}
+
+function filterByPeriod(arr){
+  var now = new Date(); var y = now.getFullYear(); var m = now.getMonth();
+  var todayStr = today();
+  return arr.filter(function(e){
+    var d = e.date||'';
+    if(period==='today') return d===todayStr;
+    if(period==='month') return d.startsWith(y+'-'+String(m+1).padStart(2,'0'));
+    if(period==='year') return d.startsWith(String(y));
+    return true;
+  });
+}
+
+// ===== KPIs =====
+function calcKPIs(){
+  var filtered = filterByPeriod(entries);
+  // القيد الملغى أو المسوّى خرج من الحساب — لا يدخل المبيعات ولا المصاريف
+  var live    = filtered.filter(function(e){ return e.status !== 'ملغي' && e.status !== 'مسوى'; });
+  var income  = live.filter(function(e){ return e.type==='income'; });
+  var expense = live.filter(function(e){ return e.type==='expense'; });
+
+  // الدخل المحصل فعلياً فقط
+  var revenue    = income.reduce(function(s,e){ return s + getCollectedAmount(e); }, 0);
+  var totalExp   = expense.reduce(function(s,e){ return s + (parseFloat(e.amount)||0); }, 0);
+  var profit     = revenue - totalExp;
+
+  // الذمم المدينة (الكل، ليس مقيداً بالفترة)
+  var receivables = entries.filter(isReceivable);
+  var pendingTotal = receivables.reduce(function(s,e){
+    var paid = getCollectedAmount(e);
+    return s + ((parseFloat(e.amount)||0) - paid);
+  }, 0);
+
+  // إجمالي المبيعات بالاستحقاق: كل ما فُوتر في الفترة، محصّلاً كان أو مؤجلاً
+  var billed = income.reduce(function(s,e){ return s + (parseFloat(e.amount)||0); }, 0);
+  var collectRate = billed > 0 ? Math.round(revenue / billed * 100) : 0;
+
+  var max = Math.max(revenue, billed, 1);
+  document.getElementById('kBilled').textContent     = fmt(billed) + ' ﷼';
+  document.getElementById('kBilledRate').textContent = billed > 0
+    ? ('حُصّل منها ' + collectRate + '٪') : '—';
+  document.getElementById('kBilledBar').style.width  = Math.min(100, billed/max*100) + '%';
+  document.getElementById('kRevenue').textContent    = fmt(revenue) + ' ﷼';
+  document.getElementById('kExpense').textContent    = fmt(totalExp) + ' ﷼';
+  document.getElementById('kProfit').textContent     = fmt(profit) + ' ﷼';
+  document.getElementById('kPending').textContent    = fmt(pendingTotal) + ' ﷼';
+  document.getElementById('kRevenueChange').textContent  = income.length + ' عملية';
+  document.getElementById('kExpenseChange').textContent  = expense.length + ' قيد';
+  document.getElementById('kProfitChange').textContent   = revenue>0 ? '↑ هامش ' + Math.round(profit/revenue*100) + '%' : '—';
+  document.getElementById('kPendingCount').textContent   = receivables.length + ' مستحق';
+  document.getElementById('kRevenueBar').style.width  = Math.min(100,revenue/max*100)+'%';
+  document.getElementById('kExpenseBar').style.width  = Math.min(100,totalExp/max*100)+'%';
+  document.getElementById('kProfitBar').style.width   = Math.min(100,Math.max(0,profit)/max*100)+'%';
+  document.getElementById('kPendingBar').style.width  = Math.min(100,pendingTotal/max*100)+'%';
+
+  renderReceivables(receivables);
+  renderDueAlert(receivables);
+
+  return {revenue, totalExp, profit, pendingTotal};
+}
+
+// ===== قسم الذمم المدينة =====
+function renderReceivables(receivables) {
+  var todayStr    = today();
+  var tomorrowStr = new Date(Date.now()+86400000).toISOString().split('T')[0];
+
+  var overdue  = receivables.filter(function(e){ return getDueCategory(e)==='overdue'; });
+  var todayDue = receivables.filter(function(e){ return getDueCategory(e)==='today'; });
+  var tomorrow = receivables.filter(function(e){ return getDueCategory(e)==='tomorrow'; });
+  var upcoming = receivables.filter(function(e){ return getDueCategory(e)==='upcoming'; });
+  var open     = receivables.filter(function(e){ return getDueCategory(e)==='open'; });
+
+  document.getElementById('recOverdue').textContent  = overdue.length;
+  document.getElementById('recToday').textContent    = todayDue.length;
+  document.getElementById('recTomorrow').textContent = tomorrow.length;
+  document.getElementById('recUpcoming').textContent = upcoming.length;
+  document.getElementById('recOpen').textContent     = open.length;
+
+  var total = receivables.reduce(function(s,e){
+    return s + ((parseFloat(e.amount)||0) - getCollectedAmount(e));
+  }, 0);
+  document.getElementById('recTotalBadge').textContent = 'الإجمالي: ' + fmt(total) + ' ﷼';
+
+  // ترتيب: متأخر → اليوم → غداً → قادم → بدون تاريخ
+  var ORDER = {overdue:0, today:1, tomorrow:2, upcoming:3, open:4};
+  var sorted = receivables.slice().sort(function(a,b){
+    return (ORDER[getDueCategory(a)]||4) - (ORDER[getDueCategory(b)]||4);
+  });
+
+  var list = document.getElementById('recList');
+  if(!sorted.length) {
+    list.innerHTML = '<div style="text-align:center;padding:30px;color:var(--mist);">لا توجد ذمم مدينة ✅</div>';
+    return;
+  }
+
+  var DUE_LABELS = {overdue:'🔴 متأخر', today:'🟡 مستحق اليوم', tomorrow:'🔵 غداً', upcoming:'📅 قادم', open:'⬜ بدون تاريخ'};
+  var STATUS_BADGES = {
+    'مؤجل':             '<span class="badge-deferred">مؤجل</span>',
+    'غير مدفوع':        '<span class="badge-unpaid">غير مدفوع</span>',
+    'مدفوع جزئياً':     '<span class="badge-partial">جزئي</span>',
+    'معلق':             '<span class="badge-unpaid">غير مدفوع</span>'
+  };
+
+  list.innerHTML = sorted.map(function(e) {
+    var remaining = (parseFloat(e.amount)||0) - getCollectedAmount(e);
+    var cat = getDueCategory(e);
+    var rowClass = cat + '-row';
+    var badge = STATUS_BADGES[normalizePayStatus(e.status)] || '';
+    var dueLabel = e.dueDate ? fmtDate(e.dueDate) : (DUE_LABELS[cat]||'');
+    return '<div class="rec-row '+rowClass+'" onclick="openRecDetail(\''+e._fbKey+'\')">' +
+      '<div>' +
+        '<div class="rec-client">'+(e.party||'—')+' '+badge+'</div>' +
+        '<div class="rec-desc">'+(e.desc||'')+(dueLabel ? ' · '+dueLabel : '')+'</div>' +
+        (e.lastReminderAt ? '<div style="font-size:10px;color:var(--mist);">آخر فتح رسالة تذكير: '+fmtDate(e.lastReminderAt.split('T')[0])+'</div>' : '') +
+      '</div>' +
+      '<div>' +
+        '<div class="rec-amount">'+fmt(remaining)+' ﷼</div>' +
+        '<div class="rec-remaining">من '+fmt(e.amount)+' ﷼</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+// ===== تنبيه المستحقات =====
+function renderDueAlert(receivables) {
+  var todayStr = today();
+  var todayDue = receivables.filter(function(e){ return e.dueDate === todayStr; });
+  var overdue  = receivables.filter(function(e){ return e.dueDate && e.dueDate < todayStr; });
+  var bar = document.getElementById('dueAlertBar');
+  var txt = document.getElementById('dueAlertText');
+
+  var msgs = [];
+  if(todayDue.length) {
+    var total = todayDue.reduce(function(s,e){ return s + ((parseFloat(e.amount)||0) - getCollectedAmount(e)); }, 0);
+    // نص صريح يفرّق عن عداد الذمم الكلي
+    msgs.push('🔔 ' + todayDue.length + ' مستحقة اليوم بإجمالي ' + fmt(total) + ' ﷼');
+  }
+  if(overdue.length) {
+    var total2 = overdue.reduce(function(s,e){ return s + ((parseFloat(e.amount)||0) - getCollectedAmount(e)); }, 0);
+    msgs.push('⏰ ' + overdue.length + ' متأخرة بإجمالي ' + fmt(total2) + ' ﷼');
+  }
+
+  if(msgs.length) {
+    txt.textContent = msgs.join(' | ');
+    bar.classList.add('show');
+  } else {
+    bar.classList.remove('show');
+  }
+}
+
+function scrollToReceivables() {
+  document.getElementById('receivablesSection').scrollIntoView({behavior:'smooth'});
+}
+
+// ===== Modal تفاصيل المستحق =====
+var _currentRecKey = '';
+function openRecDetail(fbKey) {
+  var e = entries.find(function(x){ return x._fbKey === fbKey; });
+  if(!e) return;
+  _currentRecKey = fbKey;
+  var remaining = (parseFloat(e.amount)||0) - getCollectedAmount(e);
+  var DUE_TYPE_LABELS = {specific:'تاريخ محدد', end_of_month:'نهاية الشهر', salary:'عند نزول الراتب', open:'موعد غير محدد'};
+  var cat = getDueCategory(e);
+  var CAT_LABELS = {overdue:'🔴 متأخر', today:'🟡 مستحق اليوم', tomorrow:'🔵 غداً', upcoming:'📅 قادم', open:'⬜ بدون تاريخ'};
+
+  // سجل الدفعات الجزئية
+  var paymentsHtml = '';
+  if(Array.isArray(e.payments) && e.payments.length) {
+    paymentsHtml = '<div class="pay-history"><div class="pay-history-title">سجل الدفعات</div>' +
+      e.payments.map(function(p){
+        return '<div class="pay-hist-row"><span>'+fmtDate(p.date)+' — '+(p.method||'كاش')+'</span><span style="color:var(--success);font-weight:700;">+'+fmt(p.amount)+' ﷼</span></div>';
+      }).join('') + '</div>';
+  }
+
+  var phone = e.phone || '';
+  var wa = phone ? 'https://wa.me/966'+phone.replace(/^0/,'')+'?text='+encodeURIComponent(buildCollectionMsg(e)) : '';
+
+  document.getElementById('recDetailBody').innerHTML =
+    '<div class="rec-detail-row"><span class="rec-detail-label">العميل</span><span class="rec-detail-val">'+(e.party||'—')+'</span></div>' +
+    '<div class="rec-detail-row"><span class="rec-detail-label">مصدر القيد</span><span class="rec-detail-val">'+getSourceHtml(e)+'</span></div>' +
+    (e.phone ? '<div class="rec-detail-row"><span class="rec-detail-label">الجوال</span><span class="rec-detail-val" dir="ltr">'+e.phone+'</span></div>' : '') +
+    '<div class="rec-detail-row"><span class="rec-detail-label">البيان</span><span class="rec-detail-val">'+(e.desc||'—')+'</span></div>' +
+    '<div class="rec-detail-row"><span class="rec-detail-label">إجمالي الفاتورة</span><span class="rec-detail-val">'+fmt(e.amount)+' ﷼</span></div>' +
+    '<div class="rec-detail-row"><span class="rec-detail-label">تم تحصيله</span><span class="rec-detail-val" style="color:var(--success);">'+fmt(getCollectedAmount(e))+' ﷼</span></div>' +
+    '<div class="rec-detail-row"><span class="rec-detail-label">الرصيد المتبقي</span><span class="rec-detail-val" style="color:var(--danger);font-size:16px;">'+fmt(remaining)+' ﷼</span></div>' +
+    '<div class="rec-detail-row"><span class="rec-detail-label">حالة الدفع</span><span class="rec-detail-val">'+normalizePayStatus(e.status)+'</span></div>' +
+    (e.dueType ? '<div class="rec-detail-row"><span class="rec-detail-label">موعد السداد</span><span class="rec-detail-val">'+(DUE_TYPE_LABELS[e.dueType]||e.dueType)+'</span></div>' : '') +
+    (e.dueDate ? '<div class="rec-detail-row"><span class="rec-detail-label">تاريخ الاستحقاق</span><span class="rec-detail-val">'+(fmtDate(e.dueDate)+' ('+CAT_LABELS[cat]+')')+'</span></div>' : '') +
+    (e.paymentNote ? '<div class="rec-detail-row"><span class="rec-detail-label">ملاحظة</span><span class="rec-detail-val">'+(e.paymentNote)+'</span></div>' : '') +
+    (e.lastReminderAt ? '<div class="rec-detail-row"><span class="rec-detail-label">آخر فتح رسالة تذكير</span><span class="rec-detail-val">'+new Date(e.lastReminderAt).toLocaleString('ar-SA-u-ca-gregory')+'</span></div>' : '') +
+    paymentsHtml +
+    buildAmountHistoryHtml(e) +
+    '<div class="rec-modal-btns">' +
+      '<button class="rec-modal-btns btn-register-pay" onclick="openPayModal()">💵 تسجيل سداد</button>' +
+      '<button class="rec-modal-btns btn-change-due" onclick="openDueModal()">📅 موعد السداد</button>' +
+      '<button class="rec-modal-btns btn-edit-amount" onclick="openAmountModal()">✏️ تعديل المبلغ</button>' +
+      (phone ? '<a class="rec-modal-btns btn-wa-collect" href="'+wa+'" target="_blank" onclick="recordReminderSent(\''+fbKey+'\')">📲 طلب سداد واتساب</a>' : '') +
+      '<button class="rec-modal-btns btn-settle" onclick="settleReceivable(\''+fbKey+'\')">✅ تسوية المستحق</button>' +
+      '<button class="rec-modal-btns btn-cancel-rec" onclick="cancelReceivable(\''+fbKey+'\')">🚫 إلغاء المستحق</button>' +
+      '<button class="rec-modal-btns btn-delete-final" onclick="deleteFinal(\''+fbKey+'\')">🗑️ حذف نهائي</button>' +
+    '</div>';
+
+  document.getElementById('recDetailModal').classList.add('open');
+}
+
+function closeRecModal() {
+  document.getElementById('recDetailModal').classList.remove('open');
+  _currentRecKey = '';
+}
+
+// بناء رسالة طلب السداد
+function buildCollectionMsg(e) {
+  var remaining = (parseFloat(e.amount)||0) - getCollectedAmount(e);
+  return 'السلام عليكم ' + (e.party||'') + '،\n\n' +
+    'نود تذكيركم بأن مبلغ ' + fmt(remaining) + ' ريال مستحق مقابل ' + (e.desc||'خدمة صيانة المكيفات') + ' المقدمة لكم.\n\n' +
+    'نأمل التكرم بالسداد في الموعد المتفق عليه، وشكراً لتعاملكم مع مؤسسة أطواد لصيانة المكيفات.';
+}
+
+// تسجيل وقت فتح رسالة التذكير
+function recordReminderSent(fbKey) {
+  var e = entries.find(function(x){ return x._fbKey === fbKey; });
+  if(!e) return;
+  e.lastReminderAt = new Date().toISOString();
+  saveSingleEntry(e);
+  renderAll();
+}
+
+/* ===== موعد السداد لقيد قائم =====
+   القيود المستوردة من الحجوزات تصل بلا موعد استحقاق، ونموذج الإضافة
+   وحده كان يسأل عنه — فبقيت تلك القيود خارج تنبيهات التحصيل.
+   هذه النافذة تضيف الموعد أو تعدّله بعد الإنشاء. */
+function openDueModal() {
+  var e = entries.find(function(x){ return x._fbKey === _currentRecKey; });
+  if(!e) return;
+  document.getElementById('due_type_edit').value = e.dueType || 'specific';
+  document.getElementById('due_date_edit').value = e.dueDate || '';
+  document.getElementById('due_note_edit').value = e.paymentNote || '';
+  onDueModalTypeChange(document.getElementById('due_type_edit').value);
+  document.getElementById('dueModal').classList.add('open');
+}
+
+function closeDueModal() {
+  document.getElementById('dueModal').classList.remove('open');
+}
+
+function onDueModalTypeChange(val) {
+  var showDate = (val === 'specific' || val === 'salary');
+  document.getElementById('dueDateEditGroup').style.display = showDate ? 'block' : 'none';
+  if(val === 'end_of_month') document.getElementById('due_date_edit').value = calcDueDate('end_of_month');
+}
+
+function saveDueDate() {
+  var e = entries.find(function(x){ return x._fbKey === _currentRecKey; });
+  if(!e) return;
+
+  var type = document.getElementById('due_type_edit').value;
+  var date = document.getElementById('due_date_edit').value;
+  var note = document.getElementById('due_note_edit').value.trim();
+
+  if(type === 'end_of_month') date = calcDueDate('end_of_month');
+  if(type === 'open') date = '';
+  if((type === 'specific' || type === 'salary') && !date) {
+    showToast('❌ اختر التاريخ');
+    return;
+  }
+
+  e.dueType = type;
+  if(date) e.dueDate = date; else delete e.dueDate;
+  if(note) e.paymentNote = note; else delete e.paymentNote;
+
+  saveSingleEntry(e);
+  closeDueModal();
+  renderAll();
+  openRecDetail(_currentRecKey);   // تُعاد البطاقة لتُرى القيمة الجديدة فوراً
+  showToast(date ? '✅ موعد السداد: ' + fmtDate(date) : '✅ حُفظ: موعد غير محدد');
+}
+
+// ===== Modal تعديل المبلغ =====
+// يعدّل إجمالي الفاتورة (amount) لمستحق مفتوح، ويحفظ كل تعديل في amountHistory
+// ولا يلمس الدفعات المسجلة — الرصيد المتبقي = المبلغ الجديد − المحصّل
+function buildAmountHistoryHtml(e) {
+  if(!Array.isArray(e.amountHistory) || !e.amountHistory.length) return '';
+  return '<div class="pay-history"><div class="pay-history-title">سجل تعديل المبلغ</div>' +
+    e.amountHistory.map(function(h){
+      var when = '';
+      try { when = new Date(h.at).toLocaleDateString('ar-SA-u-ca-gregory',{month:'short',day:'numeric',year:'numeric'}); } catch(err) { when = h.at || ''; }
+      return '<div class="amt-hist-row"><b>'+fmt(h.from)+' ← '+fmt(h.to)+' ﷼</b> — '+when+'<br><span style="color:var(--mist);">'+(h.reason||'')+'</span></div>';
+    }).join('') + '</div>';
+}
+
+function openAmountModal() {
+  var e = entries.find(function(x){ return x._fbKey === _currentRecKey; });
+  if(!e) return;
+  var total = parseFloat(e.amount) || 0;
+  var paid  = getCollectedAmount(e);
+  document.getElementById('amt_info').innerHTML =
+    'العميل: <b>'+(e.party||'—')+'</b><br>' +
+    'المبلغ الحالي: <b>'+fmt(total)+' ﷼</b><br>' +
+    'تم تحصيله: <b style="color:var(--success);">'+fmt(paid)+' ﷼</b>';
+  document.getElementById('amt_new').value = total;
+  document.getElementById('amt_reason').value = '';
+  previewAmountEdit();
+  document.getElementById('amountModal').classList.add('open');
+}
+
+function closeAmountModal() {
+  document.getElementById('amountModal').classList.remove('open');
+}
+
+function previewAmountEdit() {
+  var e = entries.find(function(x){ return x._fbKey === _currentRecKey; });
+  if(!e) return;
+  var paid = getCollectedAmount(e);
+  var v = parseFloat(document.getElementById('amt_new').value);
+  var hint = document.getElementById('amt_hint');
+  if(isNaN(v)) { hint.textContent = ''; return; }
+  if(v < paid - 0.01) {
+    hint.style.color = 'var(--danger)';
+    hint.textContent = 'لا يمكن أن يقل عن المحصّل ('+fmt(paid)+' ﷼)';
+  } else if(Math.abs(v - paid) < 0.01) {
+    hint.style.color = 'var(--success)';
+    hint.textContent = 'الرصيد المتبقي سيصبح صفراً وسيُقفل المستحق كمدفوع';
+  } else {
+    hint.style.color = 'var(--mist)';
+    hint.textContent = 'الرصيد المتبقي بعد التعديل: '+fmt(v - paid)+' ﷼';
+  }
+}
+
+function confirmAmountEdit() {
+  var e = entries.find(function(x){ return x._fbKey === _currentRecKey; });
+  if(!e || !db) { showToast('❌ تعذر الوصول للقيد'); return; }
+
+  var oldAmt = parseFloat(e.amount) || 0;
+  var newAmt = parseFloat(document.getElementById('amt_new').value);
+  var reason = document.getElementById('amt_reason').value.trim();
+  var paid   = getCollectedAmount(e);
+
+  if(isNaN(newAmt) || newAmt <= 0) { showToast('❌ أدخل مبلغاً صحيحاً أكبر من صفر'); return; }
+  if(Math.abs(newAmt - oldAmt) < 0.01) { showToast('⚠️ المبلغ لم يتغير'); return; }
+  if(newAmt < paid - 0.01) { showToast('❌ المبلغ الجديد أقل من المحصّل ('+fmt(paid)+' ﷼)'); return; }
+  if(!reason) { showToast('⚠️ سبب التعديل إلزامي'); return; }
+
+  var history = Array.isArray(e.amountHistory) ? e.amountHistory.slice() : [];
+  history.push({ from: oldAmt, to: newAmt, reason: reason, at: new Date().toISOString() });
+
+  var updates = { amount: newAmt, amountHistory: history, amountEditedAt: new Date().toISOString() };
+
+  // إن صار المحصّل يغطي المبلغ الجديد → يُقفل كمدفوع
+  if(paid > 0 && Math.abs(newAmt - paid) < 0.01) {
+    updates.status = 'مدفوع';
+    updates.paidAmount = paid;
+    updates.paidAt = today();
+  }
+
+  var btn = document.getElementById('amt_save_btn');
+  btn.disabled = true;
+  db.ref('transactions/' + e._fbKey).update(updates).then(function(){
+    e.amount = newAmt;
+    e.amountHistory = history;
+    e.amountEditedAt = updates.amountEditedAt;
+    if(updates.status) { e.status = updates.status; e.paidAmount = updates.paidAmount; e.paidAt = updates.paidAt; }
+    localStorage.setItem('atwad_finance', JSON.stringify(entries));
+    btn.disabled = false;
+    closeAmountModal();
+    closeRecModal();
+    renderAll();
+    showToast('✅ تم تعديل المبلغ من '+fmt(oldAmt)+' إلى '+fmt(newAmt)+' ﷼' + (updates.status ? ' — تم السداد الكامل' : ''));
+  }).catch(function(err){
+    btn.disabled = false;
+    showToast('❌ خطأ: ' + err.message);
+  });
+}
+
+// ===== Modal تسجيل سداد =====
+function openPayModal() {
+  var e = entries.find(function(x){ return x._fbKey === _currentRecKey; });
+  if(!e) return;
+  var remaining = (parseFloat(e.amount)||0) - getCollectedAmount(e);
+  document.getElementById('pay_amount').value = remaining;
+  document.getElementById('pay_amount').max   = remaining;
+  document.getElementById('pay_date').value   = today();
+  document.getElementById('pay_method').value = 'كاش';
+  document.getElementById('pay_note').value   = '';
+  document.getElementById('pay_max_hint').textContent = 'الحد الأقصى: '+fmt(remaining)+' ﷼';
+  document.getElementById('payModal').classList.add('open');
+}
+
+function closePayModal() {
+  document.getElementById('payModal').classList.remove('open');
+}
+
+function confirmPayment() {
+  var e = entries.find(function(x){ return x._fbKey === _currentRecKey; });
+  if(!e) return;
+
+  var payAmt  = parseFloat(document.getElementById('pay_amount').value) || 0;
+  var payDate = document.getElementById('pay_date').value;
+  var payMethod = document.getElementById('pay_method').value;
+  var payNote   = document.getElementById('pay_note').value.trim();
+
+  if(!payAmt || payAmt <= 0) { showToast('❌ أدخل مبلغاً صحيحاً'); return; }
+  if(!payDate) { showToast('❌ اختر التاريخ'); return; }
+
+  var totalAmount  = parseFloat(e.amount) || 0;
+  var alreadyPaid  = getCollectedAmount(e);
+  var maxAllowed   = totalAmount - alreadyPaid;
+
+  // منع تجاوز المبلغ الأصلي
+  if(payAmt > maxAllowed + 0.01) {
+    showToast('❌ المبلغ يتجاوز الرصيد المتبقي ('+fmt(maxAllowed)+' ﷼)');
+    return;
+  }
+
+  // إضافة الدفعة
+  if(!Array.isArray(e.payments)) e.payments = [];
+  var payId = 'P'+Date.now();
+  e.payments.push({id:payId, amount:payAmt, date:payDate, method:payMethod, note:payNote});
+
+  var newPaid = alreadyPaid + payAmt;
+  e.paidAmount = newPaid;
+
+  // تحديث الحالة
+  if(Math.abs(newPaid - totalAmount) < 0.01) {
+    e.status = 'مدفوع';
+    e.paidAt = payDate;
+  } else {
+    e.status = 'مدفوع جزئياً';
+  }
+
+  saveSingleEntry(e);
+  closePayModal();
+  closeRecModal();
+  renderAll();
+  showToast('✅ تم تسجيل سداد '+fmt(payAmt)+' ﷼' + (e.status==='مدفوع' ? ' — تم السداد الكامل!' : ' — الرصيد المتبقي '+fmt(totalAmount-newPaid)+' ﷼'));
+}
+
+// ===== IMPORT FIREBASE =====
+var SVC_PRICES = {
+  'تنظيف مكيف':{1:110,2:180,3:240,4:280},
+  'تنظيف وغسيل المكيفات':{1:110,2:180,3:240,4:280},
+  'صيانة دورية':120,'تعبئة غاز':150,
+  'كشف وإصلاح أعطال':100,'تركيب مكيف جديد':200,'باقة صيانة سنوية':400
+};
+function calcPrice(svc, units) {
+  var p = SVC_PRICES[svc];
+  if(p && typeof p === 'object'){ return units>=5?units*60:(p[units]||units*60); }
+  return ((p||100)) * units;
+}
+
+/* ===== تطبيع الأسماء — الهيكل الصوتي =====
+   يوحّد الاسم العربي واللاتيني في بصمة واحدة («ياسر» = «Yasser» = «Yaser»)
+   حتى لا يتولّد قيدٌ ثانٍ للزيارة نفسها باختلاف هجاء الاسم. */
+var AR2LAT_FIN = {
+  'ب':'b','ت':'t','ث':'t','ج':'j','ح':'h','خ':'k','د':'d','ذ':'z','ر':'r','ز':'z',
+  'س':'s','ش':'s','ص':'s','ض':'d','ط':'t','ظ':'z','ع':'','غ':'g','ف':'f','ق':'k',
+  'ك':'k','ل':'l','م':'m','ن':'n','ه':'h','ة':'','و':'','ي':'','ى':'','ا':'',
+  'أ':'','إ':'','آ':'','ء':'','ؤ':'','ئ':''
+};
+
+function finSkeleton(s){
+  var t = String(s || '').toLowerCase();
+  t = t.replace(/[ـً-ْ.,_\-()0-9]/g, ' ');
+  t = t.replace(/\b(mr|mrs|ms|miss|dr|eng|al|el)\b/g, ' ');
+  t = t.replace(/^(الاستاذ|الأستاذ|الاستاذة|الدكتور|السيد|السيدة)\s+/, '');
+  t = t.replace(/(^|\s)ال/g, '$1');
+  t = t.replace(/\bal(?=[a-z]{3,})/g, ' ');
+  t = t.replace(/kh/g, 'k').replace(/gh/g, 'g').replace(/sh/g, 's')
+       .replace(/th/g, 't').replace(/ph/g, 'f').replace(/ch/g, 's').replace(/q/g, 'k');
+  var out = '';
+  for(var i = 0; i < t.length; i++){
+    var c = t.charAt(i);
+    if(Object.prototype.hasOwnProperty.call(AR2LAT_FIN, c)){ out += AR2LAT_FIN[c]; continue; }
+    if(c >= 'a' && c <= 'z'){
+      if('aeiouwy'.indexOf(c) >= 0) continue;
+      out += c;
+    }
+  }
+  return out.replace(/(.)\1+/g, '$1');
+}
+
+function importFinanceFromFirebase() {
+  if(!db){ showToast('⚠️ Firebase غير متاح'); return; }
+  var btn = document.getElementById('importFinBtn');
+  btn.textContent = '⏳ جاري الاستيراد...'; btn.disabled = true;
+  db.ref('bookings').once('value', function(snap) {
+    var added=0, skip=0;
+    var existRefs = new Set(entries.map(function(e){ return e.firebaseRef||''; }));
+
+    /* الحارس الثاني: زيارةٌ أُغلقت بورقة الدفع قبل إضافة علامة الحجز
+       لا تحمل firebaseRef، فنمنع تكرارها بمطابقة الاسم واليوم. */
+    var existDayName = {};
+    entries.forEach(function(e){
+      if(e.type !== 'income') return;
+      if(e.status === 'ملغي' || e.status === 'مسوى') return;
+      var sk = finSkeleton(e.party || e.client || '');
+      if(sk.length < 2 || !e.date) return;
+      existDayName[e.date + '|' + sk] = true;
+    });
+
+    snap.forEach(function(child) {
+      var b = child.val(); var key = child.key;
+      if(existRefs.has(key)){ skip++; return; }
+      if(!b.date) return;
+      var bSk = finSkeleton(b.client || b.name || '');
+      if(bSk.length >= 2 && existDayName[b.date + '|' + bSk]){ skip++; return; }
+      var amount = b.servicePrice || calcPrice(b.service||'تنظيف مكيف', b.units||1);
+      entries.unshift({
+        id:'F'+Date.now()+Math.random().toString(36).slice(2,5),
+        firebaseRef:key, type:'income', amount:amount,
+        desc:(b.service||'خدمة')+' - '+(b.client||b.name||'عميل'),
+        date:b.date, category:'خدمة', method:'كاش',
+        party:b.client||b.name||'',
+        phone:b.phone||'',
+        status:'غير مدفوع',
+        // بلا هذين الحقلين يسقط القيد في «بيانات قديمة» فلا يراه أحد ولا يُطالَب به
+        dueType:'open',
+        paymentNote:'مستورد من الحجوزات — لم يُؤكَّد القبض',
+        payments:[], paidAmount:0,
+        createdAt:b.createdAt||new Date().toISOString()
+      });
+      existRefs.add(key);
+      if(bSk.length >= 2){ existDayName[b.date + '|' + bSk] = true; }
+      added++;
+    });
+    saveData(); renderAll();
+    btn.textContent='📥 استيراد إيرادات الحجوزات'; btn.disabled=false;
+    if(added>0) showToast('✅ استُورد '+added+' إيراد — دخلت الذمم المدينة حتى تؤكّد قبضها');
+    else showToast('ℹ️ لا إيرادات جديدة — تخطي '+skip);
+  }, function(){ btn.textContent='📥 استيراد'; btn.disabled=false; showToast('❌ خطأ'); });
+}
+
+// ===== MODAL إضافة قيد =====
+let selectedType = 'income';
+function openModal(){
+  selectType('income');
+  ['f_amount','f_desc','f_party','f_payment_note'].forEach(function(id){
+    var el = document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('f_date').value    = today();
+  document.getElementById('f_category').value= 'خدمة';
+  document.getElementById('f_method').value  = 'كاش';
+  document.getElementById('f_status').value  = 'مدفوع';
+  document.getElementById('dueFields').classList.remove('show');
+  document.getElementById('addModal').classList.add('open');
+}
+function closeModal(){ document.getElementById('addModal').classList.remove('open'); }
+
+function selectType(t){
+  selectedType = t;
+  document.getElementById('typeIncome').classList.toggle('sel', t==='income');
+  document.getElementById('typeExpense').classList.toggle('sel', t==='expense');
+  document.getElementById('statusGroup').style.display = t==='income'?'block':'none';
+  var cats = t==='income'
+    ? ['خدمة','قطع غيار','عقد سنوي','أخرى']
+    : ['قطع غيار','وقود','رواتب','إيجار','تأمين','إعلانات','صيانة سيارة','طعام','أخرى'];
+  document.getElementById('f_category').innerHTML = cats.map(function(c){ return '<option>'+c+'</option>'; }).join('');
+}
+
+function onStatusChange(val) {
+  var needsDue = (val === 'مؤجل' || val === 'غير مدفوع' || val === 'مدفوع جزئياً');
+  document.getElementById('dueFields').classList.toggle('show', needsDue);
+  if(needsDue) onDueTypeChange(document.getElementById('f_due_type').value);
+}
+
+function onDueTypeChange(val) {
+  var showDate = (val === 'specific' || val === 'salary');
+  document.getElementById('dueDateGroup').style.display = showDate ? 'block' : 'none';
+  if(val === 'end_of_month') {
+    document.getElementById('f_due_date').value = calcDueDate('end_of_month');
+  }
+}
+
+function saveEntry(){
+  var amount = parseFloat(document.getElementById('f_amount').value);
+  var desc   = document.getElementById('f_desc').value.trim();
+  var date   = document.getElementById('f_date').value;
+  if(!amount||amount<=0) return showToast('❌ أدخل مبلغاً صحيحاً');
+  if(!desc)   return showToast('❌ أدخل البيان');
+  if(!date)   return showToast('❌ اختر التاريخ');
+
+  var status = selectedType==='income' ? document.getElementById('f_status').value : 'مدفوع';
+  var entry = {
+    id:genId(), type:selectedType, amount:amount, desc:desc, date:date,
+    category: document.getElementById('f_category').value,
+    method:   document.getElementById('f_method').value,
+    party:    document.getElementById('f_party').value.trim(),
+    status:   status,
+    payments: [], paidAmount: 0,
+    createdAt: new Date().toISOString()
+  };
+
+  // حقول التأجيل
+  if(selectedType==='income' && (status==='مؤجل'||status==='غير مدفوع'||status==='مدفوع جزئياً')) {
+    var dueType = document.getElementById('f_due_type').value;
+    var dueDate = document.getElementById('f_due_date').value;
+    var payNote = document.getElementById('f_payment_note').value.trim();
+    entry.dueType = dueType;
+    if(dueType === 'end_of_month') dueDate = calcDueDate('end_of_month');
+    if(dueDate) entry.dueDate = dueDate;
+    if(payNote) entry.paymentNote = payNote;
+  }
+
+  // إذا مدفوع جزئياً أثناء الإضافة — نعتبره مؤجلاً والمبلغ المحصل صفر
+  if(status === 'مدفوع') {
+    entry.paidAmount = amount;
+    entry.payments   = [{id:'P'+Date.now(), amount:amount, date:date, method:entry.method, note:''}];
+  }
+
+  entries.unshift(entry);
+  saveData(); closeModal(); renderAll();
+  showToast(selectedType==='income'?'✅ تم إضافة الإيراد':'✅ تم إضافة المصروف');
+}
+
+// ===== CHARTS =====
+function renderBarChart(){
+  var filtered = filterByPeriod(entries);
+  var days = period==='today'?24:(period==='month'?30:12);
+  var labels=[],incArr=[],expArr=[];
+  var now=new Date();
+  for(var i=days-1;i>=0;i--){
+    var d=new Date(now);
+    var lbl='',dayE;
+    if(period==='today'){
+      var h=now.getHours()-i; if(h<0)continue;
+      lbl=h+':00';
+      dayE=filtered.filter(function(e){ return e.date===today()&&new Date(e.createdAt||e.date+'T12:00').getHours()===h; });
+    } else if(period==='year'){
+      d.setMonth(now.getMonth()-i);
+      var ym=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+      lbl=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'][d.getMonth()];
+      dayE=filtered.filter(function(e){ return (e.date||'').startsWith(ym); });
+    } else {
+      d.setDate(now.getDate()-i); var ds=d.toISOString().split('T')[0];
+      lbl=d.getDate()+'';
+      dayE=filtered.filter(function(e){ return e.date===ds; });
+    }
+    var rev=dayE.filter(function(e){return e.type==='income';}).reduce(function(s,e){return s+getCollectedAmount(e);},0);
+    var exp=dayE.filter(function(e){return e.type==='expense';}).reduce(function(s,e){return s+(parseFloat(e.amount)||0);},0);
+    labels.push(lbl); incArr.push(rev); expArr.push(exp);
+  }
+  var maxV=Math.max(...incArr,...expArr,1);
+  var bc=document.getElementById('barChart');
+  var bl=document.getElementById('barLabels');
+  bc.innerHTML=labels.map(function(l,i){
+    var ih=Math.round(incArr[i]/maxV*120);
+    var eh=Math.round(expArr[i]/maxV*120);
+    return '<div class="bar-group"><div class="bar" style="height:'+ih+'px;background:var(--sky)" data-val="'+fmt(incArr[i])+' ﷼"></div><div class="bar" style="height:'+eh+'px;background:var(--danger)" data-val="'+fmt(expArr[i])+' ﷼"></div></div>';
+  }).join('');
+  bl.innerHTML=labels.map(function(l){ return '<div class="bar-x-label">'+l+'</div>'; }).join('');
+}
+
+function renderDonut(){
+  var filtered=filterByPeriod(entries).filter(function(e){return e.type==='expense';});
+  var cats={};
+  filtered.forEach(function(e){ cats[e.category]=(cats[e.category]||0)+(parseFloat(e.amount)||0); });
+  var total=Object.values(cats).reduce(function(a,b){return a+b;},0)||1;
+  var colors=['#0EA5E9','#EF4444','#10B981','#F59E0B','#8B5CF6','#EC4899','#14B8A6','#F97316'];
+  var entries2=Object.entries(cats).sort(function(a,b){return b[1]-a[1];});
+  var offset=0;
+  var paths=entries2.map(function(kv,i){
+    var pct=kv[1]/total; var deg=pct*360;
+    var r=15.9155; var c=18;
+    var startAngle=offset; offset+=deg;
+    var x1=c+r*Math.sin(startAngle*Math.PI/180);
+    var y1=c-r*Math.cos(startAngle*Math.PI/180);
+    var x2=c+r*Math.sin(offset*Math.PI/180);
+    var y2=c-r*Math.cos(offset*Math.PI/180);
+    var large=deg>180?1:0;
+    return '<path d="M '+c+' '+c+' L '+x1.toFixed(2)+' '+y1.toFixed(2)+' A '+r+' '+r+' 0 '+large+' 1 '+x2.toFixed(2)+' '+y2.toFixed(2)+' Z" fill="'+colors[i%colors.length]+'"/>';
+  }).join('');
+  document.getElementById('donutSVG').innerHTML = paths||'<circle cx="18" cy="18" r="15" fill="#E2E8F0"/>';
+  document.getElementById('donutLegend').innerHTML = entries2.slice(0,5).map(function(kv,i){
+    return '<div class="donut-item"><div style="display:flex;align-items:center;gap:5px"><div class="donut-dot" style="background:'+colors[i%colors.length]+'"></div>'+kv[0]+'</div><span class="donut-pct">'+Math.round(kv[1]/total*100)+'%</span></div>';
+  }).join('');
+}
+
+function renderTables(){
+  var filtered = filterByPeriod(entries);
+
+  // تطبيق فلتر الفني
+  if(activeTechFilter === 'technician') {
+    filtered = filtered.filter(isTechEntry);
+  } else if(activeTechFilter === 'legacy') {
+    filtered = filtered.filter(isLegacyEntry);
+  }
+
+  var income =filtered.filter(function(e){return e.type==='income';}).sort(function(a,b){return (b.date||'').localeCompare(a.date||'');}).slice(0,8);
+  var expense=filtered.filter(function(e){return e.type==='expense';}).sort(function(a,b){return (b.date||'').localeCompare(a.date||'');}).slice(0,8);
+  var STATUS_HTML = {
+    'مدفوع':         '<span class="badge-paid">مدفوع</span>',
+    'مؤجل':          '<span class="badge-deferred">مؤجل</span>',
+    'مدفوع جزئياً':  '<span class="badge-partial">جزئي</span>',
+    'غير مدفوع':     '<span class="badge-unpaid">غير مدفوع</span>',
+    'معلق':          '<span class="badge-unpaid">غير مدفوع</span>'
+  };
+  document.getElementById('incomeTable').innerHTML = income.length===0
+    ? '<tr><td colspan="4" style="text-align:center;color:var(--mist);padding:20px">لا توجد إيرادات</td></tr>'
+    : income.map(function(e){
+        var collected = getCollectedAmount(e);
+        var techBadge = e.source==='technician'
+          ? '<span class="badge-tech" style="font-size:9px;padding:1px 5px;">👷 فني</span>' : '';
+        var legBadge  = isLegacyEntry(e)
+          ? '<span class="badge-legacy" style="font-size:9px;padding:1px 5px;">قديم</span>' : '';
+        return '<tr onclick="'+(isReceivable(e)||isLegacyEntry(e)?'openRecDetail(\''+e._fbKey+'\')':'')+'" style="cursor:'+(isReceivable(e)||isLegacyEntry(e)?'pointer':'default')+'">' +
+          '<td style="font-weight:600;color:var(--deep)">'+(e.party||'—')+' '+techBadge+legBadge+'</td>' +
+          '<td style="font-size:12px;color:var(--mist)">'+(e.category||'—')+'</td>' +
+          '<td class="amount-in">+'+fmt(collected>0?collected:e.amount)+' ﷼</td>' +
+          '<td>'+(STATUS_HTML[normalizePayStatus(e.status)]||'')+'</td>' +
+        '</tr>';
+      }).join('');
+  document.getElementById('expenseTable').innerHTML = expense.length===0
+    ? '<tr><td colspan="4" style="text-align:center;color:var(--mist);padding:20px">لا توجد مصاريف</td></tr>'
+    : expense.map(function(e){
+        var techBadge = e.source==='technician'
+          ? '<span class="badge-tech" style="font-size:9px;padding:1px 5px;">👷 فني</span>' : '';
+        return '<tr><td style="font-weight:600;color:var(--deep)">'+(e.desc||'—')+' '+techBadge+'</td><td style="font-size:12px;color:var(--mist)">'+(e.category||'—')+'</td><td class="amount-out">-'+fmt(e.amount)+' ﷼</td><td style="font-size:12px;color:var(--mist)">'+fmtDate(e.date)+(e.createdBy?'<br><span style="font-size:10px;color:#6D28D9;">'+e.createdBy+'</span>':'')+'</td></tr>';
+      }).join('');
+}
+
+function renderAll(){ calcKPIs(); renderBarChart(); renderDonut(); renderTables(); }
+
+// ============================================================
+// فلتر إدخالات الفني والبيانات القديمة
+// ============================================================
+var activeTechFilter = 'all'; // 'all' | 'technician' | 'legacy'
+
+function setTechFilter(type, btn) {
+  activeTechFilter = type;
+  document.querySelectorAll('.tech-filter-btn').forEach(function(b){ b.classList.remove('active'); });
+  if(btn) btn.classList.add('active');
+
+  var techSummary = document.getElementById('techSummary');
+  var legacySection = document.getElementById('legacySection');
+
+  if(type === 'technician') {
+    techSummary.classList.add('show');
+    legacySection.classList.remove('show');
+    renderTechSummary();
+  } else if(type === 'legacy') {
+    techSummary.classList.remove('show');
+    legacySection.classList.add('show');
+    renderLegacySection();
+  } else {
+    techSummary.classList.remove('show');
+    legacySection.classList.remove('show');
+  }
+
+  renderAll();
+}
+
+// هل السجل من إدخال الفني؟
+function isTechEntry(e) { return e.source === 'technician'; }
+
+// هل السجل بيانات قديمة تحتاج مراجعة؟
+// معيار: income + غير مدفوع/معلق + لا يوجد dueType ولا dueDate ولا paymentNote
+function isLegacyEntry(e) {
+  if(e.type !== 'income') return false;
+  var s = normalizePayStatus(e.status);
+  if(s !== 'غير مدفوع' && s !== 'مؤجل') return false;
+  // إذا يحتوي أي من حقول نظام الاستحقاق الجديد → ليس قديماً
+  if(e.dueType || e.dueDate || e.paymentNote) return false;
+  return true;
+}
+
+// هل الذمة مؤكدة (نظام جديد)؟
+function isConfirmedReceivable(e) {
+  if(!isReceivable(e)) return false;
+  // مؤكدة إذا تحتوي على معلومات استحقاق حديثة
+  return !!(e.dueType || e.dueDate || e.paymentNote);
+}
+
+// مصدر القيد — للعرض في التفاصيل
+function getSourceLabel(e) {
+  if(e.source === 'technician') return '<span class="source-badge source-tech">👷 إدخال فني' + (e.createdBy ? ' — ' + e.createdBy : '') + '</span>';
+  if(e.source === 'booking' || e.firebaseRef) return '<span class="source-badge source-import">📥 مستورد من الحجز</span>';
+  if(e.source === 'manual' || (!e.source && e.id)) return '<span class="source-badge source-manual">✏️ إدخال يدوي من الإدارة</span>';
+  return '<span class="source-badge source-unknown">مصدر غير محدد</span>';
+}
+
+// ملخص إدخالات الفني
+function renderTechSummary() {
+  var filtered = filterByPeriod(entries).filter(isTechEntry);
+  var tIncome  = filtered.filter(function(e){ return e.type==='income'; })
+                         .reduce(function(s,e){ return s+getCollectedAmount(e); }, 0);
+  var tExpense = filtered.filter(function(e){ return e.type==='expense'; })
+                         .reduce(function(s,e){ return s+(parseFloat(e.amount)||0); }, 0);
+  document.getElementById('tSumIncome').textContent  = fmt(tIncome) + ' ﷼';
+  document.getElementById('tSumExpense').textContent = fmt(tExpense) + ' ﷼';
+  var net = tIncome - tExpense;
+  var netEl = document.getElementById('tSumNet');
+  netEl.textContent = fmt(net) + ' ﷼';
+  netEl.style.color = net >= 0 ? 'var(--success)' : 'var(--danger)';
+}
+
+// قسم البيانات القديمة
+function renderLegacySection() {
+  var legacyList = document.getElementById('legacyList');
+  var items = entries.filter(isLegacyEntry);
+  if(!items.length) {
+    legacyList.innerHTML = '<div style="text-align:center;padding:24px;color:var(--mist);">✅ لا توجد بيانات قديمة تحتاج مراجعة</div>';
+    return;
+  }
+  legacyList.innerHTML = items.map(function(e) {
+    return '<div class="legacy-row">' +
+      '<div>' +
+        '<div class="legacy-client">' + (e.party||'—') + ' <span class="badge-legacy">قديم</span></div>' +
+        '<div class="legacy-desc">' + (e.desc||'') + ' · ' + fmtDate(e.date) + '</div>' +
+      '</div>' +
+      '<div style="display:flex;align-items:center;gap:8px;">' +
+        '<div class="legacy-amount">' + fmt(e.amount) + ' ﷼</div>' +
+        '<button class="btn-confirm-legacy" onclick="openConfirmLegacy(\'' + e._fbKey + '\')">تأكيد كمستحق</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+// ============================================================
+// تعديل isReceivable: الذمم المؤكدة فقط في القسم الرئيسي
+// البيانات القديمة تُفصل بصرياً — لا تُحذف من Firebase
+// ============================================================
+function isReceivable(e) {
+  if(e.type !== 'income') return false;
+  // استبعاد الحالات المنتهية: مدفوع، مسوى، ملغي
+  if(e.status === 'مسوى' || e.status === 'ملغي') return false;
+  var s = normalizePayStatus(e.status);
+  if(s === 'مدفوع') return false;
+  if(s !== 'مؤجل' && s !== 'غير مدفوع' && s !== 'مدفوع جزئياً') return false;
+  // البيانات القديمة بدون نظام استحقاق → قسم "بيانات قديمة" فقط
+  if(isLegacyEntry(e)) return false;
+  return true;
+}
+
+// ============================================================
+// تأكيد السجل القديم كمستحق — يكتب في Firebase فقط بعد تأكيد
+// ============================================================
+var _confirmingLegacyKey = '';
+
+function openConfirmLegacy(fbKey) {
+  var e = entries.find(function(x){ return x._fbKey === fbKey; });
+  if(!e) return;
+  _confirmingLegacyKey = fbKey;
+  document.getElementById('confirmLegacyInfo').innerHTML =
+    '<strong>' + (e.party||'—') + '</strong> — ' + (e.desc||'') +
+    '<br><span style="color:var(--danger);font-weight:700;">' + fmt(e.amount) + ' ﷼</span>' +
+    ' · ' + fmtDate(e.date);
+  document.getElementById('cl_status').value   = 'مؤجل';
+  document.getElementById('cl_due_type').value = 'open';
+  document.getElementById('cl_due_date').value = '';
+  document.getElementById('cl_note').value     = '';
+  document.getElementById('cl_date_group').style.display = 'none';
+  document.getElementById('confirmLegacyModal').classList.add('open');
+}
+
+function closeConfirmLegacy() {
+  document.getElementById('confirmLegacyModal').classList.remove('open');
+  _confirmingLegacyKey = '';
+}
+
+function onClStatusChange(v) { /* لا حاجة لتغيير إضافي */ }
+function onClDueTypeChange(v) {
+  document.getElementById('cl_date_group').style.display =
+    (v === 'specific' || v === 'salary') ? 'block' : 'none';
+  if(v === 'end_of_month') {
+    document.getElementById('cl_due_date').value = calcDueDate('end_of_month');
+  }
+}
+
+function saveLegacyConfirm() {
+  if(!_confirmingLegacyKey || !db) return;
+  var e = entries.find(function(x){ return x._fbKey === _confirmingLegacyKey; });
+  if(!e) return;
+
+  var dueType = document.getElementById('cl_due_type').value;
+  var dueDate = document.getElementById('cl_due_date').value;
+  var note    = document.getElementById('cl_note').value.trim();
+  var status  = document.getElementById('cl_status').value;
+
+  if(dueType === 'end_of_month') dueDate = calcDueDate('end_of_month');
+
+  // تحديث حقول الاستحقاق فقط — لا تُعدَّل أي حقول أخرى
+  var updates = { status: status, dueType: dueType };
+  if(dueDate)  updates.dueDate     = dueDate;
+  if(note)     updates.paymentNote = note;
+
+  db.ref('transactions/' + _confirmingLegacyKey).update(updates).then(function() {
+    showToast('✅ تم تأكيد السجل كمستحق حقيقي');
+    closeConfirmLegacy();
+  }).catch(function(e){ showToast('❌ خطأ: ' + e.message); });
+}
+
+// ============================================================
+// تعديل renderTables: إضافة badge الفني + badge القديم + مصدر القيد
+// ============================================================
+
+// ============================================================
+// تعديل openRecDetail: إضافة مصدر القيد
+// ============================================================
+var _origOpenRecDetail = null; // سيُحدَّث بعد تعريف openRecDetail
+
+function getSourceHtml(e) { return getSourceLabel(e); }
+
+// ============================================================
+// تسوية المستحق — status: 'مسوى'
+// ============================================================
+function settleReceivable(fbKey) {
+  if(!fbKey || !db) return;
+  var e = entries.find(function(x){ return x._fbKey === fbKey; });
+  if(!e) return;
+  var reason = prompt('سبب التسوية (اختياري):');
+  if(reason === null) return;
+  var updates = { status:'مسوى', settledAt:new Date().toISOString(), settledReason:reason||'تسوية يدوية' };
+  db.ref('transactions/'+fbKey).update(updates).then(function(){
+    showToast('✅ تم تسوية المستحق'); closeRecModal();
+  }).catch(function(err){ showToast('❌ خطأ: '+err.message); });
+}
+
+// ============================================================
+// إلغاء المستحق — status: 'ملغي'
+// ============================================================
+function cancelReceivable(fbKey) {
+  if(!fbKey || !db) return;
+  var reason = prompt('سبب الإلغاء:');
+  if(reason === null) return;
+  if(!reason.trim()){ showToast('⚠️ يرجى إدخال سبب الإلغاء'); return; }
+  var updates = { status:'ملغي', cancelledAt:new Date().toISOString(), cancelReason:reason };
+  db.ref('transactions/'+fbKey).update(updates).then(function(){
+    showToast('✅ تم إلغاء المستحق'); closeRecModal();
+  }).catch(function(err){ showToast('❌ خطأ: '+err.message); });
+}
+
+// ============================================================
+// حذف نهائي — تأكيد مزدوج + فحص وجود دفعات
+// ============================================================
+function deleteFinal(fbKey) {
+  if(!fbKey || !db) return;
+  var e = entries.find(function(x){ return x._fbKey === fbKey; });
+  if(!e) return;
+  var hasPay = Array.isArray(e.payments) && e.payments.length > 0;
+  var msg1 = 'هل أنت متأكد أنك تريد حذف هذا القيد نهائياً؟\n\n' +
+    'العميل: '+(e.party||'—')+'\nالمبلغ: '+fmt(e.amount)+' ﷼\n' +
+    (hasPay ? '⚠️ يحتوي على '+e.payments.length+' دفعة مسجلة.\n' : '') +
+    '\nهذا الإجراء لا يمكن التراجع عنه.';
+  if(!confirm(msg1)) return;
+  if(!confirm('تأكيد أخير: سيتم حذف القيد بشكل دائم من قاعدة البيانات. هل تريد المتابعة؟')) return;
+  db.ref('transactions/'+fbKey).remove().then(function(){
+    showToast('🗑️ تم الحذف النهائي'); closeRecModal();
+  }).catch(function(err){ showToast('❌ خطأ في الحذف: '+err.message); });
+}
+
+// ============================================================
+// مراجعة المستحقات القديمة سجلاً بسجل
+// ============================================================
+function openLegacyReview() {
+  var legacy = entries.filter(isLegacyEntry);
+  if(!legacy.length){ showToast('✅ لا توجد مستحقات قديمة تحتاج مراجعة'); return; }
+  var idx = 0;
+  function reviewNext() {
+    if(idx >= legacy.length){
+      showToast('✅ انتهت مراجعة '+legacy.length+' سجل');
+      return;
+    }
+    var e = legacy[idx];
+    var msg = 'مستحق '+(idx+1)+' من '+legacy.length+'\n\n'+
+      'العميل: '+(e.party||'—')+'\n'+
+      'البيان: '+(e.desc||'—')+'\n'+
+      'المبلغ: '+fmt(e.amount)+' ﷼\n'+
+      'التاريخ: '+fmtDate(e.date)+'\n\n'+
+      'اضغط OK للانتقال للتالي، أو Cancel لإيقاف المراجعة.';
+    idx++;
+    if(confirm(msg)) reviewNext();
+  }
+  reviewNext();
+}
+
+function showAll(type){
+  var filtered=filterByPeriod(entries).filter(function(e){return e.type===type;});
+  var total=filtered.reduce(function(s,e){return s+(parseFloat(e.amount)||0);},0);
+  showToast((type==='income'?'إيرادات':'مصاريف')+': '+fmt(total)+' ﷼ — '+filtered.length+' قيد');
+}
+
+function showToast(msg){ var t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(function(){t.classList.remove('show');},2800); }
+
+// إغلاق modals بالنقر خارجها
+document.getElementById('addModal').addEventListener('click',function(ev){ if(ev.target===document.getElementById('addModal')) closeModal(); });
+document.getElementById('recDetailModal').addEventListener('click',function(ev){ if(ev.target===document.getElementById('recDetailModal')) closeRecModal(); });
+document.getElementById('payModal').addEventListener('click',function(ev){ if(ev.target===document.getElementById('payModal')) closePayModal(); });
+
+// ===== DEMO DATA =====
+if(entries.length===0){
+  var now2=new Date(); var m2=String(now2.getMonth()+1).padStart(2,'0'); var y2=now2.getFullYear();
+  var sampleIncome=[
+    {desc:'تنظيف مكيف - Dr. Hasan',party:'Dr. Hasan',phone:'0555519923',category:'خدمة',amount:300,method:'كاش',status:'مدفوع'},
+    {desc:'صيانة - Farash',party:'Farash',category:'خدمة',amount:230,method:'تحويل',status:'مدفوع'},
+    {desc:'تعبئة غاز - أم سعود',party:'أم سعود',phone:'0501234567',category:'خدمة',amount:300,method:'كاش',status:'مؤجل',dueType:'salary',paymentNote:'طلب السداد عند نزول الراتب'},
+    {desc:'تنظيف - نوره',party:'نوره',category:'خدمة',amount:110,method:'كاش',status:'مدفوع'},
+    {desc:'صيانة - Hashim',party:'Hashim',phone:'0509876543',category:'خدمة',amount:1020,method:'تحويل',status:'مدفوع جزئياً',paidAmount:500,payments:[{id:'P1',amount:500,date:now2.toISOString().split('T')[0],method:'كاش',note:'دفعة أولى'}]},
+  ];
+  var sampleExpense=[
+    {desc:'وقود ميتسوبيشي',category:'وقود',amount:100,method:'كاش'},
+    {desc:'قطع غيار - فريون',category:'قطع غيار',amount:285,method:'كاش'},
+    {desc:'غداء الفنيين',category:'طعام',amount:30,method:'كاش'},
+    {desc:'إعلان سناب',category:'إعلانات',amount:400,method:'تحويل'},
+  ];
+  var todayDate = now2.toISOString().split('T')[0];
+  var tomorrow = new Date(now2); tomorrow.setDate(tomorrow.getDate()+1);
+  sampleIncome.forEach(function(e,i){
+    var d=new Date(); d.setDate(d.getDate()-i);
+    // مثال: أم سعود dueDate = غداً
+    var extra = {};
+    if(e.status==='مؤجل' || e.status==='مدفوع جزئياً') {
+      extra.dueDate = tomorrow.toISOString().split('T')[0];
+    }
+    entries.push(Object.assign({id:genId(),type:'income',payments:[],paidAmount:0},e,extra,{date:d.toISOString().split('T')[0],createdAt:new Date().toISOString()}));
+  });
+  sampleExpense.forEach(function(e,i){
+    var d=new Date(); d.setDate(d.getDate()-i);
+    entries.push(Object.assign({id:genId(),type:'expense',party:'',status:'مدفوع',payments:[],paidAmount:0},e,{date:d.toISOString().split('T')[0],createdAt:new Date().toISOString()}));
+  });
+  saveData();
+}
+
+syncFromFirebase();
+renderAll();
+</script>
+
+
+<script>
+var LANG = localStorage.getItem('atwad_lang') || 'ar';
+
+var NAV_TEXT = {
+  ar: {clients:'العملاء', appts:'المواعيد', wo:'أوامر العمل', finance:'الإدارة المالية', reports:'التقارير', attention:'ما يحتاج قرارك', fix:'تصحيح قيد', techlog:'سجلّ الفني', backlog:'المتراكم', settings:'الإعدادات', brand:'أطواد', brandSub:'لصيانة المكيفات'},
+  en: {clients:'Clients', appts:'Appointments', wo:'Work Orders', finance:'Finance', reports:'Reports', attention:'Needs Your Call', fix:'Fix an Entry', techlog:'Tech Log', backlog:'Backlog', settings:'Settings', brand:'Atwad', brandSub:'AC Maintenance'}
+};
+
+function applySharedLang() {
+  var l = LANG;
+  document.documentElement.lang = l;
+  document.documentElement.dir = l==='ar'?'rtl':'ltr';
+  var btn = document.getElementById('langBtn');
+  if(btn) btn.textContent = l==='ar'?'🌐 EN':'🌐 عر';
+  // Sidebar
+  var t = NAV_TEXT[l];
+  setTxt('nav-brand', t.brand);
+  setTxt('nav-brandsub', t.brandSub);
+  setTxt('nav-clients', t.clients);
+  setTxt('nav-appts', t.appts);
+  setTxt('nav-wo', t.wo);
+  setTxt('nav-finance', t.finance);
+  setTxt('nav-reports', t.reports);
+  setTxt('nav-attention', t.attention);
+  setTxt('nav-fix', t.fix);
+  setTxt('nav-backlog', t.backlog);
+  setTxt('nav-techlog', t.techlog);
+  setTxt('nav-settings', t.settings);
+  // page specific
+  if(typeof applyPageLang === 'function') applyPageLang(l);
+}
+
+/* setTxt تُبدّل النص وتُبقي الأيقونة — textContent يمسح الأبناء كلهم */
+function setTxt(id, txt) {
+  var el = document.getElementById(id); if(!el) return;
+  var ic = el.querySelector('.nav-icon');
+  if(!ic){ el.textContent = txt; return; }
+  while(el.firstChild) el.removeChild(el.firstChild);
+  el.appendChild(ic);
+  el.appendChild(document.createTextNode(' ' + txt));
+}
+function setHTML(id, txt) { var el=document.getElementById(id); if(el) el.innerHTML=txt; }
+function setPlh(id, txt) { var el=document.getElementById(id); if(el) el.placeholder=txt; }
+
+function toggleLang() {
+  LANG = LANG==='ar'?'en':'ar';
+  localStorage.setItem('atwad_lang', LANG);
+  applySharedLang();
+}
+
+document.addEventListener('DOMContentLoaded', applySharedLang);
+
+
+function applyPageLang(l) {
+  var P = { ar: {'title':'الإدارة المالية', 'sub':'هذا الشهر', 'addBtn':'＋ إضافة قيد', 'importBtn':'📥 استيراد إيرادات الحجوزات', 'rev':'إجمالي الإيرادات (ريال)', 'exp':'إجمالي المصاريف (ريال)', 'profit':'صافي الربح (ريال)', 'pending':'مبالغ معلقة (ريال)', 'chartTitle':'📊 الإيرادات والمصاريف اليومية', 'donutTitle':'🥧 توزيع المصاريف', 'incTable':'💵 آخر الإيرادات', 'expTable':'💸 آخر المصاريف', 'viewAll':'عرض الكل', 'colClient':'العميل', 'colSvc':'الخدمة', 'colAmt':'المبلغ', 'colStatus':'الحالة', 'colDesc':'البيان', 'colCat':'الفئة', 'colDate':'التاريخ', 'periodToday':'اليوم', 'periodMonth':'هذا الشهر', 'periodYear':'هذه السنة', 'periodAll':'الكل'}, en: {'title':'Financial Management', 'sub':'This Month', 'addBtn':'＋ Add Entry', 'importBtn':'📥 Import Booking Revenue', 'rev':'Total Revenue (SAR)', 'exp':'Total Expenses (SAR)', 'profit':'Net Profit (SAR)', 'pending':'Pending Amounts (SAR)', 'chartTitle':'📊 Daily Revenue & Expenses', 'donutTitle':'🥧 Expense Distribution', 'incTable':'💵 Recent Revenue', 'expTable':'💸 Recent Expenses', 'viewAll':'View All', 'colClient':'Client', 'colSvc':'Service', 'colAmt':'Amount', 'colStatus':'Status', 'colDesc':'Description', 'colCat':'Category', 'colDate':'Date', 'periodToday':'Today', 'periodMonth':'This Month', 'periodYear':'This Year', 'periodAll':'All'} };
+  var t = P[l] || P['ar'];
+  // تطبيق على العناصر بـ data-lang
+  document.querySelectorAll('[data-lang]').forEach(function(el) {
+    var key = el.dataset.lang;
+    if(t[key]) el.textContent = t[key];
+  });
+  document.querySelectorAll('[data-lang-ph]').forEach(function(el) {
+    var key = el.dataset.langPh;
+    if(t[key]) el.placeholder = t[key];
+  });
+}
+</script>
+
+<script src="atwad-nav.js"></script>
+</body>
+</html>
