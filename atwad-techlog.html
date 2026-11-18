@@ -84,9 +84,10 @@ button.big:disabled{opacity:.45;cursor:default;}
   <div class="msg" id="msg">…</div>
   <div id="out"></div>
 
-  <div class="ver">إصدار الصفحة: <b>v3 · 2026-10-13 08:30</b></div>
+  <div class="ver">إصدار الصفحة: <b>v4 · 2026-11-18 09:00</b></div>
   <div class="bar">
     <button class="big" id="refBtn" disabled>🔄 تحديث</button>
+    <button class="big" id="sheetBtn" disabled onclick="techSheet()" style="background:#7C3AED;">📤 ملف للفني</button>
     <button class="big" id="backBtn" onclick="location.href='atwad-attention.html'">🎯 ما يحتاج قرارك</button>
     <button class="big" id="bkBtn" onclick="location.href='atwad-backlog.html'">📦 المتراكم</button>
     <button class="big" id="fixBtn" onclick="location.href='atwad-fix-entry.html'">🩹 تصحيح قيد</button>
@@ -272,6 +273,7 @@ function load(){
 
     render();
     el('refBtn').disabled = false;
+    el('sheetBtn').disabled = false;
     el('msg').textContent = '';
   }).catch(function(err){
     el('refBtn').disabled = false;
@@ -421,6 +423,97 @@ function render(){
     '<div><span>مُثبَت قبضه</span><b>' + fmtNum(mSum) + ' ﷼</b></div>' +
     '<div><span>سطور السجلّ</span><b>' + LOG.length + '</b></div>';
   el('out').innerHTML = html;
+}
+
+
+/* ===== ملف للفني =====
+   يجمع ما يحتاج شهادة الفني فقط: ما علّمه pending بنفسه، والمتراكم الذي
+   قُبض بمبلغٍ مختلف أو لا ذكر له في سجلّه. أمّا المطابق والدَيْن المؤكّد
+   فحكمهما ثابت ولا يُسأل عنهما. يُفتح في نافذة للطباعة أو الحفظ PDF. */
+function sheetDate(d){
+  var p = String(d || '').split('-');
+  if(p.length < 3) return d || '—';
+  var M = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return (+p[2]) + ' ' + (M[+p[1]] || p[1]);
+}
+function sheetLog(g){
+  var s = '';
+  if(g.got > 0) s += fmtNum(g.got) + (g.mode === 'transfer' ? ' t' : ' cash');
+  if(g.got > 0 && g.pend > 0) s += ' + ';
+  if(g.pend > 0) s += fmtNum(g.pend) + ' pending';
+  return s;
+}
+function techSheet(){
+  var items = [], i, r;
+  for(i = 0; i < DUE.length; i++){
+    var g = DUE[i].g;
+    items.push({ date: g.date, name: g.name, desc: '', amt: g.pend,
+                 said: 'You wrote: ' + sheetLog(g), kind: 'A' });
+  }
+  for(i = 0; i < BACK.length; i++){
+    r = BACK[i];
+    if(r.ev && r.near) continue;   // مُثبَت قبضه
+    if(r.evDue) continue;          // دَيْن مؤكّد
+    var e = r.t.e;
+    items.push({ date: e.date, name: e.party || e.client || '—', desc: e.desc || '',
+                 amt: r.t.rem,
+                 said: r.ev ? 'You wrote: ' + sheetLog(r.ev) + ' (amount differs)' : 'Not in your report',
+                 kind: 'B' });
+  }
+  if(!items.length){ el('msg').textContent = '✅ لا شيء يحتاج سؤال الفني'; return; }
+  items.sort(function(a, b){ return String(a.date).localeCompare(String(b.date)); });
+
+  var total = 0, rows = '', txt = '';
+  for(i = 0; i < items.length; i++){
+    var it = items[i]; total += it.amt;
+    rows += '<tr><td class="n">' + (i + 1) + '</td><td>' + esc(sheetDate(it.date)) + '</td>' +
+      '<td class="c"><b>' + esc(it.name) + '</b>' + (it.desc ? '<div class="d">' + esc(it.desc) + '</div>' : '') + '</td>' +
+      '<td class="r">' + esc(it.said) + '</td><td class="a">' + fmtNum(it.amt) + '</td>' +
+      '<td class="b"></td><td class="b"></td><td class="b"></td></tr>';
+    txt += (i + 1) + ') ' + sheetDate(it.date) + ' · ' + it.name + ' · ' + fmtNum(it.amt) + ' SAR · ' + it.said + '\n';
+  }
+  var head = 'Atwad — Payments to check (' + items.length + ' customers · ' + fmtNum(total) + ' SAR)\n' +
+    'Reply with the number: "3 = paid 170 cash 5 Aug" or "5 = still pending"\n\n';
+  var html = '<!DOCTYPE html><html><head><meta charset="utf-8">' +
+    '<meta name="viewport" content="width=device-width,initial-scale=1">' +
+    '<title>Atwad — Payments to check</title>' +
+    '<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&family=Noto+Sans+Devanagari:wght@400;700&family=Tajawal:wght@400;700&display=swap" rel="stylesheet">' +
+    '<style>@page{size:A4;margin:11mm}body{font-family:"Noto Sans","Tajawal","Noto Sans Devanagari",sans-serif;color:#1d2433;font-size:12px;margin:16px}' +
+    'h1{font-size:19px;margin:0 0 2px;color:#0f4c81}.sub{color:#6b7280;margin-bottom:10px}' +
+    '.box{background:#f1f6fb;border-radius:8px;padding:9px 12px;margin-bottom:8px;line-height:1.6}' +
+    'table{width:100%;border-collapse:collapse;margin-top:6px}th{background:#0f4c81;color:#fff;font-size:10.5px;padding:6px 4px;text-align:left}' +
+    'td{border-bottom:1px solid #e5e7eb;padding:7px 4px;vertical-align:middle}td.n{color:#6b7280;width:20px}' +
+    'td.c .d{color:#6b7280;font-size:10.5px}td.r{color:#6b7280;font-size:10.5px}td.a{font-weight:700;color:#b42318;text-align:right;padding-right:10px;white-space:nowrap}' +
+    'td.b{border:1px solid #cbd5e1;width:58px}tr.t td{font-weight:700;border-bottom:none}' +
+    'code{background:#fff;border:1px solid #cbd5e1;border-radius:4px;padding:1px 5px}' +
+    '.tools{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}.tools button{font:700 14px Tajawal,sans-serif;border:0;border-radius:9px;padding:10px 16px;cursor:pointer;background:#0f4c81;color:#fff}' +
+    '.tools button.g{background:#25D366}@media print{.tools{display:none}body{margin:0}}</style></head><body>' +
+    '<div class="tools"><button onclick="window.print()">🖨️ طباعة / حفظ PDF</button>' +
+    '<button class="g" id="cp">📋 نسخ نص للواتساب</button></div>' +
+    '<h1>Atwad — Payments to check</h1>' +
+    '<div class="sub">' + items.length + ' customers · Total ' + fmtNum(total) + ' SAR · ' + todayStr() + '</div>' +
+    '<div class="box"><b>Ahmad,</b> please check each customer below: did the customer pay? If yes: <b>date, amount, cash or transfer</b>. If not: <b>still pending</b>.<br>' +
+    'Reply on WhatsApp with the number, like: <code>3 = paid 170 cash 5 Aug</code> or <code>5 = still pending</code></div>' +
+    '<div class="box" style="font-family:\'Noto Sans Devanagari\',sans-serif"><b>अहमद,</b> नीचे हर ग्राहक के लिए बताइए: क्या पैसा मिला? अगर हाँ: <b>तारीख, रकम, कैश या ट्रांसफर</b>। अगर नहीं: <b>अभी बाकी</b>।<br>' +
+    'WhatsApp पर नंबर के साथ जवाब दें, जैसे: <code>3 = paid 170 cash 5 Aug</code> या <code>5 = still pending</code></div>' +
+    '<table><tr><th>#</th><th>Visit</th><th>Customer</th><th>Your report</th><th style="text-align:right">SAR</th><th>Paid? Y/N</th><th>Date</th><th>Cash / t</th></tr>' +
+    rows + '<tr class="t"><td></td><td></td><td colspan="2">Total</td><td class="a">' + fmtNum(total) + '</td><td colspan="3"></td></tr></table>' +
+    '</body></html>';
+
+  var w = window.open('', '_blank');
+  if(!w){ el('msg').textContent = '⚠️ المتصفح منع فتح نافذة جديدة — اسمح بالنوافذ المنبثقة لهذا الموقع'; return; }
+  w.document.open(); w.document.write(html); w.document.close();
+  var full = head + txt;
+  var btn = w.document.getElementById('cp');
+  if(btn){
+    btn.onclick = function(){
+      w.navigator.clipboard.writeText(full).then(function(){
+        btn.textContent = '✅ تم النسخ';
+      }).catch(function(err){
+        btn.textContent = '❌ تعذّر النسخ: ' + (err && err.message ? err.message : err);
+      });
+    };
+  }
 }
 
 /* ===== كتابة القسم الأول ===== */
