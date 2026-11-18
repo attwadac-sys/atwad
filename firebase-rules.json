@@ -102,6 +102,9 @@
       },
       "v2026-11-18": {
         ".read": true
+      },
+      "v2026-11-18b": {
+        ".read": true
       }
     },
     "publicSettings": {
@@ -109,8 +112,8 @@
       ".write": "auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802'"
     },
     "appointments": {
-      ".read": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2' || auth.uid === 'N1uELIME5jVKf2bsXbVCreTSyN53' || auth.uid === 'zfxcmSjKDOXRAAUFSfgiEBUEqAn1')",
-      ".write": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2' || auth.uid === 'N1uELIME5jVKf2bsXbVCreTSyN53' || auth.uid === 'zfxcmSjKDOXRAAUFSfgiEBUEqAn1')",
+      ".read": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2' || auth.uid === 'N1uELIME5jVKf2bsXbVCreTSyN53' || auth.uid === 'zfxcmSjKDOXRAAUFSfgiEBUEqAn1' || auth.uid === 'p5xlneealjbrkNm2oYxno0GWunR2')",
+      ".write": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2' || auth.uid === 'N1uELIME5jVKf2bsXbVCreTSyN53' || auth.uid === 'zfxcmSjKDOXRAAUFSfgiEBUEqAn1' || auth.uid === 'p5xlneealjbrkNm2oYxno0GWunR2')",
       ".indexOn": [
         "date"
       ]
@@ -125,9 +128,9 @@
     },
     "transactions": {
       ".read": "auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802'",
-      ".write": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === 'N1uELIME5jVKf2bsXbVCreTSyN53' || auth.uid === 'zfxcmSjKDOXRAAUFSfgiEBUEqAn1')",
+      ".write": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === 'N1uELIME5jVKf2bsXbVCreTSyN53' || auth.uid === 'zfxcmSjKDOXRAAUFSfgiEBUEqAn1' || auth.uid === 'p5xlneealjbrkNm2oYxno0GWunR2')",
       "$entryId": {
-        ".write": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || ((auth.uid === 'N1uELIME5jVKf2bsXbVCreTSyN53' || auth.uid === 'zfxcmSjKDOXRAAUFSfgiEBUEqAn1') && !data.exists() && newData.exists()))"
+        ".write": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || ((auth.uid === 'N1uELIME5jVKf2bsXbVCreTSyN53' || auth.uid === 'zfxcmSjKDOXRAAUFSfgiEBUEqAn1' || auth.uid === 'p5xlneealjbrkNm2oYxno0GWunR2') && !data.exists() && newData.exists()))"
       }
     },
     "reviewCampaigns": {
@@ -178,12 +181,12 @@
       }
     },
     "bookings": {
-      ".read": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2' || auth.uid === 'N1uELIME5jVKf2bsXbVCreTSyN53' || auth.uid === 'zfxcmSjKDOXRAAUFSfgiEBUEqAn1')",
+      ".read": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2' || auth.uid === 'N1uELIME5jVKf2bsXbVCreTSyN53' || auth.uid === 'zfxcmSjKDOXRAAUFSfgiEBUEqAn1' || auth.uid === 'p5xlneealjbrkNm2oYxno0GWunR2')",
       ".indexOn": [
         "date"
       ],
       "$bookingId": {
-        ".read": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2' || auth.uid === 'N1uELIME5jVKf2bsXbVCreTSyN53' || auth.uid === 'zfxcmSjKDOXRAAUFSfgiEBUEqAn1')",
+        ".read": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2' || auth.uid === 'N1uELIME5jVKf2bsXbVCreTSyN53' || auth.uid === 'zfxcmSjKDOXRAAUFSfgiEBUEqAn1' || auth.uid === 'p5xlneealjbrkNm2oYxno0GWunR2')",
         ".write": "(auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2')) || (!data.exists() && newData.exists())",
         ".validate": "(auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2')) || newData.hasChildren(['ref','client','phone','service','date','time','createdAt','startBlock','endBlock','lockBlocks'])",
         "ref": {
@@ -372,8 +375,8 @@
       }
     },
     "vehicles": {
-      ".read": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2' || auth.uid === 'N1uELIME5jVKf2bsXbVCreTSyN53' || auth.uid === 'zfxcmSjKDOXRAAUFSfgiEBUEqAn1')",
-      ".write": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2' || auth.uid === 'N1uELIME5jVKf2bsXbVCreTSyN53' || auth.uid === 'zfxcmSjKDOXRAAUFSfgiEBUEqAn1')",
+      ".read": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2' || auth.uid === 'N1uELIME5jVKf2bsXbVCreTSyN53' || auth.uid === 'zfxcmSjKDOXRAAUFSfgiEBUEqAn1' || auth.uid === 'p5xlneealjbrkNm2oYxno0GWunR2')",
+      ".write": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2' || auth.uid === 'N1uELIME5jVKf2bsXbVCreTSyN53' || auth.uid === 'zfxcmSjKDOXRAAUFSfgiEBUEqAn1' || auth.uid === 'p5xlneealjbrkNm2oYxno0GWunR2')",
       "$vehicleId": {
         ".validate": "newData.hasChildren(['name'])",
         "name": {
@@ -415,7 +418,7 @@
       }
     },
     "vehicleMaintenance": {
-      ".read": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2' || auth.uid === 'N1uELIME5jVKf2bsXbVCreTSyN53' || auth.uid === 'zfxcmSjKDOXRAAUFSfgiEBUEqAn1')",
+      ".read": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2' || auth.uid === 'N1uELIME5jVKf2bsXbVCreTSyN53' || auth.uid === 'zfxcmSjKDOXRAAUFSfgiEBUEqAn1' || auth.uid === 'p5xlneealjbrkNm2oYxno0GWunR2')",
       ".write": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2')",
       "$entryId": {
         ".validate": "newData.hasChildren(['vehicleId','type','date','odometer'])",
@@ -449,8 +452,8 @@
       }
     },
     "vehicleChecks": {
-      ".read": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2' || auth.uid === 'N1uELIME5jVKf2bsXbVCreTSyN53' || auth.uid === 'zfxcmSjKDOXRAAUFSfgiEBUEqAn1')",
-      ".write": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2' || auth.uid === 'N1uELIME5jVKf2bsXbVCreTSyN53' || auth.uid === 'zfxcmSjKDOXRAAUFSfgiEBUEqAn1')",
+      ".read": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2' || auth.uid === 'N1uELIME5jVKf2bsXbVCreTSyN53' || auth.uid === 'zfxcmSjKDOXRAAUFSfgiEBUEqAn1' || auth.uid === 'p5xlneealjbrkNm2oYxno0GWunR2')",
+      ".write": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2' || auth.uid === 'N1uELIME5jVKf2bsXbVCreTSyN53' || auth.uid === 'zfxcmSjKDOXRAAUFSfgiEBUEqAn1' || auth.uid === 'p5xlneealjbrkNm2oYxno0GWunR2')",
       "$vehicleId": {
         ".validate": "root.child('vehicles').child($vehicleId).exists()",
         "$weekKey": {
@@ -503,12 +506,12 @@
       }
     },
     "vehicleSettings": {
-      ".read": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2' || auth.uid === 'N1uELIME5jVKf2bsXbVCreTSyN53' || auth.uid === 'zfxcmSjKDOXRAAUFSfgiEBUEqAn1')",
+      ".read": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2' || auth.uid === 'N1uELIME5jVKf2bsXbVCreTSyN53' || auth.uid === 'zfxcmSjKDOXRAAUFSfgiEBUEqAn1' || auth.uid === 'p5xlneealjbrkNm2oYxno0GWunR2')",
       ".write": "auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802'"
     },
     "odometerLogs": {
-      ".read": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === 'N1uELIME5jVKf2bsXbVCreTSyN53' || auth.uid === 'zfxcmSjKDOXRAAUFSfgiEBUEqAn1')",
-      ".write": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === 'N1uELIME5jVKf2bsXbVCreTSyN53' || auth.uid === 'zfxcmSjKDOXRAAUFSfgiEBUEqAn1')",
+      ".read": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === 'N1uELIME5jVKf2bsXbVCreTSyN53' || auth.uid === 'zfxcmSjKDOXRAAUFSfgiEBUEqAn1' || auth.uid === 'p5xlneealjbrkNm2oYxno0GWunR2')",
+      ".write": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === 'N1uELIME5jVKf2bsXbVCreTSyN53' || auth.uid === 'zfxcmSjKDOXRAAUFSfgiEBUEqAn1' || auth.uid === 'p5xlneealjbrkNm2oYxno0GWunR2')",
       ".indexOn": [
         "date"
       ],
@@ -535,22 +538,22 @@
       }
     },
     "apptImages": {
-      ".read": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2' || auth.uid === 'N1uELIME5jVKf2bsXbVCreTSyN53' || auth.uid === 'zfxcmSjKDOXRAAUFSfgiEBUEqAn1')",
+      ".read": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2' || auth.uid === 'N1uELIME5jVKf2bsXbVCreTSyN53' || auth.uid === 'zfxcmSjKDOXRAAUFSfgiEBUEqAn1' || auth.uid === 'p5xlneealjbrkNm2oYxno0GWunR2')",
       ".write": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2')",
       "$key": {
         ".validate": "newData.isString() && newData.val().length <= 300000"
       }
     },
     "bookingImages": {
-      ".read": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2' || auth.uid === 'N1uELIME5jVKf2bsXbVCreTSyN53' || auth.uid === 'zfxcmSjKDOXRAAUFSfgiEBUEqAn1')",
+      ".read": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2' || auth.uid === 'N1uELIME5jVKf2bsXbVCreTSyN53' || auth.uid === 'zfxcmSjKDOXRAAUFSfgiEBUEqAn1' || auth.uid === 'p5xlneealjbrkNm2oYxno0GWunR2')",
       ".write": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2')",
       "$key": {
         ".validate": "newData.isString() && newData.val().length <= 300000"
       }
     },
     "vehicleCheckPhotos": {
-      ".read": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2' || auth.uid === 'N1uELIME5jVKf2bsXbVCreTSyN53' || auth.uid === 'zfxcmSjKDOXRAAUFSfgiEBUEqAn1')",
-      ".write": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2' || auth.uid === 'N1uELIME5jVKf2bsXbVCreTSyN53' || auth.uid === 'zfxcmSjKDOXRAAUFSfgiEBUEqAn1')",
+      ".read": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2' || auth.uid === 'N1uELIME5jVKf2bsXbVCreTSyN53' || auth.uid === 'zfxcmSjKDOXRAAUFSfgiEBUEqAn1' || auth.uid === 'p5xlneealjbrkNm2oYxno0GWunR2')",
+      ".write": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2' || auth.uid === 'N1uELIME5jVKf2bsXbVCreTSyN53' || auth.uid === 'zfxcmSjKDOXRAAUFSfgiEBUEqAn1' || auth.uid === 'p5xlneealjbrkNm2oYxno0GWunR2')",
       "$vehicleId": {
         ".validate": "root.child('vehicles').child($vehicleId).exists()",
         "$weekKey": {
@@ -562,7 +565,7 @@
       }
     },
     "vehicleCheckItems": {
-      ".read": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2' || auth.uid === 'N1uELIME5jVKf2bsXbVCreTSyN53' || auth.uid === 'zfxcmSjKDOXRAAUFSfgiEBUEqAn1')",
+      ".read": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2' || auth.uid === 'N1uELIME5jVKf2bsXbVCreTSyN53' || auth.uid === 'zfxcmSjKDOXRAAUFSfgiEBUEqAn1' || auth.uid === 'p5xlneealjbrkNm2oYxno0GWunR2')",
       ".write": "auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802'",
       "$itemKey": {
         ".validate": "newData.hasChildren(['label'])",
