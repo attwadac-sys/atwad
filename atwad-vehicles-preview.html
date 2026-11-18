@@ -956,6 +956,7 @@ function renderPicks(){
 var TECH_URL = 'https://attwadac-sys.github.io/atwad/atwad-technician-vehicles-preview.html';
 
 var DAY_AR = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+var DAY_EN = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 
 function dStr(d){
   var m = d.getMonth() + 1, dd = d.getDate();
@@ -1052,14 +1053,24 @@ function remindText(name){
   var due = num(SETTINGS.dueDay); if(!(due >= 0 && due <= 6)) due = 6;
   var late = daysLate();
   var pending = pendingFor(name);
+  var dow = new Date(todayStr() + 'T00:00:00').getDay();
+  // عربي ثم إنجليزي — الفنيون لا يقرؤون العربية جيداً
   var t = 'تذكير: الفحص الأسبوعي للمركبة\n';
-  t += 'اليوم ' + DAY_AR[new Date(todayStr() + 'T00:00:00').getDay()] + ' ' + todayStr() + '\n\n';
+  t += 'اليوم ' + DAY_AR[dow] + ' ' + todayStr() + '\n';
   if(name) t += 'المسؤول: ' + name + '\n';
   t += pending.length ? ('المطلوب فحصه: ' + pending.join(' · ') + '\n') : 'كل المركبات مفحوصة — شكراً.\n';
   if(late > 0 && pending.length) t += 'الموعد كان يوم ' + DAY_AR[due] + ' — متأخر ' + late + ' يوم.\n';
-  t += '\nالبنود: العداد، الزيت، ماء الرديتر، الإطارات، الأصوات — مع صورة لكل بند مطلوب.\n';
-  if(name) t += '\nافتح البوابة واضغط اسمك (' + name + ') ثم سجّل:\n' + TECH_URL;
-  else     t += '\nافتح البوابة واضغط اسمك ثم سجّل:\n' + TECH_URL;
+  t += 'البنود: العداد، الزيت، ماء الرديتر، الإطارات، الأصوات — مع صورة لكل بند مطلوب.\n';
+  t += 'افتح البوابة واضغط اسمك' + (name ? ' (' + name + ')' : '') + ' ثم سجّل الفحص.\n';
+  t += '\n— — —\n\n';
+  t += 'Reminder: Weekly vehicle check\n';
+  t += 'Today: ' + DAY_EN[dow] + ' ' + todayStr() + '\n';
+  if(name) t += 'Responsible: ' + name + '\n';
+  t += pending.length ? ('To check: ' + pending.join(' · ') + '\n') : 'All vehicles checked — thank you.\n';
+  if(late > 0 && pending.length) t += 'Due day was ' + DAY_EN[due] + ' — ' + late + ' day(s) late.\n';
+  t += 'Items: odometer, oil, radiator water, tyres, noises — with a photo for each required item.\n';
+  t += 'Open the portal, tap your name' + (name ? ' (' + name + ')' : '') + ', and save the check.\n';
+  t += '\n' + TECH_URL;
   return t;
 }
 function waLink(phone, name){
