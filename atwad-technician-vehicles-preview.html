@@ -1869,22 +1869,58 @@ function vehSaveCheck(id){
   }
   if(odo > vehNum(v.odometer)) updates['vehicles/' + id + '/odometer'] = odo;
 
-  btn.disabled = true;
+  /* الحفظ على مرحلتين:
+     1) السجل نفسه (نص خفيف + الممشى) — هو ما تعتمد عليه بوابة التسجيل.
+     2) الصور في مسار منفصل. إن فشلت الصور (حجم، شبكة، قاعدة) يبقى
+        الفحص محفوظاً ولا يُحجب الفني بسببها، وتظهر له رسالة واضحة.
+     والزر يُظهر حالة الانتظار حتى لا يبدو كأنه لم يستجب فيُضغط مراراً. */
+  var photoUpdates = {};
+  for(var pp in updates){
+    if(Object.prototype.hasOwnProperty.call(updates, pp) && pp.indexOf('vehicleCheckPhotos/') === 0){
+      photoUpdates[pp] = updates[pp];
+      delete updates[pp];
+    }
+  }
+  var savingTxt = LANG === 'ar' ? '⏳ جارٍ الحفظ…' : '⏳ Saving…';
+  var btnTxt = btn.textContent;
+  btn.disabled = true; btn.textContent = savingTxt;
+  msgEl.className = 'veh-msg'; msgEl.textContent = savingTxt;
+  if(msgEl.scrollIntoView) msgEl.scrollIntoView({ behavior:'smooth', block:'center' });
+
   db.ref().update(updates).then(function(){
-    btn.disabled = false;
     if(!VEH_CHECKS[id]) VEH_CHECKS[id] = {};
     VEH_CHECKS[id][wk] = rec;
+    if(odo > vehNum(v.odometer)){ v.odometer = odo; VEH_LIST[id] = v; }
+    var hasPhotos = Object.keys(photoUpdates).length > 0;
+    return (hasPhotos ? db.ref().update(photoUpdates) : Promise.resolve()).then(function(){
+      return { photosOk: true };
+    }).catch(function(perr){
+      console.warn('فشل رفع صور الفحص:', perr);
+      return { photosOk: false, err: perr };
+    });
+  }).then(function(res){
+    btn.disabled = false; btn.textContent = btnTxt;
     for(var dk in VEH_PHOTO){
       if(Object.prototype.hasOwnProperty.call(VEH_PHOTO, dk) && dk.indexOf(id + '--') === 0){
         delete VEH_PHOTO[dk];
       }
     }
-    if(odo > vehNum(v.odometer)){ v.odometer = odo; VEH_LIST[id] = v; }
-    showToast(t('vehSaved'));
+    if(res.photosOk){
+      showToast(t('vehSaved'));
+    } else {
+      var ptxt = (LANG === 'ar'
+        ? '✅ حُفظ الفحص، لكن تعذّر رفع الصور: '
+        : '✅ Check saved, but photos could not be uploaded: ') + (res.err && res.err.message ? res.err.message : '');
+      showToast(ptxt);
+      try { alert(ptxt); } catch(e){ console.warn(e); }
+    }
     vehRender();
   }).catch(function(err){
-    btn.disabled = false;
-    fail(t('vehFail') + err.message);
+    btn.disabled = false; btn.textContent = btnTxt;
+    var etxt = t('vehFail') + (err && err.message ? err.message : String(err));
+    fail(etxt);
+    showToast(etxt);
+    try { alert(etxt); } catch(e){ console.warn(e); }
   });
 }
 
