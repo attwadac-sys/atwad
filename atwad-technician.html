@@ -218,6 +218,7 @@ body{font-family:'Cairo',sans-serif;background:#F1F5F9;color:var(--slate);min-he
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 <script src="atwad-firebase.js"></script>
 <script src="atwad-auth.js"></script>
+<script src="atwad-veh-gate.js"></script>
 <!-- قوائم الإغلاق الثلاث — مشتركة مع صفحة الإدارة -->
 <script src="atwad-closing.js"></script>
 <!-- محرّك مطابقة الديون: الفني لا يرى منه إلا المطابق بالهاتف -->
@@ -1587,6 +1588,15 @@ function closeWalkin(){ document.getElementById('wiOv').classList.remove('show')
 
 function submitWalkin(method){
   if(!db){ showToast(t('tNoFb')); return; }
+  // عميل بلا موعد يمرّ بنفس بوابة فحص المركبة
+  if(!window.__vehGateWalkin){
+    AtwadVehGate.guard({ tech: currentTechAr || currentTech, lang: LANG }).then(function(ok){
+      if(!ok) return;
+      window.__vehGateWalkin = true;
+      try { submitWalkin(method); } finally { window.__vehGateWalkin = false; }
+    });
+    return;
+  }
   var x = wiT();
   var client = (document.getElementById('wiClient').value || '').trim();
   if(!client){ showToast(x.needClient); document.getElementById('wiClient').focus(); return; }
@@ -1693,8 +1703,13 @@ function finishDoneUI(id){
 
 function markDone(id, source, fbKey) {
   if(!db) { showToast(t('tNoFb')); return; }
-  // القائمة أولاً، ثم القبض — لا يُسجَّل قبضٌ بلا فحص
-  openClosingModal(id, source, fbKey);
+  // بوابة فحص المركبة الأسبوعي أولاً — إن كان الإلزام «منع» في الإعدادات
+  // لا يُفتح الإغلاق ولا القبض قبل تسجيل الفحص (atwad-veh-gate.js)
+  AtwadVehGate.guard({ tech: currentTechAr || currentTech, lang: LANG }).then(function(ok){
+    if(!ok) return;
+    // القائمة أولاً، ثم القبض — لا يُسجَّل قبضٌ بلا فحص
+    openClosingModal(id, source, fbKey);
+  });
 }
 
 // المسار القديم — يُبقى للرجوع إليه إن لزم (لا يُستدعى الآن)

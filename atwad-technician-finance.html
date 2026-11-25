@@ -99,6 +99,7 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);min-
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 <script src="atwad-firebase.js"></script>
 <script src="atwad-auth.js"></script>
+<script src="atwad-veh-gate.js"></script>
 </head>
 <body>
 
@@ -334,6 +335,15 @@ function onMethodChange(){
 }
 
 function saveEntry() {
+  // بوابة فحص المركبة الأسبوعي: لا قيد مالي قبل الفحص عند تفعيل «منع»
+  if(!window.__vehGateSave){
+    AtwadVehGate.guard({ tech: document.getElementById('f_tech').value, lang: LANG }).then(function(ok){
+      if(!ok) return;
+      window.__vehGateSave = true;
+      try { saveEntry(); } finally { window.__vehGateSave = false; }
+    });
+    return;
+  }
   var amount = parseFloat(document.getElementById('f_amount').value);
   var desc   = document.getElementById('f_desc').value.trim();
   var date   = document.getElementById('f_date').value;

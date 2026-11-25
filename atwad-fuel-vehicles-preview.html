@@ -109,6 +109,7 @@ tr:last-child td{border-bottom:none;}
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 <script src="atwad-firebase.js"></script>
 <script src="atwad-auth.js"></script>
+<script src="atwad-veh-gate.js"></script>
 </head>
 <body>
 
@@ -650,6 +651,16 @@ function addEntry(){
   var note = document.getElementById('fNote').value.trim();
   var vehSel = document.getElementById('fVeh');
   var vehId = vehSel ? String(vehSel.value || '') : '';
+
+  // بوابة فحص المركبة: مصروف بنزين لمركبة لم تُفحص هذا الأسبوع يُمنع عند «منع»
+  if(vehId && !window.__vehGateFuel){
+    AtwadVehGate.guard({ vehicleId: vehId, lang: lang }).then(function(ok){
+      if(!ok) return;
+      window.__vehGateFuel = true;
+      try { addEntry(); } finally { window.__vehGateFuel = false; }
+    });
+    return;
+  }
 
   if(!date){ alert(t('errDate')); return; }
   // المركبة إلزامية ما دامت هناك مركبات مسجّلة
