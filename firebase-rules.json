@@ -105,6 +105,9 @@
       },
       "v2026-11-18b": {
         ".read": true
+      },
+      "v2026-11-21": {
+        ".read": true
       }
     },
     "publicSettings": {
@@ -187,8 +190,8 @@
       ],
       "$bookingId": {
         ".read": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2' || auth.uid === 'N1uELIME5jVKf2bsXbVCreTSyN53' || auth.uid === 'zfxcmSjKDOXRAAUFSfgiEBUEqAn1' || auth.uid === 'p5xlneealjbrkNm2oYxno0GWunR2')",
-        ".write": "(auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2')) || (!data.exists() && newData.exists())",
-        ".validate": "(auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2')) || newData.hasChildren(['ref','client','phone','service','date','time','createdAt','startBlock','endBlock','lockBlocks'])",
+        ".write": "(auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2')) || (!data.exists() && newData.exists()) || (auth != null && (auth.uid === 'N1uELIME5jVKf2bsXbVCreTSyN53' || auth.uid === 'zfxcmSjKDOXRAAUFSfgiEBUEqAn1' || auth.uid === 'p5xlneealjbrkNm2oYxno0GWunR2') && data.exists() && newData.exists())",
+        ".validate": "(auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2')) || newData.hasChildren(['ref','client','phone','service','date','time','createdAt','startBlock','endBlock','lockBlocks']) || (auth != null && (auth.uid === 'N1uELIME5jVKf2bsXbVCreTSyN53' || auth.uid === 'zfxcmSjKDOXRAAUFSfgiEBUEqAn1' || auth.uid === 'p5xlneealjbrkNm2oYxno0GWunR2') && data.exists())",
         "ref": {
           ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (newData.isString() && newData.val().length >= 3 && newData.val().length <= 30)"
         },
@@ -311,6 +314,21 @@
         },
         "maintUnits": {
           ".validate": "(auth != null && auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802') || (newData.isNumber() && newData.val() >= 0 && newData.val() <= 50)"
+        },
+        "status": {
+          ".validate": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2' || auth.uid === 'N1uELIME5jVKf2bsXbVCreTSyN53' || auth.uid === 'zfxcmSjKDOXRAAUFSfgiEBUEqAn1' || auth.uid === 'p5xlneealjbrkNm2oYxno0GWunR2')"
+        },
+        "closing": {
+          ".validate": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2' || auth.uid === 'N1uELIME5jVKf2bsXbVCreTSyN53' || auth.uid === 'zfxcmSjKDOXRAAUFSfgiEBUEqAn1' || auth.uid === 'p5xlneealjbrkNm2oYxno0GWunR2')"
+        },
+        "closingTech": {
+          ".validate": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2' || auth.uid === 'N1uELIME5jVKf2bsXbVCreTSyN53' || auth.uid === 'zfxcmSjKDOXRAAUFSfgiEBUEqAn1' || auth.uid === 'p5xlneealjbrkNm2oYxno0GWunR2')"
+        },
+        "closingComplete": {
+          ".validate": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2' || auth.uid === 'N1uELIME5jVKf2bsXbVCreTSyN53' || auth.uid === 'zfxcmSjKDOXRAAUFSfgiEBUEqAn1' || auth.uid === 'p5xlneealjbrkNm2oYxno0GWunR2')"
+        },
+        "notRepaired": {
+          ".validate": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2' || auth.uid === 'N1uELIME5jVKf2bsXbVCreTSyN53' || auth.uid === 'zfxcmSjKDOXRAAUFSfgiEBUEqAn1' || auth.uid === 'p5xlneealjbrkNm2oYxno0GWunR2')"
         },
         "$other": {
           ".validate": "auth != null && (auth.uid === 'NU8g25megKefUOBQGvfkVtBOw802' || auth.uid === '0zGIJyaLAjSrLOzSRt2YaDUe4xv2')"
