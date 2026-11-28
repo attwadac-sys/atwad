@@ -595,8 +595,8 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
             <option>صيانة مكيف</option><option>تعبئة غاز</option>
             <option>الغسيل العميق</option>
             <option>كشف تسرّب مبدئي</option>
-            <option>كشف تسرّب عميق — ضغط النيتروجين</option>
-            <option>كشف تسرّب عميق — قراءة النتيجة</option>
+            <option value="كشف تسرّب عميق — ضغط النيتروجين">كشف بالنيتروجين — زيارة الضغط</option>
+            <option value="كشف تسرّب عميق — قراءة النتيجة">كشف بالنيتروجين — قراءة النتيجة</option>
             <option>كشف وإصلاح أعطال</option>
             <option>تنظيف الوحدات الداخلية أو الخارجية</option>
             <option>تركيب مكيف</option>
@@ -612,6 +612,14 @@ body{font-family:'Tajawal',sans-serif;background:#F1F5F9;color:var(--slate);}
             <input type="number" id="f_maint_units" value="0" min="0" max="30" placeholder="صيانة" title="عدد مكيفات الصيانة" onchange="onServiceOrUnitsChanged()" style="flex:1;">
           </div>
         </div>
+      </div>
+      <div id="leakNote" style="display:none;grid-column:1/-1;width:100%;background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:12px;padding:12px 14px;margin:6px 0 10px;font-size:12.5px;line-height:1.9;color:#1E40AF;">
+        <strong>🔍 الفرق بين الكشف المبدئي والكشف بالنيتروجين — وضّحه للعميل قبل الحجز</strong><br>
+        • <strong>الكشف المبدئي — 100 ريال</strong>: زيارة واحدة نحو نصف ساعة، فحص نظري لأجزاء الوحدتين الداخلية والخارجية. يكشف التسرّب الظاهر.<br>
+        • <strong>الكشف بالنيتروجين — 250 ريال</strong>: لا يُحجز إلا إذا لم يظهر التسرّب في المبدئي. زيارتان: الأولى نفصل الوحدتين ومواسير النحاس ونضغطها بالنيتروجين، والثانية بعد 48 ساعة لقراءة الضغط وتحديد موضع التسرّب.<br>
+        • <strong>الـ 100 ريال تُحتسب من الـ 250</strong> — فمن احتاج الكشف بالنيتروجين يدفع 250 فقط في المجموع.<br>
+        <span style="color:#B45309;font-weight:800;">⚠️ العميل الجديد يُحجز له «كشف تسرّب مبدئي» أولاً، حتى لو طلب «الكشف بالنيتروجين».</span><br>
+        <button type="button" onclick="copyLeakExplain()" style="margin-top:8px;background:#1E40AF;color:#fff;border:none;border-radius:8px;padding:7px 14px;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;">📋 نسخ الشرح لإرساله للعميل</button>
       </div>
       <div class="form-row">
         <div class="form-group"><label>تاريخ الزيارة <span class="req">*</span></label><input type="date" id="f_date"></div>
@@ -3053,6 +3061,7 @@ function readSplitUnits(){
 
 /** يُظهر حقلي الغسيل والصيانة للخدمة المختلطة فقط */
 function syncSplitUnitsVisibility(){
+  updateLeakNote();
   var mixed = document.getElementById('f_service').value === MIXED_SERVICE;
   document.getElementById('splitUnitsGroup').style.display = mixed ? '' : 'none';
   document.getElementById('unitsGroup').style.display      = mixed ? 'none' : '';
@@ -3157,6 +3166,37 @@ function updateApptEndPreview(){
   el.value=atwadMinutesToBlock(start).replace(/^(\d{2})(\d{2})$/,'$1:$2')+' ← '+
            (end>=1440?'بعد منتصف الليل':atwadMinutesToBlock(end).replace(/^(\d{2})(\d{2})$/,'$1:$2'));
 }
+/* ملاحظة كشف التسرّب — العملاء يخلطون بين المبدئي (100) والكشف بالنيتروجين (250).
+   تظهر عند اختيار أيٍّ من خدمات كشف التسرّب الثلاث. */
+var LEAK_EXPLAIN_MSG =
+  'الفرق بين نوعي كشف تسرّب الفريون:\n\n' +
+  '1) الكشف المبدئي — 100 ريال\n' +
+  'زيارة واحدة نحو نصف ساعة، نفحص فيها أجزاء الوحدة الداخلية والخارجية. يكشف التسرّب الظاهر في أغلب الحالات.\n\n' +
+  '2) الكشف بالنيتروجين — 250 ريال\n' +
+  'نلجأ إليه فقط إذا لم يظهر التسرّب في الكشف المبدئي. يتم على زيارتين: في الأولى نفصل الوحدتين ومواسير النحاس ونضغطها بغاز النيتروجين، وفي الثانية بعد 48 ساعة نقرأ الضغط ونحدد موضع التسرّب بالضبط، فلا يُستبدل جزء سليم.\n\n' +
+  'مبلغ الكشف المبدئي (100 ريال) يُحتسب من الكشف بالنيتروجين، فإن احتجته تدفع 250 ريال فقط في المجموع.\n\n' +
+  'نبدأ دائماً بالكشف المبدئي.';
+
+function updateLeakNote(){
+  var box=document.getElementById('leakNote');
+  if(!box) return;
+  var svc=(document.getElementById('f_service')||{}).value||'';
+  box.style.display = (svc.indexOf('كشف تسرّب') === 0) ? 'block' : 'none';
+}
+
+function copyLeakExplain(){
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(LEAK_EXPLAIN_MSG).then(function(){
+      showToast('✅ نُسخ الشرح — الصقه في واتساب العميل');
+    }).catch(function(e){
+      window.prompt('انسخ النص:', LEAK_EXPLAIN_MSG);
+      console.warn('تعذّر النسخ التلقائي:', e);
+    });
+  } else {
+    window.prompt('انسخ النص:', LEAK_EXPLAIN_MSG);
+  }
+}
+
 function onServiceOrUnitsChanged(){
   syncSplitUnitsVisibility();
   var svc=document.getElementById('f_service').value;
